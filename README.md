@@ -1,7 +1,7 @@
-# Diesel Cop
+# CC-Flota
 
 ## 📌 Overview
-Diesel Cop is a web-based system built with Laravel designed to manage and optimize operational workflows.  
+CC-Flota is a web-based system built with Laravel designed to manage and optimize operational workflows.  
 This project is currently in its foundational phase, focusing on architecture, data modeling, and system design before implementing business logic.
 
 ---
