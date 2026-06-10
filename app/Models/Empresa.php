@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Empresa extends Model
 {
@@ -30,15 +29,4 @@ class Empresa extends Model
         'inactivado_por',
         'motivo_inactivacion',
     ];
-
-    protected $casts = [
-        'fecha_creacion' => 'datetime',
-        'fecha_actualizacion' => 'datetime',
-        'fecha_inactivacion' => 'datetime',
-    ];
-
-    public function usuarios(): HasMany
-    {
-        return $this->hasMany(User::class, 'empresa_id');
-    }
 }
