@@ -2,27 +2,294 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ===========================================
-   CC-Flota — Componentes base administrativos
-   =========================================== */
+/* =========================================================
+   CC-Flota UI Base v0.1 — Componentes administrativos
+   ========================================================= */
+
+:root {
+    --cc-bg-main: #0f172a;
+    --cc-bg-panel: #111827;
+
+    --cc-card-bg: #ffffff;
+    --cc-card-border: #e5e7eb;
+
+    --cc-text-main: #111827;
+    --cc-text-muted: #6b7280;
+    --cc-text-soft: #9ca3af;
+
+    --cc-primary: #1f2937;
+    --cc-primary-hover: #111827;
+
+    --cc-danger: #991b1b;
+    --cc-danger-hover: #7f1d1d;
+
+    --cc-success: #166534;
+    --cc-success-hover: #14532d;
+
+    --cc-success-bg: #dcfce7;
+    --cc-success-text: #166534;
+
+    --cc-inactive-bg: #fee2e2;
+    --cc-inactive-text: #991b1b;
+
+    --cc-focus: rgba(37, 99, 235, 0.18);
+}
+
+/* =========================================================
+   Admin shell layout
+   ========================================================= */
+
+.cc-admin-shell {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 17rem minmax(0, 1fr);
+    background: var(--cc-bg-main);
+}
+
+.cc-sidebar {
+    background: var(--cc-bg-panel);
+    border-right: 1px solid rgba(148, 163, 184, 0.18);
+    color: #e5e7eb;
+    padding: 1.5rem 1.25rem;
+    min-height: 100vh;
+}
+
+.cc-sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.cc-sidebar-logo {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #1f2937;
+    color: #ffffff;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.cc-sidebar-title {
+    font-size: 1.05rem;
+    font-weight: 900;
+    color: #ffffff;
+    line-height: 1.2;
+}
+
+.cc-sidebar-subtitle {
+    font-size: 0.78rem;
+    color: #94a3b8;
+    margin-top: 0.15rem;
+}
+
+.cc-sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.cc-sidebar-section {
+    margin-top: 1.15rem;
+    margin-bottom: 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #94a3b8;
+}
+
+.cc-sidebar-link {
+    display: flex;
+    align-items: center;
+    min-height: 2.35rem;
+    border-radius: 0.5rem;
+    padding: 0.55rem 0.75rem;
+    color: #cbd5e1;
+    font-size: 0.92rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.cc-sidebar-link:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: #ffffff;
+}
+
+.cc-sidebar-link-active {
+    background: #ffffff;
+    color: #111827;
+}
+
+.cc-sidebar-link-active:hover {
+    background: #ffffff;
+    color: #111827;
+}
+
+.cc-sidebar-link-disabled {
+    color: #64748b;
+    cursor: not-allowed;
+}
+
+.cc-sidebar-link-disabled:hover {
+    background: transparent;
+    color: #64748b;
+}
+
+.cc-main-area {
+    min-width: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--cc-bg-main);
+}
+
+.cc-topbar {
+    min-height: 5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.1rem 2rem;
+    background: #1f2937;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+    color: #ffffff;
+}
+
+.cc-topbar-title {
+    font-size: 1rem;
+    font-weight: 900;
+    color: #ffffff;
+}
+
+.cc-topbar-subtitle {
+    margin-top: 0.15rem;
+    font-size: 0.82rem;
+    color: #94a3b8;
+}
+
+.cc-topbar-user {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.cc-user-info {
+    text-align: right;
+}
+
+.cc-user-name {
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.cc-user-role {
+    font-size: 0.78rem;
+    color: #94a3b8;
+}
+
+.cc-logout-button {
+    min-height: 2.35rem;
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.85rem;
+    background: transparent;
+    color: #cbd5e1;
+    border: 1px solid rgba(203, 213, 225, 0.28);
+    font-size: 0.72rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.cc-logout-button:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.35);
+}
+
+.cc-page-heading {
+    padding: 1.25rem 2rem 0;
+}
+
+.cc-main-content {
+    flex: 1;
+    min-width: 0;
+}
+
+/* =========================================================
+   Page structure
+   ========================================================= */
+
+.cc-page-wrapper {
+    padding: 2rem 1.25rem;
+}
+
+.cc-content-container {
+    max-width: 86rem;
+    margin: 0 auto;
+}
+
+.cc-form-container {
+    max-width: 72rem;
+    margin: 0 auto;
+}
 
 .cc-form-wrapper {
     padding: 2rem 1.25rem;
 }
 
+/* =========================================================
+   Cards
+   ========================================================= */
+
 .cc-card {
-    background: #ffffff;
-    border-radius: 0.5rem;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
-    padding: 1.5rem;
+    background: var(--cc-card-bg);
+    border: 1px solid var(--cc-card-border);
+    border-radius: 0.75rem;
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
+    padding: 1.75rem;
+}
+
+.cc-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--cc-card-border);
 }
 
 .cc-title {
-    font-size: 1.125rem;
-    font-weight: 700;
-    color: #111827;
-    margin-bottom: 1.5rem;
+    font-size: 1.75rem;
+    font-weight: 900;
+    color: var(--cc-text-main);
+    margin-bottom: 0.45rem;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
 }
+
+.cc-subtitle {
+    font-size: 1.12rem;
+    font-style: italic;
+    color: var(--cc-text-muted);
+    line-height: 1.55;
+}
+
+/* =========================================================
+   Forms
+   ========================================================= */
 
 .cc-grid {
     display: grid;
@@ -43,36 +310,37 @@
 .cc-field label {
     display: block;
     font-size: 0.875rem;
-    font-weight: 600;
+    font-weight: 700;
     color: #374151;
     margin-bottom: 0.35rem;
 }
 
 .cc-required {
-    color: #dc2626;
+    color: var(--cc-danger);
 }
 
 .cc-input {
     width: 100%;
     border: 1px solid #d1d5db;
-    border-radius: 0.375rem;
-    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    padding: 0.62rem 0.8rem;
     font-size: 0.95rem;
-    color: #111827;
+    color: var(--cc-text-main);
     background-color: #ffffff;
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .cc-input:focus {
     outline: none;
     border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+    box-shadow: 0 0 0 3px var(--cc-focus);
 }
 
 .cc-error {
     margin-top: 0.35rem;
     font-size: 0.875rem;
-    color: #dc2626;
+    color: var(--cc-danger);
 }
 
 .cc-actions {
@@ -81,47 +349,204 @@
     gap: 0.75rem;
     margin-top: 1.75rem;
     padding-top: 1.25rem;
+    border-top: 1px solid var(--cc-card-border);
+}
+
+.cc-form-section {
+    grid-column: 1 / -1;
+    margin-top: 1rem;
+    padding-top: 1.1rem;
+    padding-left: 0.9rem;
     border-top: 1px solid #e5e7eb;
+    border-left: 4px solid #cbd5e1;
+}
+
+.cc-grid > .cc-form-section:first-child {
+    margin-top: 0.25rem;
+}
+
+.cc-form-section-title {
+    font-size: 0.92rem;
+    font-weight: 900;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: #111827;
+    margin-bottom: 0.3rem;
+    line-height: 1.3;
+}
+
+.cc-form-section-note {
+    font-size: 0.95rem;
+    color: var(--cc-text-muted);
+    font-style: italic;
+    line-height: 1.5;
+}
+
+/* =========================================================
+   Buttons
+   ========================================================= */
+
+.cc-btn-primary,
+.cc-btn-secondary,
+.cc-btn-danger,
+.cc-btn-success {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 7.25rem;
+    min-height: 2.45rem;
+    border-radius: 0.5rem;
+    padding: 0.55rem 0.95rem;
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.05s ease;
+    white-space: nowrap;
+}
+
+.cc-btn-primary:active,
+.cc-btn-secondary:active,
+.cc-btn-danger:active,
+.cc-btn-success:active {
+    transform: translateY(1px);
+}
+
+.cc-btn-wide {
+    min-width: 9.75rem;
+}
+
+.cc-btn-form-action {
+    min-width: 13.5rem;
 }
 
 .cc-btn-primary {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #1f2937;
+    background-color: var(--cc-primary);
     color: #ffffff;
-    border: 1px solid #1f2937;
-    border-radius: 0.375rem;
-    padding: 0.65rem 1.15rem;
-    font-size: 0.75rem;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    cursor: pointer;
-    text-decoration: none;
+    border: 1px solid var(--cc-primary);
 }
 
 .cc-btn-primary:hover {
-    background-color: #111827;
+    background-color: var(--cc-primary-hover);
+    border-color: var(--cc-primary-hover);
 }
 
 .cc-btn-secondary {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
     background-color: #ffffff;
     color: #374151;
     border: 1px solid #d1d5db;
-    border-radius: 0.375rem;
-    padding: 0.65rem 1.15rem;
-    font-size: 0.75rem;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    cursor: pointer;
-    text-decoration: none;
 }
 
 .cc-btn-secondary:hover {
     background-color: #f9fafb;
+    border-color: #cbd5e1;
+}
+
+.cc-btn-danger {
+    background-color: var(--cc-danger);
+    color: #ffffff;
+    border: 1px solid var(--cc-danger);
+}
+
+.cc-btn-danger:hover {
+    background-color: var(--cc-danger-hover);
+    border-color: var(--cc-danger-hover);
+}
+
+.cc-btn-success {
+    background-color: var(--cc-success);
+    color: #ffffff;
+    border: 1px solid var(--cc-success);
+}
+
+.cc-btn-success:hover {
+    background-color: var(--cc-success-hover);
+    border-color: var(--cc-success-hover);
+}
+
+/* =========================================================
+   Tables
+   ========================================================= */
+
+.cc-table-wrapper {
+    overflow-x: auto;
+}
+
+.cc-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.cc-table thead th {
+    padding: 0.9rem 1rem;
+    text-align: left;
+    font-size: 0.84rem;
+    font-weight: 900;
+    color: #111827;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    border-bottom: 2px solid #cbd5e1;
+    background-color: #ffffff;
+}
+
+.cc-table tbody td {
+    padding: 0.85rem 1rem;
+    font-size: 0.92rem;
+    color: #1f2937;
+    border-bottom: 1px solid #edf0f3;
+    vertical-align: middle;
+}
+
+.cc-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.cc-table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+/* =========================================================
+   Badges
+   ========================================================= */
+
+.cc-badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    padding: 0.25rem 0.65rem;
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+.cc-badge-active {
+    background-color: var(--cc-success-bg);
+    color: var(--cc-success-text);
+}
+
+.cc-badge-inactive {
+    background-color: var(--cc-inactive-bg);
+    color: var(--cc-inactive-text);
+}
+
+/* =========================================================
+   Alerts and empty states
+   ========================================================= */
+
+.cc-alert-success {
+    margin-bottom: 1rem;
+    border-radius: 0.5rem;
+    background-color: #ecfdf5;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+    padding: 0.85rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.cc-empty-state {
+    color: var(--cc-text-muted);
+    font-size: 0.95rem;
+    padding: 1rem 0;
 }

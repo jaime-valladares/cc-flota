@@ -1,17 +1,28 @@
 <div class="cc-grid">
+
+    <div class="cc-form-section">
+        <div class="cc-form-section-title">
+            Identificación de la empresa
+        </div>
+        <div class="cc-form-section-note">
+            Datos principales que identifican legal y comercialmente a la empresa cliente.
+        </div>
+    </div>
+
     <div class="cc-field">
         <label for="nombre_legal">
             Nombre legal <span class="cc-required">*</span>
         </label>
-        <input type="text"
-               name="nombre_legal"
-               id="nombre_legal"
-               value="{{ old('nombre_legal', $empresa->nombre_legal ?? '') }}"
-               required
-               maxlength="150"
-               class="cc-input">
+        <input
+            id="nombre_legal"
+            name="nombre_legal"
+            type="text"
+            class="cc-input"
+            value="{{ old('nombre_legal', $empresa->nombre_legal ?? '') }}"
+            required
+        >
         @error('nombre_legal')
-            <p class="cc-error">{{ $message }}</p>
+            <div class="cc-error">{{ $message }}</div>
         @enderror
     </div>
 
@@ -19,14 +30,15 @@
         <label for="nombre_comercial">
             Nombre comercial
         </label>
-        <input type="text"
-               name="nombre_comercial"
-               id="nombre_comercial"
-               value="{{ old('nombre_comercial', $empresa->nombre_comercial ?? '') }}"
-               maxlength="150"
-               class="cc-input">
+        <input
+            id="nombre_comercial"
+            name="nombre_comercial"
+            type="text"
+            class="cc-input"
+            value="{{ old('nombre_comercial', $empresa->nombre_comercial ?? '') }}"
+        >
         @error('nombre_comercial')
-            <p class="cc-error">{{ $message }}</p>
+            <div class="cc-error">{{ $message }}</div>
         @enderror
     </div>
 
@@ -34,17 +46,43 @@
         <label for="nit">
             NIT <span class="cc-required">*</span>
         </label>
-        <input type="text"
-               name="nit"
-               id="nit"
-               value="{{ old('nit', $empresa->nit ?? '') }}"
-               required
-               maxlength="17"
-               inputmode="numeric"
-               autocomplete="off"
-               class="cc-input">
+        <input
+            id="nit"
+            name="nit"
+            type="text"
+            class="cc-input"
+            value="{{ old('nit', $empresa->nit ?? '') }}"
+            maxlength="17"
+            required
+        >
         @error('nit')
-            <p class="cc-error">{{ $message }}</p>
+            <div class="cc-error">{{ $message }}</div>
+        @enderror
+    </div>
+
+    <div class="cc-form-section">
+        <div class="cc-form-section-title">
+            Contacto institucional
+        </div>
+        <div class="cc-form-section-note">
+            Información general de comunicación y ubicación de la empresa.
+        </div>
+    </div>
+
+    <div class="cc-field">
+        <label for="correo_empresa">
+            Correo empresa <span class="cc-required">*</span>
+        </label>
+        <input
+            id="correo_empresa"
+            name="correo_empresa"
+            type="email"
+            class="cc-input"
+            value="{{ old('correo_empresa', $empresa->correo_empresa ?? '') }}"
+            required
+        >
+        @error('correo_empresa')
+            <div class="cc-error">{{ $message }}</div>
         @enderror
     </div>
 
@@ -52,16 +90,16 @@
         <label for="telefono_empresa">
             Teléfono empresa
         </label>
-        <input type="text"
-               name="telefono_empresa"
-               id="telefono_empresa"
-               value="{{ old('telefono_empresa', $empresa->telefono_empresa ?? '') }}"
-               maxlength="9"
-               inputmode="numeric"
-               autocomplete="off"
-               class="cc-input">
+        <input
+            id="telefono_empresa"
+            name="telefono_empresa"
+            type="text"
+            class="cc-input"
+            value="{{ old('telefono_empresa', $empresa->telefono_empresa ?? '') }}"
+            maxlength="9"
+        >
         @error('telefono_empresa')
-            <p class="cc-error">{{ $message }}</p>
+            <div class="cc-error">{{ $message }}</div>
         @enderror
     </div>
 
@@ -69,46 +107,41 @@
         <label for="direccion">
             Dirección
         </label>
-        <input type="text"
-               name="direccion"
-               id="direccion"
-               value="{{ old('direccion', $empresa->direccion ?? '') }}"
-               maxlength="255"
-               class="cc-input">
+        <input
+            id="direccion"
+            name="direccion"
+            type="text"
+            class="cc-input"
+            value="{{ old('direccion', $empresa->direccion ?? '') }}"
+        >
         @error('direccion')
-            <p class="cc-error">{{ $message }}</p>
+            <div class="cc-error">{{ $message }}</div>
         @enderror
     </div>
 
-    <div class="cc-field">
-        <label for="correo_empresa">
-            Correo empresa <span class="cc-required">*</span>
-        </label>
-        <input type="email"
-               name="correo_empresa"
-               id="correo_empresa"
-               value="{{ old('correo_empresa', $empresa->correo_empresa ?? '') }}"
-               required
-               maxlength="150"
-               class="cc-input">
-        @error('correo_empresa')
-            <p class="cc-error">{{ $message }}</p>
-        @enderror
+    <div class="cc-form-section">
+        <div class="cc-form-section-title">
+            Punto de contacto operativo
+        </div>
+        <div class="cc-form-section-note">
+            Persona principal de referencia para coordinación administrativa y operativa.
+        </div>
     </div>
 
     <div class="cc-field">
         <label for="poc_nombre">
             Nombre del POC <span class="cc-required">*</span>
         </label>
-        <input type="text"
-               name="poc_nombre"
-               id="poc_nombre"
-               value="{{ old('poc_nombre', $empresa->poc_nombre ?? '') }}"
-               required
-               maxlength="150"
-               class="cc-input">
+        <input
+            id="poc_nombre"
+            name="poc_nombre"
+            type="text"
+            class="cc-input"
+            value="{{ old('poc_nombre', $empresa->poc_nombre ?? '') }}"
+            required
+        >
         @error('poc_nombre')
-            <p class="cc-error">{{ $message }}</p>
+            <div class="cc-error">{{ $message }}</div>
         @enderror
     </div>
 
@@ -116,15 +149,16 @@
         <label for="poc_email">
             Correo del POC <span class="cc-required">*</span>
         </label>
-        <input type="email"
-               name="poc_email"
-               id="poc_email"
-               value="{{ old('poc_email', $empresa->poc_email ?? '') }}"
-               required
-               maxlength="150"
-               class="cc-input">
+        <input
+            id="poc_email"
+            name="poc_email"
+            type="email"
+            class="cc-input"
+            value="{{ old('poc_email', $empresa->poc_email ?? '') }}"
+            required
+        >
         @error('poc_email')
-            <p class="cc-error">{{ $message }}</p>
+            <div class="cc-error">{{ $message }}</div>
         @enderror
     </div>
 
@@ -132,26 +166,27 @@
         <label for="poc_telefono">
             Teléfono del POC
         </label>
-        <input type="text"
-               name="poc_telefono"
-               id="poc_telefono"
-               value="{{ old('poc_telefono', $empresa->poc_telefono ?? '') }}"
-               maxlength="9"
-               inputmode="numeric"
-               autocomplete="off"
-               class="cc-input">
+        <input
+            id="poc_telefono"
+            name="poc_telefono"
+            type="text"
+            class="cc-input"
+            value="{{ old('poc_telefono', $empresa->poc_telefono ?? '') }}"
+            maxlength="9"
+        >
         @error('poc_telefono')
-            <p class="cc-error">{{ $message }}</p>
+            <div class="cc-error">{{ $message }}</div>
         @enderror
     </div>
+
 </div>
 
 <div class="cc-actions">
-    <button type="submit" class="cc-btn-primary">
+    <button type="submit" class="cc-btn-primary cc-btn-form-action">
         {{ $submitLabel }}
     </button>
 
-    <a href="{{ route('empresas.index') }}" class="cc-btn-secondary">
+    <a href="{{ route('empresas.index') }}" class="cc-btn-secondary cc-btn-form-action">
         Cancelar
     </a>
 </div>
@@ -185,27 +220,25 @@
         return `${digits.slice(0, 4)}-${digits.slice(4)}`;
     }
 
-    document.addEventListener('DOMContentLoaded', function () {
-        const nitInput = document.getElementById('nit');
-        const telefonoEmpresaInput = document.getElementById('telefono_empresa');
-        const pocTelefonoInput = document.getElementById('poc_telefono');
+    const nitInput = document.getElementById('nit');
+    const telefonoEmpresaInput = document.getElementById('telefono_empresa');
+    const pocTelefonoInput = document.getElementById('poc_telefono');
 
-        if (nitInput) {
-            nitInput.addEventListener('input', function () {
-                this.value = formatNit(this.value);
-            });
-        }
+    if (nitInput) {
+        nitInput.addEventListener('input', function () {
+            this.value = formatNit(this.value);
+        });
+    }
 
-        if (telefonoEmpresaInput) {
-            telefonoEmpresaInput.addEventListener('input', function () {
-                this.value = formatPhone(this.value);
-            });
-        }
+    if (telefonoEmpresaInput) {
+        telefonoEmpresaInput.addEventListener('input', function () {
+            this.value = formatPhone(this.value);
+        });
+    }
 
-        if (pocTelefonoInput) {
-            pocTelefonoInput.addEventListener('input', function () {
-                this.value = formatPhone(this.value);
-            });
-        }
-    });
+    if (pocTelefonoInput) {
+        pocTelefonoInput.addEventListener('input', function () {
+            this.value = formatPhone(this.value);
+        });
+    }
 </script>
