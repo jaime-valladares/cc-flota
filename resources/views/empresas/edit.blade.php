@@ -1,23 +1,22 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Editar empresa
-            </h2>
-
-            <a href="{{ route('empresas.index') }}"
-               class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
-                Volver al listado
-            </a>
-        </div>
-    </x-slot>
-
-    <div class="cc-form-wrapper">
-        <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
+    <div class="cc-page-wrapper">
+        <div class="cc-content-container">
             <div class="cc-card">
-                <h3 class="cc-title">
-                    Editar empresa cliente
-                </h3>
+
+                <div class="cc-card-header">
+                    <div>
+                        <h3 class="cc-title">
+                            Editar empresa cliente
+                        </h3>
+                        <p class="cc-subtitle">
+                            Actualice los datos generales, fiscales y de contacto de la empresa.
+                        </p>
+                    </div>
+
+                    <a href="{{ route('empresas.index') }}" class="cc-btn-secondary cc-btn-wide">
+                        Volver al listado
+                    </a>
+                </div>
 
                 <form method="POST" action="{{ route('empresas.update', $empresa) }}">
                     @csrf
@@ -28,6 +27,7 @@
                         'submitLabel' => 'Actualizar empresa',
                     ])
                 </form>
+
             </div>
         </div>
     </div>

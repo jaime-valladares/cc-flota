@@ -31,37 +31,47 @@
                 @else
                     <div class="cc-table-wrapper">
                         <table class="cc-table">
+                            
+                            <colgroup>
+                                <col style="width: 22%;">
+                                <col style="width: 17%;">
+                                <col style="width: 16%;">
+                                <col style="width: 12%;">
+                                <col style="width: 12%;">
+                                <col style="width: 21%;">
+                            </colgroup>
+
                             <thead>
                                 <tr>
-                                    <th>Nombre legal</th>
-                                    <th>Nombre comercial</th>
-                                    <th>NIT</th>
-                                    <th>POC</th>
-                                    <th>Estado</th>
-                                    <th>Acciones</th>
+                                    <th class="cc-text-left">Nombre legal</th>
+                                    <th class="cc-text-left">Nombre comercial</th>
+                                    <th class="cc-text-left">NIT</th>
+                                    <th class="cc-text-left">POC</th>
+                                    <th class="cc-text-center">Estado</th>
+                                    <th class="cc-text-center">Acciones</th>
                                 </tr>
                             </thead>
 
                             <tbody>
                                 @foreach ($empresas as $empresa)
                                     <tr>
-                                        <td>
+                                        <td class="cc-text-left cc-cell-truncate">
                                             {{ $empresa->nombre_legal }}
                                         </td>
 
-                                        <td>
+                                        <td class="cc-text-left cc-cell-truncate">
                                             {{ $empresa->nombre_comercial ?? '—' }}
                                         </td>
 
-                                        <td>
+                                        <td class="cc-text-left">
                                             {{ $empresa->nit }}
                                         </td>
 
-                                        <td>
+                                        <td class="cc-text-left cc-cell-truncate">
                                             {{ $empresa->poc_nombre }}
                                         </td>
 
-                                        <td>
+                                        <td class="cc-text-center">
                                             @if ($empresa->estado === 'activa')
                                                 <span class="cc-badge cc-badge-active">
                                                     Activa
@@ -73,8 +83,8 @@
                                             @endif
                                         </td>
 
-                                        <td>
-                                            <div class="flex items-center gap-2">
+                                        <td class="cc-actions-cell">
+                                            <div class="cc-actions-group">
                                                 <a href="{{ route('empresas.edit', $empresa) }}" class="cc-btn-primary">
                                                     Editar
                                                 </a>
