@@ -40,10 +40,28 @@
                         Administración
                     </div>
 
-                    <a href="{{ route('empresas.index') }}"
-                       class="cc-sidebar-link {{ request()->routeIs('empresas.*') ? 'cc-sidebar-link-active' : '' }}">
-                        Empresas
-                    </a>
+                    <div class="cc-sidebar-group">
+                        <div class="cc-sidebar-parent {{ request()->routeIs('empresas.*') ? 'cc-sidebar-parent-active' : '' }}">
+                            Empresas
+                        </div>
+
+                        <div class="cc-sidebar-subnav">
+                            <a href="{{ route('empresas.index') }}"
+                               class="cc-sidebar-sublink {{ request()->routeIs('empresas.index') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Consulta empresas
+                            </a>
+
+                            <a href="{{ route('empresas.administrar') }}"
+                               class="cc-sidebar-sublink {{ request()->routeIs('empresas.administrar') || request()->routeIs('empresas.show') || request()->routeIs('empresas.edit') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Administrar empresa
+                            </a>
+
+                            <a href="{{ route('empresas.create') }}"
+                               class="cc-sidebar-sublink {{ request()->routeIs('empresas.create') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Nueva empresa
+                            </a>
+                        </div>
+                    </div>
 
                     <span class="cc-sidebar-link cc-sidebar-link-disabled">
                         Usuarios
@@ -108,18 +126,12 @@
                         <div class="cc-topbar-title">
                             Consola administrativa
                         </div>
-                        <div class="cc-topbar-subtitle">
-                            Gestión interna de Diesel Cop
-                        </div>
                     </div>
 
                     <div class="cc-topbar-user">
                         <div class="cc-user-info">
                             <div class="cc-user-name">
                                 {{ Auth::user()->name }}
-                            </div>
-                            <div class="cc-user-role">
-                                Administrador
                             </div>
                         </div>
 

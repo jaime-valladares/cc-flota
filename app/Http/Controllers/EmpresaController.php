@@ -9,14 +9,260 @@ use Illuminate\Support\Facades\Auth;
 class EmpresaController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display the informational company consultation panel.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $empresas = Empresa::orderBy('nombre_legal')->get();
+        $validated = $request->validate([
+            'nombre_comercial' => ['nullable', 'string', 'max:150'],
+            'nit' => [
+                'nullable',
+                'string',
+                'max:17',
+                'regex:/^\d{4}-\d{6}-\d{3}-\d{1}$/',
+            ],
+            'estado' => ['nullable', 'in:activa,inactiva'],
+        ], [
+            'nit.regex' => 'El NIT debe tener el formato 0000-000000-000-0.',
+            'estado.in' => 'El estado seleccionado no es válido.',
+        ]);
 
-        return view('empresas.index', compact('empresas'));
+        $nombreComercial = trim((string) ($validated['nombre_comercial'] ?? ''));
+        $nit = trim((string) ($validated['nit'] ?? ''));
+        $estado = $validated['estado'] ?? null;
 
+        $hayFiltros = $nombreComercial !== ''
+            || $nit !== ''
+            || in_array($estado, ['activa', 'inactiva'], true);
+
+        $query = Empresa::query();
+
+        if ($hayFiltros) {
+            if ($nombreComercial !== '') {
+                $query->where('nombre_comercial', 'like', '%' . $nombreComercial . '%');
+            }
+
+            if ($nit !== '') {
+                $query->where('nit', $nit);
+            }
+
+            if (in_array($estado, ['activa', 'inactiva'], true)) {
+                $query->where('estado', $estado);
+            }
+        } else {
+            $query->whereRaw('1 = 0');
+        }
+
+        $empresas = $query
+            ->orderBy('nombre_legal')
+            ->paginate(10)
+            ->withQueryString();
+
+        $totalEmpresas = Empresa::count();
+        $empresasActivas = Empresa::where('estado', 'activa')->count();
+        $empresasInactivas = Empresa::where('estado', 'inactiva')->count();
+
+        return view('empresas.index', compact(
+            'empresas',
+            'nombreComercial',
+            'nit',
+            'estado',
+            'hayFiltros',
+            'totalEmpresas',
+            'empresasActivas',
+            'empresasInactivas'
+        ));
+    }
+
+    /**
+     * Display the standalone informational company consultation panel.
+     */
+    public function consultaVentana(Request $request)
+    {
+        $validated = $request->validate([
+            'nombre_comercial' => ['nullable', 'string', 'max:150'],
+            'nit' => [
+                'nullable',
+                'string',
+                'max:17',
+                'regex:/^\d{4}-\d{6}-\d{3}-\d{1}$/',
+            ],
+            'estado' => ['nullable', 'in:activa,inactiva'],
+        ], [
+            'nit.regex' => 'El NIT debe tener el formato 0000-000000-000-0.',
+            'estado.in' => 'El estado seleccionado no es válido.',
+        ]);
+
+        $nombreComercial = trim((string) ($validated['nombre_comercial'] ?? ''));
+        $nit = trim((string) ($validated['nit'] ?? ''));
+        $estado = $validated['estado'] ?? null;
+
+        $hayFiltros = $nombreComercial !== ''
+            || $nit !== ''
+            || in_array($estado, ['activa', 'inactiva'], true);
+
+        $query = Empresa::query();
+
+        if ($hayFiltros) {
+            if ($nombreComercial !== '') {
+                $query->where('nombre_comercial', 'like', '%' . $nombreComercial . '%');
+            }
+
+            if ($nit !== '') {
+                $query->where('nit', $nit);
+            }
+
+            if (in_array($estado, ['activa', 'inactiva'], true)) {
+                $query->where('estado', $estado);
+            }
+        } else {
+            $query->whereRaw('1 = 0');
+        }
+
+        $empresas = $query
+            ->orderBy('nombre_legal')
+            ->paginate(10)
+            ->withQueryString();
+
+        $totalEmpresas = Empresa::count();
+        $empresasActivas = Empresa::where('estado', 'activa')->count();
+        $empresasInactivas = Empresa::where('estado', 'inactiva')->count();
+
+        return view('empresas.index-ventana', compact(
+            'empresas',
+            'nombreComercial',
+            'nit',
+            'estado',
+            'hayFiltros',
+            'totalEmpresas',
+            'empresasActivas',
+            'empresasInactivas'
+        ));
+    }
+
+    /**
+     * Display the administrative company search panel.
+     */
+    public function administrar(Request $request)
+    {
+        $validated = $request->validate([
+            'nombre_comercial' => ['nullable', 'string', 'max:150'],
+            'nit' => [
+                'nullable',
+                'string',
+                'max:17',
+                'regex:/^\d{4}-\d{6}-\d{3}-\d{1}$/',
+            ],
+            'estado' => ['nullable', 'in:activa,inactiva'],
+        ], [
+            'nit.regex' => 'El NIT debe tener el formato 0000-000000-000-0.',
+            'estado.in' => 'El estado seleccionado no es válido.',
+        ]);
+
+        $nombreComercial = trim((string) ($validated['nombre_comercial'] ?? ''));
+        $nit = trim((string) ($validated['nit'] ?? ''));
+        $estado = $validated['estado'] ?? null;
+
+        $hayFiltros = $nombreComercial !== ''
+            || $nit !== ''
+            || in_array($estado, ['activa', 'inactiva'], true);
+
+        $query = Empresa::query();
+
+        if ($hayFiltros) {
+            if ($nombreComercial !== '') {
+                $query->where('nombre_comercial', 'like', '%' . $nombreComercial . '%');
+            }
+
+            if ($nit !== '') {
+                $query->where('nit', $nit);
+            }
+
+            if (in_array($estado, ['activa', 'inactiva'], true)) {
+                $query->where('estado', $estado);
+            }
+        } else {
+            $query->whereRaw('1 = 0');
+        }
+
+        $empresas = $query
+            ->orderBy('nombre_legal')
+            ->paginate(10)
+            ->withQueryString();
+
+        $totalEmpresas = Empresa::count();
+        $empresasActivas = Empresa::where('estado', 'activa')->count();
+        $empresasInactivas = Empresa::where('estado', 'inactiva')->count();
+
+        return view('empresas.administrar', compact(
+            'empresas',
+            'nombreComercial',
+            'nit',
+            'estado',
+            'hayFiltros',
+            'totalEmpresas',
+            'empresasActivas',
+            'empresasInactivas'
+        ));
+    }
+
+    /**
+     * Display the standalone administrative company search panel.
+     */
+    public function administrarVentana(Request $request)
+    {
+        $validated = $request->validate([
+            'nombre_comercial' => ['nullable', 'string', 'max:150'],
+            'nit' => [
+                'nullable',
+                'string',
+                'max:17',
+                'regex:/^\d{4}-\d{6}-\d{3}-\d{1}$/',
+            ],
+            'estado' => ['nullable', 'in:activa,inactiva'],
+        ], [
+            'nit.regex' => 'El NIT debe tener el formato 0000-000000-000-0.',
+            'estado.in' => 'El estado seleccionado no es válido.',
+        ]);
+
+        $nombreComercial = trim((string) ($validated['nombre_comercial'] ?? ''));
+        $nit = trim((string) ($validated['nit'] ?? ''));
+        $estado = $validated['estado'] ?? null;
+
+        $hayFiltros = $nombreComercial !== ''
+            || $nit !== ''
+            || in_array($estado, ['activa', 'inactiva'], true);
+
+        $query = Empresa::query();
+
+        if ($hayFiltros) {
+            if ($nombreComercial !== '') {
+                $query->where('nombre_comercial', 'like', '%' . $nombreComercial . '%');
+            }
+
+            if ($nit !== '') {
+                $query->where('nit', $nit);
+            }
+
+            if (in_array($estado, ['activa', 'inactiva'], true)) {
+                $query->where('estado', $estado);
+            }
+        } else {
+            $query->whereRaw('1 = 0');
+        }
+
+        $empresas = $query
+            ->orderBy('nombre_legal')
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('empresas.administrar-ventana', compact(
+            'empresas',
+            'nombreComercial',
+            'nit',
+            'estado',
+            'hayFiltros'
+        ));
     }
 
     /**
@@ -25,6 +271,14 @@ class EmpresaController extends Controller
     public function create()
     {
         return view('empresas.create');
+    }
+
+    /**
+     * Show the standalone form for creating a new company.
+     */
+    public function createVentana()
+    {
+        return view('empresas.create-ventana');
     }
 
     /**
@@ -83,9 +337,9 @@ class EmpresaController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Empresa $empresa)
     {
-        //
+        return view('empresas.show', compact('empresa'));
     }
 
     /**
@@ -99,7 +353,6 @@ class EmpresaController extends Controller
     /**
      * Update the specified resource in storage.
      */
-
     public function update(Request $request, Empresa $empresa)
     {
         $validated = $request->validate([
@@ -145,17 +398,22 @@ class EmpresaController extends Controller
         $empresa->update($validated);
 
         return redirect()
-            ->route('empresas.index')
+            ->route('empresas.show', $empresa)
             ->with('success', 'Empresa actualizada correctamente.');
     }
-
 
     public function inactivar(Request $request, Empresa $empresa)
     {
         $validated = $request->validate([
-            'motivo_inactivacion' => ['required', 'string', 'max:255'],
+            'motivo_inactivacion' => [
+                'required',
+                'string',
+                'max:255',
+                'in:Falta de pago,No continúa como cliente,Contrato finalizado,Empresa duplicada,Datos incorrectos en registro,Solicitud del cliente,Suspensión administrativa,Otro',
+            ],
         ], [
-            'motivo_inactivacion.required' => 'Debe ingresar el motivo de inactivación.',
+            'motivo_inactivacion.required' => 'Debe seleccionar el motivo de inactivación.',
+            'motivo_inactivacion.in' => 'El motivo de inactivación seleccionado no es válido.',
             'motivo_inactivacion.max' => 'El motivo de inactivación no debe exceder 255 caracteres.',
         ]);
 
@@ -169,7 +427,7 @@ class EmpresaController extends Controller
         ]);
 
         return redirect()
-            ->route('empresas.index')
+            ->route('empresas.show', $empresa)
             ->with('success', 'Empresa inactivada correctamente.');
     }
 
@@ -185,7 +443,7 @@ class EmpresaController extends Controller
         ]);
 
         return redirect()
-            ->route('empresas.index')
+            ->route('empresas.show', $empresa)
             ->with('success', 'Empresa reactivada correctamente.');
     }
 

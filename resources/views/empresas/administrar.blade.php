@@ -6,15 +6,15 @@
                 <div class="cc-card-header">
                     <div>
                         <h3 class="cc-title">
-                            Consulta de empresas
+                            Administrar empresa
                         </h3>
                         <p class="cc-subtitle">
-                            Consulte información general de las empresas cliente registradas en CC-Flota.
+                            Localice una empresa cliente para consultar su ficha, editar sus datos o gestionar su estado administrativo.
                         </p>
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <a href="{{ route('empresas.consulta.ventana') }}"
+                        <a href="{{ route('empresas.administrar.ventana') }}"
                            target="_blank"
                            rel="noopener noreferrer"
                            class="cc-btn-secondary cc-btn-wide">
@@ -29,37 +29,18 @@
                     </div>
                 @endif
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div class="border border-gray-200 rounded-lg p-4 bg-white">
-                        <div class="text-sm font-bold text-gray-500 uppercase tracking-wider">
-                            Total empresas
-                        </div>
-                        <div class="mt-2 text-3xl font-black text-gray-900">
-                            {{ $totalEmpresas }}
-                        </div>
-                    </div>
+                <form method="GET" action="{{ route('empresas.administrar') }}" class="mb-6">
+                    <div class="border border-gray-200 rounded-lg p-5 bg-gray-50">
 
-                    <div class="border border-gray-200 rounded-lg p-4 bg-white">
-                        <div class="text-sm font-bold text-gray-500 uppercase tracking-wider">
-                            Activas
+                        <div class="cc-form-section" style="margin-top: 0; margin-bottom: 1.25rem;">
+                            <div class="cc-form-section-title">
+                                Búsqueda administrativa
+                            </div>
+                            <div class="cc-form-section-note">
+                                Ingrese criterios para localizar la empresa que desea administrar.
+                            </div>
                         </div>
-                        <div class="mt-2 text-3xl font-black text-green-700">
-                            {{ $empresasActivas }}
-                        </div>
-                    </div>
 
-                    <div class="border border-gray-200 rounded-lg p-4 bg-white">
-                        <div class="text-sm font-bold text-gray-500 uppercase tracking-wider">
-                            Inactivas
-                        </div>
-                        <div class="mt-2 text-3xl font-black text-red-800">
-                            {{ $empresasInactivas }}
-                        </div>
-                    </div>
-                </div>
-
-                <form method="GET" action="{{ route('empresas.index') }}" class="mb-6">
-                    <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
                         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
 
                             <div class="lg:col-span-4 cc-field">
@@ -123,17 +104,11 @@
                                     Buscar
                                 </button>
 
-                                <a href="{{ route('empresas.index') }}" class="cc-btn-secondary">
+                                <a href="{{ route('empresas.administrar') }}" class="cc-btn-secondary">
                                     Resetear
                                 </a>
                             </div>
 
-                        </div>
-
-                        <div class="mt-4 border-t border-gray-200 pt-4">
-                            <p class="text-sm text-gray-500 italic">
-                                Use al menos un criterio de búsqueda para mostrar empresas.
-                            </p>
                         </div>
                     </div>
                 </form>
@@ -141,18 +116,18 @@
                 <div class="flex items-center justify-between mb-4">
                     <div>
                         <h4 class="text-base font-black text-gray-900">
-                            Resultados
+                            Resultado administrativo
                         </h4>
 
                         <p class="text-sm text-gray-500 italic">
                             @if (! $hayFiltros)
-                                Ingrese un nombre comercial, NIT o seleccione un estado para consultar empresas.
+                                Ingrese un nombre comercial, NIT o seleccione un estado para buscar una empresa.
                             @elseif ($empresas->total() === 0)
                                 No se encontraron empresas con los criterios seleccionados.
                             @elseif ($empresas->total() === 1)
-                                Se encontró 1 empresa.
+                                Se encontró 1 empresa para administrar.
                             @else
-                                Se encontraron {{ $empresas->total() }} empresas.
+                                Se encontraron {{ $empresas->total() }} empresas para administrar.
                             @endif
                         </p>
                     </div>
@@ -172,10 +147,10 @@
                 @if (! $hayFiltros)
                     <div class="border border-dashed border-gray-300 rounded-lg p-6 bg-gray-50">
                         <h5 class="text-base font-black text-gray-900">
-                            Consulta pendiente
+                            Búsqueda pendiente
                         </h5>
                         <p class="mt-1 text-sm text-gray-500 italic">
-                            La tabla permanecerá vacía hasta que realice una búsqueda o filtre por empresas activas o inactivas.
+                            Los resultados permanecerán vacíos hasta que localice una empresa por nombre comercial, NIT o estado.
                         </p>
                     </div>
                 @elseif ($empresas->isEmpty())
@@ -191,11 +166,11 @@
                     <div class="cc-table-wrapper">
                         <table class="cc-table">
                             <colgroup>
-                                <col style="width: 27%;">
+                                <col style="width: 28%;">
                                 <col style="width: 16%;">
-                                <col style="width: 17%;">
-                                <col style="width: 14%;">
-                                <col style="width: 26%;">
+                                <col style="width: 16%;">
+                                <col style="width: 12%;">
+                                <col style="width: 28%;">
                             </colgroup>
 
                             <thead>
@@ -203,8 +178,8 @@
                                     <th class="cc-text-left">Nombre legal</th>
                                     <th class="cc-text-left">NIT</th>
                                     <th class="cc-text-left">Contacto</th>
-                                    <th class="cc-text-left">Teléfono</th>
-                                    <th class="cc-text-left">Correo empresa</th>
+                                    <th class="cc-text-center">Estado</th>
+                                    <th class="cc-text-center">Acciones</th>
                                 </tr>
                             </thead>
 
@@ -223,12 +198,28 @@
                                             {{ $empresa->poc_nombre }}
                                         </td>
 
-                                        <td class="cc-text-left">
-                                            {{ $empresa->poc_telefono ?? '—' }}
+                                        <td class="cc-text-center">
+                                            @if ($empresa->estado === 'activa')
+                                                <span class="cc-badge cc-badge-active">
+                                                    Activa
+                                                </span>
+                                            @else
+                                                <span class="cc-badge cc-badge-inactive">
+                                                    Inactiva
+                                                </span>
+                                            @endif
                                         </td>
 
-                                        <td class="cc-text-left cc-cell-truncate">
-                                            {{ $empresa->correo_empresa }}
+                                        <td class="cc-actions-cell">
+                                            <div class="cc-actions-group">
+                                                <a href="{{ route('empresas.show', $empresa) }}" class="cc-btn-primary">
+                                                    Ver ficha
+                                                </a>
+
+                                                <a href="{{ route('empresas.edit', $empresa) }}" class="cc-btn-secondary">
+                                                    Editar
+                                                </a>
+                                            </div>
                                         </td>
                                     </tr>
                                 @endforeach

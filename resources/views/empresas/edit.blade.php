@@ -1,6 +1,6 @@
 <x-app-layout>
     <div class="cc-page-wrapper">
-        <div class="cc-content-container">
+        <div class="cc-form-container">
             <div class="cc-card">
 
                 <div class="cc-card-header">
@@ -9,13 +9,15 @@
                             Editar empresa cliente
                         </h3>
                         <p class="cc-subtitle">
-                            Actualice los datos generales, fiscales y de contacto de la empresa.
+                            Actualice los datos legales, fiscales y de contacto de la empresa cliente.
                         </p>
                     </div>
 
-                    <a href="{{ route('empresas.index') }}" class="cc-btn-secondary cc-btn-wide">
-                        Volver al listado
-                    </a>
+                    <div class="flex items-center gap-3">
+                        <a href="{{ route('empresas.show', $empresa) }}" class="cc-btn-secondary cc-btn-wide">
+                            Volver a ficha
+                        </a>
+                    </div>
                 </div>
 
                 <form method="POST" action="{{ route('empresas.update', $empresa) }}">

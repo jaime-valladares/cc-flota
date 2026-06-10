@@ -53,6 +53,7 @@
             class="cc-input"
             value="{{ old('nit', $empresa->nit ?? '') }}"
             maxlength="17"
+            placeholder="0000-000000-000-0"
             required
         >
         @error('nit')
@@ -97,6 +98,7 @@
             class="cc-input"
             value="{{ old('telefono_empresa', $empresa->telefono_empresa ?? '') }}"
             maxlength="9"
+            placeholder="0000-0000"
         >
         @error('telefono_empresa')
             <div class="cc-error">{{ $message }}</div>
@@ -173,6 +175,7 @@
             class="cc-input"
             value="{{ old('poc_telefono', $empresa->poc_telefono ?? '') }}"
             maxlength="9"
+            placeholder="0000-0000"
         >
         @error('poc_telefono')
             <div class="cc-error">{{ $message }}</div>
@@ -186,9 +189,15 @@
         {{ $submitLabel }}
     </button>
 
-    <a href="{{ route('empresas.index') }}" class="cc-btn-secondary cc-btn-form-action">
-        Cancelar
-    </a>
+    @if ($empresa)
+        <a href="{{ route('empresas.show', $empresa) }}" class="cc-btn-secondary cc-btn-form-action">
+            Cancelar
+        </a>
+    @else
+        <a href="{{ route('empresas.index') }}" class="cc-btn-secondary cc-btn-form-action">
+            Cancelar
+        </a>
+    @endif
 </div>
 
 <script>

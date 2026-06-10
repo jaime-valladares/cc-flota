@@ -9,13 +9,22 @@
                             Registro de empresa cliente
                         </h3>
                         <p class="cc-subtitle">
-                            Complete los datos generales, fiscales y de contacto de la empresa.
+                            Complete los datos legales, fiscales y de contacto de la empresa cliente.
                         </p>
                     </div>
 
-                    <a href="{{ route('empresas.index') }}" class="cc-btn-secondary cc-btn-wide">
-                        Volver al listado
-                    </a>
+                    <div class="flex items-center gap-3">
+                        <a href="{{ route('empresas.create.ventana') }}"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="cc-btn-secondary cc-btn-wide">
+                            Abrir en nueva pestaña
+                        </a>
+
+                        <a href="{{ route('empresas.index') }}" class="cc-btn-secondary cc-btn-wide">
+                            Volver a consulta
+                        </a>
+                    </div>
                 </div>
 
                 <form method="POST" action="{{ route('empresas.store') }}">
