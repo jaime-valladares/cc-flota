@@ -13,65 +13,9 @@ class EmpresaController extends Controller
      */
     public function index(Request $request)
     {
-        $validated = $request->validate([
-            'nombre_comercial' => ['nullable', 'string', 'max:150'],
-            'nit' => [
-                'nullable',
-                'string',
-                'max:17',
-                'regex:/^\d{4}-\d{6}-\d{3}-\d{1}$/',
-            ],
-            'estado' => ['nullable', 'in:activa,inactiva'],
-        ], [
-            'nit.regex' => 'El NIT debe tener el formato 0000-000000-000-0.',
-            'estado.in' => 'El estado seleccionado no es válido.',
-        ]);
+        $data = $this->prepararConsultaEmpresas($request);
 
-        $nombreComercial = trim((string) ($validated['nombre_comercial'] ?? ''));
-        $nit = trim((string) ($validated['nit'] ?? ''));
-        $estado = $validated['estado'] ?? null;
-
-        $hayFiltros = $nombreComercial !== ''
-            || $nit !== ''
-            || in_array($estado, ['activa', 'inactiva'], true);
-
-        $query = Empresa::query();
-
-        if ($hayFiltros) {
-            if ($nombreComercial !== '') {
-                $query->where('nombre_comercial', 'like', '%' . $nombreComercial . '%');
-            }
-
-            if ($nit !== '') {
-                $query->where('nit', $nit);
-            }
-
-            if (in_array($estado, ['activa', 'inactiva'], true)) {
-                $query->where('estado', $estado);
-            }
-        } else {
-            $query->whereRaw('1 = 0');
-        }
-
-        $empresas = $query
-            ->orderBy('nombre_legal')
-            ->paginate(10)
-            ->withQueryString();
-
-        $totalEmpresas = Empresa::count();
-        $empresasActivas = Empresa::where('estado', 'activa')->count();
-        $empresasInactivas = Empresa::where('estado', 'inactiva')->count();
-
-        return view('empresas.index', compact(
-            'empresas',
-            'nombreComercial',
-            'nit',
-            'estado',
-            'hayFiltros',
-            'totalEmpresas',
-            'empresasActivas',
-            'empresasInactivas'
-        ));
+        return view('empresas.index', $data);
     }
 
     /**
@@ -79,65 +23,9 @@ class EmpresaController extends Controller
      */
     public function consultaVentana(Request $request)
     {
-        $validated = $request->validate([
-            'nombre_comercial' => ['nullable', 'string', 'max:150'],
-            'nit' => [
-                'nullable',
-                'string',
-                'max:17',
-                'regex:/^\d{4}-\d{6}-\d{3}-\d{1}$/',
-            ],
-            'estado' => ['nullable', 'in:activa,inactiva'],
-        ], [
-            'nit.regex' => 'El NIT debe tener el formato 0000-000000-000-0.',
-            'estado.in' => 'El estado seleccionado no es válido.',
-        ]);
+        $data = $this->prepararConsultaEmpresas($request);
 
-        $nombreComercial = trim((string) ($validated['nombre_comercial'] ?? ''));
-        $nit = trim((string) ($validated['nit'] ?? ''));
-        $estado = $validated['estado'] ?? null;
-
-        $hayFiltros = $nombreComercial !== ''
-            || $nit !== ''
-            || in_array($estado, ['activa', 'inactiva'], true);
-
-        $query = Empresa::query();
-
-        if ($hayFiltros) {
-            if ($nombreComercial !== '') {
-                $query->where('nombre_comercial', 'like', '%' . $nombreComercial . '%');
-            }
-
-            if ($nit !== '') {
-                $query->where('nit', $nit);
-            }
-
-            if (in_array($estado, ['activa', 'inactiva'], true)) {
-                $query->where('estado', $estado);
-            }
-        } else {
-            $query->whereRaw('1 = 0');
-        }
-
-        $empresas = $query
-            ->orderBy('nombre_legal')
-            ->paginate(10)
-            ->withQueryString();
-
-        $totalEmpresas = Empresa::count();
-        $empresasActivas = Empresa::where('estado', 'activa')->count();
-        $empresasInactivas = Empresa::where('estado', 'inactiva')->count();
-
-        return view('empresas.index-ventana', compact(
-            'empresas',
-            'nombreComercial',
-            'nit',
-            'estado',
-            'hayFiltros',
-            'totalEmpresas',
-            'empresasActivas',
-            'empresasInactivas'
-        ));
+        return view('empresas.index-ventana', $data);
     }
 
     /**
@@ -145,65 +33,9 @@ class EmpresaController extends Controller
      */
     public function administrar(Request $request)
     {
-        $validated = $request->validate([
-            'nombre_comercial' => ['nullable', 'string', 'max:150'],
-            'nit' => [
-                'nullable',
-                'string',
-                'max:17',
-                'regex:/^\d{4}-\d{6}-\d{3}-\d{1}$/',
-            ],
-            'estado' => ['nullable', 'in:activa,inactiva'],
-        ], [
-            'nit.regex' => 'El NIT debe tener el formato 0000-000000-000-0.',
-            'estado.in' => 'El estado seleccionado no es válido.',
-        ]);
+        $data = $this->prepararConsultaEmpresas($request);
 
-        $nombreComercial = trim((string) ($validated['nombre_comercial'] ?? ''));
-        $nit = trim((string) ($validated['nit'] ?? ''));
-        $estado = $validated['estado'] ?? null;
-
-        $hayFiltros = $nombreComercial !== ''
-            || $nit !== ''
-            || in_array($estado, ['activa', 'inactiva'], true);
-
-        $query = Empresa::query();
-
-        if ($hayFiltros) {
-            if ($nombreComercial !== '') {
-                $query->where('nombre_comercial', 'like', '%' . $nombreComercial . '%');
-            }
-
-            if ($nit !== '') {
-                $query->where('nit', $nit);
-            }
-
-            if (in_array($estado, ['activa', 'inactiva'], true)) {
-                $query->where('estado', $estado);
-            }
-        } else {
-            $query->whereRaw('1 = 0');
-        }
-
-        $empresas = $query
-            ->orderBy('nombre_legal')
-            ->paginate(10)
-            ->withQueryString();
-
-        $totalEmpresas = Empresa::count();
-        $empresasActivas = Empresa::where('estado', 'activa')->count();
-        $empresasInactivas = Empresa::where('estado', 'inactiva')->count();
-
-        return view('empresas.administrar', compact(
-            'empresas',
-            'nombreComercial',
-            'nit',
-            'estado',
-            'hayFiltros',
-            'totalEmpresas',
-            'empresasActivas',
-            'empresasInactivas'
-        ));
+        return view('empresas.administrar', $data);
     }
 
     /**
@@ -211,8 +43,25 @@ class EmpresaController extends Controller
      */
     public function administrarVentana(Request $request)
     {
+        $data = $this->prepararConsultaEmpresas($request);
+
+        return view('empresas.administrar-ventana', $data);
+    }
+
+    /**
+     * Prepare company query data for normal and standalone company screens.
+     */
+    private function prepararConsultaEmpresas(Request $request): array
+    {
+        $user = Auth::user();
+
+        $esUsuarioDieselCop = is_null($user->empresa_id);
+        $empresaUsuario = $esUsuarioDieselCop
+            ? null
+            : Empresa::find($user->empresa_id);
+
         $validated = $request->validate([
-            'nombre_comercial' => ['nullable', 'string', 'max:150'],
+            'empresa_id' => ['nullable', 'integer', 'exists:empresas,id'],
             'nit' => [
                 'nullable',
                 'string',
@@ -221,23 +70,38 @@ class EmpresaController extends Controller
             ],
             'estado' => ['nullable', 'in:activa,inactiva'],
         ], [
+            'empresa_id.exists' => 'La empresa seleccionada no es válida.',
             'nit.regex' => 'El NIT debe tener el formato 0000-000000-000-0.',
             'estado.in' => 'El estado seleccionado no es válido.',
         ]);
 
-        $nombreComercial = trim((string) ($validated['nombre_comercial'] ?? ''));
+        $empresaId = $validated['empresa_id'] ?? null;
         $nit = trim((string) ($validated['nit'] ?? ''));
         $estado = $validated['estado'] ?? null;
 
-        $hayFiltros = $nombreComercial !== ''
-            || $nit !== ''
-            || in_array($estado, ['activa', 'inactiva'], true);
+        /*
+        |--------------------------------------------------------------------------
+        | Alcance multiempresa
+        |--------------------------------------------------------------------------
+        |
+        | Diesel Cop puede consultar todas o una empresa específica.
+        | Un usuario de empresa siempre queda limitado a su propia empresa,
+        | sin importar lo que llegue en la URL.
+        |
+        */
+
+        if (! $esUsuarioDieselCop) {
+            $empresaId = $user->empresa_id;
+        }
+
+        $hayFiltros = ! $esUsuarioDieselCop
+            || $request->hasAny(['empresa_id', 'nit', 'estado']);
 
         $query = Empresa::query();
 
         if ($hayFiltros) {
-            if ($nombreComercial !== '') {
-                $query->where('nombre_comercial', 'like', '%' . $nombreComercial . '%');
+            if ($empresaId) {
+                $query->where('id', $empresaId);
             }
 
             if ($nit !== '') {
@@ -256,13 +120,43 @@ class EmpresaController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return view('empresas.administrar-ventana', compact(
-            'empresas',
-            'nombreComercial',
-            'nit',
-            'estado',
-            'hayFiltros'
-        ));
+        $totalEmpresas = $esUsuarioDieselCop
+            ? Empresa::count()
+            : Empresa::where('id', $user->empresa_id)->count();
+
+        $empresasActivas = $esUsuarioDieselCop
+            ? Empresa::where('estado', 'activa')->count()
+            : Empresa::where('id', $user->empresa_id)->where('estado', 'activa')->count();
+
+        $empresasInactivas = $esUsuarioDieselCop
+            ? Empresa::where('estado', 'inactiva')->count()
+            : Empresa::where('id', $user->empresa_id)->where('estado', 'inactiva')->count();
+
+        $empresasSelector = $esUsuarioDieselCop
+            ? Empresa::orderBy('nombre_comercial')
+                ->orderBy('nombre_legal')
+                ->get()
+            : collect([$empresaUsuario])->filter();
+
+        return [
+            'empresas' => $empresas,
+            'empresasSelector' => $empresasSelector,
+            'empresaId' => $empresaId,
+            'nit' => $nit,
+            'estado' => $estado,
+            'hayFiltros' => $hayFiltros,
+            'totalEmpresas' => $totalEmpresas,
+            'empresasActivas' => $empresasActivas,
+            'empresasInactivas' => $empresasInactivas,
+            'esUsuarioDieselCop' => $esUsuarioDieselCop,
+            'empresaUsuario' => $empresaUsuario,
+
+            /*
+             * Variable conservada temporalmente para evitar errores si alguna vista
+             * antigua todavía la referencia durante la transición.
+             */
+            'nombreComercial' => '',
+        ];
     }
 
     /**
@@ -339,6 +233,8 @@ class EmpresaController extends Controller
      */
     public function show(Empresa $empresa)
     {
+        $this->autorizarAccesoEmpresa($empresa);
+
         return view('empresas.show', compact('empresa'));
     }
 
@@ -347,6 +243,8 @@ class EmpresaController extends Controller
      */
     public function edit(Empresa $empresa)
     {
+        $this->autorizarAccesoEmpresa($empresa);
+
         return view('empresas.edit', compact('empresa'));
     }
 
@@ -355,6 +253,8 @@ class EmpresaController extends Controller
      */
     public function update(Request $request, Empresa $empresa)
     {
+        $this->autorizarAccesoEmpresa($empresa);
+
         $validated = $request->validate([
             'nombre_legal' => ['required', 'string', 'max:150'],
             'nombre_comercial' => ['nullable', 'string', 'max:150'],
@@ -404,6 +304,8 @@ class EmpresaController extends Controller
 
     public function inactivar(Request $request, Empresa $empresa)
     {
+        $this->autorizarAccesoEmpresa($empresa);
+
         $validated = $request->validate([
             'motivo_inactivacion' => [
                 'required',
@@ -433,6 +335,8 @@ class EmpresaController extends Controller
 
     public function reactivar(Empresa $empresa)
     {
+        $this->autorizarAccesoEmpresa($empresa);
+
         $empresa->update([
             'estado' => 'activa',
             'fecha_inactivacion' => null,
@@ -448,10 +352,14 @@ class EmpresaController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Prevent company users from accessing other companies.
      */
-    public function destroy(string $id)
+    private function autorizarAccesoEmpresa(Empresa $empresa): void
     {
-        //
+        $user = Auth::user();
+
+        if (! is_null($user->empresa_id) && (int) $user->empresa_id !== (int) $empresa->id) {
+            abort(403, 'No tiene autorización para acceder a esta empresa.');
+        }
     }
 }

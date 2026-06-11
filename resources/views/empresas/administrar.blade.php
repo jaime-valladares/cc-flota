@@ -44,17 +44,35 @@
                         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
 
                             <div class="lg:col-span-4 cc-field">
-                                <label for="nombre_comercial">
-                                    Nombre comercial
+                                <label for="empresa_id">
+                                    Empresa
                                 </label>
-                                <input
-                                    id="nombre_comercial"
-                                    name="nombre_comercial"
-                                    type="text"
-                                    class="cc-input"
-                                    value="{{ $nombreComercial }}"
-                                    placeholder="Buscar por nombre comercial"
-                                >
+
+                                @if ($esUsuarioDieselCop)
+                                    <select id="empresa_id" name="empresa_id" class="cc-input">
+                                        <option value="">Todas</option>
+
+                                        @foreach ($empresasSelector as $empresaOpcion)
+                                            <option value="{{ $empresaOpcion->id }}" @selected((string) $empresaId === (string) $empresaOpcion->id)>
+                                                {{ $empresaOpcion->nombre_comercial ?: $empresaOpcion->nombre_legal }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                @else
+                                    <select id="empresa_id" name="empresa_id" class="cc-input" disabled>
+                                        @foreach ($empresasSelector as $empresaOpcion)
+                                            <option value="{{ $empresaOpcion->id }}" selected>
+                                                {{ $empresaOpcion->nombre_comercial ?: $empresaOpcion->nombre_legal }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                @endif
+
+                                @error('empresa_id')
+                                    <div class="cc-error">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
                             </div>
 
                             <div class="lg:col-span-3 cc-field">
@@ -110,6 +128,16 @@
                             </div>
 
                         </div>
+
+                        <div class="mt-4 border-t border-gray-200 pt-4">
+                            <p class="text-sm text-gray-500 italic">
+                                @if ($esUsuarioDieselCop)
+                                    Seleccione una empresa, use Todas o agregue otro criterio para localizar empresas.
+                                @else
+                                    La búsqueda administrativa está limitada automáticamente a la empresa asignada a su usuario.
+                                @endif
+                            </p>
+                        </div>
                     </div>
                 </form>
 
@@ -121,7 +149,7 @@
 
                         <p class="text-sm text-gray-500 italic">
                             @if (! $hayFiltros)
-                                Ingrese un nombre comercial, NIT o seleccione un estado para buscar una empresa.
+                                Seleccione una empresa, NIT o estado para buscar una empresa.
                             @elseif ($empresas->total() === 0)
                                 No se encontraron empresas con los criterios seleccionados.
                             @elseif ($empresas->total() === 1)
@@ -150,7 +178,7 @@
                             Búsqueda pendiente
                         </h5>
                         <p class="mt-1 text-sm text-gray-500 italic">
-                            Los resultados permanecerán vacíos hasta que localice una empresa por nombre comercial, NIT o estado.
+                            Los resultados permanecerán vacíos hasta que localice una empresa por empresa, NIT o estado.
                         </p>
                     </div>
                 @elseif ($empresas->isEmpty())

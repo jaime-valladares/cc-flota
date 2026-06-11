@@ -63,17 +63,29 @@
                         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
 
                             <div class="lg:col-span-4 cc-field">
-                                <label for="nombre_comercial">
-                                    Nombre comercial
+                                <label for="empresa_id">
+                                    Empresa
                                 </label>
-                                <input
-                                    id="nombre_comercial"
-                                    name="nombre_comercial"
-                                    type="text"
-                                    class="cc-input"
-                                    value="{{ $nombreComercial }}"
-                                    placeholder="Buscar por nombre comercial"
-                                >
+
+                                @if ($esUsuarioDieselCop)
+                                    <select id="empresa_id" name="empresa_id" class="cc-input">
+                                        <option value="">Todas</option>
+
+                                        @foreach ($empresasSelector as $empresaOpcion)
+                                            <option value="{{ $empresaOpcion->id }}" @selected((string) $empresaId === (string) $empresaOpcion->id)>
+                                                {{ $empresaOpcion->nombre_comercial ?: $empresaOpcion->nombre_legal }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                @else
+                                    <select id="empresa_id" name="empresa_id" class="cc-input" disabled>
+                                        @foreach ($empresasSelector as $empresaOpcion)
+                                            <option value="{{ $empresaOpcion->id }}" selected>
+                                                {{ $empresaOpcion->nombre_comercial ?: $empresaOpcion->nombre_legal }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                @endif
                             </div>
 
                             <div class="lg:col-span-3 cc-field">
@@ -132,7 +144,11 @@
 
                         <div class="mt-4 border-t border-gray-200 pt-4">
                             <p class="text-sm text-gray-500 italic">
-                                Use al menos un criterio de búsqueda para mostrar empresas.
+                                @if ($esUsuarioDieselCop)
+                                    Seleccione una empresa, use Todas o agregue otro criterio para consultar información.
+                                @else
+                                    La consulta está limitada automáticamente a la empresa asignada a su usuario.
+                                @endif
                             </p>
                         </div>
                     </div>
@@ -146,7 +162,7 @@
 
                         <p class="text-sm text-gray-500 italic">
                             @if (! $hayFiltros)
-                                Ingrese un nombre comercial, NIT o seleccione un estado para consultar empresas.
+                                Seleccione una empresa, NIT o estado para consultar empresas.
                             @elseif ($empresas->total() === 0)
                                 No se encontraron empresas con los criterios seleccionados.
                             @elseif ($empresas->total() === 1)
@@ -175,7 +191,7 @@
                             Consulta pendiente
                         </h5>
                         <p class="mt-1 text-sm text-gray-500 italic">
-                            La tabla permanecerá vacía hasta que realice una búsqueda o filtre por empresas activas o inactivas.
+                            La tabla permanecerá vacía hasta que realice una búsqueda o filtre por empresa, NIT o estado.
                         </p>
                     </div>
                 @elseif ($empresas->isEmpty())
