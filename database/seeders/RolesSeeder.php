@@ -15,58 +15,58 @@ class RolesSeeder extends Seeder
         $roles = [
             [
                 'codigo' => 'DIESEL_SUPER_ADMIN',
-                'nombre' => 'Diesel Cop Super Administrador',
+                'nombre' => 'Super Administrador Diesel Cop',
                 'alcance' => 'diesel_cop',
-                'descripcion' => 'Rol con acceso máximo a la administración global de CC-Flota.',
+                'descripcion' => 'Rol interno de Diesel Cop con acceso total global sobre CC-Flota, usuarios Diesel Cop y todas las empresas cliente.',
                 'estado' => 'activo',
             ],
             [
                 'codigo' => 'DIESEL_ADMIN',
-                'nombre' => 'Diesel Cop Administrador',
+                'nombre' => 'Administrador Diesel Cop',
                 'alcance' => 'diesel_cop',
-                'descripcion' => 'Rol administrativo de Diesel Cop con permisos globales controlados.',
+                'descripcion' => 'Rol administrativo de Diesel Cop orientado a la gestión operativa de empresas cliente, sin administración de usuarios internos Diesel Cop.',
                 'estado' => 'activo',
             ],
             [
                 'codigo' => 'DIESEL_TECNICO',
-                'nombre' => 'Diesel Cop Técnico',
+                'nombre' => 'Técnico Diesel Cop',
                 'alcance' => 'diesel_cop',
-                'descripcion' => 'Rol técnico para configuración de unidades, puntos de seguridad y marchamos.',
+                'descripcion' => 'Rol técnico de Diesel Cop para configuración de unidades, puntos de seguridad, marchamos iniciales y reemplazos técnicos.',
                 'estado' => 'activo',
             ],
             [
                 'codigo' => 'DIESEL_AUDITOR',
-                'nombre' => 'Diesel Cop Auditor',
+                'nombre' => 'Auditor Diesel Cop',
                 'alcance' => 'diesel_cop',
-                'descripcion' => 'Rol de consulta y revisión de auditoría del sistema.',
+                'descripcion' => 'Rol interno de Diesel Cop con acceso global de consulta, revisión, auditoría y análisis, sin modificación de registros.',
                 'estado' => 'activo',
             ],
             [
                 'codigo' => 'EMPRESA_ADMIN',
-                'nombre' => 'Empresa Administrador',
+                'nombre' => 'Administrador Empresa',
                 'alcance' => 'empresa',
-                'descripcion' => 'Rol administrador de una empresa cliente dentro de CC-Flota.',
+                'descripcion' => 'Rol máximo operativo dentro de una empresa cliente. Administra usuarios y operación de su propia empresa.',
                 'estado' => 'activo',
             ],
             [
                 'codigo' => 'EMPRESA_SUPERVISOR',
-                'nombre' => 'Empresa Supervisor',
+                'nombre' => 'Supervisor Empresa',
                 'alcance' => 'empresa',
-                'descripcion' => 'Rol supervisor para revisión y control operativo de la empresa.',
+                'descripcion' => 'Rol de supervisión operativa dentro de una empresa cliente. Consulta operación, registra eventos y corrige abastecimientos.',
                 'estado' => 'activo',
             ],
             [
                 'codigo' => 'EMPRESA_OPERADOR',
-                'nombre' => 'Empresa Operador',
+                'nombre' => 'Operador Empresa',
                 'alcance' => 'empresa',
-                'descripcion' => 'Rol operativo para registrar abastecimientos y operaciones permitidas.',
+                'descripcion' => 'Rol operativo de empresa para registrar abastecimientos y todo tipo de reemplazos permitidos dentro de su propia empresa.',
                 'estado' => 'activo',
             ],
             [
-                'codigo' => 'EMPRESA_CONSULTA',
-                'nombre' => 'Empresa Consulta',
+                'codigo' => 'EMPRESA_AUDITOR',
+                'nombre' => 'Auditor Empresa',
                 'alcance' => 'empresa',
-                'descripcion' => 'Rol de consulta para visualizar información sin modificar registros.',
+                'descripcion' => 'Rol de empresa con acceso de consulta, revisión y análisis sobre la información de su propia empresa, sin modificación de registros.',
                 'estado' => 'activo',
             ],
         ];
@@ -76,6 +76,17 @@ class RolesSeeder extends Seeder
                 ['codigo' => $role['codigo']],
                 $role
             );
+        }
+
+        $rolConsultaAnterior = Role::where('codigo', 'EMPRESA_CONSULTA')->first();
+
+        if ($rolConsultaAnterior) {
+            $rolConsultaAnterior->update([
+                'estado' => 'inactivo',
+                'fecha_actualizacion' => now(),
+                'fecha_inactivacion' => now(),
+                'motivo_inactivacion' => 'Rol reemplazado por EMPRESA_AUDITOR en definición funcional V1.',
+            ]);
         }
     }
 }

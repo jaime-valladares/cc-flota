@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Permiso extends Model
@@ -37,5 +38,15 @@ class Permiso extends Model
     public function rolPermisos(): HasMany
     {
         return $this->hasMany(RolPermiso::class, 'permiso_id');
+    }
+
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Role::class,
+            'rol_permisos',
+            'permiso_id',
+            'rol_id'
+        );
     }
 }

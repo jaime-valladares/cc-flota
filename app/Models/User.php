@@ -22,10 +22,14 @@ use Illuminate\Notifications\Notifiable;
     'cargo',
     'estado',
     'password',
+    'ultimo_acceso',
+    'creado_por',
+    'actualizado_por',
     'fecha_inactivacion',
     'inactivado_por',
     'motivo_inactivacion',
 ])]
+
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -52,6 +56,22 @@ class User extends Authenticatable
     }
 
     /**
+    * Usuario que creó este registro, si aplica.
+    */
+        public function creadoPor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'creado_por');
+    }
+
+    /**
+    * Usuario que actualizó este registro por última vez, si aplica.
+    */
+    public function actualizadoPor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'actualizado_por');
+    }
+
+    /**
      * Usuario que inactivó este registro, si aplica.
      */
     public function inactivadoPor(): BelongsTo
@@ -68,6 +88,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'ultimo_acceso' => 'datetime',
             'fecha_inactivacion' => 'datetime',
             'password' => 'hashed',
         ];
