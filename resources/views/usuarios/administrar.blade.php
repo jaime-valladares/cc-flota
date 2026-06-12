@@ -6,16 +6,15 @@
                 <div class="cc-card-header">
                     <div>
                         <h3 class="cc-title">
-                            Consulta de usuarios
+                            Administrar usuario
                         </h3>
                         <p class="cc-subtitle">
-                            Consulte información general de los usuarios registrados en CC-Flota, incluyendo tipo de
-                            usuario, empresa asociada y rol asignado.
+                            Localice un usuario para consultar su ficha, editar sus datos o gestionar su estado administrativo.
                         </p>
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <a href="{{ route('usuarios.consulta.ventana') }}"
+                        <a href="{{ route('usuarios.administrar.ventana') }}"
                            target="_blank"
                            rel="noopener noreferrer"
                            class="cc-btn-secondary cc-btn-wide">
@@ -30,42 +29,23 @@
                     </div>
                 @endif
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div class="border border-gray-200 rounded-lg p-4 bg-white">
-                        <div class="text-sm font-bold text-gray-500 uppercase tracking-wider">
-                            Total usuarios
-                        </div>
-                        <div class="mt-2 text-3xl font-black text-gray-900">
-                            {{ $totalUsuarios }}
-                        </div>
-                    </div>
-
-                    <div class="border border-gray-200 rounded-lg p-4 bg-white">
-                        <div class="text-sm font-bold text-gray-500 uppercase tracking-wider">
-                            Activos
-                        </div>
-                        <div class="mt-2 text-3xl font-black text-green-700">
-                            {{ $usuariosActivos }}
-                        </div>
-                    </div>
-
-                    <div class="border border-gray-200 rounded-lg p-4 bg-white">
-                        <div class="text-sm font-bold text-gray-500 uppercase tracking-wider">
-                            Inactivos
-                        </div>
-                        <div class="mt-2 text-3xl font-black text-red-800">
-                            {{ $usuariosInactivos }}
-                        </div>
-                    </div>
-                </div>
-
-                <form method="GET" action="{{ route('usuarios.index') }}" class="mb-6">
+                <form method="GET" action="{{ route('usuarios.administrar') }}" class="mb-6">
                     <input type="hidden" name="consultar" value="1">
 
                     <div class="border border-gray-200 rounded-lg p-5 bg-gray-50">
-                        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; align-items: end;">
 
-                            <div class="cc-field">
+                        <div class="cc-form-section" style="margin-top: 0; margin-bottom: 1.25rem;">
+                            <div class="cc-form-section-title">
+                                Búsqueda administrativa
+                            </div>
+                            <div class="cc-form-section-note">
+                                Ingrese criterios para localizar el usuario que desea administrar.
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
+
+                            <div class="lg:col-span-3 cc-field">
                                 <label for="tipo_usuario">
                                     Tipo de usuario
                                 </label>
@@ -80,7 +60,7 @@
                                 </select>
                             </div>
 
-                            <div class="cc-field">
+                            <div class="lg:col-span-3 cc-field">
                                 <label for="empresa_id">
                                     Empresa
                                 </label>
@@ -90,13 +70,13 @@
                                     @foreach ($empresas as $empresa)
                                         <option value="{{ $empresa->id }}"
                                                 @selected((string) $empresaId === (string) $empresa->id)>
-                                            {{ $empresa->nombre_legal }}
+                                            {{ $empresa->nombre_comercial ?: $empresa->nombre_legal }}
                                         </option>
                                     @endforeach
                                 </select>
                             </div>
 
-                            <div class="cc-field">
+                            <div class="lg:col-span-3 cc-field">
                                 <label for="rol_id">
                                     Rol
                                 </label>
@@ -113,22 +93,22 @@
                                 </select>
                             </div>
 
-                        </div>
-
-                        <div class="mt-5 border-t border-gray-200 pt-4 flex items-center justify-between gap-4">
-                            <p class="text-sm text-gray-500 italic">
-                                Seleccione tipo de usuario, empresa o rol para mostrar usuarios.
-                            </p>
-
-                            <div class="flex items-center gap-3">
+                            <div class="lg:col-span-3 flex items-center gap-3">
                                 <button type="submit" class="cc-btn-primary">
                                     Buscar
                                 </button>
 
-                                <a href="{{ route('usuarios.index') }}" class="cc-btn-secondary">
+                                <a href="{{ route('usuarios.administrar') }}" class="cc-btn-secondary">
                                     Resetear
                                 </a>
                             </div>
+
+                        </div>
+
+                        <div class="mt-4 border-t border-gray-200 pt-4">
+                            <p class="text-sm text-gray-500 italic">
+                                Seleccione tipo de usuario, empresa o rol para localizar usuarios administrables.
+                            </p>
                         </div>
                     </div>
                 </form>
@@ -136,18 +116,18 @@
                 <div class="flex items-center justify-between mb-4">
                     <div>
                         <h4 class="text-base font-black text-gray-900">
-                            Resultados
+                            Resultado administrativo
                         </h4>
 
                         <p class="text-sm text-gray-500 italic">
                             @if (! $hayFiltros)
-                                Seleccione tipo de usuario, empresa o rol para consultar usuarios.
+                                Seleccione tipo de usuario, empresa o rol para buscar usuarios.
                             @elseif ($usuarios->total() === 0)
                                 No se encontraron usuarios con los criterios seleccionados.
                             @elseif ($usuarios->total() === 1)
-                                Se encontró 1 usuario.
+                                Se encontró 1 usuario para administrar.
                             @else
-                                Se encontraron {{ $usuarios->total() }} usuarios.
+                                Se encontraron {{ $usuarios->total() }} usuarios para administrar.
                             @endif
                         </p>
                     </div>
@@ -167,10 +147,10 @@
                 @if (! $hayFiltros)
                     <div class="border border-dashed border-gray-300 rounded-lg p-6 bg-gray-50">
                         <h5 class="text-base font-black text-gray-900">
-                            Consulta pendiente
+                            Búsqueda pendiente
                         </h5>
                         <p class="mt-1 text-sm text-gray-500 italic">
-                            La tabla permanecerá vacía hasta que seleccione tipo de usuario, empresa o rol.
+                            Los resultados permanecerán vacíos hasta que localice un usuario por tipo, empresa o rol.
                         </p>
                     </div>
                 @elseif ($usuarios->isEmpty())
@@ -186,10 +166,11 @@
                     <div class="cc-table-wrapper">
                         <table class="cc-table">
                             <colgroup>
-                                <col style="width: 28%;">
-                                <col style="width: 28%;">
-                                <col style="width: 28%;">
-                                <col style="width: 16%;">
+                                <col style="width: 24%;">
+                                <col style="width: 22%;">
+                                <col style="width: 20%;">
+                                <col style="width: 12%;">
+                                <col style="width: 22%;">
                             </colgroup>
 
                             <thead>
@@ -197,7 +178,8 @@
                                     <th class="cc-text-left">Usuario</th>
                                     <th class="cc-text-left">Empresa</th>
                                     <th class="cc-text-left">Rol</th>
-                                    <th class="cc-text-left">Tipo</th>
+                                    <th class="cc-text-center">Estado</th>
+                                    <th class="cc-text-center">Acciones</th>
                                 </tr>
                             </thead>
 
@@ -205,10 +187,10 @@
                                 @foreach ($usuarios as $usuario)
                                     <tr>
                                         <td class="cc-text-left">
-                                            <div class="font-bold text-gray-900">
+                                            <div class="font-bold text-gray-900 cc-cell-truncate">
                                                 {{ $usuario->name }} {{ $usuario->apellido }}
                                             </div>
-                                            <div class="text-sm text-gray-500">
+                                            <div class="text-sm text-gray-500 cc-cell-truncate">
                                                 {{ $usuario->email }}
                                             </div>
                                         </td>
@@ -230,7 +212,7 @@
 
                                         <td class="cc-text-left">
                                             @if ($usuario->role)
-                                                <div class="font-bold text-gray-900">
+                                                <div class="font-bold text-gray-900 cc-cell-truncate">
                                                     {{ $usuario->role->nombre }}
                                                 </div>
                                                 <div class="text-sm text-gray-500">
@@ -243,12 +225,28 @@
                                             @endif
                                         </td>
 
-                                        <td class="cc-text-left">
-                                            @if ($usuario->tipo_usuario === 'diesel_cop')
-                                                Diesel Cop
+                                        <td class="cc-text-center">
+                                            @if ($usuario->estado === 'activo')
+                                                <span class="cc-badge cc-badge-active">
+                                                    Activo
+                                                </span>
                                             @else
-                                                Empresa
+                                                <span class="cc-badge cc-badge-inactive">
+                                                    Inactivo
+                                                </span>
                                             @endif
+                                        </td>
+
+                                        <td class="cc-actions-cell">
+                                            <div class="cc-actions-group">
+                                                <a href="{{ route('usuarios.show', $usuario) }}" class="cc-btn-primary">
+                                                    Ver ficha
+                                                </a>
+
+                                                <a href="{{ route('usuarios.edit', $usuario) }}" class="cc-btn-secondary">
+                                                    Editar
+                                                </a>
+                                            </div>
                                         </td>
                                     </tr>
                                 @endforeach

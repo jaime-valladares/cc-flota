@@ -63,9 +63,28 @@
                         </div>
                     </div>
 
-                    <span class="cc-sidebar-link cc-sidebar-link-disabled">
-                        Usuarios
-                    </span>
+                    <div class="cc-sidebar-group">
+                        <div class="cc-sidebar-parent {{ request()->routeIs('usuarios.*') ? 'cc-sidebar-parent-active' : '' }}">
+                            Usuarios
+                        </div>
+
+                        <div class="cc-sidebar-subnav">
+                            <a href="{{ route('usuarios.index') }}"
+                            class="cc-sidebar-sublink {{ request()->routeIs('usuarios.index') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Consulta usuarios
+                            </a>
+
+                            <a href="{{ route('usuarios.administrar') }}"
+                            class="cc-sidebar-sublink {{ request()->routeIs('usuarios.administrar') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Administrar usuario
+                            </a>
+
+                            <a href="{{ route('usuarios.create') }}"
+                            class="cc-sidebar-sublink {{ request()->routeIs('usuarios.create') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Nuevo usuario
+                            </a>
+                        </div>
+                    </div>
 
                     <span class="cc-sidebar-link cc-sidebar-link-disabled">
                         Roles y permisos
