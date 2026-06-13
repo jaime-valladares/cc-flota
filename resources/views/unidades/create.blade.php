@@ -14,6 +14,13 @@
                     </div>
 
                     <div class="flex items-center gap-3">
+                        <a href="{{ route('unidades.create.ventana') }}"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="cc-btn-secondary cc-btn-wide">
+                            Abrir en nueva pestaña
+                        </a>
+
                         <a href="{{ route('unidades.index') }}" class="cc-btn-secondary cc-btn-wide">
                             Volver a consulta
                         </a>

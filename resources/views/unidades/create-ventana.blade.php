@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>Registro de empresa cliente | CC-Flota</title>
+        <title>Registro de unidad | CC-Flota</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900&display=swap" rel="stylesheet" />
@@ -22,26 +22,35 @@
                         <div class="cc-card-header">
                             <div>
                                 <h3 class="cc-title">
-                                    Registro de empresa cliente
+                                    Registro de unidad
                                 </h3>
                                 <p class="cc-subtitle">
-                                    Complete los datos legales, fiscales y de contacto de la empresa cliente.
+                                    Complete la información de la unidad, sus tanques, capacidad cubierta y modelo de medición.
                                 </p>
                             </div>
 
                             <div class="flex items-center gap-3">
-                                <a href="{{ route('empresas.create') }}" class="cc-btn-secondary cc-btn-wide">
+                                <a href="{{ route('unidades.create') }}" class="cc-btn-secondary cc-btn-wide">
                                     Volver al sistema
                                 </a>
                             </div>
                         </div>
 
-                        <form method="POST" action="{{ route('empresas.store') }}" novalidate>
+                        @if (session('success'))
+                            <div class="cc-alert-success">
+                                {{ session('success') }}
+                            </div>
+                        @endif
+
+                        <form method="POST" action="{{ route('unidades.store') }}" novalidate>
                             @csrf
 
-                            @include('empresas._form', [
-                                'empresa' => null,
-                                'submitLabel' => 'Guardar empresa',
+                            @include('unidades._form', [
+                                'unidad' => null,
+                                'empresas' => $empresas,
+                                'modelosMedicion' => $modelosMedicion,
+                                'esUsuarioDieselCop' => $esUsuarioDieselCop,
+                                'submitLabel' => 'Guardar unidad',
                             ])
                         </form>
 

@@ -157,6 +157,29 @@ class UnidadController extends Controller
     }
 
     /**
+    * Formulario de creación de unidad en ventana independiente.
+    */
+    public function createVentana(): View
+    {
+        $user = Auth::user();
+        $esUsuarioDieselCop = is_null($user->empresa_id);
+
+        $empresas = Empresa::query()
+            ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
+                $query->where('id', $user->empresa_id);
+            })
+            ->orderBy('nombre_comercial')
+            ->orderBy('nombre_legal')
+            ->get();
+
+        return view('unidades.create-ventana', [
+            'empresas' => $empresas,
+            'esUsuarioDieselCop' => $esUsuarioDieselCop,
+            'modelosMedicion' => $this->modelosMedicion(),
+        ]);
+    }
+
+    /**
      * Guarda una nueva unidad.
      */
     public function store(Request $request): RedirectResponse

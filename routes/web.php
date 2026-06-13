@@ -49,7 +49,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/usuarios/nuevo/ventana', [UsuarioController::class, 'createVentana'])
         ->name('usuarios.create.ventana');
-    
+
     Route::post('/usuarios', [UsuarioController::class, 'store'])
         ->name('usuarios.store');
 
@@ -93,6 +93,9 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/unidades/nueva', [UnidadController::class, 'create'])
         ->name('unidades.create');
+
+    Route::get('/unidades/nueva/ventana', [UnidadController::class, 'createVentana'])
+        ->name('unidades.create.ventana');
 
     Route::post('/unidades', [UnidadController::class, 'store'])
         ->name('unidades.store');
