@@ -14,10 +14,10 @@
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <a href="{{ route('usuarios.create') }}"
-                           target="_blank"
-                           rel="noopener noreferrer"
-                           class="cc-btn-secondary cc-btn-wide">
+                        <a href="{{ route('usuarios.create.ventana') }}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="cc-btn-secondary cc-btn-wide">
                             Abrir en nueva pestaña
                         </a>
 
@@ -27,7 +27,7 @@
                     </div>
                 </div>
 
-                <form method="POST" action="{{ route('usuarios.store') }}">
+                <form method="POST" action="{{ route('usuarios.store') }}" novalidate>
                     @csrf
 
                     @include('usuarios._form', [

@@ -6,30 +6,29 @@
                 <div class="cc-card-header">
                     <div>
                         <h3 class="cc-title">
-                            Editar usuario
+                            Registro de unidad
                         </h3>
                         <p class="cc-subtitle">
-                            Actualice los datos de acceso, empresa, rol y contacto del usuario.
+                            Complete la información de la unidad, sus tanques, capacidad cubierta y modelo de medición.
                         </p>
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <a href="{{ route('usuarios.show', $usuario) }}" class="cc-btn-secondary cc-btn-wide">
-                            Volver a ficha
+                        <a href="{{ route('unidades.index') }}" class="cc-btn-secondary cc-btn-wide">
+                            Volver a consulta
                         </a>
                     </div>
                 </div>
 
-                <form method="POST" action="{{ route('usuarios.update', $usuario) }}" novalidate>
+                <form method="POST" action="{{ route('unidades.store') }}" novalidate>
                     @csrf
-                    @method('PUT')
 
-                    @include('usuarios._form', [
-                        'usuario' => $usuario,
+                    @include('unidades._form', [
+                        'unidad' => null,
                         'empresas' => $empresas,
-                        'roles' => $roles,
+                        'modelosMedicion' => $modelosMedicion,
                         'esUsuarioDieselCop' => $esUsuarioDieselCop,
-                        'submitLabel' => 'Actualizar usuario',
+                        'submitLabel' => 'Guardar unidad',
                     ])
                 </form>
 

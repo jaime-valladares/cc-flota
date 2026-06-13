@@ -27,7 +27,7 @@
                     </div>
                 </div>
 
-                <form method="POST" action="{{ route('empresas.store') }}">
+                <form method="POST" action="{{ route('empresas.store') }}" novalidate>
                     @csrf
 
                     @include('empresas._form', [

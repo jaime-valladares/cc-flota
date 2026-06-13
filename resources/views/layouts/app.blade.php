@@ -94,9 +94,28 @@
                         Operación
                     </div>
 
-                    <span class="cc-sidebar-link cc-sidebar-link-disabled">
-                        Unidades
-                    </span>
+                    <div class="cc-sidebar-group">
+                        <div class="cc-sidebar-parent {{ request()->routeIs('unidades.*') ? 'cc-sidebar-parent-active' : '' }}">
+                            Unidades
+                        </div>
+
+                        <div class="cc-sidebar-subnav">
+                            <a href="{{ route('unidades.index') }}"
+                            class="cc-sidebar-sublink {{ request()->routeIs('unidades.index') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Consulta unidades
+                            </a>
+
+                            <a href="{{ route('unidades.administrar') }}"
+                            class="cc-sidebar-sublink {{ request()->routeIs('unidades.administrar') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Administrar unidad
+                            </a>
+
+                            <a href="{{ route('unidades.create') }}"
+                            class="cc-sidebar-sublink {{ request()->routeIs('unidades.create') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Nueva unidad
+                            </a>
+                        </div>
+                    </div>
 
                     <span class="cc-sidebar-link cc-sidebar-link-disabled">
                         Marchamos

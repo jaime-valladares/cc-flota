@@ -1,7 +1,8 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\EmpresaController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\UnidadController;
 use App\Http\Controllers\UsuarioController;
 use Illuminate\Support\Facades\Route;
 
@@ -46,6 +47,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/usuarios/nuevo', [UsuarioController::class, 'create'])
         ->name('usuarios.create');
 
+    Route::get('/usuarios/nuevo/ventana', [UsuarioController::class, 'createVentana'])
+        ->name('usuarios.create.ventana');
+    
     Route::post('/usuarios', [UsuarioController::class, 'store'])
         ->name('usuarios.store');
 
@@ -63,6 +67,50 @@ Route::middleware('auth')->group(function () {
 
     Route::patch('/usuarios/{usuario}/reactivar', [UsuarioController::class, 'reactivar'])
         ->name('usuarios.reactivar');
+
+/*
+    |--------------------------------------------------------------------------
+    | Unidades
+    |--------------------------------------------------------------------------
+    |
+    | Se mantiene la misma separación funcional aplicada en Empresas y Usuarios:
+    | consulta informativa, administración operativa, creación, ficha,
+    | edición e inactivación/reactivación.
+    |
+    */
+
+    Route::get('/unidades', [UnidadController::class, 'index'])
+        ->name('unidades.index');
+
+    Route::get('/unidades/consulta/ventana', [UnidadController::class, 'consultaVentana'])
+        ->name('unidades.consulta.ventana');
+
+    Route::get('/unidades/administrar', [UnidadController::class, 'administrar'])
+        ->name('unidades.administrar');
+
+    Route::get('/unidades/administrar/ventana', [UnidadController::class, 'administrarVentana'])
+        ->name('unidades.administrar.ventana');
+
+    Route::get('/unidades/nueva', [UnidadController::class, 'create'])
+        ->name('unidades.create');
+
+    Route::post('/unidades', [UnidadController::class, 'store'])
+        ->name('unidades.store');
+
+    Route::get('/unidades/{unidad}', [UnidadController::class, 'show'])
+        ->name('unidades.show');
+
+    Route::get('/unidades/{unidad}/editar', [UnidadController::class, 'edit'])
+        ->name('unidades.edit');
+
+    Route::put('/unidades/{unidad}', [UnidadController::class, 'update'])
+        ->name('unidades.update');
+
+    Route::patch('/unidades/{unidad}/inactivar', [UnidadController::class, 'inactivar'])
+        ->name('unidades.inactivar');
+
+    Route::patch('/unidades/{unidad}/reactivar', [UnidadController::class, 'reactivar'])
+        ->name('unidades.reactivar');
 
     /*
     |--------------------------------------------------------------------------

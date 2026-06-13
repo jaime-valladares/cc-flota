@@ -189,6 +189,37 @@ class UsuarioController extends Controller
     }
 
     /**
+    * Formulario de creación de usuario en ventana independiente.
+    */
+    public function createVentana(): View
+    {
+        $user = Auth::user();
+        $esUsuarioDieselCop = is_null($user->empresa_id);
+
+        $empresas = Empresa::query()
+            ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
+                $query->where('id', $user->empresa_id);
+            })
+            ->orderBy('nombre_comercial')
+            ->orderBy('nombre_legal')
+            ->get();
+
+        $roles = Role::query()
+            ->when(! $esUsuarioDieselCop, function ($query) {
+                $query->where('alcance', 'empresa');
+            })
+            ->where('estado', 'activo')
+            ->orderBy('nombre')
+            ->get();
+
+        return view('usuarios.create-ventana', [
+            'empresas' => $empresas,
+            'roles' => $roles,
+            'esUsuarioDieselCop' => $esUsuarioDieselCop,
+        ]);
+    }
+
+    /**
      * Guarda un nuevo usuario.
      */
     public function store(Request $request): RedirectResponse
