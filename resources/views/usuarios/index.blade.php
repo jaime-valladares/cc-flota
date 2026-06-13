@@ -63,9 +63,19 @@
                     <input type="hidden" name="consultar" value="1">
 
                     <div class="border border-gray-200 rounded-lg p-5 bg-gray-50">
-                        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; align-items: end;">
 
-                            <div class="cc-field">
+                        <div class="cc-form-section" style="margin-top: 0; margin-bottom: 1.25rem;">
+                            <div class="cc-form-section-title">
+                                Filtros de consulta
+                            </div>
+                            <div class="cc-form-section-note">
+                                Utilice los filtros para localizar usuarios por tipo, empresa o rol asignado.
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
+
+                            <div class="lg:col-span-3 cc-field">
                                 <label for="tipo_usuario">
                                     Tipo de usuario
                                 </label>
@@ -80,7 +90,7 @@
                                 </select>
                             </div>
 
-                            <div class="cc-field">
+                            <div class="lg:col-span-4 cc-field">
                                 <label for="empresa_id">
                                     Empresa
                                 </label>
@@ -90,13 +100,13 @@
                                     @foreach ($empresas as $empresa)
                                         <option value="{{ $empresa->id }}"
                                                 @selected((string) $empresaId === (string) $empresa->id)>
-                                            {{ $empresa->nombre_legal }}
+                                            {{ $empresa->nombre_comercial ?: $empresa->nombre_legal }}
                                         </option>
                                     @endforeach
                                 </select>
                             </div>
 
-                            <div class="cc-field">
+                            <div class="lg:col-span-5 cc-field">
                                 <label for="rol_id">
                                     Rol
                                 </label>
@@ -115,19 +125,21 @@
 
                         </div>
 
-                        <div class="mt-5 border-t border-gray-200 pt-4 flex items-center justify-between gap-4">
-                            <p class="text-sm text-gray-500 italic">
-                                Seleccione tipo de usuario, empresa o rol para mostrar usuarios.
-                            </p>
+                        <div class="mt-4 border-t border-gray-200 pt-4">
+                            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                                <p class="text-sm text-gray-500 italic">
+                                    La consulta permite visualizar usuarios, sin modificar información.
+                                </p>
 
-                            <div class="flex items-center gap-3">
-                                <button type="submit" class="cc-btn-primary">
-                                    Buscar
-                                </button>
+                                <div class="flex items-center gap-3">
+                                    <button type="submit" class="cc-btn-primary">
+                                        Buscar
+                                    </button>
 
-                                <a href="{{ route('usuarios.index') }}" class="cc-btn-secondary">
-                                    Resetear
-                                </a>
+                                    <a href="{{ route('usuarios.index') }}" class="cc-btn-secondary">
+                                        Resetear
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -170,7 +182,7 @@
                             Consulta pendiente
                         </h5>
                         <p class="mt-1 text-sm text-gray-500 italic">
-                            La tabla permanecerá vacía hasta que seleccione tipo de usuario, empresa o rol.
+                            Los resultados permanecerán vacíos hasta que seleccione tipo de usuario, empresa o rol.
                         </p>
                     </div>
                 @elseif ($usuarios->isEmpty())

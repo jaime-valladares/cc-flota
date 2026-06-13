@@ -59,10 +59,20 @@
                 </div>
 
                 <form method="GET" action="{{ route('empresas.index') }}" class="mb-6">
-                    <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <div class="border border-gray-200 rounded-lg p-5 bg-gray-50">
+
+                        <div class="cc-form-section" style="margin-top: 0; margin-bottom: 1.25rem;">
+                            <div class="cc-form-section-title">
+                                Filtros de consulta
+                            </div>
+                            <div class="cc-form-section-note">
+                                Utilice los filtros para localizar empresas por empresa, NIT o estado.
+                            </div>
+                        </div>
+
                         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
 
-                            <div class="lg:col-span-4 cc-field">
+                            <div class="lg:col-span-5 cc-field">
                                 <label for="empresa_id">
                                     Empresa
                                 </label>
@@ -109,7 +119,7 @@
                                 @enderror
                             </div>
 
-                            <div class="lg:col-span-2 cc-field">
+                            <div class="lg:col-span-4 cc-field">
                                 <label for="estado">
                                     Estado
                                 </label>
@@ -130,26 +140,28 @@
                                 @enderror
                             </div>
 
-                            <div class="lg:col-span-3 flex items-center gap-3">
-                                <button type="submit" class="cc-btn-primary">
-                                    Buscar
-                                </button>
-
-                                <a href="{{ route('empresas.index') }}" class="cc-btn-secondary">
-                                    Resetear
-                                </a>
-                            </div>
-
                         </div>
 
                         <div class="mt-4 border-t border-gray-200 pt-4">
-                            <p class="text-sm text-gray-500 italic">
-                                @if ($esUsuarioDieselCop)
-                                    Seleccione una empresa, use Todas o agregue otro criterio para consultar información.
-                                @else
-                                    La consulta está limitada automáticamente a la empresa asignada a su usuario.
-                                @endif
-                            </p>
+                            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                                <p class="text-sm text-gray-500 italic">
+                                    @if ($esUsuarioDieselCop)
+                                        La consulta permite visualizar empresas, sin modificar información.
+                                    @else
+                                        La consulta está limitada automáticamente a la empresa asignada a su usuario.
+                                    @endif
+                                </p>
+
+                                <div class="flex items-center gap-3">
+                                    <button type="submit" class="cc-btn-primary">
+                                        Buscar
+                                    </button>
+
+                                    <a href="{{ route('empresas.index') }}" class="cc-btn-secondary">
+                                        Resetear
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </form>

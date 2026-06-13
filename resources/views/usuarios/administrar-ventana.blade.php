@@ -73,7 +73,7 @@
                                         </select>
                                     </div>
 
-                                    <div class="lg:col-span-3 cc-field">
+                                    <div class="lg:col-span-4 cc-field">
                                         <label for="empresa_id">
                                             Empresa
                                         </label>
@@ -89,7 +89,7 @@
                                         </select>
                                     </div>
 
-                                    <div class="lg:col-span-3 cc-field">
+                                    <div class="lg:col-span-5 cc-field">
                                         <label for="rol_id">
                                             Rol
                                         </label>
@@ -106,22 +106,24 @@
                                         </select>
                                     </div>
 
-                                    <div class="lg:col-span-3 flex items-center gap-3">
-                                        <button type="submit" class="cc-btn-primary">
-                                            Buscar
-                                        </button>
-
-                                        <a href="{{ route('usuarios.administrar.ventana') }}" class="cc-btn-secondary">
-                                            Resetear
-                                        </a>
-                                    </div>
-
                                 </div>
 
                                 <div class="mt-4 border-t border-gray-200 pt-4">
-                                    <p class="text-sm text-gray-500 italic">
-                                        Seleccione tipo de usuario, empresa o rol para localizar usuarios administrables.
-                                    </p>
+                                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                                        <p class="text-sm text-gray-500 italic">
+                                            Seleccione tipo de usuario, empresa o rol para localizar usuarios administrables.
+                                        </p>
+
+                                        <div class="flex items-center gap-3">
+                                            <button type="submit" class="cc-btn-primary">
+                                                Buscar
+                                            </button>
+
+                                            <a href="{{ route('usuarios.administrar.ventana') }}" class="cc-btn-secondary">
+                                                Resetear
+                                            </a>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </form>

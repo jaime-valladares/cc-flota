@@ -117,7 +117,7 @@
                                 </select>
                             </div>
 
-                            <div class="lg:col-span-2 cc-field">
+                            <div class="lg:col-span-5 cc-field">
                                 <label for="modelo_medicion">
                                     Modelo de medición
                                 </label>
@@ -132,22 +132,24 @@
                                 </select>
                             </div>
 
-                            <div class="lg:col-span-3 flex items-center gap-3">
-                                <button type="submit" class="cc-btn-primary">
-                                    Buscar
-                                </button>
-
-                                <a href="{{ route('unidades.index') }}" class="cc-btn-secondary">
-                                    Resetear
-                                </a>
-                            </div>
-
                         </div>
 
                         <div class="mt-4 border-t border-gray-200 pt-4">
-                            <p class="text-sm text-gray-500 italic">
-                                La consulta permite visualizar unidades, sin modificar información.
-                            </p>
+                            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                                <p class="text-sm text-gray-500 italic">
+                                    La consulta permite visualizar unidades, sin modificar información.
+                                </p>
+
+                                <div class="flex items-center gap-3">
+                                    <button type="submit" class="cc-btn-primary">
+                                        Buscar
+                                    </button>
+
+                                    <a href="{{ route('unidades.index') }}" class="cc-btn-secondary">
+                                        Resetear
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </form>
@@ -238,7 +240,6 @@
                                             <div class="mt-1 font-bold text-gray-900 cc-cell-truncate">
                                                 {{ $unidad->empresa->nombre_comercial ?: $unidad->empresa->nombre_legal }}
                                             </div>
-
                                         @else
                                             <div class="mt-1 text-sm text-gray-500 italic">
                                                 Sin empresa
@@ -266,7 +267,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="lg:col-span-2 min-w-0">
+                                    <div class="lg:col-span-3 min-w-0">
                                         <div class="text-xs font-black text-gray-500 uppercase tracking-wider">
                                             Modelo de medición
                                         </div>
@@ -274,7 +275,6 @@
                                         <div class="mt-1 font-bold text-gray-900 cc-cell-truncate">
                                             {{ $unidad->modelo_medicion_texto }}
                                         </div>
-
                                     </div>
 
                                 </div>

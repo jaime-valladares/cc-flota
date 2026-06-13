@@ -71,101 +71,113 @@
                             </div>
                         </div>
 
-                        <form method="GET" action="{{ route('empresas.consulta.ventana') }}" class="mb-6">
-                            <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                                <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
+                <form method="GET" action="{{ route('empresas.consulta.ventana') }}" class="mb-6">
+                    <div class="border border-gray-200 rounded-lg p-5 bg-gray-50">
 
-                                    <div class="lg:col-span-4 cc-field">
-                                        <label for="empresa_id">
-                                            Empresa
-                                        </label>
+                        <div class="cc-form-section" style="margin-top: 0; margin-bottom: 1.25rem;">
+                            <div class="cc-form-section-title">
+                                Filtros de consulta
+                            </div>
+                            <div class="cc-form-section-note">
+                                Utilice los filtros para localizar empresas por empresa, NIT o estado.
+                            </div>
+                        </div>
 
-                                        @if ($esUsuarioDieselCop)
-                                            <select id="empresa_id" name="empresa_id" class="cc-input">
-                                                <option value="">Todas</option>
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
 
-                                                @foreach ($empresasSelector as $empresaOpcion)
-                                                    <option value="{{ $empresaOpcion->id }}" @selected((string) $empresaId === (string) $empresaOpcion->id)>
-                                                        {{ $empresaOpcion->nombre_comercial ?: $empresaOpcion->nombre_legal }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        @else
-                                            <select id="empresa_id" name="empresa_id" class="cc-input" disabled>
-                                                @foreach ($empresasSelector as $empresaOpcion)
-                                                    <option value="{{ $empresaOpcion->id }}" selected>
-                                                        {{ $empresaOpcion->nombre_comercial ?: $empresaOpcion->nombre_legal }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        @endif
-                                    </div>
+                            <div class="lg:col-span-5 cc-field">
+                                <label for="empresa_id">
+                                    Empresa
+                                </label>
 
-                                    <div class="lg:col-span-3 cc-field">
-                                        <label for="nit">
-                                            NIT
-                                        </label>
-                                        <input
-                                            id="nit"
-                                            name="nit"
-                                            type="text"
-                                            class="cc-input"
-                                            value="{{ $nit }}"
-                                            maxlength="17"
-                                            placeholder="0000-000000-000-0"
-                                        >
+                                @if ($esUsuarioDieselCop)
+                                    <select id="empresa_id" name="empresa_id" class="cc-input">
+                                        <option value="">Todas</option>
 
-                                        @error('nit')
-                                            <div class="cc-error">
-                                                {{ $message }}
-                                            </div>
-                                        @enderror
-                                    </div>
-
-                                    <div class="lg:col-span-2 cc-field">
-                                        <label for="estado">
-                                            Estado
-                                        </label>
-                                        <select id="estado" name="estado" class="cc-input">
-                                            <option value="">Seleccione</option>
-                                            <option value="activa" @selected($estado === 'activa')>
-                                                Activas
+                                        @foreach ($empresasSelector as $empresaOpcion)
+                                            <option value="{{ $empresaOpcion->id }}" @selected((string) $empresaId === (string) $empresaOpcion->id)>
+                                                {{ $empresaOpcion->nombre_comercial ?: $empresaOpcion->nombre_legal }}
                                             </option>
-                                            <option value="inactiva" @selected($estado === 'inactiva')>
-                                                Inactivas
+                                        @endforeach
+                                    </select>
+                                @else
+                                    <select id="empresa_id" name="empresa_id" class="cc-input" disabled>
+                                        @foreach ($empresasSelector as $empresaOpcion)
+                                            <option value="{{ $empresaOpcion->id }}" selected>
+                                                {{ $empresaOpcion->nombre_comercial ?: $empresaOpcion->nombre_legal }}
                                             </option>
-                                        </select>
+                                        @endforeach
+                                    </select>
+                                @endif
+                            </div>
 
-                                        @error('estado')
-                                            <div class="cc-error">
-                                                {{ $message }}
-                                            </div>
-                                        @enderror
+                            <div class="lg:col-span-3 cc-field">
+                                <label for="nit">
+                                    NIT
+                                </label>
+                                <input
+                                    id="nit"
+                                    name="nit"
+                                    type="text"
+                                    class="cc-input"
+                                    value="{{ $nit }}"
+                                    maxlength="17"
+                                    placeholder="0000-000000-000-0"
+                                >
+
+                                @error('nit')
+                                    <div class="cc-error">
+                                        {{ $message }}
                                     </div>
+                                @enderror
+                            </div>
 
-                                    <div class="lg:col-span-3 flex items-center gap-3">
-                                        <button type="submit" class="cc-btn-primary">
-                                            Buscar
-                                        </button>
+                            <div class="lg:col-span-4 cc-field">
+                                <label for="estado">
+                                    Estado
+                                </label>
+                                <select id="estado" name="estado" class="cc-input">
+                                    <option value="">Seleccione</option>
+                                    <option value="activa" @selected($estado === 'activa')>
+                                        Activas
+                                    </option>
+                                    <option value="inactiva" @selected($estado === 'inactiva')>
+                                        Inactivas
+                                    </option>
+                                </select>
 
-                                        <a href="{{ route('empresas.consulta.ventana') }}" class="cc-btn-secondary">
-                                            Resetear
-                                        </a>
+                                @error('estado')
+                                    <div class="cc-error">
+                                        {{ $message }}
                                     </div>
+                                @enderror
+                            </div>
 
-                                </div>
+                        </div>
 
-                                <div class="mt-4 border-t border-gray-200 pt-4">
-                                    <p class="text-sm text-gray-500 italic">
-                                        @if ($esUsuarioDieselCop)
-                                            Seleccione una empresa, use Todas o agregue otro criterio para consultar información.
-                                        @else
-                                            La consulta está limitada automáticamente a la empresa asignada a su usuario.
-                                        @endif
-                                    </p>
+                        <div class="mt-4 border-t border-gray-200 pt-4">
+                            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                                <p class="text-sm text-gray-500 italic">
+                                    @if ($esUsuarioDieselCop)
+                                        La consulta permite visualizar empresas, sin modificar información.
+                                    @else
+                                        La consulta está limitada automáticamente a la empresa asignada a su usuario.
+                                    @endif
+                                </p>
+
+                                <div class="flex items-center gap-3">
+                                    <button type="submit" class="cc-btn-primary">
+                                        Buscar
+                                    </button>
+
+                                    <a href="{{ route('empresas.consulta.ventana') }}" class="cc-btn-secondary">
+                                        Resetear
+                                    </a>
                                 </div>
                             </div>
-                        </form>
+                        </div>
+                    </div>
+                </form>
 
                         <div class="flex items-center justify-between mb-4">
                             <div>
