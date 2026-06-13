@@ -204,42 +204,17 @@
                                 </p>
                             </div>
                         @else
-                            <div class="cc-table-wrapper">
-                                <table class="cc-table">
-                                    <colgroup>
-                                        <col style="width: 28%;">
-                                        <col style="width: 16%;">
-                                        <col style="width: 16%;">
-                                        <col style="width: 12%;">
-                                        <col style="width: 28%;">
-                                    </colgroup>
+                            <div class="space-y-4">
+                                @foreach ($empresas as $empresa)
+                                    <article class="border border-gray-200 rounded-xl bg-white p-5 shadow-sm">
+                                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
 
-                                    <thead>
-                                        <tr>
-                                            <th class="cc-text-left">Nombre legal</th>
-                                            <th class="cc-text-left">NIT</th>
-                                            <th class="cc-text-left">Contacto</th>
-                                            <th class="cc-text-center">Estado</th>
-                                            <th class="cc-text-center">Acciones</th>
-                                        </tr>
-                                    </thead>
+                                            <div class="lg:col-span-4 min-w-0">
+                                                <div class="flex items-center gap-3 min-w-0">
+                                                    <h5 class="text-xl font-black text-gray-900 cc-cell-truncate">
+                                                        {{ $empresa->nombre_legal }}
+                                                    </h5>
 
-                                    <tbody>
-                                        @foreach ($empresas as $empresa)
-                                            <tr>
-                                                <td class="cc-text-left cc-cell-truncate">
-                                                    {{ $empresa->nombre_legal }}
-                                                </td>
-
-                                                <td class="cc-text-left">
-                                                    {{ $empresa->nit }}
-                                                </td>
-
-                                                <td class="cc-text-left cc-cell-truncate">
-                                                    {{ $empresa->poc_nombre }}
-                                                </td>
-
-                                                <td class="cc-text-center">
                                                     @if ($empresa->estado === 'activa')
                                                         <span class="cc-badge cc-badge-active">
                                                             Activa
@@ -249,23 +224,52 @@
                                                             Inactiva
                                                         </span>
                                                     @endif
-                                                </td>
+                                                </div>
 
-                                                <td class="cc-actions-cell">
-                                                    <div class="cc-actions-group">
-                                                        <a href="{{ route('empresas.show', $empresa) }}" class="cc-btn-primary">
-                                                            Ver ficha
-                                                        </a>
+                                                <div class="mt-1 text-sm text-gray-500 cc-cell-truncate">
+                                                    {{ $empresa->nombre_comercial ?: 'Sin nombre comercial registrado' }}
+                                                </div>
+                                            </div>
 
-                                                        <a href="{{ route('empresas.edit', $empresa) }}" class="cc-btn-secondary">
-                                                            Editar
-                                                        </a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
+                                            <div class="lg:col-span-2 min-w-0">
+                                                <div class="text-xs font-black text-gray-500 uppercase tracking-wider">
+                                                    NIT
+                                                </div>
+
+                                                <div class="mt-1 font-bold text-gray-900">
+                                                    {{ $empresa->nit }}
+                                                </div>
+                                            </div>
+
+                                            <div class="lg:col-span-3 min-w-0">
+                                                <div class="text-xs font-black text-gray-500 uppercase tracking-wider">
+                                                    Contacto
+                                                </div>
+
+                                                <div class="mt-1 font-bold text-gray-900 cc-cell-truncate">
+                                                    {{ $empresa->poc_nombre }}
+                                                </div>
+
+                                                <div class="text-sm text-gray-500 cc-cell-truncate">
+                                                    {{ $empresa->poc_email }}
+                                                </div>
+                                            </div>
+
+                                            <div class="lg:col-span-3">
+                                                <div class="flex items-center justify-end gap-3">
+                                                    <a href="{{ route('empresas.show', $empresa) }}" class="cc-btn-primary">
+                                                        Ver ficha
+                                                    </a>
+
+                                                    <a href="{{ route('empresas.edit', $empresa) }}" class="cc-btn-secondary">
+                                                        Editar
+                                                    </a>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </article>
+                                @endforeach
                             </div>
 
                             <div class="mt-6">

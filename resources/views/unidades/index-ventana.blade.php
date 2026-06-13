@@ -209,83 +209,17 @@
                                 </p>
                             </div>
                         @else
-                            <div class="cc-table-wrapper">
-                                <table class="cc-table">
-                                    <colgroup>
-                                        <col style="width: 18%;">
-                                        <col style="width: 24%;">
-                                        <col style="width: 14%;">
-                                        <col style="width: 14%;">
-                                        <col style="width: 18%;">
-                                        <col style="width: 12%;">
-                                    </colgroup>
+                            <div class="space-y-4">
+                                @foreach ($unidades as $unidad)
+                                    <article class="border border-gray-200 rounded-xl bg-white p-5 shadow-sm">
+                                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
 
-                                    <thead>
-                                        <tr>
-                                            <th class="cc-text-left">Placa</th>
-                                            <th class="cc-text-left">Empresa</th>
-                                            <th class="cc-text-center">Tanques</th>
-                                            <th class="cc-text-center">Cobertura</th>
-                                            <th class="cc-text-left">Modelo medición</th>
-                                            <th class="cc-text-center">Estado</th>
-                                        </tr>
-                                    </thead>
-
-                                    <tbody>
-                                        @foreach ($unidades as $unidad)
-                                            <tr>
-                                                <td class="cc-text-left">
-                                                    <div class="font-bold text-gray-900 cc-cell-truncate">
+                                            <div class="lg:col-span-3 min-w-0">
+                                                <div class="flex items-center gap-3 min-w-0">
+                                                    <h5 class="text-xl font-black text-gray-900 cc-cell-truncate">
                                                         {{ $unidad->placa }}
-                                                    </div>
-                                                    <div class="text-sm text-gray-500 cc-cell-truncate">
-                                                        {{ $unidad->marca ?: 'Sin marca registrada' }}
-                                                    </div>
-                                                </td>
+                                                    </h5>
 
-                                                <td class="cc-text-left">
-                                                    @if ($unidad->empresa)
-                                                        <div class="font-bold text-gray-900 cc-cell-truncate">
-                                                            {{ $unidad->empresa->nombre_comercial ?: $unidad->empresa->nombre_legal }}
-                                                        </div>
-                                                        <div class="text-sm text-gray-500">
-                                                            {{ $unidad->empresa->nit }}
-                                                        </div>
-                                                    @else
-                                                        <span class="text-sm text-gray-500 italic">
-                                                            Sin empresa
-                                                        </span>
-                                                    @endif
-                                                </td>
-
-                                                <td class="cc-text-center">
-                                                    <div class="font-bold text-gray-900">
-                                                        {{ $unidad->total_tanques }}
-                                                    </div>
-                                                    <div class="text-sm text-gray-500">
-                                                        totales
-                                                    </div>
-                                                </td>
-
-                                                <td class="cc-text-center">
-                                                    <div class="font-bold text-gray-900">
-                                                        {{ $unidad->cantidad_tanques_con_licencia }}
-                                                    </div>
-                                                    <div class="text-sm text-gray-500">
-                                                        protegidos
-                                                    </div>
-                                                </td>
-
-                                                <td class="cc-text-left">
-                                                    <div class="font-bold text-gray-900 cc-cell-truncate">
-                                                        {{ $unidad->modelo_medicion_texto }}
-                                                    </div>
-                                                    <div class="text-sm text-gray-500">
-                                                        {{ number_format((float) $unidad->capacidad_cubierta, 2) }} galones cubiertos
-                                                    </div>
-                                                </td>
-
-                                                <td class="cc-text-center">
                                                     @if ($unidad->estado === 'activo')
                                                         <span class="cc-badge cc-badge-active">
                                                             Activo
@@ -295,11 +229,62 @@
                                                             Inactivo
                                                         </span>
                                                     @endif
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
+                                                </div>
+
+                                                <div class="mt-1 text-sm text-gray-500 cc-cell-truncate">
+                                                    {{ $unidad->marca ?: 'Sin marca registrada' }}
+                                                </div>
+                                            </div>
+
+                                            <div class="lg:col-span-2 min-w-0">
+                                                <div class="text-xs font-black text-gray-500 uppercase tracking-wider">
+                                                    Empresa
+                                                </div>
+
+                                                @if ($unidad->empresa)
+                                                    <div class="mt-1 font-bold text-gray-900 cc-cell-truncate">
+                                                        {{ $unidad->empresa->nombre_comercial ?: $unidad->empresa->nombre_legal }}
+                                                    </div>
+                                                @else
+                                                    <div class="mt-1 text-sm text-gray-500 italic">
+                                                        Sin empresa
+                                                    </div>
+                                                @endif
+                                            </div>
+
+                                            <div class="lg:col-span-2">
+                                                <div class="text-xs font-black text-gray-500 uppercase tracking-wider">
+                                                    Tanques
+                                                </div>
+
+                                                <div class="mt-1 font-bold text-gray-900">
+                                                    {{ $unidad->total_tanques }} totales
+                                                </div>
+                                            </div>
+
+                                            <div class="lg:col-span-2">
+                                                <div class="text-xs font-black text-gray-500 uppercase tracking-wider">
+                                                    Cobertura
+                                                </div>
+
+                                                <div class="mt-1 font-bold text-gray-900">
+                                                    {{ $unidad->cantidad_tanques_con_licencia }} de {{ $unidad->total_tanques }} tanques
+                                                </div>
+                                            </div>
+
+                                            <div class="lg:col-span-3 min-w-0">
+                                                <div class="text-xs font-black text-gray-500 uppercase tracking-wider">
+                                                    Modelo de medición
+                                                </div>
+
+                                                <div class="mt-1 font-bold text-gray-900 cc-cell-truncate">
+                                                    {{ $unidad->modelo_medicion_texto }}
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </article>
+                                @endforeach
                             </div>
 
                             <div class="mt-6">

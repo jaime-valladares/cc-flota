@@ -176,69 +176,17 @@
                                 </p>
                             </div>
                         @else
-                            <div class="cc-table-wrapper">
-                                <table class="cc-table">
-                                    <colgroup>
-                                        <col style="width: 24%;">
-                                        <col style="width: 22%;">
-                                        <col style="width: 20%;">
-                                        <col style="width: 12%;">
-                                        <col style="width: 22%;">
-                                    </colgroup>
+                            <div class="space-y-4">
+                                @foreach ($usuarios as $usuario)
+                                    <article class="border border-gray-200 rounded-xl bg-white p-5 shadow-sm">
+                                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
 
-                                    <thead>
-                                        <tr>
-                                            <th class="cc-text-left">Usuario</th>
-                                            <th class="cc-text-left">Empresa</th>
-                                            <th class="cc-text-left">Rol</th>
-                                            <th class="cc-text-center">Estado</th>
-                                            <th class="cc-text-center">Acciones</th>
-                                        </tr>
-                                    </thead>
-
-                                    <tbody>
-                                        @foreach ($usuarios as $usuario)
-                                            <tr>
-                                                <td class="cc-text-left">
-                                                    <div class="font-bold text-gray-900 cc-cell-truncate">
+                                            <div class="lg:col-span-4 min-w-0">
+                                                <div class="flex items-center gap-3 min-w-0">
+                                                    <h5 class="text-xl font-black text-gray-900 cc-cell-truncate">
                                                         {{ $usuario->name }} {{ $usuario->apellido }}
-                                                    </div>
-                                                    <div class="text-sm text-gray-500 cc-cell-truncate">
-                                                        {{ $usuario->email }}
-                                                    </div>
-                                                </td>
+                                                    </h5>
 
-                                                <td class="cc-text-left">
-                                                    @if ($usuario->empresa)
-                                                        <div class="font-bold text-gray-900 cc-cell-truncate">
-                                                            {{ $usuario->empresa->nombre_comercial ?: $usuario->empresa->nombre_legal }}
-                                                        </div>
-                                                        <div class="text-sm text-gray-500">
-                                                            {{ $usuario->empresa->nit }}
-                                                        </div>
-                                                    @else
-                                                        <div class="font-bold text-gray-900">
-                                                            Diesel Cop
-                                                        </div>
-                                                    @endif
-                                                </td>
-
-                                                <td class="cc-text-left">
-                                                    @if ($usuario->role)
-                                                        <div class="font-bold text-gray-900 cc-cell-truncate">
-                                                            {{ $usuario->role->nombre }}
-                                                        </div>
-                                                        <div class="text-sm text-gray-500">
-                                                            {{ $usuario->role->codigo }}
-                                                        </div>
-                                                    @else
-                                                        <span class="text-sm text-gray-500 italic">
-                                                            Sin rol
-                                                        </span>
-                                                    @endif
-                                                </td>
-
-                                                <td class="cc-text-center">
                                                     @if ($usuario->estado === 'activo')
                                                         <span class="cc-badge cc-badge-active">
                                                             Activo
@@ -248,23 +196,60 @@
                                                             Inactivo
                                                         </span>
                                                     @endif
-                                                </td>
+                                                </div>
 
-                                                <td class="cc-actions-cell">
-                                                    <div class="cc-actions-group">
-                                                        <a href="{{ route('usuarios.show', $usuario) }}" class="cc-btn-primary">
-                                                            Ver ficha
-                                                        </a>
+                                                <div class="mt-1 text-sm text-gray-500 cc-cell-truncate">
+                                                    {{ $usuario->email }}
+                                                </div>
+                                            </div>
 
-                                                        <a href="{{ route('usuarios.edit', $usuario) }}" class="cc-btn-secondary">
-                                                            Editar
-                                                        </a>
+                                            <div class="lg:col-span-2 min-w-0">
+                                                <div class="text-xs font-black text-gray-500 uppercase tracking-wider">
+                                                    Empresa
+                                                </div>
+
+                                                @if ($usuario->empresa)
+                                                    <div class="mt-1 font-bold text-gray-900 cc-cell-truncate">
+                                                        {{ $usuario->empresa->nombre_comercial ?: $usuario->empresa->nombre_legal }}
                                                     </div>
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
+                                                @else
+                                                    <div class="mt-1 font-bold text-gray-900">
+                                                        Diesel Cop
+                                                    </div>
+                                                @endif
+                                            </div>
+
+                                            <div class="lg:col-span-3 min-w-0">
+                                                <div class="text-xs font-black text-gray-500 uppercase tracking-wider">
+                                                    Rol
+                                                </div>
+
+                                                @if ($usuario->role)
+                                                    <div class="mt-1 font-bold text-gray-900 cc-cell-truncate">
+                                                        {{ $usuario->role->nombre }}
+                                                    </div>
+                                                @else
+                                                    <div class="mt-1 text-sm text-gray-500 italic">
+                                                        Sin rol
+                                                    </div>
+                                                @endif
+                                            </div>
+
+                                            <div class="lg:col-span-3">
+                                                <div class="flex items-center justify-end gap-3">
+                                                    <a href="{{ route('usuarios.show', $usuario) }}" class="cc-btn-primary">
+                                                        Ver ficha
+                                                    </a>
+
+                                                    <a href="{{ route('usuarios.edit', $usuario) }}" class="cc-btn-secondary">
+                                                        Editar
+                                                    </a>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </article>
+                                @endforeach
                             </div>
 
                             <div class="mt-6">
