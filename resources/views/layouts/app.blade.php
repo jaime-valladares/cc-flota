@@ -8,14 +8,30 @@
         <title>CC-Flota</title>
 
         <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900&display=swap" rel="stylesheet" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
 
-    <body class="font-sans antialiased">
+    <body class="antialiased">
+        @php
+            $userName = Auth::user()->name ?? 'Usuario';
+            $userEmail = Auth::user()->email ?? null;
+
+            $initials = collect(explode(' ', trim($userName)))
+                ->filter()
+                ->map(fn ($part) => mb_substr($part, 0, 1))
+                ->take(2)
+                ->implode('');
+
+            if ($initials === '') {
+                $initials = 'U';
+            }
+        @endphp
+
         <div class="cc-admin-shell">
 
             <!-- Sidebar -->
@@ -30,7 +46,7 @@
                             CC-Flota
                         </div>
                         <div class="cc-sidebar-subtitle">
-                            Diesel Cop Admin
+                            Diesel Cop Operations
                         </div>
                     </div>
                 </div>
@@ -70,17 +86,17 @@
 
                         <div class="cc-sidebar-subnav">
                             <a href="{{ route('usuarios.index') }}"
-                            class="cc-sidebar-sublink {{ request()->routeIs('usuarios.index') ? 'cc-sidebar-sublink-active' : '' }}">
+                               class="cc-sidebar-sublink {{ request()->routeIs('usuarios.index') ? 'cc-sidebar-sublink-active' : '' }}">
                                 Consulta usuarios
                             </a>
 
                             <a href="{{ route('usuarios.administrar') }}"
-                            class="cc-sidebar-sublink {{ request()->routeIs('usuarios.administrar') ? 'cc-sidebar-sublink-active' : '' }}">
+                               class="cc-sidebar-sublink {{ request()->routeIs('usuarios.administrar') ? 'cc-sidebar-sublink-active' : '' }}">
                                 Administrar usuario
                             </a>
 
                             <a href="{{ route('usuarios.create') }}"
-                            class="cc-sidebar-sublink {{ request()->routeIs('usuarios.create') ? 'cc-sidebar-sublink-active' : '' }}">
+                               class="cc-sidebar-sublink {{ request()->routeIs('usuarios.create') ? 'cc-sidebar-sublink-active' : '' }}">
                                 Nuevo usuario
                             </a>
                         </div>
@@ -101,21 +117,25 @@
 
                         <div class="cc-sidebar-subnav">
                             <a href="{{ route('unidades.index') }}"
-                            class="cc-sidebar-sublink {{ request()->routeIs('unidades.index') ? 'cc-sidebar-sublink-active' : '' }}">
+                               class="cc-sidebar-sublink {{ request()->routeIs('unidades.index') ? 'cc-sidebar-sublink-active' : '' }}">
                                 Consulta unidades
                             </a>
 
                             <a href="{{ route('unidades.administrar') }}"
-                            class="cc-sidebar-sublink {{ request()->routeIs('unidades.administrar') ? 'cc-sidebar-sublink-active' : '' }}">
+                               class="cc-sidebar-sublink {{ request()->routeIs('unidades.administrar') || request()->routeIs('unidades.show') || request()->routeIs('unidades.edit') ? 'cc-sidebar-sublink-active' : '' }}">
                                 Administrar unidad
                             </a>
 
                             <a href="{{ route('unidades.create') }}"
-                            class="cc-sidebar-sublink {{ request()->routeIs('unidades.create') ? 'cc-sidebar-sublink-active' : '' }}">
+                               class="cc-sidebar-sublink {{ request()->routeIs('unidades.create') ? 'cc-sidebar-sublink-active' : '' }}">
                                 Nueva unidad
                             </a>
                         </div>
                     </div>
+
+                    <span class="cc-sidebar-link cc-sidebar-link-disabled">
+                        Licencias
+                    </span>
 
                     <span class="cc-sidebar-link cc-sidebar-link-disabled">
                         Marchamos
@@ -161,16 +181,30 @@
                 <!-- Topbar -->
                 <header class="cc-topbar">
                     <div>
+                        <div class="cc-topbar-kicker">
+                            Plataforma operativa
+                        </div>
+
                         <div class="cc-topbar-title">
-                            Consola administrativa
+                            Consola administrativa CC-Flota
                         </div>
                     </div>
 
                     <div class="cc-topbar-user">
                         <div class="cc-user-info">
                             <div class="cc-user-name">
-                                {{ Auth::user()->name }}
+                                {{ $userName }}
                             </div>
+
+                            @if ($userEmail)
+                                <div class="cc-user-role">
+                                    {{ $userEmail }}
+                                </div>
+                            @endif
+                        </div>
+
+                        <div class="cc-user-avatar">
+                            {{ strtoupper($initials) }}
                         </div>
 
                         <form method="POST" action="{{ route('logout') }}">

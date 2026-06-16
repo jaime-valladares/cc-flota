@@ -30,30 +30,30 @@
                     </div>
                 @endif
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div class="border border-gray-200 rounded-lg p-4 bg-white">
-                        <div class="text-sm font-bold text-gray-500 uppercase tracking-wider">
+                <div class="cc-metric-grid">
+                    <div class="cc-metric-card">
+                        <div class="cc-metric-label">
                             Total usuarios
                         </div>
-                        <div class="mt-2 text-3xl font-black text-gray-900">
+                        <div class="cc-metric-value">
                             {{ $totalUsuarios }}
                         </div>
                     </div>
 
-                    <div class="border border-gray-200 rounded-lg p-4 bg-white">
-                        <div class="text-sm font-bold text-gray-500 uppercase tracking-wider">
+                    <div class="cc-metric-card">
+                        <div class="cc-metric-label">
                             Activos
                         </div>
-                        <div class="mt-2 text-3xl font-black text-green-700">
+                        <div class="cc-metric-value cc-metric-value-success">
                             {{ $usuariosActivos }}
                         </div>
                     </div>
 
-                    <div class="border border-gray-200 rounded-lg p-4 bg-white">
-                        <div class="text-sm font-bold text-gray-500 uppercase tracking-wider">
+                    <div class="cc-metric-card">
+                        <div class="cc-metric-label">
                             Inactivos
                         </div>
-                        <div class="mt-2 text-3xl font-black text-red-800">
+                        <div class="cc-metric-value cc-metric-value-danger">
                             {{ $usuariosInactivos }}
                         </div>
                     </div>
@@ -62,7 +62,7 @@
                 <form method="GET" action="{{ route('usuarios.index') }}" class="mb-6">
                     <input type="hidden" name="consultar" value="1">
 
-                    <div class="border border-gray-200 rounded-lg p-5 bg-gray-50">
+                    <div class="cc-filter-panel">
 
                         <div class="cc-form-section" style="margin-top: 0; margin-bottom: 1.25rem;">
                             <div class="cc-form-section-title">
@@ -125,9 +125,9 @@
 
                         </div>
 
-                        <div class="mt-4 border-t border-gray-200 pt-4">
+                        <div class="mt-5 border-t border-[var(--cc-card-border)] pt-5">
                             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                                <p class="text-sm text-gray-500 italic">
+                                <p class="text-sm text-[var(--cc-text-muted)] leading-relaxed">
                                     La consulta permite visualizar usuarios, sin modificar información.
                                 </p>
 
@@ -145,13 +145,13 @@
                     </div>
                 </form>
 
-                <div class="flex items-center justify-between mb-4">
+                <div class="cc-section-heading">
                     <div>
-                        <h4 class="text-base font-black text-gray-900">
+                        <h4 class="cc-section-title">
                             Resultados
                         </h4>
 
-                        <p class="text-sm text-gray-500 italic">
+                        <p class="cc-section-note">
                             @if (! $hayFiltros)
                                 Seleccione tipo de usuario, empresa o rol para consultar usuarios.
                             @elseif ($usuarios->total() === 0)
@@ -165,32 +165,32 @@
                     </div>
 
                     @if ($hayFiltros && $usuarios->total() > 0)
-                        <div class="text-sm text-gray-500">
+                        <div class="text-sm text-[var(--cc-text-muted)]">
                             Mostrando
-                            <span class="font-bold text-gray-700">{{ $usuarios->firstItem() }}</span>
+                            <span class="font-bold text-[var(--cc-text-main)]">{{ $usuarios->firstItem() }}</span>
                             -
-                            <span class="font-bold text-gray-700">{{ $usuarios->lastItem() }}</span>
+                            <span class="font-bold text-[var(--cc-text-main)]">{{ $usuarios->lastItem() }}</span>
                             de
-                            <span class="font-bold text-gray-700">{{ $usuarios->total() }}</span>
+                            <span class="font-bold text-[var(--cc-text-main)]">{{ $usuarios->total() }}</span>
                         </div>
                     @endif
                 </div>
 
                 @if (! $hayFiltros)
-                    <div class="border border-dashed border-gray-300 rounded-lg p-6 bg-gray-50">
-                        <h5 class="text-base font-black text-gray-900">
+                    <div class="cc-empty-panel">
+                        <h5>
                             Consulta pendiente
                         </h5>
-                        <p class="mt-1 text-sm text-gray-500 italic">
+                        <p>
                             Los resultados permanecerán vacíos hasta que seleccione tipo de usuario, empresa o rol.
                         </p>
                     </div>
                 @elseif ($usuarios->isEmpty())
-                    <div class="border border-dashed border-gray-300 rounded-lg p-6 bg-gray-50">
-                        <h5 class="text-base font-black text-gray-900">
+                    <div class="cc-empty-panel">
+                        <h5>
                             Sin resultados
                         </h5>
-                        <p class="mt-1 text-sm text-gray-500 italic">
+                        <p>
                             No hay usuarios que coincidan con los criterios seleccionados.
                         </p>
                     </div>
@@ -217,24 +217,24 @@
                                 @foreach ($usuarios as $usuario)
                                     <tr>
                                         <td class="cc-text-left">
-                                            <div class="font-bold text-gray-900">
+                                            <div class="font-bold text-[var(--cc-text-main)]">
                                                 {{ $usuario->name }} {{ $usuario->apellido }}
                                             </div>
-                                            <div class="text-sm text-gray-500">
+                                            <div class="text-sm text-[var(--cc-text-muted)]">
                                                 {{ $usuario->email }}
                                             </div>
                                         </td>
 
                                         <td class="cc-text-left">
                                             @if ($usuario->empresa)
-                                                <div class="font-bold text-gray-900 cc-cell-truncate">
+                                                <div class="font-bold text-[var(--cc-text-main)] cc-cell-truncate">
                                                     {{ $usuario->empresa->nombre_comercial ?: $usuario->empresa->nombre_legal }}
                                                 </div>
-                                                <div class="text-sm text-gray-500">
+                                                <div class="text-sm text-[var(--cc-text-muted)]">
                                                     {{ $usuario->empresa->nit }}
                                                 </div>
                                             @else
-                                                <div class="font-bold text-gray-900">
+                                                <div class="font-bold text-[var(--cc-text-main)]">
                                                     Diesel Cop
                                                 </div>
                                             @endif
@@ -242,14 +242,14 @@
 
                                         <td class="cc-text-left">
                                             @if ($usuario->role)
-                                                <div class="font-bold text-gray-900">
+                                                <div class="font-bold text-[var(--cc-text-main)]">
                                                     {{ $usuario->role->nombre }}
                                                 </div>
-                                                <div class="text-sm text-gray-500">
+                                                <div class="text-sm text-[var(--cc-text-muted)]">
                                                     {{ $usuario->role->codigo }}
                                                 </div>
                                             @else
-                                                <span class="text-sm text-gray-500 italic">
+                                                <span class="text-sm text-[var(--cc-text-muted)]">
                                                     Sin rol
                                                 </span>
                                             @endif
@@ -257,9 +257,13 @@
 
                                         <td class="cc-text-left">
                                             @if ($usuario->tipo_usuario === 'diesel_cop')
-                                                Diesel Cop
+                                                <span class="cc-badge cc-badge-info">
+                                                    Diesel Cop
+                                                </span>
                                             @else
-                                                Empresa
+                                                <span class="cc-badge cc-badge-active">
+                                                    Empresa
+                                                </span>
                                             @endif
                                         </td>
                                     </tr>

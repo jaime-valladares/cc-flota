@@ -30,7 +30,7 @@
                 @endif
 
                 <form method="GET" action="{{ route('empresas.administrar') }}" class="mb-6">
-                    <div class="border border-gray-200 rounded-lg p-5 bg-gray-50">
+                    <div class="cc-filter-panel">
 
                         <div class="cc-form-section" style="margin-top: 0; margin-bottom: 1.25rem;">
                             <div class="cc-form-section-title">
@@ -119,9 +119,9 @@
 
                         </div>
 
-                        <div class="mt-4 border-t border-gray-200 pt-4">
+                        <div class="mt-5 border-t border-[var(--cc-card-border)] pt-5">
                             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                                <p class="text-sm text-gray-500 italic">
+                                <p class="text-sm text-[var(--cc-text-muted)] leading-relaxed">
                                     @if ($esUsuarioDieselCop)
                                         Seleccione una empresa, use Todas o agregue otro criterio para localizar empresas.
                                     @else
@@ -143,13 +143,13 @@
                     </div>
                 </form>
 
-                <div class="flex items-center justify-between mb-4">
+                <div class="cc-section-heading">
                     <div>
-                        <h4 class="text-base font-black text-gray-900">
+                        <h4 class="cc-section-title">
                             Resultado administrativo
                         </h4>
 
-                        <p class="text-sm text-gray-500 italic">
+                        <p class="cc-section-note">
                             @if (! $hayFiltros)
                                 Seleccione una empresa, NIT o estado para buscar una empresa.
                             @elseif ($empresas->total() === 0)
@@ -163,44 +163,44 @@
                     </div>
 
                     @if ($hayFiltros && $empresas->total() > 0)
-                        <div class="text-sm text-gray-500">
+                        <div class="text-sm text-[var(--cc-text-muted)]">
                             Mostrando
-                            <span class="font-bold text-gray-700">{{ $empresas->firstItem() }}</span>
+                            <span class="font-bold text-[var(--cc-text-main)]">{{ $empresas->firstItem() }}</span>
                             -
-                            <span class="font-bold text-gray-700">{{ $empresas->lastItem() }}</span>
+                            <span class="font-bold text-[var(--cc-text-main)]">{{ $empresas->lastItem() }}</span>
                             de
-                            <span class="font-bold text-gray-700">{{ $empresas->total() }}</span>
+                            <span class="font-bold text-[var(--cc-text-main)]">{{ $empresas->total() }}</span>
                         </div>
                     @endif
                 </div>
 
                 @if (! $hayFiltros)
-                    <div class="border border-dashed border-gray-300 rounded-lg p-6 bg-gray-50">
-                        <h5 class="text-base font-black text-gray-900">
+                    <div class="cc-empty-panel">
+                        <h5>
                             Búsqueda pendiente
                         </h5>
-                        <p class="mt-1 text-sm text-gray-500 italic">
+                        <p>
                             Los resultados permanecerán vacíos hasta que localice una empresa por empresa, NIT o estado.
                         </p>
                     </div>
                 @elseif ($empresas->isEmpty())
-                    <div class="border border-dashed border-gray-300 rounded-lg p-6 bg-gray-50">
-                        <h5 class="text-base font-black text-gray-900">
+                    <div class="cc-empty-panel">
+                        <h5>
                             Sin resultados
                         </h5>
-                        <p class="mt-1 text-sm text-gray-500 italic">
+                        <p>
                             No hay empresas que coincidan con los criterios seleccionados.
                         </p>
                     </div>
                 @else
                     <div class="space-y-4">
                         @foreach ($empresas as $empresa)
-                            <article class="border border-gray-200 rounded-xl bg-white p-5 shadow-sm">
+                            <article class="cc-result-card">
                                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
 
                                     <div class="lg:col-span-4 min-w-0">
                                         <div class="flex items-center gap-3 min-w-0">
-                                            <h5 class="text-xl font-black text-gray-900 cc-cell-truncate">
+                                            <h5 class="font-[var(--cc-font-heading)] text-xl font-extrabold text-[var(--cc-text-heading)] tracking-[-0.03em] cc-cell-truncate">
                                                 {{ $empresa->nombre_legal }}
                                             </h5>
 
@@ -215,31 +215,31 @@
                                             @endif
                                         </div>
 
-                                        <div class="mt-1 text-sm text-gray-500 cc-cell-truncate">
+                                        <div class="mt-1 text-sm font-medium text-[var(--cc-text-muted)] cc-cell-truncate">
                                             {{ $empresa->nombre_comercial ?: 'Sin nombre comercial registrado' }}
                                         </div>
                                     </div>
 
                                     <div class="lg:col-span-2 min-w-0">
-                                        <div class="text-xs font-black text-gray-500 uppercase tracking-wider">
+                                        <div class="font-[var(--cc-font-heading)] text-xs font-extrabold text-[var(--cc-text-muted)] uppercase tracking-wider">
                                             NIT
                                         </div>
 
-                                        <div class="mt-1 font-bold text-gray-900">
+                                        <div class="mt-1 font-bold text-[var(--cc-text-main)]">
                                             {{ $empresa->nit }}
                                         </div>
                                     </div>
 
                                     <div class="lg:col-span-3 min-w-0">
-                                        <div class="text-xs font-black text-gray-500 uppercase tracking-wider">
+                                        <div class="font-[var(--cc-font-heading)] text-xs font-extrabold text-[var(--cc-text-muted)] uppercase tracking-wider">
                                             Contacto
                                         </div>
 
-                                        <div class="mt-1 font-bold text-gray-900 cc-cell-truncate">
+                                        <div class="mt-1 font-bold text-[var(--cc-text-main)] cc-cell-truncate">
                                             {{ $empresa->poc_nombre }}
                                         </div>
 
-                                        <div class="text-sm text-gray-500 cc-cell-truncate">
+                                        <div class="text-sm font-medium text-[var(--cc-text-muted)] cc-cell-truncate">
                                             {{ $empresa->poc_email }}
                                         </div>
                                     </div>
@@ -297,4 +297,4 @@
             });
         }
     </script>
-</x-app-layout> 
+</x-app-layout>

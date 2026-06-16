@@ -29,37 +29,37 @@
                     </div>
                 @endif
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div class="border border-gray-200 rounded-lg p-4 bg-white">
-                        <div class="text-sm font-bold text-gray-500 uppercase tracking-wider">
+                <div class="cc-metric-grid">
+                    <div class="cc-metric-card">
+                        <div class="cc-metric-label">
                             Total empresas
                         </div>
-                        <div class="mt-2 text-3xl font-black text-gray-900">
+                        <div class="cc-metric-value">
                             {{ $totalEmpresas }}
                         </div>
                     </div>
 
-                    <div class="border border-gray-200 rounded-lg p-4 bg-white">
-                        <div class="text-sm font-bold text-gray-500 uppercase tracking-wider">
+                    <div class="cc-metric-card">
+                        <div class="cc-metric-label">
                             Activas
                         </div>
-                        <div class="mt-2 text-3xl font-black text-green-700">
+                        <div class="cc-metric-value cc-metric-value-success">
                             {{ $empresasActivas }}
                         </div>
                     </div>
 
-                    <div class="border border-gray-200 rounded-lg p-4 bg-white">
-                        <div class="text-sm font-bold text-gray-500 uppercase tracking-wider">
+                    <div class="cc-metric-card">
+                        <div class="cc-metric-label">
                             Inactivas
                         </div>
-                        <div class="mt-2 text-3xl font-black text-red-800">
+                        <div class="cc-metric-value cc-metric-value-danger">
                             {{ $empresasInactivas }}
                         </div>
                     </div>
                 </div>
 
                 <form method="GET" action="{{ route('empresas.index') }}" class="mb-6">
-                    <div class="border border-gray-200 rounded-lg p-5 bg-gray-50">
+                    <div class="cc-filter-panel">
 
                         <div class="cc-form-section" style="margin-top: 0; margin-bottom: 1.25rem;">
                             <div class="cc-form-section-title">
@@ -142,9 +142,9 @@
 
                         </div>
 
-                        <div class="mt-4 border-t border-gray-200 pt-4">
+                        <div class="mt-5 border-t border-[var(--cc-card-border)] pt-5">
                             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                                <p class="text-sm text-gray-500 italic">
+                                <p class="text-sm text-[var(--cc-text-muted)] leading-relaxed">
                                     @if ($esUsuarioDieselCop)
                                         La consulta permite visualizar empresas, sin modificar información.
                                     @else
@@ -166,13 +166,13 @@
                     </div>
                 </form>
 
-                <div class="flex items-center justify-between mb-4">
+                <div class="cc-section-heading">
                     <div>
-                        <h4 class="text-base font-black text-gray-900">
+                        <h4 class="cc-section-title">
                             Resultados
                         </h4>
 
-                        <p class="text-sm text-gray-500 italic">
+                        <p class="cc-section-note">
                             @if (! $hayFiltros)
                                 Seleccione una empresa, NIT o estado para consultar empresas.
                             @elseif ($empresas->total() === 0)
@@ -186,32 +186,32 @@
                     </div>
 
                     @if ($hayFiltros && $empresas->total() > 0)
-                        <div class="text-sm text-gray-500">
+                        <div class="text-sm text-[var(--cc-text-muted)]">
                             Mostrando
-                            <span class="font-bold text-gray-700">{{ $empresas->firstItem() }}</span>
+                            <span class="font-bold text-[var(--cc-text-main)]">{{ $empresas->firstItem() }}</span>
                             -
-                            <span class="font-bold text-gray-700">{{ $empresas->lastItem() }}</span>
+                            <span class="font-bold text-[var(--cc-text-main)]">{{ $empresas->lastItem() }}</span>
                             de
-                            <span class="font-bold text-gray-700">{{ $empresas->total() }}</span>
+                            <span class="font-bold text-[var(--cc-text-main)]">{{ $empresas->total() }}</span>
                         </div>
                     @endif
                 </div>
 
                 @if (! $hayFiltros)
-                    <div class="border border-dashed border-gray-300 rounded-lg p-6 bg-gray-50">
-                        <h5 class="text-base font-black text-gray-900">
+                    <div class="cc-empty-panel">
+                        <h5>
                             Consulta pendiente
                         </h5>
-                        <p class="mt-1 text-sm text-gray-500 italic">
+                        <p>
                             La tabla permanecerá vacía hasta que realice una búsqueda o filtre por empresa, NIT o estado.
                         </p>
                     </div>
                 @elseif ($empresas->isEmpty())
-                    <div class="border border-dashed border-gray-300 rounded-lg p-6 bg-gray-50">
-                        <h5 class="text-base font-black text-gray-900">
+                    <div class="cc-empty-panel">
+                        <h5>
                             Sin resultados
                         </h5>
-                        <p class="mt-1 text-sm text-gray-500 italic">
+                        <p>
                             No hay empresas que coincidan con los criterios seleccionados.
                         </p>
                     </div>

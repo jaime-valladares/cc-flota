@@ -7,16 +7,18 @@
 
         <title>Administrar usuario | CC-Flota</title>
 
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900&display=swap" rel="stylesheet" />
+        <!-- Fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
 
-    <body class="font-sans antialiased">
+    <body class="antialiased">
         <div class="min-h-screen" style="background: var(--cc-bg-main);">
             <div class="cc-page-wrapper">
-                <div class="cc-content-container">
+                <div class="cc-window-container">
                     <div class="cc-card">
 
                         <div class="cc-card-header">
@@ -45,7 +47,7 @@
                         <form method="GET" action="{{ route('usuarios.administrar.ventana') }}" class="mb-6">
                             <input type="hidden" name="consultar" value="1">
 
-                            <div class="border border-gray-200 rounded-lg p-5 bg-gray-50">
+                            <div class="cc-filter-panel">
 
                                 <div class="cc-form-section" style="margin-top: 0; margin-bottom: 1.25rem;">
                                     <div class="cc-form-section-title">
@@ -108,9 +110,9 @@
 
                                 </div>
 
-                                <div class="mt-4 border-t border-gray-200 pt-4">
+                                <div class="mt-5 border-t border-[var(--cc-card-border)] pt-5">
                                     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                                        <p class="text-sm text-gray-500 italic">
+                                        <p class="text-sm text-[var(--cc-text-muted)] leading-relaxed">
                                             Seleccione tipo de usuario, empresa o rol para localizar usuarios administrables.
                                         </p>
 
@@ -128,13 +130,13 @@
                             </div>
                         </form>
 
-                        <div class="flex items-center justify-between mb-4">
+                        <div class="cc-section-heading">
                             <div>
-                                <h4 class="text-base font-black text-gray-900">
+                                <h4 class="cc-section-title">
                                     Resultado administrativo
                                 </h4>
 
-                                <p class="text-sm text-gray-500 italic">
+                                <p class="cc-section-note">
                                     @if (! $hayFiltros)
                                         Seleccione tipo de usuario, empresa o rol para buscar usuarios.
                                     @elseif ($usuarios->total() === 0)
@@ -148,44 +150,44 @@
                             </div>
 
                             @if ($hayFiltros && $usuarios->total() > 0)
-                                <div class="text-sm text-gray-500">
+                                <div class="text-sm text-[var(--cc-text-muted)]">
                                     Mostrando
-                                    <span class="font-bold text-gray-700">{{ $usuarios->firstItem() }}</span>
+                                    <span class="font-bold text-[var(--cc-text-main)]">{{ $usuarios->firstItem() }}</span>
                                     -
-                                    <span class="font-bold text-gray-700">{{ $usuarios->lastItem() }}</span>
+                                    <span class="font-bold text-[var(--cc-text-main)]">{{ $usuarios->lastItem() }}</span>
                                     de
-                                    <span class="font-bold text-gray-700">{{ $usuarios->total() }}</span>
+                                    <span class="font-bold text-[var(--cc-text-main)]">{{ $usuarios->total() }}</span>
                                 </div>
                             @endif
                         </div>
 
                         @if (! $hayFiltros)
-                            <div class="border border-dashed border-gray-300 rounded-lg p-6 bg-gray-50">
-                                <h5 class="text-base font-black text-gray-900">
+                            <div class="cc-empty-panel">
+                                <h5>
                                     Búsqueda pendiente
                                 </h5>
-                                <p class="mt-1 text-sm text-gray-500 italic">
+                                <p>
                                     Los resultados permanecerán vacíos hasta que localice un usuario por tipo, empresa o rol.
                                 </p>
                             </div>
                         @elseif ($usuarios->isEmpty())
-                            <div class="border border-dashed border-gray-300 rounded-lg p-6 bg-gray-50">
-                                <h5 class="text-base font-black text-gray-900">
+                            <div class="cc-empty-panel">
+                                <h5>
                                     Sin resultados
                                 </h5>
-                                <p class="mt-1 text-sm text-gray-500 italic">
+                                <p>
                                     No hay usuarios que coincidan con los criterios seleccionados.
                                 </p>
                             </div>
                         @else
                             <div class="space-y-4">
                                 @foreach ($usuarios as $usuario)
-                                    <article class="border border-gray-200 rounded-xl bg-white p-5 shadow-sm">
+                                    <article class="cc-result-card">
                                         <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
 
                                             <div class="lg:col-span-4 min-w-0">
                                                 <div class="flex items-center gap-3 min-w-0">
-                                                    <h5 class="text-xl font-black text-gray-900 cc-cell-truncate">
+                                                    <h5 class="font-[var(--cc-font-heading)] text-xl font-extrabold text-[var(--cc-text-heading)] tracking-[-0.03em] cc-cell-truncate">
                                                         {{ $usuario->name }} {{ $usuario->apellido }}
                                                     </h5>
 
@@ -200,38 +202,38 @@
                                                     @endif
                                                 </div>
 
-                                                <div class="mt-1 text-sm text-gray-500 cc-cell-truncate">
+                                                <div class="mt-1 text-sm font-medium text-[var(--cc-text-muted)] cc-cell-truncate">
                                                     {{ $usuario->email }}
                                                 </div>
                                             </div>
 
                                             <div class="lg:col-span-2 min-w-0">
-                                                <div class="text-xs font-black text-gray-500 uppercase tracking-wider">
+                                                <div class="font-[var(--cc-font-heading)] text-xs font-extrabold text-[var(--cc-text-muted)] uppercase tracking-wider">
                                                     Empresa
                                                 </div>
 
                                                 @if ($usuario->empresa)
-                                                    <div class="mt-1 font-bold text-gray-900 cc-cell-truncate">
+                                                    <div class="mt-1 font-bold text-[var(--cc-text-main)] cc-cell-truncate">
                                                         {{ $usuario->empresa->nombre_comercial ?: $usuario->empresa->nombre_legal }}
                                                     </div>
                                                 @else
-                                                    <div class="mt-1 font-bold text-gray-900">
+                                                    <div class="mt-1 font-bold text-[var(--cc-text-main)]">
                                                         Diesel Cop
                                                     </div>
                                                 @endif
                                             </div>
 
                                             <div class="lg:col-span-3 min-w-0">
-                                                <div class="text-xs font-black text-gray-500 uppercase tracking-wider">
+                                                <div class="font-[var(--cc-font-heading)] text-xs font-extrabold text-[var(--cc-text-muted)] uppercase tracking-wider">
                                                     Rol
                                                 </div>
 
                                                 @if ($usuario->role)
-                                                    <div class="mt-1 font-bold text-gray-900 cc-cell-truncate">
+                                                    <div class="mt-1 font-bold text-[var(--cc-text-main)] cc-cell-truncate">
                                                         {{ $usuario->role->nombre }}
                                                     </div>
                                                 @else
-                                                    <div class="mt-1 text-sm text-gray-500 italic">
+                                                    <div class="mt-1 text-sm text-[var(--cc-text-muted)]">
                                                         Sin rol
                                                     </div>
                                                 @endif

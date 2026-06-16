@@ -7,16 +7,18 @@
 
         <title>Consulta de empresas | CC-Flota</title>
 
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900&display=swap" rel="stylesheet" />
+        <!-- Fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
 
-    <body class="font-sans antialiased">
+    <body class="antialiased">
         <div class="min-h-screen" style="background: var(--cc-bg-main);">
             <div class="cc-page-wrapper">
-                <div class="cc-content-container">
+                <div class="cc-window-container">
                     <div class="cc-card">
 
                         <div class="cc-card-header">
@@ -42,150 +44,150 @@
                             </div>
                         @endif
 
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                            <div class="border border-gray-200 rounded-lg p-4 bg-white">
-                                <div class="text-sm font-bold text-gray-500 uppercase tracking-wider">
+                        <div class="cc-metric-grid">
+                            <div class="cc-metric-card">
+                                <div class="cc-metric-label">
                                     Total empresas
                                 </div>
-                                <div class="mt-2 text-3xl font-black text-gray-900">
+                                <div class="cc-metric-value">
                                     {{ $totalEmpresas }}
                                 </div>
                             </div>
 
-                            <div class="border border-gray-200 rounded-lg p-4 bg-white">
-                                <div class="text-sm font-bold text-gray-500 uppercase tracking-wider">
+                            <div class="cc-metric-card">
+                                <div class="cc-metric-label">
                                     Activas
                                 </div>
-                                <div class="mt-2 text-3xl font-black text-green-700">
+                                <div class="cc-metric-value cc-metric-value-success">
                                     {{ $empresasActivas }}
                                 </div>
                             </div>
 
-                            <div class="border border-gray-200 rounded-lg p-4 bg-white">
-                                <div class="text-sm font-bold text-gray-500 uppercase tracking-wider">
+                            <div class="cc-metric-card">
+                                <div class="cc-metric-label">
                                     Inactivas
                                 </div>
-                                <div class="mt-2 text-3xl font-black text-red-800">
+                                <div class="cc-metric-value cc-metric-value-danger">
                                     {{ $empresasInactivas }}
                                 </div>
                             </div>
                         </div>
 
-                <form method="GET" action="{{ route('empresas.consulta.ventana') }}" class="mb-6">
-                    <div class="border border-gray-200 rounded-lg p-5 bg-gray-50">
+                        <form method="GET" action="{{ route('empresas.consulta.ventana') }}" class="mb-6">
+                            <div class="cc-filter-panel">
 
-                        <div class="cc-form-section" style="margin-top: 0; margin-bottom: 1.25rem;">
-                            <div class="cc-form-section-title">
-                                Filtros de consulta
-                            </div>
-                            <div class="cc-form-section-note">
-                                Utilice los filtros para localizar empresas por empresa, NIT o estado.
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
-
-                            <div class="lg:col-span-5 cc-field">
-                                <label for="empresa_id">
-                                    Empresa
-                                </label>
-
-                                @if ($esUsuarioDieselCop)
-                                    <select id="empresa_id" name="empresa_id" class="cc-input">
-                                        <option value="">Todas</option>
-
-                                        @foreach ($empresasSelector as $empresaOpcion)
-                                            <option value="{{ $empresaOpcion->id }}" @selected((string) $empresaId === (string) $empresaOpcion->id)>
-                                                {{ $empresaOpcion->nombre_comercial ?: $empresaOpcion->nombre_legal }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                @else
-                                    <select id="empresa_id" name="empresa_id" class="cc-input" disabled>
-                                        @foreach ($empresasSelector as $empresaOpcion)
-                                            <option value="{{ $empresaOpcion->id }}" selected>
-                                                {{ $empresaOpcion->nombre_comercial ?: $empresaOpcion->nombre_legal }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                @endif
-                            </div>
-
-                            <div class="lg:col-span-3 cc-field">
-                                <label for="nit">
-                                    NIT
-                                </label>
-                                <input
-                                    id="nit"
-                                    name="nit"
-                                    type="text"
-                                    class="cc-input"
-                                    value="{{ $nit }}"
-                                    maxlength="17"
-                                    placeholder="0000-000000-000-0"
-                                >
-
-                                @error('nit')
-                                    <div class="cc-error">
-                                        {{ $message }}
+                                <div class="cc-form-section" style="margin-top: 0; margin-bottom: 1.25rem;">
+                                    <div class="cc-form-section-title">
+                                        Filtros de consulta
                                     </div>
-                                @enderror
-                            </div>
-
-                            <div class="lg:col-span-4 cc-field">
-                                <label for="estado">
-                                    Estado
-                                </label>
-                                <select id="estado" name="estado" class="cc-input">
-                                    <option value="">Seleccione</option>
-                                    <option value="activa" @selected($estado === 'activa')>
-                                        Activas
-                                    </option>
-                                    <option value="inactiva" @selected($estado === 'inactiva')>
-                                        Inactivas
-                                    </option>
-                                </select>
-
-                                @error('estado')
-                                    <div class="cc-error">
-                                        {{ $message }}
+                                    <div class="cc-form-section-note">
+                                        Utilice los filtros para localizar empresas por empresa, NIT o estado.
                                     </div>
-                                @enderror
-                            </div>
+                                </div>
 
-                        </div>
+                                <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
 
-                        <div class="mt-4 border-t border-gray-200 pt-4">
-                            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                                <p class="text-sm text-gray-500 italic">
-                                    @if ($esUsuarioDieselCop)
-                                        La consulta permite visualizar empresas, sin modificar información.
-                                    @else
-                                        La consulta está limitada automáticamente a la empresa asignada a su usuario.
-                                    @endif
-                                </p>
+                                    <div class="lg:col-span-5 cc-field">
+                                        <label for="empresa_id">
+                                            Empresa
+                                        </label>
 
-                                <div class="flex items-center gap-3">
-                                    <button type="submit" class="cc-btn-primary">
-                                        Buscar
-                                    </button>
+                                        @if ($esUsuarioDieselCop)
+                                            <select id="empresa_id" name="empresa_id" class="cc-input">
+                                                <option value="">Todas</option>
 
-                                    <a href="{{ route('empresas.consulta.ventana') }}" class="cc-btn-secondary">
-                                        Resetear
-                                    </a>
+                                                @foreach ($empresasSelector as $empresaOpcion)
+                                                    <option value="{{ $empresaOpcion->id }}" @selected((string) $empresaId === (string) $empresaOpcion->id)>
+                                                        {{ $empresaOpcion->nombre_comercial ?: $empresaOpcion->nombre_legal }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        @else
+                                            <select id="empresa_id" name="empresa_id" class="cc-input" disabled>
+                                                @foreach ($empresasSelector as $empresaOpcion)
+                                                    <option value="{{ $empresaOpcion->id }}" selected>
+                                                        {{ $empresaOpcion->nombre_comercial ?: $empresaOpcion->nombre_legal }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        @endif
+                                    </div>
+
+                                    <div class="lg:col-span-3 cc-field">
+                                        <label for="nit">
+                                            NIT
+                                        </label>
+                                        <input
+                                            id="nit"
+                                            name="nit"
+                                            type="text"
+                                            class="cc-input"
+                                            value="{{ $nit }}"
+                                            maxlength="17"
+                                            placeholder="0000-000000-000-0"
+                                        >
+
+                                        @error('nit')
+                                            <div class="cc-error">
+                                                {{ $message }}
+                                            </div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="lg:col-span-4 cc-field">
+                                        <label for="estado">
+                                            Estado
+                                        </label>
+                                        <select id="estado" name="estado" class="cc-input">
+                                            <option value="">Seleccione</option>
+                                            <option value="activa" @selected($estado === 'activa')>
+                                                Activas
+                                            </option>
+                                            <option value="inactiva" @selected($estado === 'inactiva')>
+                                                Inactivas
+                                            </option>
+                                        </select>
+
+                                        @error('estado')
+                                            <div class="cc-error">
+                                                {{ $message }}
+                                            </div>
+                                        @enderror
+                                    </div>
+
+                                </div>
+
+                                <div class="mt-5 border-t border-[var(--cc-card-border)] pt-5">
+                                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                                        <p class="text-sm text-[var(--cc-text-muted)] leading-relaxed">
+                                            @if ($esUsuarioDieselCop)
+                                                La consulta permite visualizar empresas, sin modificar información.
+                                            @else
+                                                La consulta está limitada automáticamente a la empresa asignada a su usuario.
+                                            @endif
+                                        </p>
+
+                                        <div class="flex items-center gap-3">
+                                            <button type="submit" class="cc-btn-primary">
+                                                Buscar
+                                            </button>
+
+                                            <a href="{{ route('empresas.consulta.ventana') }}" class="cc-btn-secondary">
+                                                Resetear
+                                            </a>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </form>
+                        </form>
 
-                        <div class="flex items-center justify-between mb-4">
+                        <div class="cc-section-heading">
                             <div>
-                                <h4 class="text-base font-black text-gray-900">
+                                <h4 class="cc-section-title">
                                     Resultados
                                 </h4>
 
-                                <p class="text-sm text-gray-500 italic">
+                                <p class="cc-section-note">
                                     @if (! $hayFiltros)
                                         Seleccione una empresa, NIT o estado para consultar empresas.
                                     @elseif ($empresas->total() === 0)
@@ -199,32 +201,32 @@
                             </div>
 
                             @if ($hayFiltros && $empresas->total() > 0)
-                                <div class="text-sm text-gray-500">
+                                <div class="text-sm text-[var(--cc-text-muted)]">
                                     Mostrando
-                                    <span class="font-bold text-gray-700">{{ $empresas->firstItem() }}</span>
+                                    <span class="font-bold text-[var(--cc-text-main)]">{{ $empresas->firstItem() }}</span>
                                     -
-                                    <span class="font-bold text-gray-700">{{ $empresas->lastItem() }}</span>
+                                    <span class="font-bold text-[var(--cc-text-main)]">{{ $empresas->lastItem() }}</span>
                                     de
-                                    <span class="font-bold text-gray-700">{{ $empresas->total() }}</span>
+                                    <span class="font-bold text-[var(--cc-text-main)]">{{ $empresas->total() }}</span>
                                 </div>
                             @endif
                         </div>
 
                         @if (! $hayFiltros)
-                            <div class="border border-dashed border-gray-300 rounded-lg p-6 bg-gray-50">
-                                <h5 class="text-base font-black text-gray-900">
+                            <div class="cc-empty-panel">
+                                <h5>
                                     Consulta pendiente
                                 </h5>
-                                <p class="mt-1 text-sm text-gray-500 italic">
+                                <p>
                                     La tabla permanecerá vacía hasta que realice una búsqueda o filtre por empresa, NIT o estado.
                                 </p>
                             </div>
                         @elseif ($empresas->isEmpty())
-                            <div class="border border-dashed border-gray-300 rounded-lg p-6 bg-gray-50">
-                                <h5 class="text-base font-black text-gray-900">
+                            <div class="cc-empty-panel">
+                                <h5>
                                     Sin resultados
                                 </h5>
-                                <p class="mt-1 text-sm text-gray-500 italic">
+                                <p>
                                     No hay empresas que coincidan con los criterios seleccionados.
                                 </p>
                             </div>
