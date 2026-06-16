@@ -27,12 +27,12 @@
                 @endif
 
                 @if ($errors->any())
-                    <div class="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
-                        <div class="font-bold text-red-700">
+                    <div class="cc-alert-danger">
+                        <div class="font-bold">
                             Revise la información ingresada.
                         </div>
 
-                        <ul class="mt-2 list-disc list-inside text-sm text-red-600">
+                        <ul class="mt-2 list-disc list-inside">
                             @foreach ($errors->all() as $error)
                                 <li>{{ $error }}</li>
                             @endforeach
@@ -51,17 +51,25 @@
                         </div>
 
                         <div class="cc-profile-meta">
-                            {{ $unidad->marca ?: 'Sin marca registrada' }}
+                            <span>{{ $unidad->marca ?: 'Sin marca registrada' }}</span>
+
+                            @if ($unidad->empresa)
+                                <span>Empresa: {{ $unidad->empresa->nombre_comercial ?: $unidad->empresa->nombre_legal }}</span>
+                            @else
+                                <span>Empresa: Sin empresa</span>
+                            @endif
+
+                            <span>Modelo: {{ $unidad->modelo_medicion_texto }}</span>
                         </div>
                     </div>
 
-                    <div>
+                    <div class="cc-profile-status">
                         @if ($unidad->estado === 'activo')
-                            <span class="cc-profile-status cc-badge cc-badge-active">
+                            <span class="cc-badge cc-badge-active">
                                 Activo
                             </span>
                         @else
-                            <span class="cc-profile-status cc-badge cc-badge-inactive">
+                            <span class="cc-badge cc-badge-inactive">
                                 Inactivo
                             </span>
                         @endif
@@ -70,9 +78,10 @@
 
                 <div class="cc-detail-layout">
 
-                    <div class="cc-detail-section">
+                    <section class="cc-detail-section">
                         <div class="cc-detail-section-header">
-                            Identificación
+                            <h5>Identificación</h5>
+                            <p>Datos principales de identificación de la unidad y empresa propietaria.</p>
                         </div>
 
                         <div class="cc-detail-grid">
@@ -108,11 +117,12 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </section>
 
-                    <div class="cc-detail-section">
+                    <section class="cc-detail-section">
                         <div class="cc-detail-section-header">
-                            Tanques y cobertura Diesel Cop
+                            <h5>Tanques y cobertura Diesel Cop</h5>
+                            <p>Relación entre capacidad física de la unidad y cobertura protegida por el servicio.</p>
                         </div>
 
                         <div class="cc-detail-grid">
@@ -144,11 +154,12 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </section>
 
-                    <div class="cc-detail-section">
+                    <section class="cc-detail-section">
                         <div class="cc-detail-section-header">
-                            Medición operativa
+                            <h5>Medición operativa</h5>
+                            <p>Modelo utilizado para medir el consumo operativo de la unidad.</p>
                         </div>
 
                         <div class="cc-detail-grid">
@@ -162,15 +173,24 @@
                             <div class="cc-detail-item">
                                 <div class="cc-detail-label">Estado</div>
                                 <div class="cc-detail-value">
-                                    {{ $unidad->estado_texto }}
+                                    @if ($unidad->estado === 'activo')
+                                        <span class="cc-badge cc-badge-active">
+                                            {{ $unidad->estado_texto }}
+                                        </span>
+                                    @else
+                                        <span class="cc-badge cc-badge-inactive">
+                                            {{ $unidad->estado_texto }}
+                                        </span>
+                                    @endif
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </section>
 
-                    <div class="cc-detail-section">
+                    <section class="cc-detail-section">
                         <div class="cc-detail-section-header">
-                            Control administrativo
+                            <h5>Control administrativo</h5>
+                            <p>Información de creación, actualización e inactivación administrativa del registro.</p>
                         </div>
 
                         <div class="cc-detail-grid">
@@ -225,11 +245,11 @@
                                 </div>
                             @endif
                         </div>
-                    </div>
+                    </section>
 
                 </div>
 
-                <div class="cc-actions-split">
+                <div class="cc-actions cc-actions-split">
                     <div class="cc-actions-normal">
                         <a href="{{ route('unidades.edit', $unidad) }}" class="cc-btn-primary cc-btn-form-action">
                             Editar unidad
@@ -241,9 +261,14 @@
                     </div>
                 </div>
 
-                <div class="cc-danger-zone">
+                <section class="cc-danger-zone">
                     <div class="cc-danger-zone-header">
-                        Zona de riesgo
+                        <div>
+                            <h5>Zona de riesgo</h5>
+                            <p>
+                                Modifique el estado de la unidad únicamente cuando exista una razón administrativa válida.
+                            </p>
+                        </div>
                     </div>
 
                     @if ($unidad->estado === 'activo')
@@ -291,7 +316,7 @@
                             @csrf
                             @method('PATCH')
 
-                            <p class="text-sm text-gray-500 italic">
+                            <p class="text-sm text-[var(--cc-text-muted)] leading-relaxed">
                                 Esta unidad se encuentra inactiva. Puede reactivarla para permitir nuevamente su uso administrativo.
                             </p>
 
@@ -300,7 +325,7 @@
                             </button>
                         </form>
                     @endif
-                </div>
+                </section>
 
             </div>
         </div>
