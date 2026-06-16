@@ -30,6 +30,10 @@
             if ($initials === '') {
                 $initials = 'U';
             }
+
+            $empresasActivo = request()->routeIs('empresas.*');
+            $usuariosActivo = request()->routeIs('usuarios.*');
+            $unidadesActivo = request()->routeIs('unidades.*');
         @endphp
 
         <div class="cc-admin-shell">
@@ -56,10 +60,11 @@
                         Administración
                     </div>
 
-                    <div class="cc-sidebar-group">
-                        <div class="cc-sidebar-parent {{ request()->routeIs('empresas.*') ? 'cc-sidebar-parent-active' : '' }}">
-                            Empresas
-                        </div>
+                    <details class="cc-sidebar-group" @if ($empresasActivo) open @endif>
+                        <summary class="cc-sidebar-parent {{ $empresasActivo ? 'cc-sidebar-parent-active' : '' }}">
+                            <span>Empresas</span>
+                            <span class="cc-sidebar-chevron">▾</span>
+                        </summary>
 
                         <div class="cc-sidebar-subnav">
                             <a href="{{ route('empresas.index') }}"
@@ -77,12 +82,13 @@
                                 Nueva empresa
                             </a>
                         </div>
-                    </div>
+                    </details>
 
-                    <div class="cc-sidebar-group">
-                        <div class="cc-sidebar-parent {{ request()->routeIs('usuarios.*') ? 'cc-sidebar-parent-active' : '' }}">
-                            Usuarios
-                        </div>
+                    <details class="cc-sidebar-group" @if ($usuariosActivo) open @endif>
+                        <summary class="cc-sidebar-parent {{ $usuariosActivo ? 'cc-sidebar-parent-active' : '' }}">
+                            <span>Usuarios</span>
+                            <span class="cc-sidebar-chevron">▾</span>
+                        </summary>
 
                         <div class="cc-sidebar-subnav">
                             <a href="{{ route('usuarios.index') }}"
@@ -91,7 +97,7 @@
                             </a>
 
                             <a href="{{ route('usuarios.administrar') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('usuarios.administrar') ? 'cc-sidebar-sublink-active' : '' }}">
+                               class="cc-sidebar-sublink {{ request()->routeIs('usuarios.administrar') || request()->routeIs('usuarios.show') || request()->routeIs('usuarios.edit') ? 'cc-sidebar-sublink-active' : '' }}">
                                 Administrar usuario
                             </a>
 
@@ -100,7 +106,7 @@
                                 Nuevo usuario
                             </a>
                         </div>
-                    </div>
+                    </details>
 
                     <span class="cc-sidebar-link cc-sidebar-link-disabled">
                         Roles y permisos
@@ -110,10 +116,11 @@
                         Operación
                     </div>
 
-                    <div class="cc-sidebar-group">
-                        <div class="cc-sidebar-parent {{ request()->routeIs('unidades.*') ? 'cc-sidebar-parent-active' : '' }}">
-                            Unidades
-                        </div>
+                    <details class="cc-sidebar-group" @if ($unidadesActivo) open @endif>
+                        <summary class="cc-sidebar-parent {{ $unidadesActivo ? 'cc-sidebar-parent-active' : '' }}">
+                            <span>Unidades</span>
+                            <span class="cc-sidebar-chevron">▾</span>
+                        </summary>
 
                         <div class="cc-sidebar-subnav">
                             <a href="{{ route('unidades.index') }}"
@@ -131,7 +138,7 @@
                                 Nueva unidad
                             </a>
                         </div>
-                    </div>
+                    </details>
 
                     <span class="cc-sidebar-link cc-sidebar-link-disabled">
                         Licencias
