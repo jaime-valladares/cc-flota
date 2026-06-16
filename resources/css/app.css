@@ -2296,3 +2296,254 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         align-self: flex-start;
     }
 }
+
+/* =========================================================
+   CC-Flota — Modular visual identity system
+   Reusable module intros, callouts, icons and status strips
+   ========================================================= */
+
+.cc-page-intro {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 1rem;
+    align-items: flex-start;
+    border: 1px solid var(--cc-card-border);
+    border-radius: var(--cc-radius-xl);
+    background:
+        radial-gradient(circle at top right, rgba(217, 130, 43, 0.10), transparent 18rem),
+        linear-gradient(135deg, #FFFFFF 0%, #F8FBFC 100%);
+    padding: 1.35rem;
+    box-shadow: 0 14px 32px rgba(6, 27, 42, 0.06);
+    overflow: hidden;
+}
+
+.cc-page-intro::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--cc-primary), var(--cc-secondary), var(--cc-accent));
+}
+
+.cc-page-intro-icon,
+.cc-module-icon {
+    width: 3.25rem;
+    height: 3.25rem;
+    border-radius: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-family: var(--cc-font-heading);
+    font-size: 0.88rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    color: #ffffff;
+    background:
+        linear-gradient(145deg, var(--cc-primary), var(--cc-secondary));
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    box-shadow: 0 14px 28px rgba(6, 59, 74, 0.20);
+}
+
+.cc-page-intro-kicker {
+    font-family: var(--cc-font-heading);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--cc-secondary);
+    margin-bottom: 0.25rem;
+}
+
+.cc-page-intro-title {
+    font-family: var(--cc-font-heading);
+    font-size: clamp(1.45rem, 1.1rem + 0.7vw, 2rem);
+    font-weight: 800;
+    color: var(--cc-text-heading);
+    letter-spacing: -0.045em;
+    line-height: 1.15;
+}
+
+.cc-page-intro-text {
+    max-width: 58rem;
+    margin-top: 0.45rem;
+    font-size: 0.96rem;
+    font-weight: 450;
+    color: var(--cc-text-muted);
+    line-height: 1.62;
+}
+
+.cc-page-intro-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    margin-top: 0.9rem;
+}
+
+.cc-page-intro-meta span {
+    border: 1px solid var(--cc-card-border);
+    border-radius: 999px;
+    background: #ffffff;
+    padding: 0.35rem 0.65rem;
+    font-family: var(--cc-font-heading);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--cc-text-muted);
+}
+
+.cc-callout {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.9rem;
+    align-items: flex-start;
+    border-radius: var(--cc-radius-lg);
+    border: 1px solid var(--cc-card-border);
+    background: #ffffff;
+    padding: 1rem 1.1rem;
+    box-shadow: 0 10px 24px rgba(6, 27, 42, 0.04);
+}
+
+.cc-callout-marker {
+    width: 0.8rem;
+    height: 0.8rem;
+    margin-top: 0.28rem;
+    border-radius: 999px;
+    background: var(--cc-info);
+    box-shadow: 0 0 0 4px var(--cc-info-soft);
+}
+
+.cc-callout-title {
+    font-family: var(--cc-font-heading);
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: var(--cc-text-heading);
+}
+
+.cc-callout-text {
+    margin-top: 0.25rem;
+    font-size: 0.88rem;
+    line-height: 1.55;
+    color: var(--cc-text-muted);
+}
+
+.cc-callout-info {
+    background: linear-gradient(180deg, #FFFFFF, var(--cc-info-soft));
+    border-color: var(--cc-info-border);
+}
+
+.cc-callout-warning {
+    background: linear-gradient(180deg, #FFFFFF, var(--cc-warning-soft));
+    border-color: var(--cc-warning-border);
+}
+
+.cc-callout-warning .cc-callout-marker {
+    background: var(--cc-warning);
+    box-shadow: 0 0 0 4px var(--cc-warning-soft);
+}
+
+.cc-callout-danger {
+    background: linear-gradient(180deg, #FFFFFF, var(--cc-danger-soft));
+    border-color: var(--cc-danger-border);
+}
+
+.cc-callout-danger .cc-callout-marker {
+    background: var(--cc-danger);
+    box-shadow: 0 0 0 4px var(--cc-danger-soft);
+}
+
+.cc-callout-success {
+    background: linear-gradient(180deg, #FFFFFF, var(--cc-success-soft));
+    border-color: var(--cc-success-border);
+}
+
+.cc-callout-success .cc-callout-marker {
+    background: var(--cc-success);
+    box-shadow: 0 0 0 4px var(--cc-success-soft);
+}
+
+.cc-module-icon-company {
+    background: linear-gradient(145deg, #063B4A, #3B7A8C);
+}
+
+.cc-module-icon-user {
+    background: linear-gradient(145deg, #12384D, #3B7A8C);
+}
+
+.cc-module-icon-unit {
+    background: linear-gradient(145deg, #063B4A, #0A2638);
+}
+
+.cc-module-icon-license {
+    background: linear-gradient(145deg, #3B7A8C, #D9822B);
+}
+
+.cc-module-icon-seal {
+    background: linear-gradient(145deg, #061B2A, #D9822B);
+}
+
+.cc-status-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-radius: var(--cc-radius-lg);
+    border: 1px solid var(--cc-card-border);
+    background: #ffffff;
+    padding: 0.85rem 1rem;
+    box-shadow: 0 10px 22px rgba(6, 27, 42, 0.04);
+}
+
+.cc-status-strip strong {
+    font-family: var(--cc-font-heading);
+    font-size: 0.86rem;
+    font-weight: 800;
+    color: var(--cc-text-heading);
+}
+
+.cc-status-strip span {
+    font-size: 0.84rem;
+    font-weight: 550;
+    color: var(--cc-text-muted);
+}
+
+.cc-status-strip-active {
+    border-color: var(--cc-success-border);
+    background: linear-gradient(180deg, #FFFFFF, var(--cc-success-soft));
+}
+
+.cc-status-strip-warning {
+    border-color: var(--cc-warning-border);
+    background: linear-gradient(180deg, #FFFFFF, var(--cc-warning-soft));
+}
+
+.cc-status-strip-danger {
+    border-color: var(--cc-danger-border);
+    background: linear-gradient(180deg, #FFFFFF, var(--cc-danger-soft));
+}
+
+.cc-status-strip-muted {
+    border-color: var(--cc-neutral-border);
+    background: linear-gradient(180deg, #FFFFFF, var(--cc-neutral-soft));
+}
+
+@media (max-width: 720px) {
+    .cc-page-intro {
+        grid-template-columns: 1fr;
+    }
+
+    .cc-status-strip {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+.cc-home-footnote {
+    margin-top: 0.25rem;
+    max-width: 34rem;
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: var(--cc-text-muted);
+}
