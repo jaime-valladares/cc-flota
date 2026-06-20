@@ -51,4 +51,9 @@ class Empresa extends Model
     {
         return $this->hasMany(Licencia::class, 'empresa_id');
     }
+
+    public function marchamos(): HasMany
+    {
+        return $this->hasMany(Marchamo::class, 'empresa_id');
+    }
 }

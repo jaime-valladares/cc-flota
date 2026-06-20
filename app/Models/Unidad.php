@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable([
@@ -48,6 +49,23 @@ class Unidad extends Model
     public function licencia(): HasOne
     {
         return $this->hasOne(Licencia::class);
+    }
+
+    /**
+    * Puntos de seguridad configurados para la unidad.
+    */
+    public function puntosSeguridad(): HasMany
+    {
+        return $this->hasMany(PuntoSeguridadUnidad::class, 'unidad_id')
+            ->orderBy('orden');
+    }
+
+    /**
+    * Historial de marchamos asociados a la unidad.
+    */
+    public function marchamos(): HasMany
+    {
+        return $this->hasMany(Marchamo::class, 'unidad_id');
     }
 
     /**
@@ -96,8 +114,9 @@ class Unidad extends Model
     {
         return Attribute::make(
             get: fn () => match ($this->estado) {
-                'activo' => 'Activo',
-                'inactivo' => 'Inactivo',
+                'registrada' => 'Registrada',
+                'activa' => 'Activa',
+                'inactiva' => 'Inactiva',
                 default => 'No definido',
             }
         );

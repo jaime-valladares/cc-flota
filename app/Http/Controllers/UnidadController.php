@@ -90,8 +90,9 @@ class UnidadController extends Controller
             });
 
         $totalUnidades = (clone $baseQuery)->count();
-        $totalActivas = (clone $baseQuery)->where('estado', 'activo')->count();
-        $totalInactivas = (clone $baseQuery)->where('estado', 'inactivo')->count();
+        $totalRegistradas = (clone $baseQuery)->where('estado', 'registrada')->count();
+        $totalActivas = (clone $baseQuery)->where('estado', 'activa')->count();
+        $totalInactivas = (clone $baseQuery)->where('estado', 'inactiva')->count();
 
         $unidades = Unidad::query()
             ->with(['empresa'])
@@ -126,10 +127,12 @@ class UnidadController extends Controller
             'placa' => $placa,
             'hayFiltros' => $hayFiltros,
             'totalUnidades' => $totalUnidades,
+            'totalRegistradas' => $totalRegistradas,
             'totalActivas' => $totalActivas,
             'totalInactivas' => $totalInactivas,
             'esUsuarioDieselCop' => $esUsuarioDieselCop,
             'modelosMedicion' => $this->modelosMedicion(),
+            'estadosUnidad' => $this->estadosUnidad(),
         ];
     }
 
@@ -145,6 +148,7 @@ class UnidadController extends Controller
             ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
                 $query->where('id', $user->empresa_id);
             })
+            ->where('estado', 'activa')
             ->orderBy('nombre_comercial')
             ->orderBy('nombre_legal')
             ->get();
@@ -153,12 +157,13 @@ class UnidadController extends Controller
             'empresas' => $empresas,
             'esUsuarioDieselCop' => $esUsuarioDieselCop,
             'modelosMedicion' => $this->modelosMedicion(),
+            'estadosUnidad' => $this->estadosUnidad(),
         ]);
     }
 
     /**
-    * Formulario de creación de unidad en ventana independiente.
-    */
+     * Formulario de creación de unidad en ventana independiente.
+     */
     public function createVentana(): View
     {
         $user = Auth::user();
@@ -168,6 +173,7 @@ class UnidadController extends Controller
             ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
                 $query->where('id', $user->empresa_id);
             })
+            ->where('estado', 'activa')
             ->orderBy('nombre_comercial')
             ->orderBy('nombre_legal')
             ->get();
@@ -176,6 +182,7 @@ class UnidadController extends Controller
             'empresas' => $empresas,
             'esUsuarioDieselCop' => $esUsuarioDieselCop,
             'modelosMedicion' => $this->modelosMedicion(),
+            'estadosUnidad' => $this->estadosUnidad(),
         ]);
     }
 
@@ -196,7 +203,13 @@ class UnidadController extends Controller
         $validated['placa'] = mb_strtoupper(trim($validated['placa']));
         $validated['creado_por'] = $user->id;
         $validated['actualizado_por'] = $user->id;
-        $validated['estado'] = 'activo';
+
+        /*
+         * La unidad nace como registrada.
+         * Solo pasará a activa cuando tenga licencia, puntos de seguridad
+         * y asignación inicial de marchamos completa.
+         */
+        $validated['estado'] = 'registrada';
 
         Unidad::create($validated);
 
@@ -212,7 +225,14 @@ class UnidadController extends Controller
     {
         $this->autorizarAccesoUnidad($unidad);
 
-        $unidad->load(['empresa', 'creadoPor', 'actualizadoPor', 'inactivadoPor']);
+        $unidad->load([
+            'empresa',
+            'licencia',
+            'puntosSeguridad.marchamoActual',
+            'creadoPor',
+            'actualizadoPor',
+            'inactivadoPor',
+        ]);
 
         return view('unidades.show', compact('unidad'));
     }
@@ -231,6 +251,7 @@ class UnidadController extends Controller
             ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
                 $query->where('id', $user->empresa_id);
             })
+            ->where('estado', 'activa')
             ->orderBy('nombre_comercial')
             ->orderBy('nombre_legal')
             ->get();
@@ -240,6 +261,7 @@ class UnidadController extends Controller
             'empresas' => $empresas,
             'esUsuarioDieselCop' => $esUsuarioDieselCop,
             'modelosMedicion' => $this->modelosMedicion(),
+            'estadosUnidad' => $this->estadosUnidad(),
         ]);
     }
 
@@ -261,6 +283,13 @@ class UnidadController extends Controller
 
         $validated['placa'] = mb_strtoupper(trim($validated['placa']));
         $validated['actualizado_por'] = $user->id;
+
+        /*
+         * El estado no se actualiza desde el formulario general de edición.
+         * Los cambios de estado pasan por inactivar/reactivar o por finalizar
+         * asignación inicial de marchamos.
+         */
+        unset($validated['estado']);
 
         $unidad->update($validated);
 
@@ -286,7 +315,7 @@ class UnidadController extends Controller
         ]);
 
         $unidad->update([
-            'estado' => 'inactivo',
+            'estado' => 'inactiva',
             'fecha_inactivacion' => now(),
             'inactivado_por' => Auth::id(),
             'motivo_inactivacion' => $validated['motivo_inactivacion'],
@@ -299,14 +328,17 @@ class UnidadController extends Controller
     }
 
     /**
-     * Reactiva una unidad previamente inactivada.
+     * Reactiva una unidad previamente inactiva.
+     *
+     * La unidad vuelve a registrada, no directamente a activa,
+     * porque puede requerir validación de licencia, puntos y marchamos.
      */
     public function reactivar(Unidad $unidad): RedirectResponse
     {
         $this->autorizarAccesoUnidad($unidad);
 
         $unidad->update([
-            'estado' => 'activo',
+            'estado' => 'registrada',
             'fecha_inactivacion' => null,
             'inactivado_por' => null,
             'motivo_inactivacion' => null,
@@ -315,7 +347,7 @@ class UnidadController extends Controller
 
         return redirect()
             ->route('unidades.show', $unidad)
-            ->with('success', 'Unidad reactivada correctamente.');
+            ->with('success', 'Unidad reactivada correctamente. Queda en estado registrada para validación operativa.');
     }
 
     /**
@@ -331,14 +363,13 @@ class UnidadController extends Controller
             'empresa_id' => [
                 $esUsuarioDieselCop ? 'required' : 'nullable',
                 'integer',
-                Rule::exists('empresas', 'id'),
+                Rule::exists('empresas', 'id')->where('estado', 'activa'),
             ],
             'placa' => [
                 'required',
                 'string',
                 'max:30',
                 Rule::unique('unidades', 'placa')
-                    ->where(fn ($query) => $query->where('empresa_id', $empresaId))
                     ->ignore($unidad?->id),
             ],
             'marca' => [
@@ -388,6 +419,18 @@ class UnidadController extends Controller
             'galones_hora' => 'Galones por hora',
             'galones_kilometro' => 'Galones por kilómetro',
             'galones_viaje' => 'Galones por viaje',
+        ];
+    }
+
+    /**
+     * Catálogo fijo de estados de unidad.
+     */
+    private function estadosUnidad(): array
+    {
+        return [
+            'registrada' => 'Registrada',
+            'activa' => 'Activa',
+            'inactiva' => 'Inactiva',
         ];
     }
 

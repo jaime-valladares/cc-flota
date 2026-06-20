@@ -20,7 +20,7 @@
 
     <div class="cc-form-section">
         <div class="cc-form-section-title">
-            Unidad licenciada
+            Unidad a Asignar Licencia
         </div>
     </div>
 

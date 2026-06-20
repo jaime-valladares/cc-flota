@@ -4,11 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Empresa;
 use App\Models\Licencia;
+use App\Models\PuntoSeguridadUnidad;
 use App\Models\Unidad;
+use App\Support\PlantillasPuntosSeguridad;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -187,7 +190,7 @@ class LicenciaController extends Controller
 
         $unidades = Unidad::query()
             ->with(['empresa', 'licencia'])
-            ->where('estado', 'activo')
+            ->where('estado', 'registrada')
             ->whereDoesntHave('licencia')
             ->when(filled($empresaSeleccionadaId), function ($query) use ($empresaSeleccionadaId) {
                 $query->where('empresa_id', $empresaSeleccionadaId);
@@ -211,7 +214,7 @@ class LicenciaController extends Controller
     }
 
     /**
-     * Guarda una nueva licencia.
+     * Guarda una nueva licencia y genera los puntos de seguridad de la unidad.
      */
     public function store(Request $request): RedirectResponse
     {
@@ -221,7 +224,7 @@ class LicenciaController extends Controller
         $validated = $request->validate($this->reglasValidacionCrearLicencia($request, $esUsuarioDieselCop));
 
         $unidad = Unidad::query()
-            ->with(['empresa', 'licencia'])
+            ->with(['empresa', 'licencia', 'puntosSeguridad'])
             ->findOrFail($validated['unidad_id']);
 
         $this->autorizarAccesoUnidad($unidad);
@@ -234,11 +237,11 @@ class LicenciaController extends Controller
                 ]);
         }
 
-        if ($unidad->estado !== 'activo') {
+        if ($unidad->estado !== 'registrada') {
             return back()
                 ->withInput()
                 ->withErrors([
-                    'unidad_id' => 'Solo se puede crear licencia para unidades activas.',
+                    'unidad_id' => 'Solo se puede crear licencia para unidades registradas pendientes de configuración.',
                 ]);
         }
 
@@ -250,24 +253,57 @@ class LicenciaController extends Controller
                 ]);
         }
 
+        if ($unidad->puntosSeguridad()->exists()) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'unidad_id' => 'Esta unidad ya tiene puntos de seguridad generados.',
+                ]);
+        }
+
         $fechaActivacion = Carbon::parse($validated['fecha_activacion']);
         $periodoVigencia = (int) $validated['periodo_vigencia_meses'];
+        $plantilla = $this->plantillaDesdeTanquesProtegidos((int) $unidad->cantidad_tanques_con_licencia);
 
-        Licencia::create([
-            'empresa_id' => $unidad->empresa_id,
-            'unidad_id' => $unidad->id,
-            'periodo_vigencia_meses' => $periodoVigencia,
-            'fecha_activacion' => $fechaActivacion->toDateString(),
-            'fecha_vencimiento' => $fechaActivacion->copy()->addMonthsNoOverflow($periodoVigencia)->toDateString(),
-            'estado' => 'activa',
-            'plantilla_puntos_seguridad' => $this->plantillaDesdeTanquesProtegidos((int) $unidad->cantidad_tanques_con_licencia),
-            'creado_por' => $user->id,
-            'actualizado_por' => $user->id,
-        ]);
+        DB::transaction(function () use ($unidad, $user, $fechaActivacion, $periodoVigencia, $plantilla): void {
+            Licencia::create([
+                'empresa_id' => $unidad->empresa_id,
+                'unidad_id' => $unidad->id,
+                'periodo_vigencia_meses' => $periodoVigencia,
+                'fecha_activacion' => $fechaActivacion->toDateString(),
+                'fecha_vencimiento' => $fechaActivacion->copy()->addMonthsNoOverflow($periodoVigencia)->toDateString(),
+                'estado' => 'activa',
+                'plantilla_puntos_seguridad' => $plantilla,
+                'creado_por' => $user->id,
+                'actualizado_por' => $user->id,
+            ]);
+
+            foreach (PlantillasPuntosSeguridad::porPlantilla($plantilla) as $punto) {
+                PuntoSeguridadUnidad::create([
+                    'unidad_id' => $unidad->id,
+                    'orden' => $punto['orden_visual'] ?? $punto['orden'] ?? null,
+                    'codigo_punto' => $punto['codigo_punto'] ?? null,
+                    'grupo' => $punto['grupo'] ?? null,
+                    'subgrupo' => $punto['subgrupo'] ?? null,
+                    'nombre_punto' => $punto['nombre_punto'] ?? $punto['nombre'] ?? 'Punto sin nombre',
+                    'descripcion' => null,
+                    'posicion_tanque' => $punto['posicion_tanque'] ?? null,
+                    'tipo_punto' => $punto['tipo_punto'] ?? null,
+                    'requiere_marchamo' => (bool) ($punto['requiere_marchamo'] ?? true),
+                    'plantilla_origen' => $plantilla,
+                    'criterio_origen' => $punto['criterio_origen'] ?? null,
+                    'estado_asignacion' => 'pendiente',
+                    'marchamo_actual_id' => null,
+                    'estado' => 'activo',
+                    'creado_por' => $user->id,
+                    'actualizado_por' => $user->id,
+                ]);
+            }
+        });
 
         return redirect()
             ->route('licencias.index', ['consultar' => 1])
-            ->with('success', 'Licencia creada correctamente.');
+            ->with('success', 'Licencia creada correctamente. Los puntos de seguridad fueron generados.');
     }
 
     /**
@@ -279,7 +315,7 @@ class LicenciaController extends Controller
 
         $licencia->load([
             'empresa',
-            'unidad',
+            'unidad.puntosSeguridad.marchamoActual',
             'creadoPor',
             'actualizadoPor',
             'inactivadoPor',
@@ -414,7 +450,7 @@ class LicenciaController extends Controller
                 'integer',
                 Rule::exists('unidades', 'id')
                     ->where('empresa_id', $empresaId)
-                    ->where('estado', 'activo'),
+                    ->where('estado', 'registrada'),
                 Rule::unique('licencias', 'unidad_id'),
             ],
             'periodo_vigencia_meses' => [

@@ -35,9 +35,10 @@ return new class extends Migration
             ]);
 
             $table->enum('estado', [
-                'activo',
-                'inactivo',
-            ])->default('activo');
+                'registrada',
+                'activa',
+                'inactiva',
+            ])->default('registrada');
 
             $table->foreignId('creado_por')
                 ->nullable()
@@ -60,7 +61,9 @@ return new class extends Migration
 
             $table->timestamps();
 
-            $table->unique(['empresa_id', 'placa']);
+            $table->unique('placa');
+
+            $table->index('empresa_id');
             $table->index('estado');
             $table->index('modelo_medicion');
         });

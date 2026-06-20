@@ -40,7 +40,7 @@
         }
 
         .cc-dashboard-compact .cc-home-visual {
-            min-height: 340px !important;
+            min-height: 470px !important;
         }
 
         .cc-dashboard-compact .cc-home-mark {
@@ -97,10 +97,7 @@
 
                 <section class="cc-home-hero">
                     <div class="cc-home-hero-content">
-                        <div class="cc-home-kicker">
-                            Inicio de trabajo
-                        </div>
-
+                        
                         <h2 class="cc-home-title">
                             Inicio de operación
                         </h2>
