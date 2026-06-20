@@ -5,6 +5,7 @@ use App\Http\Controllers\LicenciaController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UnidadController;
 use App\Http\Controllers\UsuarioController;
+use App\Http\Controllers\MarchamoAsignacionInicialController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -115,6 +116,15 @@ Route::middleware('auth')->group(function () {
 
     Route::patch('/unidades/{unidad}/reactivar', [UnidadController::class, 'reactivar'])
         ->name('unidades.reactivar');
+
+    Route::get('/unidades/{unidad}/marchamos/asignacion-inicial', [MarchamoAsignacionInicialController::class, 'show'])
+        ->name('marchamos.asignacion-inicial.show');
+
+    Route::post('/unidades/{unidad}/marchamos/asignacion-inicial', [MarchamoAsignacionInicialController::class, 'guardarAvance'])
+        ->name('marchamos.asignacion-inicial.guardar-avance');
+
+    Route::post('/unidades/{unidad}/marchamos/finalizar-asignacion-inicial', [MarchamoAsignacionInicialController::class, 'finalizar'])
+        ->name('marchamos.asignacion-inicial.finalizar');
 
     /*
     |--------------------------------------------------------------------------
