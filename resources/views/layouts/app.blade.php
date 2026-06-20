@@ -127,10 +127,6 @@
                         </div>
                     </div>
 
-                    <span class="cc-sidebar-link cc-sidebar-link-disabled">
-                        Roles y permisos
-                    </span>
-
                     <div class="cc-sidebar-section">
                         Operación
                     </div>

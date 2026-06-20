@@ -18,7 +18,7 @@
 
                 <div class="cc-login-brand-content">
                     <div class="cc-login-kicker">
-                        Diesel Cop Operations
+                        Diesel Cop - Sistema de Operaciones
                     </div>
 
                     <h1 class="cc-login-title">
@@ -26,14 +26,16 @@
                     </h1>
 
                     <p class="cc-login-lead">
-                        Control operativo, trazabilidad y administración segura para flotas protegidas.
+                        Control operativo, trazabilidad y administración segura para flotas protegidas por Diesel Cop.
                     </p>
                 </div>
 
                 <div class="cc-login-minimal-footer">
                     <span>Control</span>
+                    <span>.</span>
                     <span>Trazabilidad</span>
-                    <span>Operación</span>
+                    <span>.</span>
+                    <span>Seguridad</span>
                 </div>
             </section>
 
