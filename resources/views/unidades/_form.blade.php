@@ -12,9 +12,6 @@
         <div class="cc-form-section-title">
             Identificación de la unidad
         </div>
-        <div class="cc-form-section-note">
-            Registre la empresa propietaria, placa e información descriptiva básica de la unidad.
-        </div>
     </div>
 
     <div class="cc-field">
@@ -88,9 +85,6 @@
     <div class="cc-form-section">
         <div class="cc-form-section-title">
             Tanques y cobertura Diesel Cop
-        </div>
-        <div class="cc-form-section-note">
-            Diferencie la capacidad física total de la unidad y la capacidad realmente protegida por Diesel Cop.
         </div>
     </div>
 
@@ -171,9 +165,6 @@
     <div class="cc-form-section">
         <div class="cc-form-section-title">
             Modelo de medición
-        </div>
-        <div class="cc-form-section-note">
-            Seleccione cómo se medirá el consumo operativo de esta unidad.
         </div>
     </div>
 

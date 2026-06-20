@@ -38,9 +38,6 @@
                             <div class="cc-form-section-title">
                                 Búsqueda administrativa
                             </div>
-                            <div class="cc-form-section-note">
-                                Ingrese criterios para localizar la unidad que desea administrar.
-                            </div>
                         </div>
 
                         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
@@ -106,55 +103,29 @@
                         </div>
 
                         <div class="mt-5 border-t border-[var(--cc-card-border)] pt-5">
-                            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                                <p class="text-sm text-[var(--cc-text-muted)] leading-relaxed">
-                                    Desde esta pantalla podrá acceder a la ficha administrativa o editar una unidad.
-                                </p>
+                            <div class="flex items-center justify-end gap-3">
+                                <button type="submit" class="cc-btn-primary">
+                                    Buscar
+                                </button>
 
-                                <div class="flex items-center gap-3 lg:justify-end">
-                                    <button type="submit" class="cc-btn-primary">
-                                        Buscar
-                                    </button>
-
-                                    <a href="{{ route('unidades.administrar') }}" class="cc-btn-secondary">
-                                        Resetear
-                                    </a>
-                                </div>
+                                <a href="{{ route('unidades.administrar') }}" class="cc-btn-secondary">
+                                    Resetear
+                                </a>
                             </div>
                         </div>
                     </div>
                 </form>
 
-                <div class="cc-section-heading">
-                    <div>
-                        <h4 class="cc-section-title">
-                            Resultado administrativo
-                        </h4>
-
-                        <p class="cc-section-note">
-                            @if (! $hayFiltros)
-                                Seleccione filtros para buscar unidades administrables.
-                            @elseif ($unidades->total() === 0)
-                                No se encontraron unidades con los criterios seleccionados.
-                            @elseif ($unidades->total() === 1)
-                                Se encontró 1 unidad para administrar.
-                            @else
-                                Se encontraron {{ $unidades->total() }} unidades para administrar.
-                            @endif
-                        </p>
+                @if ($hayFiltros && $unidades->total() > 0)
+                    <div class="mb-4 flex justify-end text-sm text-[var(--cc-text-muted)]">
+                        Mostrando
+                        <span class="mx-1 font-bold text-[var(--cc-text-main)]">{{ $unidades->firstItem() }}</span>
+                        -
+                        <span class="mx-1 font-bold text-[var(--cc-text-main)]">{{ $unidades->lastItem() }}</span>
+                        de
+                        <span class="ml-1 font-bold text-[var(--cc-text-main)]">{{ $unidades->total() }}</span>
                     </div>
-
-                    @if ($hayFiltros && $unidades->total() > 0)
-                        <div class="text-sm text-[var(--cc-text-muted)]">
-                            Mostrando
-                            <span class="font-bold text-[var(--cc-text-main)]">{{ $unidades->firstItem() }}</span>
-                            -
-                            <span class="font-bold text-[var(--cc-text-main)]">{{ $unidades->lastItem() }}</span>
-                            de
-                            <span class="font-bold text-[var(--cc-text-main)]">{{ $unidades->total() }}</span>
-                        </div>
-                    @endif
-                </div>
+                @endif
 
                 @if (! $hayFiltros)
                     <div class="cc-empty-panel">

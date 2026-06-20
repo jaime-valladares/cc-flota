@@ -9,7 +9,7 @@
                             Consulta unidades
                         </h3>
                         <p class="cc-subtitle">
-                            Consulte las unidades registradas en el sistema. Esta pantalla es únicamente informativa.
+                            Consulte las unidades registradas en el sistema.
                         </p>
                     </div>
 
@@ -66,9 +66,6 @@
                         <div class="cc-form-section" style="margin-top: 0; margin-bottom: 1.25rem;">
                             <div class="cc-form-section-title">
                                 Filtros de consulta
-                            </div>
-                            <div class="cc-form-section-note">
-                                Utilice los filtros para localizar unidades por empresa, placa, estado o modelo de medición.
                             </div>
                         </div>
 
@@ -135,55 +132,29 @@
                         </div>
 
                         <div class="mt-5 border-t border-[var(--cc-card-border)] pt-5">
-                            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                                <p class="text-sm text-[var(--cc-text-muted)] leading-relaxed">
-                                    La consulta permite visualizar unidades, sin modificar información.
-                                </p>
+                            <div class="flex items-center justify-end gap-3">
+                                <button type="submit" class="cc-btn-primary">
+                                    Buscar
+                                </button>
 
-                                <div class="flex items-center gap-3">
-                                    <button type="submit" class="cc-btn-primary">
-                                        Buscar
-                                    </button>
-
-                                    <a href="{{ route('unidades.index') }}" class="cc-btn-secondary">
-                                        Resetear
-                                    </a>
-                                </div>
+                                <a href="{{ route('unidades.index') }}" class="cc-btn-secondary">
+                                    Resetear
+                                </a>
                             </div>
                         </div>
                     </div>
                 </form>
 
-                <div class="cc-section-heading">
-                    <div>
-                        <h4 class="cc-section-title">
-                            Resultado de consulta
-                        </h4>
-
-                        <p class="cc-section-note">
-                            @if (! $hayFiltros)
-                                Seleccione filtros para consultar unidades.
-                            @elseif ($unidades->total() === 0)
-                                No se encontraron unidades con los criterios seleccionados.
-                            @elseif ($unidades->total() === 1)
-                                Se encontró 1 unidad.
-                            @else
-                                Se encontraron {{ $unidades->total() }} unidades.
-                            @endif
-                        </p>
+                @if ($hayFiltros && $unidades->total() > 0)
+                    <div class="mb-4 flex justify-end text-sm text-[var(--cc-text-muted)]">
+                        Mostrando
+                        <span class="mx-1 font-bold text-[var(--cc-text-main)]">{{ $unidades->firstItem() }}</span>
+                        -
+                        <span class="mx-1 font-bold text-[var(--cc-text-main)]">{{ $unidades->lastItem() }}</span>
+                        de
+                        <span class="ml-1 font-bold text-[var(--cc-text-main)]">{{ $unidades->total() }}</span>
                     </div>
-
-                    @if ($hayFiltros && $unidades->total() > 0)
-                        <div class="text-sm text-[var(--cc-text-muted)]">
-                            Mostrando
-                            <span class="font-bold text-[var(--cc-text-main)]">{{ $unidades->firstItem() }}</span>
-                            -
-                            <span class="font-bold text-[var(--cc-text-main)]">{{ $unidades->lastItem() }}</span>
-                            de
-                            <span class="font-bold text-[var(--cc-text-main)]">{{ $unidades->total() }}</span>
-                        </div>
-                    @endif
-                </div>
+                @endif
 
                 @if (! $hayFiltros)
                     <div class="cc-empty-panel">

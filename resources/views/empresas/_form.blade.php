@@ -4,9 +4,6 @@
         <div class="cc-form-section-title">
             Identificación de la empresa
         </div>
-        <div class="cc-form-section-note">
-            Datos principales que identifican legal y comercialmente a la empresa cliente.
-        </div>
     </div>
 
     <div class="cc-field">
@@ -65,9 +62,6 @@
         <div class="cc-form-section-title">
             Contacto institucional
         </div>
-        <div class="cc-form-section-note">
-            Información general de comunicación y ubicación de la empresa.
-        </div>
     </div>
 
     <div class="cc-field">
@@ -124,9 +118,6 @@
     <div class="cc-form-section">
         <div class="cc-form-section-title">
             Punto de contacto operativo
-        </div>
-        <div class="cc-form-section-note">
-            Persona principal de referencia para coordinación administrativa y operativa.
         </div>
     </div>
 

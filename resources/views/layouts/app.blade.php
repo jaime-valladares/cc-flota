@@ -61,11 +61,11 @@
                         Administración
                     </div>
 
-                    <details class="cc-sidebar-group" @if ($empresasActivo) open @endif>
-                        <summary class="cc-sidebar-parent {{ $empresasActivo ? 'cc-sidebar-parent-active' : '' }}">
+                    <div class="cc-sidebar-group">
+                        <a href="{{ route('empresas.index') }}"
+                           class="cc-sidebar-parent {{ $empresasActivo ? 'cc-sidebar-parent-active' : '' }}">
                             <span>Empresas</span>
-                            <span class="cc-sidebar-chevron">▾</span>
-                        </summary>
+                        </a>
 
                         <div class="cc-sidebar-subnav">
                             <a href="{{ route('empresas.index') }}"
@@ -83,13 +83,13 @@
                                 Nueva empresa
                             </a>
                         </div>
-                    </details>
+                    </div>
 
-                    <details class="cc-sidebar-group" @if ($usuariosActivo) open @endif>
-                        <summary class="cc-sidebar-parent {{ $usuariosActivo ? 'cc-sidebar-parent-active' : '' }}">
+                    <div class="cc-sidebar-group">
+                        <a href="{{ route('usuarios.index') }}"
+                           class="cc-sidebar-parent {{ $usuariosActivo ? 'cc-sidebar-parent-active' : '' }}">
                             <span>Usuarios</span>
-                            <span class="cc-sidebar-chevron">▾</span>
-                        </summary>
+                        </a>
 
                         <div class="cc-sidebar-subnav">
                             <a href="{{ route('usuarios.index') }}"
@@ -107,7 +107,7 @@
                                 Nuevo usuario
                             </a>
                         </div>
-                    </details>
+                    </div>
 
                     <span class="cc-sidebar-link cc-sidebar-link-disabled">
                         Roles y permisos
@@ -117,11 +117,11 @@
                         Operación
                     </div>
 
-                    <details class="cc-sidebar-group" @if ($unidadesActivo) open @endif>
-                        <summary class="cc-sidebar-parent {{ $unidadesActivo ? 'cc-sidebar-parent-active' : '' }}">
+                    <div class="cc-sidebar-group">
+                        <a href="{{ route('unidades.index') }}"
+                           class="cc-sidebar-parent {{ $unidadesActivo ? 'cc-sidebar-parent-active' : '' }}">
                             <span>Unidades</span>
-                            <span class="cc-sidebar-chevron">▾</span>
-                        </summary>
+                        </a>
 
                         <div class="cc-sidebar-subnav">
                             <a href="{{ route('unidades.index') }}"
@@ -139,13 +139,13 @@
                                 Nueva unidad
                             </a>
                         </div>
-                    </details>
+                    </div>
 
-                    <details class="cc-sidebar-group" @if ($licenciasActivo) open @endif>
-                        <summary class="cc-sidebar-parent {{ $licenciasActivo ? 'cc-sidebar-parent-active' : '' }}">
+                    <div class="cc-sidebar-group">
+                        <a href="{{ route('licencias.index') }}"
+                           class="cc-sidebar-parent {{ $licenciasActivo ? 'cc-sidebar-parent-active' : '' }}">
                             <span>Licencias</span>
-                            <span class="cc-sidebar-chevron">▾</span>
-                        </summary>
+                        </a>
 
                         <div class="cc-sidebar-subnav">
                             <a href="{{ route('licencias.index') }}"
@@ -163,7 +163,7 @@
                                 Nueva licencia
                             </a>
                         </div>
-                    </details>
+                    </div>
 
                     <span class="cc-sidebar-link cc-sidebar-link-disabled">
                         Marchamos

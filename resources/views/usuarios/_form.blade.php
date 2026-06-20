@@ -12,9 +12,6 @@
         <div class="cc-form-section-title">
             Clasificación y acceso
         </div>
-        <div class="cc-form-section-note">
-            Defina si el usuario pertenece a Diesel Cop o a una empresa cliente, y asigne el rol correspondiente.
-        </div>
     </div>
 
     <div class="cc-field">
@@ -111,9 +108,6 @@
     <div class="cc-form-section">
         <div class="cc-form-section-title">
             Datos personales
-        </div>
-        <div class="cc-form-section-note">
-            Información básica de identificación y contacto del usuario.
         </div>
     </div>
 
@@ -225,13 +219,6 @@
     <div class="cc-form-section">
         <div class="cc-form-section-title">
             Credenciales
-        </div>
-        <div class="cc-form-section-note">
-            @if ($esEdicion)
-                Deje la contraseña en blanco si no desea modificarla.
-            @else
-                Defina la contraseña inicial del usuario.
-            @endif
         </div>
     </div>
 
