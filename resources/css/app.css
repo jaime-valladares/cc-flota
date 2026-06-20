@@ -343,6 +343,10 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     border-left: 1px solid rgba(167, 179, 186, 0.22);
 }
 
+.cc-sidebar-subnav.is-collapsed {
+    display: none;
+}
+
 .cc-sidebar-sublink {
     position: relative;
     display: flex;
