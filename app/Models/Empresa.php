@@ -41,4 +41,14 @@ class Empresa extends Model
     {
         return $this->hasMany(User::class, 'empresa_id');
     }
+
+    public function unidades(): HasMany
+    {
+        return $this->hasMany(Unidad::class, 'empresa_id');
+    }
+
+    public function licencias(): HasMany
+    {
+        return $this->hasMany(Licencia::class, 'empresa_id');
+    }
 }

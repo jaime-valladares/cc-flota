@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\EmpresaController;
+use App\Http\Controllers\LicenciaController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UnidadController;
 use App\Http\Controllers\UsuarioController;
@@ -68,7 +69,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/usuarios/{usuario}/reactivar', [UsuarioController::class, 'reactivar'])
         ->name('usuarios.reactivar');
 
-/*
+    /*
     |--------------------------------------------------------------------------
     | Unidades
     |--------------------------------------------------------------------------
@@ -117,6 +118,53 @@ Route::middleware('auth')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
+    | Licencias
+    |--------------------------------------------------------------------------
+    |
+    | La licencia nace desde una unidad existente. La placa de la unidad será
+    | la referencia visible principal; la tabla licencias controla vigencia,
+    | estado de cobertura Diesel Cop y plantilla de puntos de seguridad.
+    |
+    */
+
+    Route::get('/licencias', [LicenciaController::class, 'index'])
+        ->name('licencias.index');
+
+    Route::get('/licencias/consulta/ventana', [LicenciaController::class, 'consultaVentana'])
+        ->name('licencias.consulta.ventana');
+
+    Route::get('/licencias/administrar', [LicenciaController::class, 'administrar'])
+        ->name('licencias.administrar');
+
+    Route::get('/licencias/administrar/ventana', [LicenciaController::class, 'administrarVentana'])
+        ->name('licencias.administrar.ventana');
+
+    Route::get('/licencias/nueva', [LicenciaController::class, 'create'])
+        ->name('licencias.create');
+
+    Route::get('/licencias/nueva/ventana', [LicenciaController::class, 'createVentana'])
+        ->name('licencias.create.ventana');
+
+    Route::post('/licencias', [LicenciaController::class, 'store'])
+        ->name('licencias.store');
+
+    Route::get('/licencias/{licencia}', [LicenciaController::class, 'show'])
+        ->name('licencias.show');
+
+    Route::get('/licencias/{licencia}/editar', [LicenciaController::class, 'edit'])
+        ->name('licencias.edit');
+
+    Route::put('/licencias/{licencia}', [LicenciaController::class, 'update'])
+        ->name('licencias.update');
+
+    Route::patch('/licencias/{licencia}/inactivar', [LicenciaController::class, 'inactivar'])
+        ->name('licencias.inactivar');
+
+    Route::patch('/licencias/{licencia}/reactivar', [LicenciaController::class, 'reactivar'])
+        ->name('licencias.reactivar');
+
+    /*
+    |--------------------------------------------------------------------------
     | Empresas
     |--------------------------------------------------------------------------
     |
@@ -132,7 +180,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/empresas/create/ventana', [EmpresaController::class, 'createVentana'])
         ->name('empresas.create.ventana');
 
-    Route::get('/empresas/administrar', [EmpresaController::class, 'administrar'])->name('empresas.administrar');
+    Route::get('/empresas/administrar', [EmpresaController::class, 'administrar'])
+        ->name('empresas.administrar');
 
     Route::get('/empresas/administrar/ventana', [EmpresaController::class, 'administrarVentana'])
         ->name('empresas.administrar.ventana');

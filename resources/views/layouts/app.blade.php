@@ -34,6 +34,7 @@
             $empresasActivo = request()->routeIs('empresas.*');
             $usuariosActivo = request()->routeIs('usuarios.*');
             $unidadesActivo = request()->routeIs('unidades.*');
+            $licenciasActivo = request()->routeIs('licencias.*');
         @endphp
 
         <div class="cc-admin-shell">
@@ -140,9 +141,29 @@
                         </div>
                     </details>
 
-                    <span class="cc-sidebar-link cc-sidebar-link-disabled">
-                        Licencias
-                    </span>
+                    <details class="cc-sidebar-group" @if ($licenciasActivo) open @endif>
+                        <summary class="cc-sidebar-parent {{ $licenciasActivo ? 'cc-sidebar-parent-active' : '' }}">
+                            <span>Licencias</span>
+                            <span class="cc-sidebar-chevron">▾</span>
+                        </summary>
+
+                        <div class="cc-sidebar-subnav">
+                            <a href="{{ route('licencias.index') }}"
+                               class="cc-sidebar-sublink {{ request()->routeIs('licencias.index') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Consulta licencias
+                            </a>
+
+                            <a href="{{ route('licencias.administrar') }}"
+                               class="cc-sidebar-sublink {{ request()->routeIs('licencias.administrar') || request()->routeIs('licencias.show') || request()->routeIs('licencias.edit') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Administrar licencia
+                            </a>
+
+                            <a href="{{ route('licencias.create') }}"
+                               class="cc-sidebar-sublink {{ request()->routeIs('licencias.create') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Nueva licencia
+                            </a>
+                        </div>
+                    </details>
 
                     <span class="cc-sidebar-link cc-sidebar-link-disabled">
                         Marchamos

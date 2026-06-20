@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable([
     'empresa_id',
@@ -36,6 +37,17 @@ class Unidad extends Model
     public function empresa(): BelongsTo
     {
         return $this->belongsTo(Empresa::class);
+    }
+
+    /**
+     * Relación con la licencia permanente de la unidad.
+     *
+     * En CC-Flota V1, una unidad puede tener como máximo una licencia,
+     * asociada a su placa de circulación.
+     */
+    public function licencia(): HasOne
+    {
+        return $this->hasOne(Licencia::class);
     }
 
     /**
