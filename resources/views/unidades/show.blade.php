@@ -64,13 +64,17 @@
                     </div>
 
                     <div class="cc-profile-status">
-                        @if ($unidad->estado === 'activo')
+                        @if ($unidad->estado === 'registrada')
+                            <span class="cc-badge cc-badge-pending">
+                                Registrada
+                            </span>
+                        @elseif ($unidad->estado === 'activa')
                             <span class="cc-badge cc-badge-active">
-                                Activo
+                                Activa
                             </span>
                         @else
                             <span class="cc-badge cc-badge-inactive">
-                                Inactivo
+                                Inactiva
                             </span>
                         @endif
                     </div>
@@ -173,7 +177,11 @@
                             <div class="cc-detail-item">
                                 <div class="cc-detail-label">Estado</div>
                                 <div class="cc-detail-value">
-                                    @if ($unidad->estado === 'activo')
+                                    @if ($unidad->estado === 'registrada')
+                                        <span class="cc-badge cc-badge-pending">
+                                            {{ $unidad->estado_texto }}
+                                        </span>
+                                    @elseif ($unidad->estado === 'activa')
                                         <span class="cc-badge cc-badge-active">
                                             {{ $unidad->estado_texto }}
                                         </span>
@@ -222,7 +230,7 @@
                                 </div>
                             </div>
 
-                            @if ($unidad->estado === 'inactivo')
+                            @if ($unidad->estado === 'inactiva')
                                 <div class="cc-detail-item">
                                     <div class="cc-detail-label">Inactivado por</div>
                                     <div class="cc-detail-value">
@@ -261,71 +269,102 @@
                     </div>
                 </div>
 
-                <section class="cc-danger-zone">
-                    <div class="cc-danger-zone-header">
-                        <div>
-                            <h5>Zona de riesgo</h5>
-                            <p>
-                                Modifique el estado de la unidad únicamente cuando exista una razón administrativa válida.
-                            </p>
-                        </div>
-                    </div>
-
-                    @if ($unidad->estado === 'activo')
-                        <form method="POST"
-                              action="{{ route('unidades.inactivar', $unidad) }}"
-                              class="cc-danger-zone-form"
-                              onsubmit="return confirm('¿Está seguro de inactivar esta unidad?');">
-                            @csrf
-                            @method('PATCH')
-
-                            <div class="cc-danger-zone-field">
-                                <label for="motivo_inactivacion">
-                                    Motivo de inactivación <span class="cc-required">*</span>
-                                </label>
-
-                                <select id="motivo_inactivacion"
-                                        name="motivo_inactivacion"
-                                        class="cc-input"
-                                        required>
-                                    <option value="">Seleccione un motivo</option>
-                                    <option value="Falta de uso">Falta de uso</option>
-                                    <option value="Unidad vendida">Unidad vendida</option>
-                                    <option value="Unidad fuera de operación">Unidad fuera de operación</option>
-                                    <option value="Unidad reemplazada">Unidad reemplazada</option>
-                                    <option value="Datos incorrectos en registro">Datos incorrectos en registro</option>
-                                    <option value="Solicitud administrativa">Solicitud administrativa</option>
-                                    <option value="Suspensión temporal">Suspensión temporal</option>
-                                    <option value="Otro">Otro</option>
-                                </select>
-
-                                @error('motivo_inactivacion')
-                                    <div class="cc-error">{{ $message }}</div>
-                                @enderror
+                @if ($unidad->estado === 'registrada')
+                    <section class="cc-info-panel mt-7">
+                        <div class="cc-form-section" style="margin-top: 0; margin-bottom: 0;">
+                            <div class="cc-form-section-title">
+                                Pendiente de configuración operativa
                             </div>
+                            <div class="cc-form-section-note">
+                                Esta unidad ya fue registrada, pero aún necesita licencia, puntos de seguridad y asignación inicial de marchamos para pasar a estado activa.
+                            </div>
+                        </div>
 
-                            <button type="submit" class="cc-btn-danger cc-btn-form-action">
-                                Inactivar unidad
-                            </button>
-                        </form>
-                    @else
-                        <form method="POST"
-                              action="{{ route('unidades.reactivar', $unidad) }}"
-                              class="cc-danger-zone-form"
-                              onsubmit="return confirm('¿Está seguro de reactivar esta unidad?');">
-                            @csrf
-                            @method('PATCH')
-
+                        <div class="mt-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                             <p class="text-sm text-[var(--cc-text-muted)] leading-relaxed">
-                                Esta unidad se encuentra inactiva. Puede reactivarla para permitir nuevamente su uso administrativo.
+                                Continúe con la creación de licencia para generar la plantilla de puntos de seguridad correspondiente.
                             </p>
 
-                            <button type="submit" class="cc-btn-success cc-btn-form-action">
-                                Reactivar unidad
-                            </button>
-                        </form>
-                    @endif
-                </section>
+                            @if (! $unidad->licencia)
+                                <a href="{{ route('licencias.create', ['empresa_id' => $unidad->empresa_id]) }}"
+                                   class="cc-btn-primary cc-btn-form-action">
+                                    Crear licencia
+                                </a>
+                            @else
+                                <a href="{{ route('licencias.show', $unidad->licencia) }}"
+                                   class="cc-btn-secondary cc-btn-form-action">
+                                    Ver licencia
+                                </a>
+                            @endif
+                        </div>
+                    </section>
+                @else
+                    <section class="cc-danger-zone">
+                        <div class="cc-danger-zone-header">
+                            <div>
+                                <h5>Zona de riesgo</h5>
+                                <p>
+                                    Modifique el estado de la unidad únicamente cuando exista una razón administrativa válida.
+                                </p>
+                            </div>
+                        </div>
+
+                        @if ($unidad->estado === 'activa')
+                            <form method="POST"
+                                  action="{{ route('unidades.inactivar', $unidad) }}"
+                                  class="cc-danger-zone-form"
+                                  onsubmit="return confirm('¿Está seguro de inactivar esta unidad?');">
+                                @csrf
+                                @method('PATCH')
+
+                                <div class="cc-danger-zone-field">
+                                    <label for="motivo_inactivacion">
+                                        Motivo de inactivación <span class="cc-required">*</span>
+                                    </label>
+
+                                    <select id="motivo_inactivacion"
+                                            name="motivo_inactivacion"
+                                            class="cc-input"
+                                            required>
+                                        <option value="">Seleccione un motivo</option>
+                                        <option value="Falta de uso">Falta de uso</option>
+                                        <option value="Unidad vendida">Unidad vendida</option>
+                                        <option value="Unidad fuera de operación">Unidad fuera de operación</option>
+                                        <option value="Unidad reemplazada">Unidad reemplazada</option>
+                                        <option value="Datos incorrectos en registro">Datos incorrectos en registro</option>
+                                        <option value="Solicitud administrativa">Solicitud administrativa</option>
+                                        <option value="Suspensión temporal">Suspensión temporal</option>
+                                        <option value="Otro">Otro</option>
+                                    </select>
+
+                                    @error('motivo_inactivacion')
+                                        <div class="cc-error">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <button type="submit" class="cc-btn-danger cc-btn-form-action">
+                                    Inactivar unidad
+                                </button>
+                            </form>
+                        @else
+                            <form method="POST"
+                                  action="{{ route('unidades.reactivar', $unidad) }}"
+                                  class="cc-danger-zone-form"
+                                  onsubmit="return confirm('¿Está seguro de reactivar esta unidad?');">
+                                @csrf
+                                @method('PATCH')
+
+                                <p class="text-sm text-[var(--cc-text-muted)] leading-relaxed">
+                                    Esta unidad se encuentra inactiva. Puede reactivarla para permitir nuevamente su validación operativa.
+                                </p>
+
+                                <button type="submit" class="cc-btn-success cc-btn-form-action">
+                                    Reactivar unidad
+                                </button>
+                            </form>
+                        @endif
+                    </section>
+                @endif
 
             </div>
         </div>
