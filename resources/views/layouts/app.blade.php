@@ -16,12 +16,16 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         <style>
-            .cc-sidebar-subnav.is-collapsed {
-                display: none;
+            .cc-sidebar-static-parent {
+                cursor: default;
             }
 
-            .cc-sidebar-chevron {
-                transition: transform 180ms ease;
+            .cc-sidebar-static-parent:hover {
+                transform: none;
+            }
+
+            .cc-sidebar-subnav {
+                display: flex;
             }
         </style>
     </head>
@@ -74,16 +78,11 @@
 
                     <!-- Empresas -->
                     <div class="cc-sidebar-group">
-                        <button type="button"
-                                class="cc-sidebar-parent {{ $empresasActivo ? 'cc-sidebar-parent-active' : '' }}"
-                                data-sidebar-toggle="empresas"
-                                aria-expanded="{{ $empresasActivo ? 'true' : 'false' }}">
+                        <div class="cc-sidebar-parent cc-sidebar-static-parent {{ $empresasActivo ? 'cc-sidebar-parent-active' : '' }}">
                             <span>Empresas</span>
-                            <span class="cc-sidebar-chevron">▾</span>
-                        </button>
+                        </div>
 
-                        <div class="cc-sidebar-subnav {{ $empresasActivo ? '' : 'is-collapsed' }}"
-                             data-sidebar-panel="empresas">
+                        <div class="cc-sidebar-subnav">
                             <a href="{{ route('empresas.index') }}"
                                class="cc-sidebar-sublink {{ request()->routeIs('empresas.index') ? 'cc-sidebar-sublink-active' : '' }}">
                                 Consulta empresas
@@ -103,16 +102,11 @@
 
                     <!-- Usuarios -->
                     <div class="cc-sidebar-group">
-                        <button type="button"
-                                class="cc-sidebar-parent {{ $usuariosActivo ? 'cc-sidebar-parent-active' : '' }}"
-                                data-sidebar-toggle="usuarios"
-                                aria-expanded="{{ $usuariosActivo ? 'true' : 'false' }}">
+                        <div class="cc-sidebar-parent cc-sidebar-static-parent {{ $usuariosActivo ? 'cc-sidebar-parent-active' : '' }}">
                             <span>Usuarios</span>
-                            <span class="cc-sidebar-chevron">▾</span>
-                        </button>
+                        </div>
 
-                        <div class="cc-sidebar-subnav {{ $usuariosActivo ? '' : 'is-collapsed' }}"
-                             data-sidebar-panel="usuarios">
+                        <div class="cc-sidebar-subnav">
                             <a href="{{ route('usuarios.index') }}"
                                class="cc-sidebar-sublink {{ request()->routeIs('usuarios.index') ? 'cc-sidebar-sublink-active' : '' }}">
                                 Consulta usuarios
@@ -136,16 +130,11 @@
 
                     <!-- Unidades -->
                     <div class="cc-sidebar-group">
-                        <button type="button"
-                                class="cc-sidebar-parent {{ $unidadesActivo ? 'cc-sidebar-parent-active' : '' }}"
-                                data-sidebar-toggle="unidades"
-                                aria-expanded="{{ $unidadesActivo ? 'true' : 'false' }}">
+                        <div class="cc-sidebar-parent cc-sidebar-static-parent {{ $unidadesActivo ? 'cc-sidebar-parent-active' : '' }}">
                             <span>Unidades</span>
-                            <span class="cc-sidebar-chevron">▾</span>
-                        </button>
+                        </div>
 
-                        <div class="cc-sidebar-subnav {{ $unidadesActivo ? '' : 'is-collapsed' }}"
-                             data-sidebar-panel="unidades">
+                        <div class="cc-sidebar-subnav">
                             <a href="{{ route('unidades.index') }}"
                                class="cc-sidebar-sublink {{ request()->routeIs('unidades.index') ? 'cc-sidebar-sublink-active' : '' }}">
                                 Consulta unidades
@@ -165,16 +154,11 @@
 
                     <!-- Licencias -->
                     <div class="cc-sidebar-group">
-                        <button type="button"
-                                class="cc-sidebar-parent {{ $licenciasActivo ? 'cc-sidebar-parent-active' : '' }}"
-                                data-sidebar-toggle="licencias"
-                                aria-expanded="{{ $licenciasActivo ? 'true' : 'false' }}">
+                        <div class="cc-sidebar-parent cc-sidebar-static-parent {{ $licenciasActivo ? 'cc-sidebar-parent-active' : '' }}">
                             <span>Licencias</span>
-                            <span class="cc-sidebar-chevron">▾</span>
-                        </button>
+                        </div>
 
-                        <div class="cc-sidebar-subnav {{ $licenciasActivo ? '' : 'is-collapsed' }}"
-                             data-sidebar-panel="licencias">
+                        <div class="cc-sidebar-subnav">
                             <a href="{{ route('licencias.index') }}"
                                class="cc-sidebar-sublink {{ request()->routeIs('licencias.index') ? 'cc-sidebar-sublink-active' : '' }}">
                                 Consulta licencias
@@ -194,16 +178,11 @@
 
                     <!-- Marchamos -->
                     <div class="cc-sidebar-group">
-                        <button type="button"
-                                class="cc-sidebar-parent {{ $marchamosActivo ? 'cc-sidebar-parent-active' : '' }}"
-                                data-sidebar-toggle="marchamos"
-                                aria-expanded="{{ $marchamosActivo ? 'true' : 'false' }}">
+                        <div class="cc-sidebar-parent cc-sidebar-static-parent {{ $marchamosActivo ? 'cc-sidebar-parent-active' : '' }}">
                             <span>Marchamos</span>
-                            <span class="cc-sidebar-chevron">▾</span>
-                        </button>
+                        </div>
 
-                        <div class="cc-sidebar-subnav {{ $marchamosActivo ? '' : 'is-collapsed' }}"
-                             data-sidebar-panel="marchamos">
+                        <div class="cc-sidebar-subnav">
                             <a href="{{ route('marchamos.index') }}"
                                class="cc-sidebar-sublink {{ request()->routeIs('marchamos.index') ? 'cc-sidebar-sublink-active' : '' }}">
                                 Consulta de marchamos
@@ -309,76 +288,5 @@
                 </main>
             </div>
         </div>
-
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                const sidebarButtons = document.querySelectorAll('[data-sidebar-toggle]');
-                const sidebarLinks = document.querySelectorAll('.cc-sidebar-sublink[href], .cc-sidebar-link[href]');
-
-                function setGroupState(button, open) {
-                    const key = button.dataset.sidebarToggle;
-                    const panel = document.querySelector(`[data-sidebar-panel="${key}"]`);
-                    const chevron = button.querySelector('.cc-sidebar-chevron');
-
-                    if (!panel) {
-                        return;
-                    }
-
-                    if (open) {
-                        panel.classList.remove('is-collapsed');
-                        button.setAttribute('aria-expanded', 'true');
-
-                        if (chevron) {
-                            chevron.style.transform = 'rotate(180deg)';
-                        }
-                    } else {
-                        panel.classList.add('is-collapsed');
-                        button.setAttribute('aria-expanded', 'false');
-
-                        if (chevron) {
-                            chevron.style.transform = 'rotate(0deg)';
-                        }
-                    }
-                }
-
-                sidebarButtons.forEach((button) => {
-                    const shouldBeOpen = button.getAttribute('aria-expanded') === 'true';
-
-                    setGroupState(button, shouldBeOpen);
-
-                    button.addEventListener('click', function (event) {
-                        event.preventDefault();
-                        event.stopPropagation();
-
-                        const key = this.dataset.sidebarToggle;
-                        const panel = document.querySelector(`[data-sidebar-panel="${key}"]`);
-
-                        if (!panel) {
-                            return;
-                        }
-
-                        const isOpen = !panel.classList.contains('is-collapsed');
-
-                        sidebarButtons.forEach((otherButton) => {
-                            if (otherButton !== this) {
-                                const otherIsActive = otherButton.classList.contains('cc-sidebar-parent-active');
-
-                                if (!otherIsActive) {
-                                    setGroupState(otherButton, false);
-                                }
-                            }
-                        });
-
-                        setGroupState(this, !isOpen);
-                    });
-                });
-
-                sidebarLinks.forEach((link) => {
-                    link.addEventListener('click', function (event) {
-                        event.stopPropagation();
-                    });
-                });
-            });
-        </script>
     </body>
 </html>
