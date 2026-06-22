@@ -76,11 +76,17 @@
                                 </label>
                                 <select id="estado" name="estado" class="cc-input">
                                     <option value="">Todos</option>
-                                    <option value="activo" @selected($estado === 'activo')>
-                                        Activo
+
+                                    <option value="registrada" @selected($estado === 'registrada')>
+                                        Registrada
                                     </option>
-                                    <option value="inactivo" @selected($estado === 'inactivo')>
-                                        Inactivo
+
+                                    <option value="activa" @selected($estado === 'activa')>
+                                        Activa
+                                    </option>
+
+                                    <option value="inactiva" @selected($estado === 'inactiva')>
+                                        Inactiva
                                     </option>
                                 </select>
                             </div>
@@ -157,13 +163,17 @@
                                                 {{ $unidad->placa }}
                                             </h5>
 
-                                            @if ($unidad->estado === 'activo')
+                                            @if ($unidad->estado === 'registrada')
+                                                <span class="cc-badge cc-badge-pending">
+                                                    Registrada
+                                                </span>
+                                            @elseif ($unidad->estado === 'activa')
                                                 <span class="cc-badge cc-badge-active">
-                                                    Activo
+                                                    Activa
                                                 </span>
                                             @else
                                                 <span class="cc-badge cc-badge-inactive">
-                                                    Inactivo
+                                                    Inactiva
                                                 </span>
                                             @endif
                                         </div>

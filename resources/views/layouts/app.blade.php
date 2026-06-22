@@ -312,17 +312,46 @@
 
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-                document.querySelectorAll('[data-sidebar-toggle]').forEach((button) => {
+                const sidebarButtons = document.querySelectorAll('[data-sidebar-toggle]');
+                const sidebarLinks = document.querySelectorAll('.cc-sidebar-sublink[href], .cc-sidebar-link[href]');
+
+                function setGroupState(button, open) {
+                    const key = button.dataset.sidebarToggle;
+                    const panel = document.querySelector(`[data-sidebar-panel="${key}"]`);
                     const chevron = button.querySelector('.cc-sidebar-chevron');
 
-                    if (button.getAttribute('aria-expanded') === 'true' && chevron) {
-                        chevron.style.transform = 'rotate(180deg)';
+                    if (!panel) {
+                        return;
                     }
 
-                    button.addEventListener('click', function () {
+                    if (open) {
+                        panel.classList.remove('is-collapsed');
+                        button.setAttribute('aria-expanded', 'true');
+
+                        if (chevron) {
+                            chevron.style.transform = 'rotate(180deg)';
+                        }
+                    } else {
+                        panel.classList.add('is-collapsed');
+                        button.setAttribute('aria-expanded', 'false');
+
+                        if (chevron) {
+                            chevron.style.transform = 'rotate(0deg)';
+                        }
+                    }
+                }
+
+                sidebarButtons.forEach((button) => {
+                    const shouldBeOpen = button.getAttribute('aria-expanded') === 'true';
+
+                    setGroupState(button, shouldBeOpen);
+
+                    button.addEventListener('click', function (event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+
                         const key = this.dataset.sidebarToggle;
                         const panel = document.querySelector(`[data-sidebar-panel="${key}"]`);
-                        const icon = this.querySelector('.cc-sidebar-chevron');
 
                         if (!panel) {
                             return;
@@ -330,21 +359,23 @@
 
                         const isOpen = !panel.classList.contains('is-collapsed');
 
-                        if (isOpen) {
-                            panel.classList.add('is-collapsed');
-                            this.setAttribute('aria-expanded', 'false');
+                        sidebarButtons.forEach((otherButton) => {
+                            if (otherButton !== this) {
+                                const otherIsActive = otherButton.classList.contains('cc-sidebar-parent-active');
 
-                            if (icon) {
-                                icon.style.transform = 'rotate(0deg)';
+                                if (!otherIsActive) {
+                                    setGroupState(otherButton, false);
+                                }
                             }
-                        } else {
-                            panel.classList.remove('is-collapsed');
-                            this.setAttribute('aria-expanded', 'true');
+                        });
 
-                            if (icon) {
-                                icon.style.transform = 'rotate(180deg)';
-                            }
-                        }
+                        setGroupState(this, !isOpen);
+                    });
+                });
+
+                sidebarLinks.forEach((link) => {
+                    link.addEventListener('click', function (event) {
+                        event.stopPropagation();
                     });
                 });
             });
