@@ -14,6 +14,32 @@ use Illuminate\View\View;
 
 class MarchamoAsignacionInicialController extends Controller
 {
+    public function index(): View
+    {
+        $user = Auth::user();
+
+        $unidades = Unidad::query()
+            ->with(['empresa', 'licencia'])
+            ->withCount([
+                'puntosSeguridad as total_puntos' => fn ($query) => $query->where('estado', 'activo'),
+                'puntosSeguridad as puntos_asignados' => fn ($query) => $query
+                    ->where('estado', 'activo')
+                    ->whereNotNull('marchamo_actual_id'),
+            ])
+            ->whereHas('licencia')
+            ->whereHas('puntosSeguridad')
+            ->when(! is_null($user->empresa_id), function ($query) use ($user) {
+                $query->where('empresa_id', $user->empresa_id);
+            })
+            ->orderBy('estado')
+            ->orderBy('placa')
+            ->paginate(15);
+
+        return view('marchamos.asignacion-inicial.index', [
+            'unidades' => $unidades,
+        ]);
+    }
+
     /**
      * Muestra la pantalla de asignación inicial de marchamos para una unidad.
      */

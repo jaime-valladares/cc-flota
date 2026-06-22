@@ -45,6 +45,7 @@
             $usuariosActivo = request()->routeIs('usuarios.*');
             $unidadesActivo = request()->routeIs('unidades.*');
             $licenciasActivo = request()->routeIs('licencias.*');
+            $marchamosActivo = request()->routeIs('marchamos.*');
         @endphp
 
         <div class="cc-admin-shell">
@@ -71,6 +72,7 @@
                         Administración
                     </div>
 
+                    <!-- Empresas -->
                     <div class="cc-sidebar-group">
                         <button type="button"
                                 class="cc-sidebar-parent {{ $empresasActivo ? 'cc-sidebar-parent-active' : '' }}"
@@ -99,6 +101,7 @@
                         </div>
                     </div>
 
+                    <!-- Usuarios -->
                     <div class="cc-sidebar-group">
                         <button type="button"
                                 class="cc-sidebar-parent {{ $usuariosActivo ? 'cc-sidebar-parent-active' : '' }}"
@@ -131,6 +134,7 @@
                         Operación
                     </div>
 
+                    <!-- Unidades -->
                     <div class="cc-sidebar-group">
                         <button type="button"
                                 class="cc-sidebar-parent {{ $unidadesActivo ? 'cc-sidebar-parent-active' : '' }}"
@@ -159,6 +163,7 @@
                         </div>
                     </div>
 
+                    <!-- Licencias -->
                     <div class="cc-sidebar-group">
                         <button type="button"
                                 class="cc-sidebar-parent {{ $licenciasActivo ? 'cc-sidebar-parent-active' : '' }}"
@@ -187,9 +192,33 @@
                         </div>
                     </div>
 
-                    <span class="cc-sidebar-link cc-sidebar-link-disabled">
-                        Marchamos
-                    </span>
+                    <!-- Marchamos -->
+                    <div class="cc-sidebar-group">
+                        <button type="button"
+                                class="cc-sidebar-parent {{ $marchamosActivo ? 'cc-sidebar-parent-active' : '' }}"
+                                data-sidebar-toggle="marchamos"
+                                aria-expanded="{{ $marchamosActivo ? 'true' : 'false' }}">
+                            <span>Marchamos</span>
+                            <span class="cc-sidebar-chevron">▾</span>
+                        </button>
+
+                        <div class="cc-sidebar-subnav {{ $marchamosActivo ? '' : 'is-collapsed' }}"
+                             data-sidebar-panel="marchamos">
+                            <a href="{{ route('marchamos.index') }}"
+                               class="cc-sidebar-sublink {{ request()->routeIs('marchamos.index') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Consulta de marchamos
+                            </a>
+
+                            <span class="cc-sidebar-sublink cc-sidebar-link-disabled">
+                                Administración de marchamos
+                            </span>
+
+                            <a href="{{ route('marchamos.asignacion-inicial.index') }}"
+                               class="cc-sidebar-sublink {{ request()->routeIs('marchamos.asignacion-inicial.*') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Asignación inicial
+                            </a>
+                        </div>
+                    </div>
 
                     <span class="cc-sidebar-link cc-sidebar-link-disabled">
                         Gasolineras

@@ -2,10 +2,11 @@
 
 use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\LicenciaController;
+use App\Http\Controllers\MarchamoAsignacionInicialController;
+use App\Http\Controllers\MarchamoController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UnidadController;
 use App\Http\Controllers\UsuarioController;
-use App\Http\Controllers\MarchamoAsignacionInicialController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -17,19 +18,27 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    /*
+    |--------------------------------------------------------------------------
+    | Perfil
+    |--------------------------------------------------------------------------
+    */
 
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profile', [ProfileController::class, 'edit'])
+        ->name('profile.edit');
 
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::patch('/profile', [ProfileController::class, 'update'])
+        ->name('profile.update');
+
+    Route::delete('/profile', [ProfileController::class, 'destroy'])
+        ->name('profile.destroy');
 
     /*
     |--------------------------------------------------------------------------
     | Usuarios
     |--------------------------------------------------------------------------
     |
-    | Se mantiene la misma separación funcional del módulo Empresas:
-    | consulta informativa, administración operativa, creación, ficha,
+    | Consulta informativa, administración operativa, creación, ficha,
     | edición e inactivación/reactivación.
     |
     */
@@ -75,8 +84,7 @@ Route::middleware('auth')->group(function () {
     | Unidades
     |--------------------------------------------------------------------------
     |
-    | Se mantiene la misma separación funcional aplicada en Empresas y Usuarios:
-    | consulta informativa, administración operativa, creación, ficha,
+    | Consulta informativa, administración operativa, creación, ficha,
     | edición e inactivación/reactivación.
     |
     */
@@ -116,15 +124,6 @@ Route::middleware('auth')->group(function () {
 
     Route::patch('/unidades/{unidad}/reactivar', [UnidadController::class, 'reactivar'])
         ->name('unidades.reactivar');
-
-    Route::get('/unidades/{unidad}/marchamos/asignacion-inicial', [MarchamoAsignacionInicialController::class, 'show'])
-        ->name('marchamos.asignacion-inicial.show');
-
-    Route::post('/unidades/{unidad}/marchamos/asignacion-inicial', [MarchamoAsignacionInicialController::class, 'guardarAvance'])
-        ->name('marchamos.asignacion-inicial.guardar-avance');
-
-    Route::post('/unidades/{unidad}/marchamos/finalizar-asignacion-inicial', [MarchamoAsignacionInicialController::class, 'finalizar'])
-        ->name('marchamos.asignacion-inicial.finalizar');
 
     /*
     |--------------------------------------------------------------------------
@@ -172,6 +171,32 @@ Route::middleware('auth')->group(function () {
 
     Route::patch('/licencias/{licencia}/reactivar', [LicenciaController::class, 'reactivar'])
         ->name('licencias.reactivar');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Marchamos
+    |--------------------------------------------------------------------------
+    |
+    | Módulo operativo avanzado. Incluye consulta global de marchamos,
+    | asignación inicial por unidad y, posteriormente, administración,
+    | correcciones, reemplazos e historial.
+    |
+    */
+
+    Route::get('/marchamos', [MarchamoController::class, 'index'])
+        ->name('marchamos.index');
+
+    Route::get('/marchamos/asignacion-inicial', [MarchamoAsignacionInicialController::class, 'index'])
+        ->name('marchamos.asignacion-inicial.index');
+
+    Route::get('/unidades/{unidad}/marchamos/asignacion-inicial', [MarchamoAsignacionInicialController::class, 'show'])
+        ->name('marchamos.asignacion-inicial.show');
+
+    Route::post('/unidades/{unidad}/marchamos/asignacion-inicial', [MarchamoAsignacionInicialController::class, 'guardarAvance'])
+        ->name('marchamos.asignacion-inicial.guardar-avance');
+
+    Route::post('/unidades/{unidad}/marchamos/finalizar-asignacion-inicial', [MarchamoAsignacionInicialController::class, 'finalizar'])
+        ->name('marchamos.asignacion-inicial.finalizar');
 
     /*
     |--------------------------------------------------------------------------
