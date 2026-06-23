@@ -39,7 +39,7 @@
         @enderror
     </div>
 
-    <div class="cc-field">
+    <div class="cc-field cc-col-span-2">
         <label for="nit">
             NIT <span class="cc-required">*</span>
         </label>
@@ -155,7 +155,7 @@
         @enderror
     </div>
 
-    <div class="cc-field">
+    <div class="cc-field cc-col-span-2">
         <label for="poc_telefono">
             Teléfono del POC
         </label>

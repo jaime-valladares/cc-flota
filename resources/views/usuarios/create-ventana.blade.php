@@ -1,64 +1,64 @@
-<!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="csrf-token" content="{{ csrf_token() }}">
+    <!DOCTYPE html>
+    <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>Registro de usuario | CC-Flota</title>
+            <title>Registro de usuario | CC-Flota</title>
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+            <!-- Fonts -->
+            <link rel="preconnect" href="https://fonts.googleapis.com">
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
 
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    </head>
+            @vite(['resources/css/app.css', 'resources/js/app.js'])
+        </head>
 
-    <body class="antialiased">
-        <div class="min-h-screen" style="background: var(--cc-bg-main);">
-            <div class="cc-page-wrapper">
-                <div class="cc-window-container">
-                    <div class="cc-card">
+        <body class="antialiased">
+            <div class="min-h-screen" style="background: var(--cc-bg-main);">
+                <div class="cc-page-wrapper">
+                    <div class="cc-window-container" style="max-width: 72rem;">
+                        <div class="cc-card">
 
-                        <div class="cc-card-header">
-                            <div>
-                                <h3 class="cc-title">
-                                    Registro de usuario
-                                </h3>
-                                <p class="cc-subtitle">
-                                    Complete los datos de acceso, empresa, rol y contacto del usuario.
-                                </p>
+                            <div class="cc-card-header">
+                                <div>
+                                    <h3 class="cc-title">
+                                        Registro de usuario
+                                    </h3>
+                                    <p class="cc-subtitle">
+                                        Complete los datos de acceso, empresa, rol y contacto del usuario.
+                                    </p>
+                                </div>
+
+                                <div class="flex items-center gap-3">
+                                    <a href="{{ route('usuarios.create') }}" class="cc-btn-secondary cc-btn-wide">
+                                        Volver al sistema
+                                    </a>
+                                </div>
                             </div>
 
-                            <div class="flex items-center gap-3">
-                                <a href="{{ route('usuarios.create') }}" class="cc-btn-secondary cc-btn-wide">
-                                    Volver al sistema
-                                </a>
-                            </div>
+                            @if (session('success'))
+                                <div class="cc-alert-success">
+                                    {{ session('success') }}
+                                </div>
+                            @endif
+
+                            <form method="POST" action="{{ route('usuarios.store') }}" novalidate>
+                                @csrf
+
+                                @include('usuarios._form', [
+                                    'usuario' => null,
+                                    'empresas' => $empresas,
+                                    'roles' => $roles,
+                                    'esUsuarioDieselCop' => $esUsuarioDieselCop,
+                                    'submitLabel' => 'Guardar usuario',
+                                ])
+                            </form>
+
                         </div>
-
-                        @if (session('success'))
-                            <div class="cc-alert-success">
-                                {{ session('success') }}
-                            </div>
-                        @endif
-
-                        <form method="POST" action="{{ route('usuarios.store') }}" novalidate>
-                            @csrf
-
-                            @include('usuarios._form', [
-                                'usuario' => null,
-                                'empresas' => $empresas,
-                                'roles' => $roles,
-                                'esUsuarioDieselCop' => $esUsuarioDieselCop,
-                                'submitLabel' => 'Guardar usuario',
-                            ])
-                        </form>
-
                     </div>
                 </div>
             </div>
-        </div>
-    </body>
-</html>
+        </body>
+    </html>

@@ -17,7 +17,7 @@
     <body class="antialiased">
         <div class="min-h-screen" style="background: var(--cc-bg-main);">
             <div class="cc-page-wrapper">
-                <div class="cc-window-container">
+                <div class="cc-window-container" style="max-width: 73rem;">
                     <div class="cc-card">
 
                         <div class="cc-card-header">
