@@ -184,13 +184,14 @@
 
                         <div class="cc-sidebar-subnav">
                             <a href="{{ route('marchamos.index') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('marchamos.index') ? 'cc-sidebar-sublink-active' : '' }}">
+                               class="cc-sidebar-sublink {{ request()->routeIs('marchamos.index') || request()->routeIs('marchamos.detalle-unidad') ? 'cc-sidebar-sublink-active' : '' }}">
                                 Consulta de marchamos
                             </a>
 
-                            <span class="cc-sidebar-sublink cc-sidebar-link-disabled">
+                            <a href="{{ route('marchamos.reemplazos.index') }}"
+                               class="cc-sidebar-sublink {{ request()->routeIs('marchamos.reemplazos.*') ? 'cc-sidebar-sublink-active' : '' }}">
                                 Administración de marchamos
-                            </span>
+                            </a>
 
                             <a href="{{ route('marchamos.asignacion-inicial.index') }}"
                                class="cc-sidebar-sublink {{ request()->routeIs('marchamos.asignacion-inicial.*') ? 'cc-sidebar-sublink-active' : '' }}">

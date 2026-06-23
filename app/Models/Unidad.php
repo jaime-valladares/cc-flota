@@ -135,4 +135,10 @@ class Unidad extends Model
             'fecha_inactivacion' => 'datetime',
         ];
     }
+
+    public function reemplazoMarchamosEventos(): HasMany
+    {
+        return $this->hasMany(ReemplazoMarchamoEvento::class, 'unidad_id');
+    }
+
 }

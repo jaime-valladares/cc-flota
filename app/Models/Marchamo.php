@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'empresa_id',
@@ -48,6 +49,16 @@ class Marchamo extends Model
     public function actualizadoPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'actualizado_por');
+    }
+
+    public function reemplazosComoMarchamoAnterior(): HasMany
+    {
+        return $this->hasMany(ReemplazoMarchamoDetalle::class, 'marchamo_anterior_id');
+    }
+
+    public function reemplazosComoMarchamoNuevo(): HasMany
+    {
+        return $this->hasMany(ReemplazoMarchamoDetalle::class, 'marchamo_nuevo_id');
     }
 
     protected function estadoTexto(): Attribute

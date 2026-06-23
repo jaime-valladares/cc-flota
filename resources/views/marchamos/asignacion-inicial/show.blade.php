@@ -68,7 +68,7 @@
 
                     <div class="cc-profile-status">
                         @if ($unidad->estado === 'registrada')
-                            <span class="cc-badge cc-badge-pending">
+                            <span class="cc-badge cc-badge-warning">
                                 Registrada
                             </span>
                         @elseif ($unidad->estado === 'activa')
@@ -83,47 +83,54 @@
                     </div>
                 </div>
 
-                <div class="cc-metric-grid">
-                    <div class="cc-metric-card">
-                        <div class="cc-metric-label">
-                            Total puntos
-                        </div>
-                        <div class="cc-metric-value">
-                            {{ $totalPuntos }}
-                        </div>
-                    </div>
+                <div class="mt-5 rounded-[var(--cc-radius-lg)] border border-[var(--cc-card-border)] bg-[var(--cc-card-bg-soft)] px-5 py-4">
+                    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                        <div>
+                            <div class="text-xs font-extrabold uppercase tracking-[0.14em] text-[var(--cc-text-muted)]">
+                                Avance de asignación
+                            </div>
 
-                    <div class="cc-metric-card">
-                        <div class="cc-metric-label">
-                            Asignados
+                            <div class="mt-1 font-[var(--cc-font-heading)] text-2xl font-extrabold text-[var(--cc-text-heading)]">
+                                {{ $porcentajeAvance }}%
+                            </div>
                         </div>
-                        <div class="cc-metric-value cc-metric-value-success">
-                            {{ $puntosAsignados }}
-                        </div>
-                    </div>
 
-                    <div class="cc-metric-card">
-                        <div class="cc-metric-label">
-                            Pendientes
-                        </div>
-                        <div class="cc-metric-value cc-metric-value-danger">
-                            {{ $puntosPendientes }}
-                        </div>
-                    </div>
+                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:min-w-[34rem]">
+                            <div class="rounded-[var(--cc-radius-md)] border border-[var(--cc-card-border)] bg-white px-4 py-3">
+                                <div class="text-xs font-extrabold uppercase tracking-[0.12em] text-[var(--cc-text-muted)]">
+                                    Total puntos
+                                </div>
+                                <div class="mt-1 text-xl font-extrabold text-[var(--cc-text-heading)]">
+                                    {{ $totalPuntos }}
+                                </div>
+                            </div>
 
-                    <div class="cc-metric-card">
-                        <div class="cc-metric-label">
-                            Avance
-                        </div>
-                        <div class="cc-metric-value">
-                            {{ $porcentajeAvance }}%
+                            <div class="rounded-[var(--cc-radius-md)] border border-[var(--cc-card-border)] bg-white px-4 py-3">
+                                <div class="text-xs font-extrabold uppercase tracking-[0.12em] text-[var(--cc-text-muted)]">
+                                    Asignados
+                                </div>
+                                <div class="mt-1 text-xl font-extrabold text-[var(--cc-success)]">
+                                    {{ $puntosAsignados }}
+                                </div>
+                            </div>
+
+                            <div class="rounded-[var(--cc-radius-md)] border border-[var(--cc-card-border)] bg-white px-4 py-3">
+                                <div class="text-xs font-extrabold uppercase tracking-[0.12em] text-[var(--cc-text-muted)]">
+                                    Pendientes
+                                </div>
+                                <div class="mt-1 text-xl font-extrabold text-[var(--cc-danger)]">
+                                    {{ $puntosPendientes }}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <section class="cc-detail-section mt-6">
                     <div class="cc-detail-section-header">
-                        <h5>Registro de marchamos</h5>
+                        <h5>
+                            Registro de marchamos
+                        </h5>
                         <p>
                             Puede guardar avances parciales. Los códigos deben tener exactamente 7 dígitos, conservando ceros a la izquierda.
                         </p>
@@ -183,7 +190,7 @@
                                                         Asignado
                                                     </span>
                                                 @else
-                                                    <span class="cc-badge cc-badge-pending">
+                                                    <span class="cc-badge cc-badge-warning">
                                                         Pendiente
                                                     </span>
                                                 @endif
@@ -231,7 +238,9 @@
 
                 <section class="cc-detail-section mt-6">
                     <div class="cc-detail-section-header">
-                        <h5>Finalización de asignación inicial</h5>
+                        <h5>
+                            Finalización de asignación inicial
+                        </h5>
 
                         @if ($puntosPendientes > 0)
                             <p>

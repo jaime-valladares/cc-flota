@@ -3,6 +3,7 @@
 use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\LicenciaController;
 use App\Http\Controllers\MarchamoAsignacionInicialController;
+use App\Http\Controllers\MarchamoReemplazoController;
 use App\Http\Controllers\MarchamoController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UnidadController;
@@ -206,6 +207,15 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/unidades/{unidad}/marchamos/finalizar-asignacion-inicial', [MarchamoAsignacionInicialController::class, 'finalizar'])
         ->name('marchamos.asignacion-inicial.finalizar');
+
+    Route::get('/marchamos/reemplazos', [MarchamoReemplazoController::class, 'index'])
+        ->name('marchamos.reemplazos.index');
+
+    Route::get('/marchamos/reemplazos/unidades/{unidad}', [MarchamoReemplazoController::class, 'show'])
+        ->name('marchamos.reemplazos.show');
+
+    Route::post('/marchamos/reemplazos/unidades/{unidad}', [MarchamoReemplazoController::class, 'store'])
+        ->name('marchamos.reemplazos.store');
 
     /*
     |--------------------------------------------------------------------------

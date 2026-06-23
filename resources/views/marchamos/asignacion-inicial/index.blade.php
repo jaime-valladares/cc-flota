@@ -9,7 +9,7 @@
                             Asignación de marchamos
                         </h3>
                         <p class="cc-subtitle">
-                            Consulte las unidades con licencia y complete la asignación inicial de marchamos.
+                            Complete la primera asignación de marchamos para unidades con licencia activa y puntos pendientes.
                         </p>
                     </div>
                 </div>
@@ -115,14 +115,14 @@
                                     <td class="text-right">
                                         <a href="{{ route('marchamos.asignacion-inicial.show', $unidad) }}"
                                            class="cc-btn-secondary cc-btn-table">
-                                            Gestionar
+                                            Asignación
                                         </a>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
                                     <td colspan="7" class="text-center text-[var(--cc-text-muted)] py-8">
-                                        No hay unidades con puntos de seguridad generados para asignación de marchamos.
+                                        No hay unidades pendientes de asignación inicial.
                                     </td>
                                 </tr>
                             @endforelse

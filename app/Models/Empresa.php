@@ -56,4 +56,10 @@ class Empresa extends Model
     {
         return $this->hasMany(Marchamo::class, 'empresa_id');
     }
+
+    public function reemplazoMarchamosEventos(): HasMany
+    {
+        return $this->hasMany(ReemplazoMarchamoEvento::class, 'empresa_id');
+    }
+
 }

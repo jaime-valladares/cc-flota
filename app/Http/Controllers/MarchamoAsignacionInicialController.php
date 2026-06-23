@@ -26,12 +26,14 @@ class MarchamoAsignacionInicialController extends Controller
                     ->where('estado', 'activo')
                     ->whereNotNull('marchamo_actual_id'),
             ])
-            ->whereHas('licencia')
+            ->where('estado', 'registrada')
+            ->whereHas('licencia', function ($query) {
+                $query->where('estado', 'activa');
+            })
             ->whereHas('puntosSeguridad')
             ->when(! is_null($user->empresa_id), function ($query) use ($user) {
                 $query->where('empresa_id', $user->empresa_id);
             })
-            ->orderBy('estado')
             ->orderBy('placa')
             ->paginate(15);
 
@@ -43,7 +45,7 @@ class MarchamoAsignacionInicialController extends Controller
     /**
      * Muestra la pantalla de asignación inicial de marchamos para una unidad.
      */
-    public function show(Unidad $unidad): View
+    public function show(Unidad $unidad): View|RedirectResponse
     {
         $this->autorizarAccesoUnidad($unidad);
 
@@ -52,6 +54,12 @@ class MarchamoAsignacionInicialController extends Controller
             'licencia',
             'puntosSeguridad.marchamoActual',
         ]);
+
+        if ($unidad->estado === 'activa') {
+            return redirect()
+                ->route('marchamos.detalle-unidad', $unidad)
+                ->with('success', 'La asignación inicial de esta unidad ya fue completada. Use Consulta de marchamos o Administración de marchamos para continuar.');
+        }
 
         $this->validarUnidadAsignable($unidad);
 
@@ -147,13 +155,12 @@ class MarchamoAsignacionInicialController extends Controller
                 }
 
                 $codigoExiste = Marchamo::query()
-                    ->where('empresa_id', $unidad->empresa_id)
                     ->where('codigo_marchamo', $codigoMarchamo)
                     ->exists();
 
                 if ($codigoExiste) {
                     throw ValidationException::withMessages([
-                        "marchamos.$puntoId" => "El marchamo {$codigoMarchamo} ya existe para esta empresa.",
+                        "marchamos.$puntoId" => "El marchamo {$codigoMarchamo} ya existe en el sistema.",
                     ]);
                 }
 
@@ -255,8 +262,8 @@ class MarchamoAsignacionInicialController extends Controller
             abort(422, 'La licencia de la unidad debe estar activa.');
         }
 
-        if (! in_array($unidad->estado, ['registrada', 'activa'], true)) {
-            abort(422, 'La unidad debe estar registrada o activa para consultar la asignación inicial.');
+        if ($unidad->estado !== 'registrada') {
+            abort(422, 'La unidad debe estar registrada para completar la asignación inicial.');
         }
 
         if ($unidad->puntosSeguridad()->count() === 0) {
