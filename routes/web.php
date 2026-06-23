@@ -186,6 +186,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/marchamos', [MarchamoController::class, 'index'])
         ->name('marchamos.index');
 
+    Route::get('/marchamos/consulta/ventana', [MarchamoController::class, 'consultaVentana'])
+        ->name('marchamos.consulta.ventana');
+
+    Route::get('/marchamos/consulta/ventana/unidades/{unidad}', [MarchamoController::class, 'detalleUnidadVentana'])
+        ->name('marchamos.detalle-unidad.ventana');
+
+    Route::get('/marchamos/unidades/{unidad}', [MarchamoController::class, 'detalleUnidad'])
+        ->name('marchamos.detalle-unidad');
+
     Route::get('/marchamos/asignacion-inicial', [MarchamoAsignacionInicialController::class, 'index'])
         ->name('marchamos.asignacion-inicial.index');
 
