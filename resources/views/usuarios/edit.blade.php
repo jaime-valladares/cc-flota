@@ -1,14 +1,14 @@
 <x-app-layout>
     <div class="cc-page-wrapper">
-        <div class="cc-form-container">
+        <div class="cc-content-container" style="max-width: 79rem;">
             <div class="cc-card">
 
-                <div class="cc-card-header">
+                <div class="cc-card-header cc-card-header-compact">
                     <div>
-                        <h3 class="cc-title">
+                        <h3 class="cc-title cc-title-compact">
                             Editar usuario
                         </h3>
-                        <p class="cc-subtitle">
+                        <p class="cc-subtitle cc-subtitle-compact">
                             Actualice los datos de acceso, empresa, rol y contacto del usuario.
                         </p>
                     </div>
@@ -30,6 +30,7 @@
                         'roles' => $roles,
                         'esUsuarioDieselCop' => $esUsuarioDieselCop,
                         'submitLabel' => 'Actualizar usuario',
+                        'modoVentana' => false,
                     ])
                 </form>
 

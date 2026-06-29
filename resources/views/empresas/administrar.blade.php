@@ -1,14 +1,14 @@
 <x-app-layout>
     <div class="cc-page-wrapper">
-        <div class="cc-content-container">
+        <div class="cc-content-container" style="max-width: 80rem;">
             <div class="cc-card">
 
-                <div class="cc-card-header">
+                <div class="cc-card-header cc-card-header-compact">
                     <div>
-                        <h3 class="cc-title">
+                        <h3 class="cc-title cc-title-compact">
                             Administrar empresa
                         </h3>
-                        <p class="cc-subtitle">
+                        <p class="cc-subtitle cc-subtitle-compact">
                             Localice una empresa cliente para consultar su ficha, editar sus datos o gestionar su estado administrativo.
                         </p>
                     </div>
@@ -29,10 +29,10 @@
                     </div>
                 @endif
 
-                <form method="GET" action="{{ route('empresas.administrar') }}" class="mb-6">
-                    <div class="cc-filter-panel">
+                <form method="GET" action="{{ route('empresas.administrar') }}" class="mb-5">
+                    <div class="cc-filter-panel cc-filter-panel-compact">
 
-                        <div class="cc-form-section" style="margin-top: 0; margin-bottom: 1.25rem;">
+                        <div class="cc-form-section cc-form-section-compact" style="margin-top: 0;">
                             <div class="cc-form-section-title">
                                 Búsqueda administrativa
                             </div>
@@ -116,7 +116,7 @@
 
                         </div>
 
-                        <div class="mt-5 border-t border-[var(--cc-card-border)] pt-5">
+                        <div class="cc-admin-filter-actions border-t border-[var(--cc-card-border)]">
                             <div class="flex items-center justify-end gap-3">
                                 <button type="submit" class="cc-btn-primary">
                                     Buscar
@@ -160,14 +160,14 @@
                         </p>
                     </div>
                 @else
-                    <div class="space-y-4">
+                    <div class="space-y-3">
                         @foreach ($empresas as $empresa)
-                            <article class="cc-result-card">
-                                <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+                            <article class="cc-result-card cc-result-card-compact">
+                                <div class="cc-result-grid">
 
-                                    <div class="lg:col-span-4 min-w-0">
-                                        <div class="flex items-center gap-3 min-w-0">
-                                            <h5 class="font-[var(--cc-font-heading)] text-xl font-extrabold text-[var(--cc-text-heading)] tracking-[-0.03em] cc-cell-truncate">
+                                    <div class="cc-result-main">
+                                        <div class="cc-result-title-row">
+                                            <h5 class="cc-result-title cc-cell-truncate">
                                                 {{ $empresa->nombre_legal }}
                                             </h5>
 
@@ -182,45 +182,43 @@
                                             @endif
                                         </div>
 
-                                        <div class="mt-1 text-sm font-medium text-[var(--cc-text-muted)] cc-cell-truncate">
+                                        <div class="cc-result-subtitle cc-cell-truncate">
                                             {{ $empresa->nombre_comercial ?: 'Sin nombre comercial registrado' }}
                                         </div>
                                     </div>
 
-                                    <div class="lg:col-span-2 min-w-0">
-                                        <div class="font-[var(--cc-font-heading)] text-xs font-extrabold text-[var(--cc-text-muted)] uppercase tracking-wider">
+                                    <div class="cc-result-meta">
+                                        <div class="cc-result-label">
                                             NIT
                                         </div>
 
-                                        <div class="mt-1 font-bold text-[var(--cc-text-main)]">
+                                        <div class="cc-result-value">
                                             {{ $empresa->nit }}
                                         </div>
                                     </div>
 
-                                    <div class="lg:col-span-3 min-w-0">
-                                        <div class="font-[var(--cc-font-heading)] text-xs font-extrabold text-[var(--cc-text-muted)] uppercase tracking-wider">
+                                    <div class="cc-result-meta">
+                                        <div class="cc-result-label">
                                             Contacto
                                         </div>
 
-                                        <div class="mt-1 font-bold text-[var(--cc-text-main)] cc-cell-truncate">
+                                        <div class="cc-result-value cc-cell-truncate">
                                             {{ $empresa->poc_nombre }}
                                         </div>
 
-                                        <div class="text-sm font-medium text-[var(--cc-text-muted)] cc-cell-truncate">
+                                        <div class="cc-result-value-muted cc-cell-truncate">
                                             {{ $empresa->poc_email }}
                                         </div>
                                     </div>
 
-                                    <div class="lg:col-span-3">
-                                        <div class="flex items-center justify-end gap-3">
-                                            <a href="{{ route('empresas.show', $empresa) }}" class="cc-btn-primary">
-                                                Ver ficha
-                                            </a>
+                                    <div class="cc-result-actions">
+                                        <a href="{{ route('empresas.show', $empresa) }}" class="cc-btn-primary cc-btn-result">
+                                            Ver ficha
+                                        </a>
 
-                                            <a href="{{ route('empresas.edit', $empresa) }}" class="cc-btn-secondary">
-                                                Editar
-                                            </a>
-                                        </div>
+                                        <a href="{{ route('empresas.edit', $empresa) }}" class="cc-btn-secondary cc-btn-result">
+                                            Editar
+                                        </a>
                                     </div>
 
                                 </div>

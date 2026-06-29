@@ -18,15 +18,15 @@
     <body class="antialiased">
         <div class="min-h-screen" style="background: var(--cc-bg-main);">
             <div class="cc-page-wrapper">
-                <div class="cc-window-container" style="max-width: 73rem;">
+                <div class="cc-window-container" style="max-width: 80rem;">
                     <div class="cc-card">
 
-                        <div class="cc-card-header">
+                        <div class="cc-card-header cc-card-header-compact">
                             <div>
-                                <h3 class="cc-title">
+                                <h3 class="cc-title cc-title-compact">
                                     Consulta de empresas
                                 </h3>
-                                <p class="cc-subtitle">
+                                <p class="cc-subtitle cc-subtitle-compact">
                                     Consulte información general de las empresas cliente registradas en CC-Flota.
                                 </p>
                             </div>
@@ -44,50 +44,47 @@
                             </div>
                         @endif
 
-                        <div class="cc-metric-grid">
-                            <div class="cc-metric-card">
-                                <div class="cc-metric-label">
+                        <div class="cc-summary-strip">
+                            <div class="cc-summary-strip-item">
+                                <span class="cc-summary-strip-label">
                                     Total empresas
-                                </div>
-                                <div class="cc-metric-value">
+                                </span>
+                                <span class="cc-summary-strip-value">
                                     {{ $totalEmpresas }}
-                                </div>
+                                </span>
                             </div>
 
-                            <div class="cc-metric-card">
-                                <div class="cc-metric-label">
+                            <div class="cc-summary-strip-item">
+                                <span class="cc-summary-strip-label">
                                     Activas
-                                </div>
-                                <div class="cc-metric-value cc-metric-value-success">
+                                </span>
+                                <span class="cc-summary-strip-value cc-summary-strip-value-success">
                                     {{ $empresasActivas }}
-                                </div>
+                                </span>
                             </div>
 
-                            <div class="cc-metric-card">
-                                <div class="cc-metric-label">
+                            <div class="cc-summary-strip-item">
+                                <span class="cc-summary-strip-label">
                                     Inactivas
-                                </div>
-                                <div class="cc-metric-value cc-metric-value-danger">
+                                </span>
+                                <span class="cc-summary-strip-value cc-summary-strip-value-danger">
                                     {{ $empresasInactivas }}
-                                </div>
+                                </span>
                             </div>
                         </div>
 
-                        <form method="GET" action="{{ route('empresas.consulta.ventana') }}" class="mb-6">
-                            <div class="cc-filter-panel">
+                        <form method="GET" action="{{ route('empresas.consulta.ventana') }}" class="mb-5">
+                            <div class="cc-filter-panel cc-filter-panel-compact cc-filter-panel-inline">
 
-                                <div class="cc-form-section" style="margin-top: 0; margin-bottom: 1.25rem;">
+                                <div class="cc-form-section cc-form-section-compact" style="margin-top: 0;">
                                     <div class="cc-form-section-title">
                                         Filtros de consulta
                                     </div>
-                                    <div class="cc-form-section-note">
-                                        Utilice los filtros para localizar empresas por empresa, NIT o estado.
-                                    </div>
                                 </div>
 
-                                <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
+                                <div class="cc-filter-inline-grid">
 
-                                    <div class="lg:col-span-5 cc-field">
+                                    <div class="cc-field">
                                         <label for="empresa_id">
                                             Empresa
                                         </label>
@@ -113,7 +110,7 @@
                                         @endif
                                     </div>
 
-                                    <div class="lg:col-span-3 cc-field">
+                                    <div class="cc-field">
                                         <label for="nit">
                                             NIT
                                         </label>
@@ -134,7 +131,7 @@
                                         @enderror
                                     </div>
 
-                                    <div class="lg:col-span-4 cc-field">
+                                    <div class="cc-field">
                                         <label for="estado">
                                             Estado
                                         </label>
@@ -155,74 +152,42 @@
                                         @enderror
                                     </div>
 
-                                </div>
+                                    <div class="cc-filter-inline-actions">
+                                        <button type="submit" class="cc-btn-primary">
+                                            Buscar
+                                        </button>
 
-                                <div class="mt-5 border-t border-[var(--cc-card-border)] pt-5">
-                                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                                        <p class="text-sm text-[var(--cc-text-muted)] leading-relaxed">
-                                            @if ($esUsuarioDieselCop)
-                                                La consulta permite visualizar empresas, sin modificar información.
-                                            @else
-                                                La consulta está limitada automáticamente a la empresa asignada a su usuario.
-                                            @endif
-                                        </p>
-
-                                        <div class="flex items-center gap-3">
-                                            <button type="submit" class="cc-btn-primary">
-                                                Buscar
-                                            </button>
-
-                                            <a href="{{ route('empresas.consulta.ventana') }}" class="cc-btn-secondary">
-                                                Resetear
-                                            </a>
-                                        </div>
+                                        <a href="{{ route('empresas.consulta.ventana') }}" class="cc-btn-secondary">
+                                            Resetear
+                                        </a>
                                     </div>
+
                                 </div>
                             </div>
                         </form>
 
-                        <div class="cc-section-heading">
-                            <div>
-                                <h4 class="cc-section-title">
-                                    Resultados
-                                </h4>
-
-                                <p class="cc-section-note">
-                                    @if (! $hayFiltros)
-                                        Seleccione una empresa, NIT o estado para consultar empresas.
-                                    @elseif ($empresas->total() === 0)
-                                        No se encontraron empresas con los criterios seleccionados.
-                                    @elseif ($empresas->total() === 1)
-                                        Se encontró 1 empresa.
-                                    @else
-                                        Se encontraron {{ $empresas->total() }} empresas.
-                                    @endif
-                                </p>
+                        @if ($hayFiltros && $empresas->total() > 0)
+                            <div class="mb-4 flex justify-end text-sm text-[var(--cc-text-muted)]">
+                                Mostrando
+                                <span class="mx-1 font-bold text-[var(--cc-text-main)]">{{ $empresas->firstItem() }}</span>
+                                -
+                                <span class="mx-1 font-bold text-[var(--cc-text-main)]">{{ $empresas->lastItem() }}</span>
+                                de
+                                <span class="ml-1 font-bold text-[var(--cc-text-main)]">{{ $empresas->total() }}</span>
                             </div>
-
-                            @if ($hayFiltros && $empresas->total() > 0)
-                                <div class="text-sm text-[var(--cc-text-muted)]">
-                                    Mostrando
-                                    <span class="font-bold text-[var(--cc-text-main)]">{{ $empresas->firstItem() }}</span>
-                                    -
-                                    <span class="font-bold text-[var(--cc-text-main)]">{{ $empresas->lastItem() }}</span>
-                                    de
-                                    <span class="font-bold text-[var(--cc-text-main)]">{{ $empresas->total() }}</span>
-                                </div>
-                            @endif
-                        </div>
+                        @endif
 
                         @if (! $hayFiltros)
-                            <div class="cc-empty-panel">
+                            <div class="cc-empty-panel cc-empty-panel-compact">
                                 <h5>
                                     Consulta pendiente
                                 </h5>
                                 <p>
-                                    La tabla permanecerá vacía hasta que realice una búsqueda o filtre por empresa, NIT o estado.
+                                    Los resultados permanecerán vacíos hasta que realice una búsqueda.
                                 </p>
                             </div>
                         @elseif ($empresas->isEmpty())
-                            <div class="cc-empty-panel">
+                            <div class="cc-empty-panel cc-empty-panel-compact">
                                 <h5>
                                     Sin resultados
                                 </h5>

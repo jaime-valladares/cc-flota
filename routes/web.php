@@ -65,6 +65,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/usuarios', [UsuarioController::class, 'store'])
         ->name('usuarios.store');
 
+    Route::get('/usuarios/{usuario}/ventana', [UsuarioController::class, 'showVentana'])
+        ->name('usuarios.show.ventana');
+
+    Route::get('/usuarios/{usuario}/editar/ventana', [UsuarioController::class, 'editVentana'])
+        ->name('usuarios.edit.ventana');
+
     Route::get('/usuarios/{usuario}', [UsuarioController::class, 'show'])
         ->name('usuarios.show');
 
@@ -245,6 +251,12 @@ Route::middleware('auth')->group(function () {
 
     Route::patch('/empresas/{empresa}/reactivar', [EmpresaController::class, 'reactivar'])
         ->name('empresas.reactivar');
+
+    Route::get('/empresas/{empresa}/ventana', [EmpresaController::class, 'showVentana'])
+        ->name('empresas.show.ventana');
+
+    Route::get('/empresas/{empresa}/editar/ventana', [EmpresaController::class, 'editVentana'])
+        ->name('empresas.edit.ventana');
 
     Route::resource('empresas', EmpresaController::class)->except(['destroy']);
 });

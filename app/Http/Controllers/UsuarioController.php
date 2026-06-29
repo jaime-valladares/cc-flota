@@ -189,8 +189,8 @@ class UsuarioController extends Controller
     }
 
     /**
-    * Formulario de creación de usuario en ventana independiente.
-    */
+     * Formulario de creación de usuario en ventana independiente.
+     */
     public function createVentana(): View
     {
         $user = Auth::user();
@@ -360,12 +360,46 @@ class UsuarioController extends Controller
     }
 
     /**
+     * Muestra la ficha administrativa de usuario en ventana independiente.
+     */
+    public function showVentana(User $usuario): View
+    {
+        $this->autorizarAccesoUsuario($usuario);
+
+        $usuario->load(['empresa', 'role', 'creadoPor', 'actualizadoPor', 'inactivadoPor']);
+
+        return view('usuarios.show-ventana', compact('usuario'));
+    }
+
+    /**
      * Muestra el formulario de edición de usuario.
      */
     public function edit(User $usuario): View
     {
         $this->autorizarAccesoUsuario($usuario);
 
+        $data = $this->prepararFormularioEdicion($usuario);
+
+        return view('usuarios.edit', $data);
+    }
+
+    /**
+     * Muestra el formulario de edición de usuario en ventana independiente.
+     */
+    public function editVentana(User $usuario): View
+    {
+        $this->autorizarAccesoUsuario($usuario);
+
+        $data = $this->prepararFormularioEdicion($usuario);
+
+        return view('usuarios.edit-ventana', $data);
+    }
+
+    /**
+     * Prepara datos reutilizables para edición normal y edición en ventana.
+     */
+    private function prepararFormularioEdicion(User $usuario): array
+    {
         $user = Auth::user();
 
         $esUsuarioDieselCop = is_null($user->empresa_id);
@@ -385,7 +419,12 @@ class UsuarioController extends Controller
             ->orderBy('nombre')
             ->get();
 
-        return view('usuarios.edit', compact('usuario', 'empresas', 'roles', 'esUsuarioDieselCop'));
+        return [
+            'usuario' => $usuario,
+            'empresas' => $empresas,
+            'roles' => $roles,
+            'esUsuarioDieselCop' => $esUsuarioDieselCop,
+        ];
     }
 
     /**
@@ -515,6 +554,12 @@ class UsuarioController extends Controller
 
         $usuario->update($datosActualizar);
 
+        if ($request->input('return_to') === 'ventana') {
+            return redirect()
+                ->route('usuarios.show.ventana', $usuario)
+                ->with('success', 'Usuario actualizado correctamente.');
+        }
+
         return redirect()
             ->route('usuarios.show', $usuario)
             ->with('success', 'Usuario actualizado correctamente.');
@@ -555,6 +600,12 @@ class UsuarioController extends Controller
             'actualizado_por' => Auth::id(),
         ]);
 
+        if ($request->input('return_to') === 'ventana') {
+            return redirect()
+                ->route('usuarios.show.ventana', $usuario)
+                ->with('success', 'Usuario inactivado correctamente.');
+        }
+
         return redirect()
             ->route('usuarios.show', $usuario)
             ->with('success', 'Usuario inactivado correctamente.');
@@ -563,7 +614,7 @@ class UsuarioController extends Controller
     /**
      * Reactiva un usuario previamente inactivo.
      */
-    public function reactivar(User $usuario): RedirectResponse
+    public function reactivar(Request $request, User $usuario): RedirectResponse
     {
         $this->autorizarAccesoUsuario($usuario);
 
@@ -574,6 +625,12 @@ class UsuarioController extends Controller
             'motivo_inactivacion' => null,
             'actualizado_por' => Auth::id(),
         ]);
+
+        if ($request->input('return_to') === 'ventana') {
+            return redirect()
+                ->route('usuarios.show.ventana', $usuario)
+                ->with('success', 'Usuario reactivado correctamente.');
+        }
 
         return redirect()
             ->route('usuarios.show', $usuario)

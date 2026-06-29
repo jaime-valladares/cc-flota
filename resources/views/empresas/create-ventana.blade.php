@@ -18,21 +18,21 @@
     <body class="antialiased">
         <div class="min-h-screen" style="background: var(--cc-bg-main);">
             <div class="cc-page-wrapper">
-                <div class="cc-window-container" style="max-width: 72rem;">
+                <div class="cc-window-container" style="max-width: 79rem;">
                     <div class="cc-card">
 
-                        <div class="cc-card-header">
+                        <div class="cc-card-header cc-card-header-compact">
                             <div>
-                                <h3 class="cc-title">
+                                <h3 class="cc-title cc-title-compact">
                                     Registro de empresa cliente
                                 </h3>
-                                <p class="cc-subtitle">
+                                <p class="cc-subtitle cc-subtitle-compact">
                                     Complete los datos legales, fiscales y de contacto de la empresa cliente.
                                 </p>
                             </div>
 
                             <div class="flex items-center gap-3">
-                                <a href="{{ route('empresas.create') }}" class="cc-btn-secondary cc-btn-wide">
+                                <a href="{{ route('empresas.index') }}" class="cc-btn-secondary cc-btn-wide">
                                     Volver al sistema
                                 </a>
                             </div>
@@ -41,9 +41,12 @@
                         <form method="POST" action="{{ route('empresas.store') }}" novalidate>
                             @csrf
 
+                            <input type="hidden" name="return_to" value="ventana">
+
                             @include('empresas._form', [
                                 'empresa' => null,
                                 'submitLabel' => 'Guardar empresa',
+                                'modoVentana' => true,
                             ])
                         </form>
 

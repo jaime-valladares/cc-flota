@@ -239,6 +239,16 @@ class EmpresaController extends Controller
     }
 
     /**
+     * Display the specified resource in standalone window.
+     */
+    public function showVentana(Empresa $empresa)
+    {
+        $this->autorizarAccesoEmpresa($empresa);
+
+        return view('empresas.show-ventana', compact('empresa'));
+    }
+
+    /**
      * Show the form for editing the specified resource.
      */
     public function edit(Empresa $empresa)
@@ -246,6 +256,16 @@ class EmpresaController extends Controller
         $this->autorizarAccesoEmpresa($empresa);
 
         return view('empresas.edit', compact('empresa'));
+    }
+
+    /**
+     * Show the standalone form for editing the specified resource.
+     */
+    public function editVentana(Empresa $empresa)
+    {
+        $this->autorizarAccesoEmpresa($empresa);
+
+        return view('empresas.edit-ventana', compact('empresa'));
     }
 
     /**
@@ -297,6 +317,12 @@ class EmpresaController extends Controller
 
         $empresa->update($validated);
 
+        if ($request->input('return_to') === 'ventana') {
+            return redirect()
+                ->route('empresas.show.ventana', $empresa)
+                ->with('success', 'Empresa actualizada correctamente.');
+        }
+
         return redirect()
             ->route('empresas.show', $empresa)
             ->with('success', 'Empresa actualizada correctamente.');
@@ -328,12 +354,18 @@ class EmpresaController extends Controller
             'actualizado_por' => Auth::id(),
         ]);
 
+        if ($request->input('return_to') === 'ventana') {
+            return redirect()
+                ->route('empresas.show.ventana', $empresa)
+                ->with('success', 'Empresa inactivada correctamente.');
+        }
+
         return redirect()
             ->route('empresas.show', $empresa)
             ->with('success', 'Empresa inactivada correctamente.');
     }
 
-    public function reactivar(Empresa $empresa)
+    public function reactivar(Request $request, Empresa $empresa)
     {
         $this->autorizarAccesoEmpresa($empresa);
 
@@ -345,6 +377,12 @@ class EmpresaController extends Controller
             'fecha_actualizacion' => now(),
             'actualizado_por' => Auth::id(),
         ]);
+
+        if ($request->input('return_to') === 'ventana') {
+            return redirect()
+                ->route('empresas.show.ventana', $empresa)
+                ->with('success', 'Empresa reactivada correctamente.');
+        }
 
         return redirect()
             ->route('empresas.show', $empresa)

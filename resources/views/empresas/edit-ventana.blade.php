@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>Registro de usuario | CC-Flota</title>
+        <title>Editar empresa cliente | CC-Flota</title>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,31 +24,33 @@
                         <div class="cc-card-header cc-card-header-compact">
                             <div>
                                 <h3 class="cc-title cc-title-compact">
-                                    Registro de usuario
+                                    Editar empresa cliente
                                 </h3>
                                 <p class="cc-subtitle cc-subtitle-compact">
-                                    Complete los datos de acceso, empresa, rol y contacto del usuario.
+                                    Actualice los datos legales, fiscales y de contacto de la empresa cliente.
                                 </p>
                             </div>
 
                             <div class="flex items-center gap-3">
-                                <a href="{{ route('usuarios.index') }}" class="cc-btn-secondary cc-btn-wide">
+                                <a href="{{ route('empresas.show.ventana', $empresa) }}" class="cc-btn-secondary cc-btn-wide">
+                                    Volver a ficha
+                                </a>
+
+                                <a href="{{ route('empresas.administrar') }}" class="cc-btn-secondary cc-btn-wide">
                                     Volver al sistema
                                 </a>
                             </div>
                         </div>
 
-                        <form method="POST" action="{{ route('usuarios.store') }}" novalidate>
+                        <form method="POST" action="{{ route('empresas.update', $empresa) }}" novalidate>
                             @csrf
+                            @method('PUT')
 
                             <input type="hidden" name="return_to" value="ventana">
 
-                            @include('usuarios._form', [
-                                'usuario' => null,
-                                'empresas' => $empresas,
-                                'roles' => $roles,
-                                'esUsuarioDieselCop' => $esUsuarioDieselCop,
-                                'submitLabel' => 'Guardar usuario',
+                            @include('empresas._form', [
+                                'empresa' => $empresa,
+                                'submitLabel' => 'Actualizar empresa',
                                 'modoVentana' => true,
                             ])
                         </form>

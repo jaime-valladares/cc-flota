@@ -1,6 +1,6 @@
-<div class="cc-grid">
+<div class="cc-grid cc-grid-compact">
 
-    <div class="cc-form-section">
+    <div class="cc-form-section-slim">
         <div class="cc-form-section-title">
             Identificación de la empresa
         </div>
@@ -58,7 +58,7 @@
         @enderror
     </div>
 
-    <div class="cc-form-section">
+    <div class="cc-form-section-slim">
         <div class="cc-form-section-title">
             Contacto institucional
         </div>
@@ -115,7 +115,7 @@
         @enderror
     </div>
 
-    <div class="cc-form-section">
+    <div class="cc-form-section-slim">
         <div class="cc-form-section-title">
             Punto de contacto operativo
         </div>
@@ -175,17 +175,19 @@
 
 </div>
 
-<div class="cc-actions">
+<div class="cc-actions cc-actions-compact">
     <button type="submit" class="cc-btn-primary cc-btn-form-action">
         {{ $submitLabel }}
     </button>
 
     @if ($empresa)
-        <a href="{{ route('empresas.show', $empresa) }}" class="cc-btn-secondary cc-btn-form-action">
+        <a href="{{ ($modoVentana ?? false) ? route('empresas.show.ventana', $empresa) : route('empresas.show', $empresa) }}"
+           class="cc-btn-secondary cc-btn-form-action">
             Cancelar
         </a>
     @else
-        <a href="{{ route('empresas.index') }}" class="cc-btn-secondary cc-btn-form-action">
+        <a href="{{ ($modoVentana ?? false) ? route('empresas.consulta.ventana') : route('empresas.index') }}"
+           class="cc-btn-secondary cc-btn-form-action">
             Cancelar
         </a>
     @endif

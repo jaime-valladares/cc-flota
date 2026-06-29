@@ -4,11 +4,12 @@
     $tipoUsuarioActual = old('tipo_usuario', $usuario->tipo_usuario ?? '');
     $empresaActual = old('empresa_id', $usuario->empresa_id ?? '');
     $rolActual = old('rol_id', $usuario->rol_id ?? '');
+    $modoVentana = $modoVentana ?? false;
 @endphp
 
-<div class="cc-grid">
+<div class="cc-grid cc-grid-compact">
 
-    <div class="cc-form-section">
+    <div class="cc-form-section-slim">
         <div class="cc-form-section-title">
             Clasificación y acceso
         </div>
@@ -105,7 +106,7 @@
         @enderror
     </div>
 
-    <div class="cc-form-section">
+    <div class="cc-form-section-slim">
         <div class="cc-form-section-title">
             Datos personales
         </div>
@@ -216,7 +217,7 @@
         @enderror
     </div>
 
-    <div class="cc-form-section">
+    <div class="cc-form-section-slim">
         <div class="cc-form-section-title">
             Credenciales
         </div>
@@ -264,17 +265,19 @@
 
 </div>
 
-<div class="cc-actions">
+<div class="cc-actions cc-actions-compact">
     <button type="submit" class="cc-btn-primary cc-btn-form-action">
         {{ $submitLabel }}
     </button>
 
     @if ($esEdicion)
-        <a href="{{ route('usuarios.show', $usuario) }}" class="cc-btn-secondary cc-btn-form-action">
+        <a href="{{ $modoVentana ? route('usuarios.show.ventana', $usuario) : route('usuarios.show', $usuario) }}"
+           class="cc-btn-secondary cc-btn-form-action">
             Cancelar
         </a>
     @else
-        <a href="{{ route('usuarios.index') }}" class="cc-btn-secondary cc-btn-form-action">
+        <a href="{{ $modoVentana ? route('usuarios.consulta.ventana') : route('usuarios.index') }}"
+           class="cc-btn-secondary cc-btn-form-action">
             Cancelar
         </a>
     @endif
