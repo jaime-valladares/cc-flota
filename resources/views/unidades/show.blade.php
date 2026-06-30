@@ -1,14 +1,14 @@
 <x-app-layout>
     <div class="cc-page-wrapper">
-        <div class="cc-content-container">
+        <div class="cc-content-container" style="max-width: 79rem;">
             <div class="cc-card">
 
-                <div class="cc-card-header">
+                <div class="cc-card-header cc-card-header-compact">
                     <div>
-                        <h3 class="cc-title">
+                        <h3 class="cc-title cc-title-compact">
                             Ficha administrativa de unidad
                         </h3>
-                        <p class="cc-subtitle">
+                        <p class="cc-subtitle cc-subtitle-compact">
                             Consulte la información completa de la unidad, su cobertura Diesel Cop y su estado administrativo.
                         </p>
                     </div>
@@ -271,7 +271,7 @@
 
                 @if ($unidad->estado === 'registrada')
                     <section class="cc-info-panel mt-7">
-                        <div class="cc-form-section" style="margin-top: 0; margin-bottom: 0;">
+                        <div class="cc-form-section cc-form-section-compact" style="margin-top: 0; margin-bottom: 0;">
                             <div class="cc-form-section-title">
                                 Pendiente de configuración operativa
                             </div>
@@ -280,22 +280,10 @@
                             </div>
                         </div>
 
-                        <div class="mt-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                        <div class="mt-5">
                             <p class="text-sm text-[var(--cc-text-muted)] leading-relaxed">
-                                Continúe con la creación de licencia para generar la plantilla de puntos de seguridad correspondiente.
+                                La configuración de licencia debe realizarse desde el módulo correspondiente, según los permisos asignados al usuario.
                             </p>
-
-                            @if (! $unidad->licencia)
-                                <a href="{{ route('licencias.create', ['empresa_id' => $unidad->empresa_id]) }}"
-                                   class="cc-btn-primary cc-btn-form-action">
-                                    Crear licencia
-                                </a>
-                            @else
-                                <a href="{{ route('licencias.show', $unidad->licencia) }}"
-                                   class="cc-btn-secondary cc-btn-form-action">
-                                    Ver licencia
-                                </a>
-                            @endif
                         </div>
                     </section>
                 @else

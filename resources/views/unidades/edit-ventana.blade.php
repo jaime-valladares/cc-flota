@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>Registro de unidad | CC-Flota</title>
+        <title>Editar unidad | CC-Flota</title>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,43 +18,42 @@
     <body class="antialiased">
         <div class="min-h-screen" style="background: var(--cc-bg-main);">
             <div class="cc-page-wrapper">
-                <div class="cc-window-container" style="max-width: 80rem;">
+                <div class="cc-window-container" style="max-width: 79rem;">
                     <div class="cc-card">
 
                         <div class="cc-card-header cc-card-header-compact">
                             <div>
                                 <h3 class="cc-title cc-title-compact">
-                                    Registro de unidad
+                                    Editar unidad
                                 </h3>
                                 <p class="cc-subtitle cc-subtitle-compact">
-                                    Complete la información de la unidad, sus tanques, capacidad cubierta y modelo de medición.
+                                    Actualice la información de la unidad, su cobertura Diesel Cop y su modelo de medición.
                                 </p>
                             </div>
 
                             <div class="flex items-center gap-3">
-                                <a href="{{ route('unidades.create') }}" class="cc-btn-secondary cc-btn-wide">
+                                <a href="{{ route('unidades.show.ventana', $unidad) }}" class="cc-btn-secondary cc-btn-wide">
+                                    Volver a ficha
+                                </a>
+
+                                <a href="{{ route('unidades.administrar') }}" class="cc-btn-secondary cc-btn-wide">
                                     Volver al sistema
                                 </a>
                             </div>
                         </div>
 
-                        @if (session('success'))
-                            <div class="cc-alert-success">
-                                {{ session('success') }}
-                            </div>
-                        @endif
-
-                        <form method="POST" action="{{ route('unidades.store') }}" novalidate>
+                        <form method="POST" action="{{ route('unidades.update', $unidad) }}" novalidate>
                             @csrf
+                            @method('PUT')
 
                             <input type="hidden" name="return_to" value="ventana">
 
                             @include('unidades._form', [
-                                'unidad' => null,
+                                'unidad' => $unidad,
                                 'empresas' => $empresas,
                                 'modelosMedicion' => $modelosMedicion,
                                 'esUsuarioDieselCop' => $esUsuarioDieselCop,
-                                'submitLabel' => 'Guardar unidad',
+                                'submitLabel' => 'Actualizar unidad',
                                 'modoVentana' => true,
                             ])
                         </form>

@@ -1,14 +1,14 @@
 <x-app-layout>
     <div class="cc-page-wrapper">
-        <div class="cc-content-container">
+        <div class="cc-content-container" style="max-width: 80rem;">
             <div class="cc-card">
 
-                <div class="cc-card-header">
+                <div class="cc-card-header cc-card-header-compact">
                     <div>
-                        <h3 class="cc-title">
+                        <h3 class="cc-title cc-title-compact">
                             Administrar unidad
                         </h3>
-                        <p class="cc-subtitle">
+                        <p class="cc-subtitle cc-subtitle-compact">
                             Localice una unidad para consultar su ficha, editar sus datos o gestionar su estado administrativo.
                         </p>
                     </div>
@@ -29,20 +29,20 @@
                     </div>
                 @endif
 
-                <form method="GET" action="{{ route('unidades.administrar') }}" class="mb-6">
+                <form method="GET" action="{{ route('unidades.administrar') }}" class="mb-5">
                     <input type="hidden" name="consultar" value="1">
 
-                    <div class="cc-filter-panel">
+                    <div class="cc-filter-panel cc-filter-panel-compact">
 
-                        <div class="cc-form-section" style="margin-top: 0; margin-bottom: 1.25rem;">
+                        <div class="cc-form-section cc-form-section-compact" style="margin-top: 0;">
                             <div class="cc-form-section-title">
                                 Búsqueda administrativa
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
+                        <div class="cc-filter-inline-grid-unidades">
 
-                            <div class="lg:col-span-3 cc-field">
+                            <div class="cc-field">
                                 <label for="empresa_id">
                                     Empresa
                                 </label>
@@ -58,7 +58,7 @@
                                 </select>
                             </div>
 
-                            <div class="lg:col-span-2 cc-field">
+                            <div class="cc-field">
                                 <label for="placa">
                                     Placa
                                 </label>
@@ -70,7 +70,7 @@
                                        placeholder="Ej. C123ABC">
                             </div>
 
-                            <div class="lg:col-span-2 cc-field">
+                            <div class="cc-field">
                                 <label for="estado">
                                     Estado
                                 </label>
@@ -91,7 +91,7 @@
                                 </select>
                             </div>
 
-                            <div class="lg:col-span-5 cc-field">
+                            <div class="cc-field">
                                 <label for="modelo_medicion">
                                     Modelo de medición
                                 </label>
@@ -106,10 +106,7 @@
                                 </select>
                             </div>
 
-                        </div>
-
-                        <div class="mt-5 border-t border-[var(--cc-card-border)] pt-5">
-                            <div class="flex items-center justify-end gap-3">
+                            <div class="cc-filter-inline-actions">
                                 <button type="submit" class="cc-btn-primary">
                                     Buscar
                                 </button>
@@ -118,6 +115,7 @@
                                     Resetear
                                 </a>
                             </div>
+
                         </div>
                     </div>
                 </form>
@@ -134,7 +132,7 @@
                 @endif
 
                 @if (! $hayFiltros)
-                    <div class="cc-empty-panel">
+                    <div class="cc-empty-panel cc-empty-panel-compact">
                         <h5>
                             Búsqueda pendiente
                         </h5>
@@ -143,7 +141,7 @@
                         </p>
                     </div>
                 @elseif ($unidades->isEmpty())
-                    <div class="cc-empty-panel">
+                    <div class="cc-empty-panel cc-empty-panel-compact">
                         <h5>
                             Sin resultados
                         </h5>
@@ -152,14 +150,14 @@
                         </p>
                     </div>
                 @else
-                    <div class="space-y-4">
+                    <div class="space-y-3">
                         @foreach ($unidades as $unidad)
-                            <article class="cc-result-card">
-                                <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
+                            <article class="cc-result-card cc-result-card-compact">
+                                <div class="cc-result-grid">
 
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex flex-wrap items-center gap-3">
-                                            <h5 class="font-[var(--cc-font-heading)] text-xl font-extrabold text-[var(--cc-text-heading)] tracking-[-0.03em] cc-cell-truncate">
+                                    <div class="cc-result-main">
+                                        <div class="cc-result-title-row">
+                                            <h5 class="cc-result-title cc-cell-truncate">
                                                 {{ $unidad->placa }}
                                             </h5>
 
@@ -178,46 +176,47 @@
                                             @endif
                                         </div>
 
-                                        <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            <div>
-                                                <div class="font-[var(--cc-font-heading)] text-xs font-extrabold text-[var(--cc-text-muted)] uppercase tracking-wider">
-                                                    Empresa
-                                                </div>
-                                                <div class="mt-1 text-sm font-bold text-[var(--cc-text-main)] cc-cell-truncate">
-                                                    @if ($unidad->empresa)
-                                                        {{ $unidad->empresa->nombre_comercial ?: $unidad->empresa->nombre_legal }}
-                                                    @else
-                                                        Sin empresa
-                                                    @endif
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <div class="font-[var(--cc-font-heading)] text-xs font-extrabold text-[var(--cc-text-muted)] uppercase tracking-wider">
-                                                    Modelo de medición
-                                                </div>
-                                                <div class="mt-1 text-sm font-bold text-[var(--cc-text-main)] cc-cell-truncate">
-                                                    {{ $unidad->modelo_medicion_texto }}
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <div class="font-[var(--cc-font-heading)] text-xs font-extrabold text-[var(--cc-text-muted)] uppercase tracking-wider">
-                                                    Cobertura
-                                                </div>
-                                                <div class="mt-1 text-sm font-bold text-[var(--cc-text-main)]">
-                                                    {{ $unidad->cantidad_tanques_con_licencia }} de {{ $unidad->total_tanques }} tanques
-                                                </div>
-                                            </div>
+                                        <div class="cc-result-subtitle cc-cell-truncate">
+                                            {{ $unidad->marca ?: 'Sin marca registrada' }}
                                         </div>
                                     </div>
 
-                                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 xl:justify-end">
-                                        <a href="{{ route('unidades.show', $unidad) }}" class="cc-btn-primary cc-btn-wide">
+                                    <div class="cc-result-meta">
+                                        <div class="cc-result-label">
+                                            Empresa
+                                        </div>
+
+                                        @if ($unidad->empresa)
+                                            <div class="cc-result-value cc-cell-truncate">
+                                                {{ $unidad->empresa->nombre_comercial ?: $unidad->empresa->nombre_legal }}
+                                            </div>
+                                        @else
+                                            <div class="cc-result-value-muted">
+                                                Sin empresa
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    <div class="cc-result-meta">
+                                        <div class="cc-result-label">
+                                            Cobertura
+                                        </div>
+
+                                        <div class="cc-result-value">
+                                            {{ $unidad->cantidad_tanques_con_licencia }} de {{ $unidad->total_tanques }} tanques
+                                        </div>
+
+                                        <div class="cc-result-value-muted">
+                                            {{ $unidad->modelo_medicion_texto }}
+                                        </div>
+                                    </div>
+
+                                    <div class="cc-result-actions">
+                                        <a href="{{ route('unidades.show', $unidad) }}" class="cc-btn-primary cc-btn-result">
                                             Ver ficha
                                         </a>
 
-                                        <a href="{{ route('unidades.edit', $unidad) }}" class="cc-btn-secondary cc-btn-wide">
+                                        <a href="{{ route('unidades.edit', $unidad) }}" class="cc-btn-secondary cc-btn-result">
                                             Editar
                                         </a>
                                     </div>

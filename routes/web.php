@@ -117,6 +117,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/unidades', [UnidadController::class, 'store'])
         ->name('unidades.store');
 
+    Route::get('/unidades/{unidad}/ficha/ventana', [UnidadController::class, 'showVentana'])
+        ->name('unidades.show.ventana');
+
+    Route::get('/unidades/{unidad}/editar/ventana', [UnidadController::class, 'editVentana'])
+        ->name('unidades.edit.ventana');
+
     Route::get('/unidades/{unidad}', [UnidadController::class, 'show'])
         ->name('unidades.show');
 

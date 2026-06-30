@@ -1,14 +1,14 @@
 <x-app-layout>
     <div class="cc-page-wrapper">
-        <div class="cc-content-container">
+        <div class="cc-content-container" style="max-width: 80rem;">
             <div class="cc-card">
 
-                <div class="cc-card-header">
+                <div class="cc-card-header cc-card-header-compact">
                     <div>
-                        <h3 class="cc-title">
+                        <h3 class="cc-title cc-title-compact">
                             Consulta unidades
                         </h3>
-                        <p class="cc-subtitle">
+                        <p class="cc-subtitle cc-subtitle-compact">
                             Consulte las unidades registradas en el sistema.
                         </p>
                     </div>
@@ -29,58 +29,58 @@
                     </div>
                 @endif
 
-                <div class="cc-metric-grid">
-                    <div class="cc-metric-card">
-                        <div class="cc-metric-label">
+                <div class="cc-summary-strip">
+                    <div class="cc-summary-strip-item">
+                        <span class="cc-summary-strip-label">
                             Total unidades
-                        </div>
-                        <div class="cc-metric-value">
+                        </span>
+                        <span class="cc-summary-strip-value">
                             {{ $totalUnidades }}
-                        </div>
+                        </span>
                     </div>
 
-                    <div class="cc-metric-card">
-                        <div class="cc-metric-label">
+                    <div class="cc-summary-strip-item">
+                        <span class="cc-summary-strip-label">
                             Registradas
-                        </div>
-                        <div class="cc-metric-value">
+                        </span>
+                        <span class="cc-summary-strip-value">
                             {{ $totalRegistradas ?? 0 }}
-                        </div>
+                        </span>
                     </div>
 
-                    <div class="cc-metric-card">
-                        <div class="cc-metric-label">
+                    <div class="cc-summary-strip-item">
+                        <span class="cc-summary-strip-label">
                             Activas
-                        </div>
-                        <div class="cc-metric-value cc-metric-value-success">
+                        </span>
+                        <span class="cc-summary-strip-value cc-summary-strip-value-success">
                             {{ $totalActivas }}
-                        </div>
+                        </span>
                     </div>
 
-                    <div class="cc-metric-card">
-                        <div class="cc-metric-label">
+                    <div class="cc-summary-strip-item">
+                        <span class="cc-summary-strip-label">
                             Inactivas
-                        </div>
-                        <div class="cc-metric-value cc-metric-value-danger">
+                        </span>
+                        <span class="cc-summary-strip-value cc-summary-strip-value-danger">
                             {{ $totalInactivas }}
-                        </div>
+                        </span>
                     </div>
                 </div>
 
-                <form method="GET" action="{{ route('unidades.index') }}" class="mb-6">
+                <form method="GET" action="{{ route('unidades.index') }}" class="mb-5">
                     <input type="hidden" name="consultar" value="1">
 
-                    <div class="cc-filter-panel">
+                    <div class="cc-filter-panel cc-filter-panel-compact cc-filter-panel-inline">
 
-                        <div class="cc-form-section" style="margin-top: 0; margin-bottom: 1.25rem;">
+                        <div class="cc-form-section cc-form-section-compact" style="margin-top: 0;">
                             <div class="cc-form-section-title">
                                 Filtros de consulta
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
+                        <div class="cc-filter-inline-grid-unidades">
 
-                            <div class="lg:col-span-3 cc-field">
+                            <div class="cc-field">
                                 <label for="empresa_id">
                                     Empresa
                                 </label>
@@ -96,7 +96,7 @@
                                 </select>
                             </div>
 
-                            <div class="lg:col-span-2 cc-field">
+                            <div class="cc-field">
                                 <label for="placa">
                                     Placa
                                 </label>
@@ -108,7 +108,7 @@
                                        placeholder="Ej. C123ABC">
                             </div>
 
-                            <div class="lg:col-span-2 cc-field">
+                            <div class="cc-field">
                                 <label for="estado">
                                     Estado
                                 </label>
@@ -129,7 +129,7 @@
                                 </select>
                             </div>
 
-                            <div class="lg:col-span-5 cc-field">
+                            <div class="cc-field">
                                 <label for="modelo_medicion">
                                     Modelo de medición
                                 </label>
@@ -144,10 +144,7 @@
                                 </select>
                             </div>
 
-                        </div>
-
-                        <div class="mt-5 border-t border-[var(--cc-card-border)] pt-5">
-                            <div class="flex items-center justify-end gap-3">
+                            <div class="cc-filter-inline-actions">
                                 <button type="submit" class="cc-btn-primary">
                                     Buscar
                                 </button>
@@ -156,6 +153,7 @@
                                     Resetear
                                 </a>
                             </div>
+
                         </div>
                     </div>
                 </form>
@@ -172,7 +170,7 @@
                 @endif
 
                 @if (! $hayFiltros)
-                    <div class="cc-empty-panel">
+                    <div class="cc-empty-panel cc-empty-panel-compact">
                         <h5>
                             Consulta pendiente
                         </h5>
@@ -181,7 +179,7 @@
                         </p>
                     </div>
                 @elseif ($unidades->isEmpty())
-                    <div class="cc-empty-panel">
+                    <div class="cc-empty-panel cc-empty-panel-compact">
                         <h5>
                             Sin resultados
                         </h5>
@@ -190,17 +188,58 @@
                         </p>
                     </div>
                 @else
-                    <div class="space-y-4">
-                        @foreach ($unidades as $unidad)
-                            <article class="cc-result-card">
-                                <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+                    <div class="cc-table-wrapper">
+                        <table class="cc-table">
+                            <thead>
+                                <tr>
+                                    <th>Placa</th>
+                                    <th>Empresa</th>
+                                    <th>Marca</th>
+                                    <th>Tanques</th>
+                                    <th>Cobertura</th>
+                                    <th>Modelo de medición</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
 
-                                    <div class="lg:col-span-3 min-w-0">
-                                        <div class="flex items-center gap-3 min-w-0">
-                                            <h5 class="font-[var(--cc-font-heading)] text-xl font-extrabold text-[var(--cc-text-heading)] tracking-[-0.03em] cc-cell-truncate">
+                            <tbody>
+                                @foreach ($unidades as $unidad)
+                                    <tr>
+                                        <td>
+                                            <span class="cc-table-strong">
                                                 {{ $unidad->placa }}
-                                            </h5>
+                                            </span>
+                                        </td>
 
+                                        <td>
+                                            @if ($unidad->empresa)
+                                                <span class="cc-cell-truncate">
+                                                    {{ $unidad->empresa->nombre_comercial ?: $unidad->empresa->nombre_legal }}
+                                                </span>
+                                            @else
+                                                <span class="text-[var(--cc-text-muted)]">
+                                                    Sin empresa
+                                                </span>
+                                            @endif
+                                        </td>
+
+                                        <td>
+                                            {{ $unidad->marca ?: 'Sin marca' }}
+                                        </td>
+
+                                        <td>
+                                            {{ $unidad->total_tanques }}
+                                        </td>
+
+                                        <td>
+                                            {{ $unidad->cantidad_tanques_con_licencia }} de {{ $unidad->total_tanques }}
+                                        </td>
+
+                                        <td>
+                                            {{ $unidad->modelo_medicion_texto }}
+                                        </td>
+
+                                        <td>
                                             @if ($unidad->estado === 'registrada')
                                                 <span class="cc-badge cc-badge-pending">
                                                     Registrada
@@ -214,62 +253,11 @@
                                                     Inactiva
                                                 </span>
                                             @endif
-                                        </div>
-
-                                        <div class="mt-1 text-sm font-medium text-[var(--cc-text-muted)] cc-cell-truncate">
-                                            {{ $unidad->marca ?: 'Sin marca registrada' }}
-                                        </div>
-                                    </div>
-
-                                    <div class="lg:col-span-2 min-w-0">
-                                        <div class="font-[var(--cc-font-heading)] text-xs font-extrabold text-[var(--cc-text-muted)] uppercase tracking-wider">
-                                            Empresa
-                                        </div>
-
-                                        @if ($unidad->empresa)
-                                            <div class="mt-1 font-bold text-[var(--cc-text-main)] cc-cell-truncate">
-                                                {{ $unidad->empresa->nombre_comercial ?: $unidad->empresa->nombre_legal }}
-                                            </div>
-                                        @else
-                                            <div class="mt-1 text-sm text-[var(--cc-text-muted)]">
-                                                Sin empresa
-                                            </div>
-                                        @endif
-                                    </div>
-
-                                    <div class="lg:col-span-2">
-                                        <div class="font-[var(--cc-font-heading)] text-xs font-extrabold text-[var(--cc-text-muted)] uppercase tracking-wider">
-                                            Tanques
-                                        </div>
-
-                                        <div class="mt-1 font-bold text-[var(--cc-text-main)]">
-                                            {{ $unidad->total_tanques }} totales
-                                        </div>
-                                    </div>
-
-                                    <div class="lg:col-span-2">
-                                        <div class="font-[var(--cc-font-heading)] text-xs font-extrabold text-[var(--cc-text-muted)] uppercase tracking-wider">
-                                            Cobertura
-                                        </div>
-
-                                        <div class="mt-1 font-bold text-[var(--cc-text-main)]">
-                                            {{ $unidad->cantidad_tanques_con_licencia }} de {{ $unidad->total_tanques }} tanques
-                                        </div>
-                                    </div>
-
-                                    <div class="lg:col-span-3 min-w-0">
-                                        <div class="font-[var(--cc-font-heading)] text-xs font-extrabold text-[var(--cc-text-muted)] uppercase tracking-wider">
-                                            Modelo de medición
-                                        </div>
-
-                                        <div class="mt-1 font-bold text-[var(--cc-text-main)] cc-cell-truncate">
-                                            {{ $unidad->modelo_medicion_texto }}
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </article>
-                        @endforeach
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
 
                     <div class="mt-6">

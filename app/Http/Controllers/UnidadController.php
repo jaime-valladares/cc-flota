@@ -213,6 +213,12 @@ class UnidadController extends Controller
 
         Unidad::create($validated);
 
+        if ($request->input('return_to') === 'ventana') {
+            return redirect()
+                ->route('unidades.administrar.ventana', ['consultar' => 1])
+                ->with('success', 'Unidad creada correctamente.');
+        }
+
         return redirect()
             ->route('unidades.index', ['consultar' => 1])
             ->with('success', 'Unidad creada correctamente.');
@@ -238,6 +244,25 @@ class UnidadController extends Controller
     }
 
     /**
+     * Ficha administrativa de la unidad en ventana independiente.
+     */
+    public function showVentana(Unidad $unidad): View
+    {
+        $this->autorizarAccesoUnidad($unidad);
+
+        $unidad->load([
+            'empresa',
+            'licencia',
+            'puntosSeguridad.marchamoActual',
+            'creadoPor',
+            'actualizadoPor',
+            'inactivadoPor',
+        ]);
+
+        return view('unidades.show-ventana', compact('unidad'));
+    }
+
+    /**
      * Formulario de edición de unidad.
      */
     public function edit(Unidad $unidad): View
@@ -257,6 +282,34 @@ class UnidadController extends Controller
             ->get();
 
         return view('unidades.edit', [
+            'unidad' => $unidad,
+            'empresas' => $empresas,
+            'esUsuarioDieselCop' => $esUsuarioDieselCop,
+            'modelosMedicion' => $this->modelosMedicion(),
+            'estadosUnidad' => $this->estadosUnidad(),
+        ]);
+    }
+
+    /**
+     * Formulario de edición de unidad en ventana independiente.
+     */
+    public function editVentana(Unidad $unidad): View
+    {
+        $this->autorizarAccesoUnidad($unidad);
+
+        $user = Auth::user();
+        $esUsuarioDieselCop = is_null($user->empresa_id);
+
+        $empresas = Empresa::query()
+            ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
+                $query->where('id', $user->empresa_id);
+            })
+            ->where('estado', 'activa')
+            ->orderBy('nombre_comercial')
+            ->orderBy('nombre_legal')
+            ->get();
+
+        return view('unidades.edit-ventana', [
             'unidad' => $unidad,
             'empresas' => $empresas,
             'esUsuarioDieselCop' => $esUsuarioDieselCop,
@@ -293,6 +346,12 @@ class UnidadController extends Controller
 
         $unidad->update($validated);
 
+        if ($request->input('return_to') === 'ventana') {
+            return redirect()
+                ->route('unidades.show.ventana', $unidad)
+                ->with('success', 'Unidad actualizada correctamente.');
+        }
+
         return redirect()
             ->route('unidades.show', $unidad)
             ->with('success', 'Unidad actualizada correctamente.');
@@ -322,6 +381,12 @@ class UnidadController extends Controller
             'actualizado_por' => Auth::id(),
         ]);
 
+        if ($request->input('return_to') === 'ventana') {
+            return redirect()
+                ->route('unidades.show.ventana', $unidad)
+                ->with('success', 'Unidad inactivada correctamente.');
+        }
+
         return redirect()
             ->route('unidades.show', $unidad)
             ->with('success', 'Unidad inactivada correctamente.');
@@ -333,7 +398,7 @@ class UnidadController extends Controller
      * La unidad vuelve a registrada, no directamente a activa,
      * porque puede requerir validación de licencia, puntos y marchamos.
      */
-    public function reactivar(Unidad $unidad): RedirectResponse
+    public function reactivar(Request $request, Unidad $unidad): RedirectResponse
     {
         $this->autorizarAccesoUnidad($unidad);
 
@@ -345,6 +410,12 @@ class UnidadController extends Controller
             'actualizado_por' => Auth::id(),
         ]);
 
+        if ($request->input('return_to') === 'ventana') {
+            return redirect()
+                ->route('unidades.show.ventana', $unidad)
+                ->with('success', 'Unidad reactivada correctamente. Queda en estado registrada para validación operativa.');
+        }
+
         return redirect()
             ->route('unidades.show', $unidad)
             ->with('success', 'Unidad reactivada correctamente. Queda en estado registrada para validación operativa.');
@@ -355,10 +426,6 @@ class UnidadController extends Controller
      */
     private function reglasValidacionUnidad(Request $request, ?Unidad $unidad, bool $esUsuarioDieselCop): array
     {
-        $empresaId = $esUsuarioDieselCop
-            ? $request->input('empresa_id')
-            : Auth::user()->empresa_id;
-
         return [
             'empresa_id' => [
                 $esUsuarioDieselCop ? 'required' : 'nullable',
@@ -381,7 +448,7 @@ class UnidadController extends Controller
                 'required',
                 'integer',
                 'min:1',
-                'max:10',
+                'max:3',
             ],
             'cantidad_tanques_con_licencia' => [
                 'required',

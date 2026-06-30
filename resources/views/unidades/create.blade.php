@@ -1,14 +1,14 @@
 <x-app-layout>
     <div class="cc-page-wrapper">
-        <div class="cc-form-container">
+        <div class="cc-content-container" style="max-width: 79rem;">
             <div class="cc-card">
 
-                <div class="cc-card-header">
+                <div class="cc-card-header cc-card-header-compact">
                     <div>
-                        <h3 class="cc-title">
+                        <h3 class="cc-title cc-title-compact">
                             Registro de unidad
                         </h3>
-                        <p class="cc-subtitle">
+                        <p class="cc-subtitle cc-subtitle-compact">
                             Complete la información de la unidad, sus tanques, capacidad cubierta y modelo de medición.
                         </p>
                     </div>
@@ -36,6 +36,7 @@
                         'modelosMedicion' => $modelosMedicion,
                         'esUsuarioDieselCop' => $esUsuarioDieselCop,
                         'submitLabel' => 'Guardar unidad',
+                        'modoVentana' => false,
                     ])
                 </form>
 

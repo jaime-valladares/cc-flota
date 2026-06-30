@@ -1146,6 +1146,29 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     font-size: 0.66rem;
 }
 
+.cc-filter-inline-grid-unidades {
+    display: grid;
+    grid-template-columns: minmax(13rem, 1.35fr) minmax(8rem, 0.7fr) minmax(9rem, 0.75fr) minmax(13rem, 1.25fr) auto;
+    gap: 0.9rem;
+    align-items: end;
+}
+
+@media (max-width: 1180px) {
+    .cc-filter-inline-grid-unidades {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .cc-filter-inline-grid-unidades .cc-filter-inline-actions {
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 700px) {
+    .cc-filter-inline-grid-unidades {
+        grid-template-columns: 1fr;
+    }
+}
+
 @media (max-width: 1100px) {
     .cc-filter-inline-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));

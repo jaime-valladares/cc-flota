@@ -1,14 +1,15 @@
 @php
     $unidad = $unidad ?? null;
     $esEdicion = ! is_null($unidad);
+    $modoVentana = $modoVentana ?? false;
 
     $empresaActual = old('empresa_id', $unidad->empresa_id ?? '');
     $modeloMedicionActual = old('modelo_medicion', $unidad->modelo_medicion ?? '');
 @endphp
 
-<div class="cc-grid">
+<div class="cc-grid cc-grid-compact">
 
-    <div class="cc-form-section">
+    <div class="cc-form-section-slim">
         <div class="cc-form-section-title">
             Identificación de la unidad
         </div>
@@ -65,7 +66,7 @@
         @enderror
     </div>
 
-    <div class="cc-field">
+    <div class="cc-field cc-col-span-2">
         <label for="marca">
             Marca
         </label>
@@ -82,7 +83,7 @@
         @enderror
     </div>
 
-    <div class="cc-form-section">
+    <div class="cc-form-section-slim">
         <div class="cc-form-section-title">
             Tanques y cobertura Diesel Cop
         </div>
@@ -98,7 +99,7 @@
                value="{{ old('total_tanques', $unidad->total_tanques ?? '') }}"
                class="cc-input"
                min="1"
-               max="10"
+               max="3"
                required>
 
         @error('total_tanques')
@@ -162,7 +163,7 @@
         @enderror
     </div>
 
-    <div class="cc-form-section">
+    <div class="cc-form-section-slim">
         <div class="cc-form-section-title">
             Modelo de medición
         </div>
@@ -189,17 +190,19 @@
 
 </div>
 
-<div class="cc-actions">
+<div class="cc-actions cc-actions-compact">
     <button type="submit" class="cc-btn-primary cc-btn-form-action">
         {{ $submitLabel }}
     </button>
 
     @if ($esEdicion)
-        <a href="{{ route('unidades.show', $unidad) }}" class="cc-btn-secondary cc-btn-form-action">
+        <a href="{{ $modoVentana ? route('unidades.show.ventana', $unidad) : route('unidades.show', $unidad) }}"
+           class="cc-btn-secondary cc-btn-form-action">
             Cancelar
         </a>
     @else
-        <a href="{{ route('unidades.index') }}" class="cc-btn-secondary cc-btn-form-action">
+        <a href="{{ $modoVentana ? route('unidades.consulta.ventana') : route('unidades.index') }}"
+           class="cc-btn-secondary cc-btn-form-action">
             Cancelar
         </a>
     @endif
