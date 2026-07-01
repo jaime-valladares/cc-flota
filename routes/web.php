@@ -38,10 +38,6 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     | Usuarios
     |--------------------------------------------------------------------------
-    |
-    | Consulta informativa, administración operativa, creación, ficha,
-    | edición e inactivación/reactivación.
-    |
     */
 
     Route::get('/usuarios', [UsuarioController::class, 'index'])
@@ -90,10 +86,6 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     | Unidades
     |--------------------------------------------------------------------------
-    |
-    | Consulta informativa, administración operativa, creación, ficha,
-    | edición e inactivación/reactivación.
-    |
     */
 
     Route::get('/unidades', [UnidadController::class, 'index'])
@@ -142,11 +134,6 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     | Licencias
     |--------------------------------------------------------------------------
-    |
-    | La licencia nace desde una unidad existente. La placa de la unidad será
-    | la referencia visible principal; la tabla licencias controla vigencia,
-    | estado de cobertura Diesel Cop y plantilla de puntos de seguridad.
-    |
     */
 
     Route::get('/licencias', [LicenciaController::class, 'index'])
@@ -170,6 +157,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/licencias', [LicenciaController::class, 'store'])
         ->name('licencias.store');
 
+    Route::get('/licencias/{licencia}/ficha/ventana', [LicenciaController::class, 'showVentana'])
+        ->name('licencias.show.ventana');
+
+    Route::get('/licencias/{licencia}/editar/ventana', [LicenciaController::class, 'editVentana'])
+        ->name('licencias.edit.ventana');
+
     Route::get('/licencias/{licencia}', [LicenciaController::class, 'show'])
         ->name('licencias.show');
 
@@ -189,11 +182,6 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     | Marchamos
     |--------------------------------------------------------------------------
-    |
-    | Módulo operativo avanzado. Incluye consulta global de marchamos,
-    | asignación inicial por unidad y, posteriormente, administración,
-    | correcciones, reemplazos e historial.
-    |
     */
 
     Route::get('/marchamos', [MarchamoController::class, 'index'])
@@ -211,8 +199,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/marchamos/asignacion-inicial', [MarchamoAsignacionInicialController::class, 'index'])
         ->name('marchamos.asignacion-inicial.index');
 
+    Route::get('/marchamos/asignacion-inicial/ventana', [MarchamoAsignacionInicialController::class, 'indexVentana'])
+        ->name('marchamos.asignacion-inicial.index.ventana');
+
     Route::get('/unidades/{unidad}/marchamos/asignacion-inicial', [MarchamoAsignacionInicialController::class, 'show'])
         ->name('marchamos.asignacion-inicial.show');
+
+    Route::get('/unidades/{unidad}/marchamos/asignacion-inicial/ventana', [MarchamoAsignacionInicialController::class, 'showVentana'])
+        ->name('marchamos.asignacion-inicial.show.ventana');
 
     Route::post('/unidades/{unidad}/marchamos/asignacion-inicial', [MarchamoAsignacionInicialController::class, 'guardarAvance'])
         ->name('marchamos.asignacion-inicial.guardar-avance');
@@ -222,6 +216,9 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/marchamos/reemplazos', [MarchamoReemplazoController::class, 'index'])
         ->name('marchamos.reemplazos.index');
+
+    Route::get('/marchamos/reemplazos/ventana', [MarchamoReemplazoController::class, 'indexVentana'])
+        ->name('marchamos.reemplazos.index.ventana');
 
     Route::get('/marchamos/reemplazos/unidades/{unidad}', [MarchamoReemplazoController::class, 'show'])
         ->name('marchamos.reemplazos.show');
@@ -233,11 +230,6 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     | Empresas
     |--------------------------------------------------------------------------
-    |
-    | Las rutas específicas deben declararse antes del resource, porque de lo
-    | contrario Laravel podría interpretar segmentos como "consulta",
-    | "administrar" o "ventana" como si fueran {empresa}.
-    |
     */
 
     Route::get('/empresas/consulta/ventana', [EmpresaController::class, 'consultaVentana'])

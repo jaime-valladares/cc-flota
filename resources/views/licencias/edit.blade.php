@@ -1,14 +1,14 @@
 <x-app-layout>
     <div class="cc-page-wrapper">
-        <div class="cc-form-container">
+        <div class="cc-content-container" style="max-width: 80rem;">
             <div class="cc-card">
 
-                <div class="cc-card-header">
+                <div class="cc-card-header cc-card-header-compact">
                     <div>
-                        <h3 class="cc-title">
+                        <h3 class="cc-title cc-title-compact">
                             Editar licencia
                         </h3>
-                        <p class="cc-subtitle">
+                        <p class="cc-subtitle cc-subtitle-compact">
                             Actualice la vigencia y fecha de activación de la licencia.
                         </p>
                     </div>
@@ -40,8 +40,12 @@
 
                     @include('licencias._form', [
                         'licencia' => $licencia,
+                        'empresas' => $empresas ?? collect(),
+                        'unidades' => $unidades ?? collect(),
                         'periodosVigencia' => $periodosVigencia,
+                        'esUsuarioDieselCop' => $esUsuarioDieselCop ?? true,
                         'submitLabel' => 'Actualizar licencia',
+                        'modoVentana' => false,
                     ])
                 </form>
 

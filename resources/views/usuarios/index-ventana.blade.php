@@ -136,11 +136,11 @@
 
                                     <div class="cc-filter-inline-actions">
                                         <button type="submit" class="cc-btn-primary">
-                                            Buscar
+                                            Consultar
                                         </button>
 
                                         <a href="{{ route('usuarios.consulta.ventana') }}" class="cc-btn-secondary">
-                                            Resetear
+                                            Limpiar
                                         </a>
                                     </div>
 

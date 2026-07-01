@@ -1,15 +1,15 @@
 <x-app-layout>
     <div class="cc-page-wrapper">
-        <div class="cc-content-container">
+        <div class="cc-content-container" style="max-width: 80rem;">
             <div class="cc-card">
 
-                <div class="cc-card-header">
+                <div class="cc-card-header cc-card-header-compact">
                     <div>
-                        <h3 class="cc-title">
+                        <h3 class="cc-title cc-title-compact">
                             Consulta de marchamos
                         </h3>
-                        <p class="cc-subtitle">
-                            Consulte la cobertura de marchamos por empresa y unidad.
+                        <p class="cc-subtitle cc-subtitle-compact">
+                            Consulte la cobertura física de marchamos por empresa y unidad.
                         </p>
                     </div>
 
@@ -29,15 +29,24 @@
                     </div>
                 @endif
 
-                <section class="cc-filter-panel">
-                    <form method="GET" action="{{ route('marchamos.index') }}">
-                        <input type="hidden" name="consultar" value="1">
+                <form method="GET" action="{{ route('marchamos.index') }}" class="mb-5">
+                    <input type="hidden" name="consultar" value="1">
 
-                        <div class="flex flex-col lg:flex-row lg:items-end gap-4">
-                            <div class="cc-field flex-1">
+                    <div class="cc-filter-panel cc-filter-panel-compact cc-filter-panel-inline">
+
+                        <div class="cc-form-section cc-form-section-compact" style="margin-top: 0;">
+                            <div class="cc-form-section-title">
+                                Filtros de cobertura
+                            </div>
+                        </div>
+
+                        <div class="cc-filter-inline-grid">
+
+                            <div class="cc-field">
                                 <label for="empresa_id">
                                     Empresa
                                 </label>
+
                                 <select id="empresa_id" name="empresa_id" class="cc-input">
                                     <option value="">Todas las empresas</option>
 
@@ -49,10 +58,11 @@
                                 </select>
                             </div>
 
-                            <div class="cc-field flex-1">
+                            <div class="cc-field">
                                 <label for="unidad_id">
                                     Unidad
                                 </label>
+
                                 <select id="unidad_id" name="unidad_id" class="cc-input">
                                     <option value="">Todas las unidades</option>
 
@@ -67,39 +77,40 @@
                                 </select>
                             </div>
 
-                            <div class="flex items-center gap-3 lg:pb-[0.05rem]">
-                                <button type="submit" class="cc-btn-primary cc-btn-form-action">
+                            <div class="cc-filter-inline-actions">
+                                <button type="submit" class="cc-btn-primary">
                                     Consultar
                                 </button>
 
-                                <a href="{{ route('marchamos.index') }}" class="cc-btn-secondary cc-btn-form-action">
+                                <a href="{{ route('marchamos.index') }}" class="cc-btn-secondary">
                                     Limpiar
                                 </a>
                             </div>
+
                         </div>
-                    </form>
-                </section>
+                    </div>
+                </form>
 
                 @if (! $hayFiltros)
-                    <section class="cc-empty-panel mt-6">
+                    <section class="cc-empty-panel cc-empty-panel-compact">
                         <h5>
                             Inicie una consulta
                         </h5>
 
                         <p>
-                            Use los filtros para consultar la cobertura de marchamos por empresa o unidad. También puede presionar Consultar sin filtros para ver todas las unidades con cobertura registrada.
+                            Use los filtros para consultar la cobertura de marchamos por empresa o unidad. También puede consultar sin filtros para ver todas las unidades con cobertura registrada.
                         </p>
                     </section>
                 @endif
 
                 @if ($hayFiltros)
-                    <section class="cc-detail-section mt-6">
+                    <section class="cc-detail-section">
                         <div class="cc-detail-section-header">
                             <h5>
                                 Cobertura por unidad
                             </h5>
                             <p>
-                                Vista operativa de unidades con licencia, puntos de seguridad y estado de cobertura por marchamos.
+                                Unidades con licencia, puntos de seguridad y avance de asignación de marchamos.
                             </p>
                         </div>
 
@@ -109,7 +120,7 @@
                                     <tr>
                                         <th>Unidad</th>
                                         <th>Empresa</th>
-                                        <th>Estado unidad</th>
+                                        <th>Estado</th>
                                         <th>Licencia</th>
                                         <th>Puntos</th>
                                         <th>Marchamos</th>
@@ -144,7 +155,7 @@
 
                                             <td>
                                                 @if ($unidad->empresa)
-                                                    <div class="font-bold text-[var(--cc-text-main)]">
+                                                    <div class="font-bold text-[var(--cc-text-main)] cc-cell-truncate">
                                                         {{ $unidad->empresa->nombre_comercial ?: $unidad->empresa->nombre_legal }}
                                                     </div>
 
@@ -180,7 +191,7 @@
                                                         {{ $unidad->licencia->periodo_vigencia_texto }}
                                                     </div>
 
-                                                    <div class="text-sm text-[var(--cc-text-muted)]">
+                                                    <div class="text-sm text-[var(--cc-text-muted)] cc-cell-truncate">
                                                         {{ $unidad->licencia->plantilla_puntos_seguridad_texto }}
                                                     </div>
                                                 @else
@@ -217,11 +228,11 @@
 
                                                 @if ($puntosPendientes === 0 && $totalPuntos > 0)
                                                     <div class="text-sm text-[var(--cc-success)]">
-                                                        Cobertura completa
+                                                        Completa
                                                     </div>
                                                 @elseif ($totalPuntos > 0)
                                                     <div class="text-sm text-[var(--cc-danger)]">
-                                                        Cobertura pendiente
+                                                        Pendiente
                                                     </div>
                                                 @else
                                                     <div class="text-sm text-[var(--cc-text-muted)]">
@@ -234,7 +245,7 @@
                                                 <div class="flex justify-end gap-2">
                                                     <a href="{{ route('marchamos.detalle-unidad', $unidad) }}"
                                                        class="cc-btn-secondary cc-btn-table">
-                                                        Ver marchamos
+                                                        Marchamos
                                                     </a>
                                                 </div>
                                             </td>

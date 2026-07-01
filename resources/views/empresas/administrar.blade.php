@@ -30,7 +30,7 @@
                 @endif
 
                 <form method="GET" action="{{ route('empresas.administrar') }}" class="mb-5">
-                    <div class="cc-filter-panel cc-filter-panel-compact">
+                    <div class="cc-filter-panel cc-filter-panel-compact cc-filter-panel-inline">
 
                         <div class="cc-form-section cc-form-section-compact" style="margin-top: 0;">
                             <div class="cc-form-section-title">
@@ -38,9 +38,9 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
+                        <div class="cc-filter-inline-grid">
 
-                            <div class="lg:col-span-5 cc-field">
+                            <div class="cc-field">
                                 <label for="empresa_id">
                                     Empresa
                                 </label>
@@ -72,7 +72,7 @@
                                 @enderror
                             </div>
 
-                            <div class="lg:col-span-3 cc-field">
+                            <div class="cc-field">
                                 <label for="nit">
                                     NIT
                                 </label>
@@ -93,7 +93,7 @@
                                 @enderror
                             </div>
 
-                            <div class="lg:col-span-4 cc-field">
+                            <div class="cc-field">
                                 <label for="estado">
                                     Estado
                                 </label>
@@ -114,18 +114,16 @@
                                 @enderror
                             </div>
 
-                        </div>
-
-                        <div class="cc-admin-filter-actions border-t border-[var(--cc-card-border)]">
-                            <div class="flex items-center justify-end gap-3">
+                            <div class="cc-filter-inline-actions">
                                 <button type="submit" class="cc-btn-primary">
-                                    Buscar
+                                    Consultar
                                 </button>
 
                                 <a href="{{ route('empresas.administrar') }}" class="cc-btn-secondary">
-                                    Resetear
+                                    Limpiar
                                 </a>
                             </div>
+
                         </div>
                     </div>
                 </form>
@@ -142,7 +140,7 @@
                 @endif
 
                 @if (! $hayFiltros)
-                    <div class="cc-empty-panel">
+                    <div class="cc-empty-panel cc-empty-panel-compact">
                         <h5>
                             Búsqueda pendiente
                         </h5>
@@ -151,7 +149,7 @@
                         </p>
                     </div>
                 @elseif ($empresas->isEmpty())
-                    <div class="cc-empty-panel">
+                    <div class="cc-empty-panel cc-empty-panel-compact">
                         <h5>
                             Sin resultados
                         </h5>

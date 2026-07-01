@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>Consulta de marchamos | CC-Flota</title>
+        <title>Asignación de marchamos | CC-Flota</title>
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,18 +20,24 @@
                 <div class="cc-window-container" style="max-width: 80rem;">
                     <div class="cc-card">
 
+                        @php
+                            $empresaId = request('empresa_id', '');
+                            $placa = request('placa', '');
+                            $hayFiltros = request()->has('consultar');
+                        @endphp
+
                         <div class="cc-card-header cc-card-header-compact">
                             <div>
                                 <h3 class="cc-title cc-title-compact">
-                                    Consulta de marchamos
+                                    Asignación de marchamos
                                 </h3>
                                 <p class="cc-subtitle cc-subtitle-compact">
-                                    Consulte la cobertura física de marchamos por empresa y unidad.
+                                    Localice unidades listas para completar su primera asignación de marchamos.
                                 </p>
                             </div>
 
                             <div class="flex items-center gap-3">
-                                <a href="{{ route('marchamos.index') }}" class="cc-btn-secondary cc-btn-wide">
+                                <a href="{{ route('marchamos.asignacion-inicial.index') }}" class="cc-btn-secondary cc-btn-wide">
                                     Volver al sistema
                                 </a>
                             </div>
@@ -43,14 +49,14 @@
                             </div>
                         @endif
 
-                        <form method="GET" action="{{ route('marchamos.consulta.ventana') }}" class="mb-5">
+                        <form method="GET" action="{{ route('marchamos.asignacion-inicial.index.ventana') }}" class="mb-5">
                             <input type="hidden" name="consultar" value="1">
 
                             <div class="cc-filter-panel cc-filter-panel-compact cc-filter-panel-inline">
 
                                 <div class="cc-form-section cc-form-section-compact" style="margin-top: 0;">
                                     <div class="cc-form-section-title">
-                                        Filtros de cobertura
+                                        Filtros de asignación
                                     </div>
                                 </div>
 
@@ -64,7 +70,7 @@
                                         <select id="empresa_id" name="empresa_id" class="cc-input">
                                             <option value="">Todas las empresas</option>
 
-                                            @foreach ($empresas as $empresa)
+                                            @foreach (($empresas ?? collect()) as $empresa)
                                                 <option value="{{ $empresa->id }}" @selected((string) $empresaId === (string) $empresa->id)>
                                                     {{ $empresa->nombre_comercial ?: $empresa->nombre_legal }}
                                                 </option>
@@ -73,22 +79,16 @@
                                     </div>
 
                                     <div class="cc-field">
-                                        <label for="unidad_id">
+                                        <label for="placa">
                                             Unidad
                                         </label>
 
-                                        <select id="unidad_id" name="unidad_id" class="cc-input">
-                                            <option value="">Todas las unidades</option>
-
-                                            @foreach ($unidades as $unidad)
-                                                <option value="{{ $unidad->id }}" @selected((string) $unidadId === (string) $unidad->id)>
-                                                    {{ $unidad->placa }}
-                                                    @if ($unidad->marca)
-                                                        · {{ $unidad->marca }}
-                                                    @endif
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                        <input id="placa"
+                                               type="text"
+                                               name="placa"
+                                               value="{{ $placa }}"
+                                               class="cc-input"
+                                               placeholder="Buscar por placa">
                                     </div>
 
                                     <div class="cc-filter-inline-actions">
@@ -96,7 +96,7 @@
                                             Consultar
                                         </button>
 
-                                        <a href="{{ route('marchamos.consulta.ventana') }}" class="cc-btn-secondary">
+                                        <a href="{{ route('marchamos.asignacion-inicial.index.ventana') }}" class="cc-btn-secondary">
                                             Limpiar
                                         </a>
                                     </div>
@@ -108,43 +108,59 @@
                         @if (! $hayFiltros)
                             <section class="cc-empty-panel cc-empty-panel-compact">
                                 <h5>
-                                    Inicie una consulta
+                                    Búsqueda pendiente
                                 </h5>
 
                                 <p>
-                                    Use los filtros para consultar la cobertura de marchamos por empresa o unidad. También puede consultar sin filtros para ver todas las unidades con cobertura registrada.
+                                    Use los filtros para localizar una unidad específica, todas las unidades de una empresa o todas las unidades elegibles para asignación inicial.
                                 </p>
                             </section>
-                        @endif
-
-                        @if ($hayFiltros)
+                        @else
                             <section class="cc-detail-section">
                                 <div class="cc-detail-section-header">
                                     <h5>
-                                        Cobertura por unidad
+                                        Unidades elegibles
                                     </h5>
                                     <p>
-                                        Unidades con licencia, puntos de seguridad y avance de asignación de marchamos.
+                                        Unidades con licencia, puntos de seguridad y marchamos pendientes de asignación inicial.
                                     </p>
                                 </div>
 
                                 <div class="overflow-x-auto">
-                                    <table class="cc-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Unidad</th>
-                                                <th>Empresa</th>
-                                                <th>Estado</th>
-                                                <th>Licencia</th>
-                                                <th>Puntos</th>
-                                                <th>Marchamos</th>
-                                                <th>Avance</th>
-                                                <th class="text-right">Acciones</th>
-                                            </tr>
-                                        </thead>
+                                    <div class="min-w-[62rem]">
 
-                                        <tbody>
-                                            @forelse ($unidadesConCobertura as $unidad)
+                                        <div class="grid grid-cols-[1.05fr_1.15fr_1fr_1fr_0.9fr_0.9fr_10rem] items-center px-4 py-3 bg-[var(--cc-bg-soft)]"
+                                             style="border-bottom: 1px solid var(--cc-border);">
+
+                                            <div class="text-[0.78rem] font-extrabold uppercase tracking-[0.09em] text-[var(--cc-text-main)]">
+                                                Unidad
+                                            </div>
+
+                                            <div class="text-[0.78rem] font-extrabold uppercase tracking-[0.09em] text-[var(--cc-text-main)]">
+                                                Empresa
+                                            </div>
+
+                                            <div class="text-[0.78rem] font-extrabold uppercase tracking-[0.09em] text-[var(--cc-text-main)]">
+                                                Licencia
+                                            </div>
+
+                                            <div class="text-[0.78rem] font-extrabold uppercase tracking-[0.09em] text-[var(--cc-text-main)]">
+                                                Estado unidad
+                                            </div>
+
+                                            <div class="text-[0.78rem] font-extrabold uppercase tracking-[0.09em] text-[var(--cc-text-main)]">
+                                                Puntos
+                                            </div>
+
+                                            <div class="text-[0.78rem] font-extrabold uppercase tracking-[0.09em] text-[var(--cc-text-main)]">
+                                                Avance
+                                            </div>
+
+                                            <div></div>
+                                        </div>
+
+                                        <div>
+                                            @forelse ($unidades as $unidad)
                                                 @php
                                                     $totalPuntos = (int) ($unidad->total_puntos ?? 0);
                                                     $puntosAsignados = (int) ($unidad->puntos_asignados ?? 0);
@@ -155,18 +171,20 @@
                                                         : 0;
                                                 @endphp
 
-                                                <tr>
-                                                    <td>
-                                                        <span class="font-bold text-[var(--cc-text-main)]">
+                                                <article class="grid grid-cols-[1.05fr_1.15fr_1fr_1fr_0.9fr_0.9fr_10rem] items-center gap-0 px-4 py-4"
+                                                         style="{{ ! $loop->first ? 'border-top: 1px solid var(--cc-border-soft, var(--cc-border));' : '' }}">
+
+                                                    <div>
+                                                        <div class="font-bold text-[var(--cc-text-main)]">
                                                             {{ $unidad->placa }}
-                                                        </span>
+                                                        </div>
 
                                                         <div class="text-sm text-[var(--cc-text-muted)]">
                                                             {{ $unidad->marca ?: 'Sin marca' }}
                                                         </div>
-                                                    </td>
+                                                    </div>
 
-                                                    <td>
+                                                    <div>
                                                         @if ($unidad->empresa)
                                                             <div class="font-bold text-[var(--cc-text-main)] cc-cell-truncate">
                                                                 {{ $unidad->empresa->nombre_comercial ?: $unidad->empresa->nombre_legal }}
@@ -180,25 +198,9 @@
                                                                 Sin empresa
                                                             </span>
                                                         @endif
-                                                    </td>
+                                                    </div>
 
-                                                    <td>
-                                                        @if ($unidad->estado === 'registrada')
-                                                            <span class="cc-badge cc-badge-warning">
-                                                                Registrada
-                                                            </span>
-                                                        @elseif ($unidad->estado === 'activa')
-                                                            <span class="cc-badge cc-badge-active">
-                                                                Activa
-                                                            </span>
-                                                        @else
-                                                            <span class="cc-badge cc-badge-inactive">
-                                                                Inactiva
-                                                            </span>
-                                                        @endif
-                                                    </td>
-
-                                                    <td>
+                                                    <div>
                                                         @if ($unidad->licencia)
                                                             <div class="font-bold text-[var(--cc-text-main)]">
                                                                 {{ $unidad->licencia->periodo_vigencia_texto }}
@@ -212,9 +214,25 @@
                                                                 Sin licencia
                                                             </span>
                                                         @endif
-                                                    </td>
+                                                    </div>
 
-                                                    <td>
+                                                    <div>
+                                                        @if ($unidad->estado === 'registrada')
+                                                            <span class="cc-badge cc-badge-warning">
+                                                                Registrada
+                                                            </span>
+                                                        @elseif ($unidad->estado === 'activa')
+                                                            <span class="cc-badge cc-badge-active">
+                                                                Activa
+                                                            </span>
+                                                        @else
+                                                            <span class="cc-badge cc-badge-inactive">
+                                                                Inactiva
+                                                            </span>
+                                                        @endif
+                                                    </div>
+
+                                                    <div>
                                                         <div class="font-bold text-[var(--cc-text-main)]">
                                                             {{ $puntosAsignados }} / {{ $totalPuntos }}
                                                         </div>
@@ -222,56 +240,43 @@
                                                         <div class="text-sm text-[var(--cc-text-muted)]">
                                                             {{ $puntosPendientes }} pendientes
                                                         </div>
-                                                    </td>
+                                                    </div>
 
-                                                    <td>
-                                                        <div class="font-bold text-[var(--cc-text-main)]">
-                                                            {{ $unidad->marchamos_activos }} activos
-                                                        </div>
-
-                                                        <div class="text-sm text-[var(--cc-text-muted)]">
-                                                            {{ $unidad->marchamos_historicos }} históricos
-                                                        </div>
-                                                    </td>
-
-                                                    <td>
+                                                    <div>
                                                         <div class="font-bold text-[var(--cc-text-main)]">
                                                             {{ $porcentajeAvance }}%
                                                         </div>
 
-                                                        @if ($puntosPendientes === 0 && $totalPuntos > 0)
-                                                            <div class="text-sm text-[var(--cc-success)]">
-                                                                Completa
-                                                            </div>
-                                                        @elseif ($totalPuntos > 0)
+                                                        @if ($puntosPendientes > 0)
                                                             <div class="text-sm text-[var(--cc-danger)]">
                                                                 Pendiente
                                                             </div>
                                                         @else
-                                                            <div class="text-sm text-[var(--cc-text-muted)]">
-                                                                Sin puntos
+                                                            <div class="text-sm text-[var(--cc-success)]">
+                                                                Completa
                                                             </div>
                                                         @endif
-                                                    </td>
+                                                    </div>
 
-                                                    <td class="text-right">
-                                                        <div class="flex justify-end gap-2">
-                                                            <a href="{{ route('marchamos.detalle-unidad.ventana', $unidad) }}"
-                                                               class="cc-btn-secondary cc-btn-table">
-                                                                Marchamos
-                                                            </a>
-                                                        </div>
-                                                    </td>
-                                                </tr>
+                                                    <div class="flex justify-end items-center">
+                                                        <a href="{{ route('marchamos.asignacion-inicial.show.ventana', $unidad) }}"
+                                                           class="cc-btn-primary cc-btn-table">
+                                                            Asignación
+                                                        </a>
+                                                    </div>
+                                                </article>
                                             @empty
-                                                <tr>
-                                                    <td colspan="8" class="text-center text-[var(--cc-text-muted)] py-8">
-                                                        No hay unidades con puntos de seguridad generados para los filtros aplicados.
-                                                    </td>
-                                                </tr>
+                                                <div class="text-center text-[var(--cc-text-muted)] py-8">
+                                                    No hay unidades elegibles para asignación inicial con los filtros seleccionados.
+                                                </div>
                                             @endforelse
-                                        </tbody>
-                                    </table>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                                <div class="mt-6">
+                                    {{ $unidades->appends(request()->query())->links() }}
                                 </div>
                             </section>
                         @endif

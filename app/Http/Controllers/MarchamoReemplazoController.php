@@ -27,87 +27,12 @@ class MarchamoReemplazoController extends Controller
 
     public function index(Request $request): View
     {
-        $user = Auth::user();
+        return view('marchamos.reemplazos.index', $this->datosIndex($request));
+    }
 
-        $empresaId = $request->input('empresa_id');
-        $unidadId = $request->input('unidad_id');
-
-        $consultaEjecutada = $request->boolean('consultar');
-
-        $hayFiltros = $consultaEjecutada
-            || filled($empresaId)
-            || filled($unidadId);
-
-        $empresas = Empresa::query()
-            ->when(! is_null($user->empresa_id), function ($query) use ($user) {
-                $query->where('id', $user->empresa_id);
-            })
-            ->orderBy('nombre_legal')
-            ->get();
-
-        $unidades = Unidad::query()
-            ->when(! is_null($user->empresa_id), function ($query) use ($user) {
-                $query->where('empresa_id', $user->empresa_id);
-            })
-            ->when(is_null($user->empresa_id) && filled($empresaId), function ($query) use ($empresaId) {
-                $query->where('empresa_id', $empresaId);
-            })
-            ->where('estado', 'activa')
-            ->whereHas('licencia')
-            ->whereHas('puntosSeguridad')
-            ->orderBy('placa')
-            ->get();
-
-        $unidadesDisponibles = Unidad::query()
-            ->with(['empresa', 'licencia'])
-            ->withCount([
-                'puntosSeguridad as total_puntos' => function ($query) {
-                    $query->where('estado', 'activo');
-                },
-                'puntosSeguridad as puntos_asignados' => function ($query) {
-                    $query->where('estado', 'activo')
-                        ->whereNotNull('marchamo_actual_id');
-                },
-                'marchamos as marchamos_activos' => function ($query) {
-                    $query->where('estado', 'activo');
-                },
-                'marchamos as marchamos_historicos' => function ($query) {
-                    $query->whereIn('estado', ['reemplazado', 'anulado']);
-                },
-            ])
-            ->when(! is_null($user->empresa_id), function ($query) use ($user) {
-                $query->where('empresa_id', $user->empresa_id);
-            })
-            ->when(is_null($user->empresa_id) && filled($empresaId), function ($query) use ($empresaId) {
-                $query->where('empresa_id', $empresaId);
-            })
-            ->when(filled($unidadId), function ($query) use ($unidadId) {
-                $query->where('id', $unidadId);
-            })
-            ->where('estado', 'activa')
-            ->whereHas('licencia')
-            ->whereHas('puntosSeguridad')
-            ->orderBy('placa')
-            ->get()
-            ->filter(function ($unidad) {
-                $totalPuntos = (int) ($unidad->total_puntos ?? 0);
-                $puntosAsignados = (int) ($unidad->puntos_asignados ?? 0);
-
-                return $totalPuntos > 0 && $totalPuntos === $puntosAsignados;
-            })
-            ->values();
-
-        return view('marchamos.reemplazos.index', [
-            'empresas' => $empresas,
-            'unidades' => $unidades,
-            'unidadesDisponibles' => $unidadesDisponibles,
-
-            'empresaId' => $empresaId,
-            'unidadId' => $unidadId,
-
-            'hayFiltros' => $hayFiltros,
-            'consultaEjecutada' => $consultaEjecutada,
-        ]);
+    public function indexVentana(Request $request): View
+    {
+        return view('marchamos.reemplazos.index-ventana', $this->datosIndex($request));
     }
 
     public function show(Unidad $unidad): View
@@ -164,13 +89,17 @@ class MarchamoReemplazoController extends Controller
         foreach ($reemplazosSeleccionados as $index => $reemplazo) {
             if (blank($reemplazo['nuevo_codigo_marchamo'] ?? null)) {
                 return back()
-                    ->withErrors(["reemplazos.{$index}.nuevo_codigo_marchamo" => 'Ingrese el nuevo código de marchamo para cada punto seleccionado.'])
+                    ->withErrors([
+                        "reemplazos.{$index}.nuevo_codigo_marchamo" => 'Ingrese el nuevo código de marchamo para cada punto seleccionado.',
+                    ])
                     ->withInput();
             }
 
             if (blank($reemplazo['motivo_reemplazo'] ?? null)) {
                 return back()
-                    ->withErrors(["reemplazos.{$index}.motivo_reemplazo" => 'Seleccione el motivo de reemplazo para cada punto seleccionado.'])
+                    ->withErrors([
+                        "reemplazos.{$index}.motivo_reemplazo" => 'Seleccione el motivo de reemplazo para cada punto seleccionado.',
+                    ])
                     ->withInput();
             }
         }
@@ -199,7 +128,7 @@ class MarchamoReemplazoController extends Controller
                 ->withInput();
         }
 
-        DB::transaction(function () use ($unidad, $reemplazosSeleccionados) {
+        DB::transaction(function () use ($unidad, $reemplazosSeleccionados): void {
             $user = Auth::user();
 
             $motivoPrincipal = $reemplazosSeleccionados->first()['motivo_reemplazo'];
@@ -272,6 +201,111 @@ class MarchamoReemplazoController extends Controller
         return redirect()
             ->route('marchamos.reemplazos.show', $unidad)
             ->with('success', 'Reemplazos de marchamos registrados correctamente.');
+    }
+
+    private function datosIndex(Request $request): array
+    {
+        $user = Auth::user();
+
+        $empresaId = $request->input('empresa_id');
+        $unidadId = $request->input('unidad_id');
+
+        $consultaEjecutada = $request->boolean('consultar');
+
+        $hayFiltros = $consultaEjecutada
+            || filled($empresaId)
+            || filled($unidadId);
+
+        $empresas = Empresa::query()
+            ->when(! is_null($user->empresa_id), function ($query) use ($user) {
+                $query->where('id', $user->empresa_id);
+            })
+            ->where('estado', 'activa')
+            ->orderBy('nombre_comercial')
+            ->orderBy('nombre_legal')
+            ->get();
+
+        $unidades = Unidad::query()
+            ->when(! is_null($user->empresa_id), function ($query) use ($user) {
+                $query->where('empresa_id', $user->empresa_id);
+            })
+            ->when(is_null($user->empresa_id) && filled($empresaId), function ($query) use ($empresaId) {
+                $query->where('empresa_id', $empresaId);
+            })
+            ->where('estado', 'activa')
+            ->whereHas('empresa', function ($query) {
+                $query->where('estado', 'activa');
+            })
+            ->whereHas('licencia', function ($query) {
+                $query->where('estado', 'activa');
+            })
+            ->whereHas('puntosSeguridad', function ($query) {
+                $query->where('estado', 'activo');
+            })
+            ->orderBy('placa')
+            ->get();
+
+        if (! $hayFiltros) {
+            $unidadesDisponibles = collect();
+        } else {
+            $unidadesDisponibles = Unidad::query()
+                ->with(['empresa', 'licencia'])
+                ->withCount([
+                    'puntosSeguridad as total_puntos' => function ($query) {
+                        $query->where('estado', 'activo');
+                    },
+                    'puntosSeguridad as puntos_asignados' => function ($query) {
+                        $query->where('estado', 'activo')
+                            ->whereNotNull('marchamo_actual_id');
+                    },
+                    'marchamos as marchamos_activos' => function ($query) {
+                        $query->where('estado', 'activo');
+                    },
+                    'marchamos as marchamos_historicos' => function ($query) {
+                        $query->whereIn('estado', ['reemplazado', 'anulado']);
+                    },
+                ])
+                ->when(! is_null($user->empresa_id), function ($query) use ($user) {
+                    $query->where('empresa_id', $user->empresa_id);
+                })
+                ->when(is_null($user->empresa_id) && filled($empresaId), function ($query) use ($empresaId) {
+                    $query->where('empresa_id', $empresaId);
+                })
+                ->when(filled($unidadId), function ($query) use ($unidadId) {
+                    $query->where('id', $unidadId);
+                })
+                ->where('estado', 'activa')
+                ->whereHas('empresa', function ($query) {
+                    $query->where('estado', 'activa');
+                })
+                ->whereHas('licencia', function ($query) {
+                    $query->where('estado', 'activa');
+                })
+                ->whereHas('puntosSeguridad', function ($query) {
+                    $query->where('estado', 'activo');
+                })
+                ->orderBy('placa')
+                ->get()
+                ->filter(function ($unidad) {
+                    $totalPuntos = (int) ($unidad->total_puntos ?? 0);
+                    $puntosAsignados = (int) ($unidad->puntos_asignados ?? 0);
+
+                    return $totalPuntos > 0 && $totalPuntos === $puntosAsignados;
+                })
+                ->values();
+        }
+
+        return [
+            'empresas' => $empresas,
+            'unidades' => $unidades,
+            'unidadesDisponibles' => $unidadesDisponibles,
+
+            'empresaId' => $empresaId,
+            'unidadId' => $unidadId,
+
+            'hayFiltros' => $hayFiltros,
+            'consultaEjecutada' => $consultaEjecutada,
+        ];
     }
 
     private function validarAccesoUnidad(Unidad $unidad): void

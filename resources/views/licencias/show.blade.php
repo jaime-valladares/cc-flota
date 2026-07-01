@@ -1,14 +1,14 @@
 <x-app-layout>
     <div class="cc-page-wrapper">
-        <div class="cc-content-container">
+        <div class="cc-content-container" style="max-width: 79rem;">
             <div class="cc-card">
 
-                <div class="cc-card-header">
+                <div class="cc-card-header cc-card-header-compact">
                     <div>
-                        <h3 class="cc-title">
+                        <h3 class="cc-title cc-title-compact">
                             Ficha administrativa de licencia
                         </h3>
-                        <p class="cc-subtitle">
+                        <p class="cc-subtitle cc-subtitle-compact">
                             Consulte la cobertura Diesel Cop asociada a la unidad y su vigencia operativa.
                         </p>
                     </div>
@@ -54,12 +54,18 @@
                             <span>{{ $licencia->unidad->marca ?? 'Sin marca registrada' }}</span>
 
                             @if ($licencia->empresa)
-                                <span>Empresa: {{ $licencia->empresa->nombre_comercial ?: $licencia->empresa->nombre_legal }}</span>
+                                <span>
+                                    Empresa: {{ $licencia->empresa->nombre_comercial ?: $licencia->empresa->nombre_legal }}
+                                </span>
                             @else
-                                <span>Empresa: Sin empresa</span>
+                                <span>
+                                    Empresa: Sin empresa
+                                </span>
                             @endif
 
-                            <span>Vence: {{ $licencia->fecha_vencimiento?->format('d/m/Y') ?? 'No registrado' }}</span>
+                            <span>
+                                Vence: {{ $licencia->fecha_vencimiento?->format('d/m/Y') ?? 'No registrado' }}
+                            </span>
                         </div>
                     </div>
 
@@ -80,12 +86,16 @@
 
                     <section class="cc-detail-section">
                         <div class="cc-detail-section-header">
-                            <h5>Unidad licenciada</h5>
+                            <h5>
+                                Unidad licenciada
+                            </h5>
                         </div>
 
                         <div class="cc-detail-grid">
                             <div class="cc-detail-item">
-                                <div class="cc-detail-label">Empresa</div>
+                                <div class="cc-detail-label">
+                                    Empresa
+                                </div>
                                 <div class="cc-detail-value">
                                     @if ($licencia->empresa)
                                         {{ $licencia->empresa->nombre_comercial ?: $licencia->empresa->nombre_legal }}
@@ -96,21 +106,27 @@
                             </div>
 
                             <div class="cc-detail-item">
-                                <div class="cc-detail-label">NIT empresa</div>
+                                <div class="cc-detail-label">
+                                    NIT empresa
+                                </div>
                                 <div class="cc-detail-value">
                                     {{ $licencia->empresa->nit ?? 'No registrado' }}
                                 </div>
                             </div>
 
                             <div class="cc-detail-item">
-                                <div class="cc-detail-label">Placa</div>
+                                <div class="cc-detail-label">
+                                    Placa
+                                </div>
                                 <div class="cc-detail-value">
                                     {{ $licencia->unidad->placa ?? 'Sin placa' }}
                                 </div>
                             </div>
 
                             <div class="cc-detail-item">
-                                <div class="cc-detail-label">Marca</div>
+                                <div class="cc-detail-label">
+                                    Marca
+                                </div>
                                 <div class="cc-detail-value">
                                     {{ $licencia->unidad->marca ?? 'No registrada' }}
                                 </div>
@@ -120,19 +136,25 @@
 
                     <section class="cc-detail-section">
                         <div class="cc-detail-section-header">
-                            <h5>Vigencia</h5>
+                            <h5>
+                                Vigencia
+                            </h5>
                         </div>
 
                         <div class="cc-detail-grid">
                             <div class="cc-detail-item">
-                                <div class="cc-detail-label">Período</div>
+                                <div class="cc-detail-label">
+                                    Período
+                                </div>
                                 <div class="cc-detail-value">
                                     {{ $licencia->periodo_vigencia_texto }}
                                 </div>
                             </div>
 
                             <div class="cc-detail-item">
-                                <div class="cc-detail-label">Estado</div>
+                                <div class="cc-detail-label">
+                                    Estado
+                                </div>
                                 <div class="cc-detail-value">
                                     @if ($licencia->estado === 'activa')
                                         <span class="cc-badge cc-badge-active">
@@ -147,14 +169,18 @@
                             </div>
 
                             <div class="cc-detail-item">
-                                <div class="cc-detail-label">Fecha activación</div>
+                                <div class="cc-detail-label">
+                                    Fecha activación
+                                </div>
                                 <div class="cc-detail-value">
                                     {{ $licencia->fecha_activacion?->format('d/m/Y') ?? 'No registrada' }}
                                 </div>
                             </div>
 
                             <div class="cc-detail-item">
-                                <div class="cc-detail-label">Fecha vencimiento</div>
+                                <div class="cc-detail-label">
+                                    Fecha vencimiento
+                                </div>
                                 <div class="cc-detail-value">
                                     {{ $licencia->fecha_vencimiento?->format('d/m/Y') ?? 'No registrada' }}
                                 </div>
@@ -164,33 +190,43 @@
 
                     <section class="cc-detail-section">
                         <div class="cc-detail-section-header">
-                            <h5>Puntos de seguridad</h5>
+                            <h5>
+                                Puntos de seguridad
+                            </h5>
                         </div>
 
                         <div class="cc-detail-grid">
                             <div class="cc-detail-item">
-                                <div class="cc-detail-label">Plantilla</div>
+                                <div class="cc-detail-label">
+                                    Plantilla
+                                </div>
                                 <div class="cc-detail-value">
                                     {{ $licencia->plantilla_puntos_seguridad_texto }}
                                 </div>
                             </div>
 
                             <div class="cc-detail-item">
-                                <div class="cc-detail-label">Puntos esperados</div>
+                                <div class="cc-detail-label">
+                                    Puntos esperados
+                                </div>
                                 <div class="cc-detail-value">
                                     {{ $licencia->cantidad_puntos_seguridad_esperados }}
                                 </div>
                             </div>
 
                             <div class="cc-detail-item">
-                                <div class="cc-detail-label">Tanques protegidos</div>
+                                <div class="cc-detail-label">
+                                    Tanques protegidos
+                                </div>
                                 <div class="cc-detail-value">
                                     {{ $licencia->unidad->cantidad_tanques_con_licencia ?? 'No registrado' }}
                                 </div>
                             </div>
 
                             <div class="cc-detail-item">
-                                <div class="cc-detail-label">Capacidad cubierta</div>
+                                <div class="cc-detail-label">
+                                    Capacidad cubierta
+                                </div>
                                 <div class="cc-detail-value">
                                     @if ($licencia->unidad)
                                         {{ number_format((float) $licencia->unidad->capacidad_cubierta, 2) }} galones
@@ -204,33 +240,43 @@
 
                     <section class="cc-detail-section">
                         <div class="cc-detail-section-header">
-                            <h5>Control administrativo</h5>
+                            <h5>
+                                Control administrativo
+                            </h5>
                         </div>
 
                         <div class="cc-detail-grid">
                             <div class="cc-detail-item">
-                                <div class="cc-detail-label">Creado por</div>
+                                <div class="cc-detail-label">
+                                    Creado por
+                                </div>
                                 <div class="cc-detail-value">
                                     {{ $licencia->creadoPor->name ?? 'No registrado' }}
                                 </div>
                             </div>
 
                             <div class="cc-detail-item">
-                                <div class="cc-detail-label">Fecha creación</div>
+                                <div class="cc-detail-label">
+                                    Fecha creación
+                                </div>
                                 <div class="cc-detail-value">
                                     {{ $licencia->created_at?->format('d/m/Y H:i') ?? 'No registrada' }}
                                 </div>
                             </div>
 
                             <div class="cc-detail-item">
-                                <div class="cc-detail-label">Actualizado por</div>
+                                <div class="cc-detail-label">
+                                    Actualizado por
+                                </div>
                                 <div class="cc-detail-value">
                                     {{ $licencia->actualizadoPor->name ?? 'No registrado' }}
                                 </div>
                             </div>
 
                             <div class="cc-detail-item">
-                                <div class="cc-detail-label">Fecha actualización</div>
+                                <div class="cc-detail-label">
+                                    Fecha actualización
+                                </div>
                                 <div class="cc-detail-value">
                                     {{ $licencia->updated_at?->format('d/m/Y H:i') ?? 'No registrada' }}
                                 </div>
@@ -238,21 +284,27 @@
 
                             @if ($licencia->estado === 'inactiva')
                                 <div class="cc-detail-item">
-                                    <div class="cc-detail-label">Inactivada por</div>
+                                    <div class="cc-detail-label">
+                                        Inactivada por
+                                    </div>
                                     <div class="cc-detail-value">
                                         {{ $licencia->inactivadoPor->name ?? 'No registrado' }}
                                     </div>
                                 </div>
 
                                 <div class="cc-detail-item">
-                                    <div class="cc-detail-label">Fecha inactivación</div>
+                                    <div class="cc-detail-label">
+                                        Fecha inactivación
+                                    </div>
                                     <div class="cc-detail-value">
                                         {{ $licencia->fecha_inactivacion?->format('d/m/Y H:i') ?? 'No registrada' }}
                                     </div>
                                 </div>
 
                                 <div class="cc-detail-item cc-detail-item-wide">
-                                    <div class="cc-detail-label">Motivo de inactivación</div>
+                                    <div class="cc-detail-label">
+                                        Motivo de inactivación
+                                    </div>
                                     <div class="cc-detail-value">
                                         {{ $licencia->motivo_inactivacion ?: 'No registrado' }}
                                     </div>
@@ -278,7 +330,9 @@
                 <section class="cc-danger-zone">
                     <div class="cc-danger-zone-header">
                         <div>
-                            <h5>Zona de riesgo</h5>
+                            <h5>
+                                Zona de riesgo
+                            </h5>
                             <p>
                                 Modifique el estado de la licencia únicamente cuando exista una razón administrativa válida.
                             </p>
@@ -314,7 +368,9 @@
                                 </select>
 
                                 @error('motivo_inactivacion')
-                                    <div class="cc-error">{{ $message }}</div>
+                                    <div class="cc-error">
+                                        {{ $message }}
+                                    </div>
                                 @enderror
                             </div>
 
@@ -346,7 +402,9 @@
                                 </select>
 
                                 @error('periodo_vigencia_meses')
-                                    <div class="cc-error">{{ $message }}</div>
+                                    <div class="cc-error">
+                                        {{ $message }}
+                                    </div>
                                 @enderror
                             </div>
 
@@ -363,7 +421,9 @@
                                        required>
 
                                 @error('fecha_activacion')
-                                    <div class="cc-error">{{ $message }}</div>
+                                    <div class="cc-error">
+                                        {{ $message }}
+                                    </div>
                                 @enderror
                             </div>
 

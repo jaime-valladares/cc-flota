@@ -1,21 +1,32 @@
 <x-app-layout>
     <div class="cc-page-wrapper">
-        <div class="cc-content-container">
+        <div class="cc-content-container" style="max-width: 79rem;">
             <div class="cc-card">
 
-                <div class="cc-card-header">
+                <div class="cc-card-header cc-card-header-compact">
                     <div>
-                        <h3 class="cc-title">
+                        <h3 class="cc-title cc-title-compact">
                             Asignación inicial de marchamos
                         </h3>
-                        <p class="cc-subtitle">
+                        <p class="cc-subtitle cc-subtitle-compact">
                             Registre los marchamos físicos instalados en cada punto de seguridad de la unidad.
                         </p>
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <a href="{{ route('unidades.show', $unidad) }}" class="cc-btn-secondary cc-btn-wide">
-                            Volver a unidad
+                        <a href="{{ route('marchamos.asignacion-inicial.show.ventana', $unidad) }}"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="cc-btn-secondary cc-btn-wide">
+                            Abrir en nueva pestaña
+                        </a>
+
+                        <a href="{{ route('marchamos.asignacion-inicial.index', [
+                            'empresa_id' => $unidad->empresa_id,
+                            'placa' => $unidad->placa,
+                            'consultar' => 1,
+                        ]) }}" class="cc-btn-secondary cc-btn-wide">
+                            Volver a asignación
                         </a>
                     </div>
                 </div>
@@ -50,18 +61,44 @@
                             {{ $unidad->placa }}
                         </div>
 
-                        <div class="cc-profile-meta">
-                            <span>{{ $unidad->marca ?: 'Sin marca registrada' }}</span>
+                        <div class="cc-profile-meta flex flex-wrap gap-x-5 gap-y-2">
+                            <span>
+                                <strong>Marca:</strong>
+                                {{ $unidad->marca ?: 'Sin marca registrada' }}
+                            </span>
 
                             @if ($unidad->empresa)
-                                <span>Empresa: {{ $unidad->empresa->nombre_comercial ?: $unidad->empresa->nombre_legal }}</span>
+                                <span>
+                                    <strong>Empresa:</strong>
+                                    {{ $unidad->empresa->nombre_comercial ?: $unidad->empresa->nombre_legal }}
+                                </span>
                             @else
-                                <span>Empresa: Sin empresa</span>
+                                <span>
+                                    <strong>Empresa:</strong>
+                                    Sin empresa
+                                </span>
                             @endif
 
                             @if ($unidad->licencia)
-                                <span>Licencia: {{ $unidad->licencia->periodo_vigencia_texto }}</span>
-                                <span>{{ $unidad->licencia->plantilla_puntos_seguridad_texto }}</span>
+                                <span>
+                                    <strong>Licencia:</strong>
+                                    {{ $unidad->licencia->periodo_vigencia_texto }}
+                                </span>
+
+                                <span>
+                                    <strong>Plantilla:</strong>
+                                    {{ $unidad->licencia->plantilla_puntos_seguridad_texto }}
+                                </span>
+                            @else
+                                <span>
+                                    <strong>Licencia:</strong>
+                                    Sin licencia
+                                </span>
+
+                                <span>
+                                    <strong>Plantilla:</strong>
+                                    Sin plantilla
+                                </span>
                             @endif
                         </div>
                     </div>
@@ -83,48 +120,54 @@
                     </div>
                 </div>
 
-                <div class="mt-5 rounded-[var(--cc-radius-lg)] border border-[var(--cc-card-border)] bg-[var(--cc-card-bg-soft)] px-5 py-4">
-                    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                        <div>
-                            <div class="text-xs font-extrabold uppercase tracking-[0.14em] text-[var(--cc-text-muted)]">
-                                Avance de asignación
-                            </div>
+                <section class="cc-detail-section mt-5">
+                    <div class="cc-detail-section-header">
+                        <h5>
+                            Avance de asignación
+                        </h5>
+                        <p>
+                            Estado actual de la instalación física de marchamos en los puntos de seguridad.
+                        </p>
+                    </div>
 
-                            <div class="mt-1 font-[var(--cc-font-heading)] text-2xl font-extrabold text-[var(--cc-text-heading)]">
+                    <div class="cc-summary-strip">
+                        <div class="cc-summary-strip-item">
+                            <span class="cc-summary-strip-label">
+                                Avance
+                            </span>
+                            <span class="cc-summary-strip-value">
                                 {{ $porcentajeAvance }}%
-                            </div>
+                            </span>
                         </div>
 
-                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:min-w-[34rem]">
-                            <div class="rounded-[var(--cc-radius-md)] border border-[var(--cc-card-border)] bg-white px-4 py-3">
-                                <div class="text-xs font-extrabold uppercase tracking-[0.12em] text-[var(--cc-text-muted)]">
-                                    Total puntos
-                                </div>
-                                <div class="mt-1 text-xl font-extrabold text-[var(--cc-text-heading)]">
-                                    {{ $totalPuntos }}
-                                </div>
-                            </div>
+                        <div class="cc-summary-strip-item">
+                            <span class="cc-summary-strip-label">
+                                Total puntos
+                            </span>
+                            <span class="cc-summary-strip-value">
+                                {{ $totalPuntos }}
+                            </span>
+                        </div>
 
-                            <div class="rounded-[var(--cc-radius-md)] border border-[var(--cc-card-border)] bg-white px-4 py-3">
-                                <div class="text-xs font-extrabold uppercase tracking-[0.12em] text-[var(--cc-text-muted)]">
-                                    Asignados
-                                </div>
-                                <div class="mt-1 text-xl font-extrabold text-[var(--cc-success)]">
-                                    {{ $puntosAsignados }}
-                                </div>
-                            </div>
+                        <div class="cc-summary-strip-item">
+                            <span class="cc-summary-strip-label">
+                                Asignados
+                            </span>
+                            <span class="cc-summary-strip-value">
+                                {{ $puntosAsignados }}
+                            </span>
+                        </div>
 
-                            <div class="rounded-[var(--cc-radius-md)] border border-[var(--cc-card-border)] bg-white px-4 py-3">
-                                <div class="text-xs font-extrabold uppercase tracking-[0.12em] text-[var(--cc-text-muted)]">
-                                    Pendientes
-                                </div>
-                                <div class="mt-1 text-xl font-extrabold text-[var(--cc-danger)]">
-                                    {{ $puntosPendientes }}
-                                </div>
-                            </div>
+                        <div class="cc-summary-strip-item">
+                            <span class="cc-summary-strip-label">
+                                Pendientes
+                            </span>
+                            <span class="cc-summary-strip-value">
+                                {{ $puntosPendientes }}
+                            </span>
                         </div>
                     </div>
-                </div>
+                </section>
 
                 <section class="cc-detail-section mt-6">
                     <div class="cc-detail-section-header">
@@ -169,6 +212,7 @@
                                                 @if ($punto->grupo || $punto->subgrupo)
                                                     <div class="text-sm text-[var(--cc-text-muted)]">
                                                         {{ $punto->grupo }}
+
                                                         @if ($punto->subgrupo)
                                                             · {{ $punto->subgrupo }}
                                                         @endif
@@ -201,6 +245,7 @@
                                                     <div class="font-bold text-[var(--cc-text-main)]">
                                                         {{ $punto->marchamoActual->codigo_marchamo }}
                                                     </div>
+
                                                     <div class="text-xs text-[var(--cc-text-muted)]">
                                                         Activo
                                                     </div>
@@ -222,16 +267,10 @@
                             </table>
                         </div>
 
-                        <div class="cc-actions cc-actions-split mt-6">
-                            <div class="cc-actions-normal">
-                                <button type="submit" class="cc-btn-primary cc-btn-form-action">
-                                    Guardar avance
-                                </button>
-
-                                <a href="{{ route('unidades.show', $unidad) }}" class="cc-btn-secondary cc-btn-form-action">
-                                    Volver a unidad
-                                </a>
-                            </div>
+                        <div class="cc-actions cc-actions-compact mt-6 mb-6">
+                            <button type="submit" class="cc-btn-primary cc-btn-form-action">
+                                Guardar avance
+                            </button>
                         </div>
                     </form>
                 </section>
@@ -253,7 +292,7 @@
                         @endif
                     </div>
 
-                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <div class="flex flex-col gap-4 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
                         <p class="text-sm text-[var(--cc-text-muted)] leading-relaxed">
                             Esta acción cambia la unidad de Registrada a Activa. Debe usarse únicamente cuando la instalación física esté completa.
                         </p>

@@ -1,14 +1,14 @@
 <x-app-layout>
     <div class="cc-page-wrapper">
-        <div class="cc-content-container">
+        <div class="cc-content-container" style="max-width: 80rem;">
             <div class="cc-card">
 
-                <div class="cc-card-header">
+                <div class="cc-card-header cc-card-header-compact">
                     <div>
-                        <h3 class="cc-title">
+                        <h3 class="cc-title cc-title-compact">
                             Registro de licencia
                         </h3>
-                        <p class="cc-subtitle">
+                        <p class="cc-subtitle cc-subtitle-compact">
                             Asigne cobertura Diesel Cop a una unidad existente.
                         </p>
                     </div>
@@ -51,6 +51,7 @@
                         'periodosVigencia' => $periodosVigencia,
                         'esUsuarioDieselCop' => $esUsuarioDieselCop,
                         'submitLabel' => 'Guardar licencia',
+                        'modoVentana' => false,
                     ])
                 </form>
 

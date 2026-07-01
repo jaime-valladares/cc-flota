@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Empresa;
 use App\Models\Marchamo;
 use App\Models\PuntoSeguridadUnidad;
 use App\Models\Unidad;
@@ -14,32 +15,14 @@ use Illuminate\View\View;
 
 class MarchamoAsignacionInicialController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $user = Auth::user();
+        return view('marchamos.asignacion-inicial.index', $this->datosIndex($request));
+    }
 
-        $unidades = Unidad::query()
-            ->with(['empresa', 'licencia'])
-            ->withCount([
-                'puntosSeguridad as total_puntos' => fn ($query) => $query->where('estado', 'activo'),
-                'puntosSeguridad as puntos_asignados' => fn ($query) => $query
-                    ->where('estado', 'activo')
-                    ->whereNotNull('marchamo_actual_id'),
-            ])
-            ->where('estado', 'registrada')
-            ->whereHas('licencia', function ($query) {
-                $query->where('estado', 'activa');
-            })
-            ->whereHas('puntosSeguridad')
-            ->when(! is_null($user->empresa_id), function ($query) use ($user) {
-                $query->where('empresa_id', $user->empresa_id);
-            })
-            ->orderBy('placa')
-            ->paginate(15);
-
-        return view('marchamos.asignacion-inicial.index', [
-            'unidades' => $unidades,
-        ]);
+    public function indexVentana(Request $request): View
+    {
+        return view('marchamos.asignacion-inicial.index-ventana', $this->datosIndex($request));
     }
 
     /**
@@ -49,42 +32,26 @@ class MarchamoAsignacionInicialController extends Controller
     {
         $this->autorizarAccesoUnidad($unidad);
 
-        $unidad->load([
-            'empresa',
-            'licencia',
-            'puntosSeguridad.marchamoActual',
-        ]);
-
         if ($unidad->estado === 'activa') {
             return redirect()
                 ->route('marchamos.detalle-unidad', $unidad)
                 ->with('success', 'La asignación inicial de esta unidad ya fue completada. Use Consulta de marchamos o Administración de marchamos para continuar.');
         }
 
-        $this->validarUnidadAsignable($unidad);
+        return view('marchamos.asignacion-inicial.show', $this->datosShow($unidad));
+    }
 
-        $totalPuntos = $unidad->puntosSeguridad()
-            ->where('estado', 'activo')
-            ->count();
+    public function showVentana(Unidad $unidad): View|RedirectResponse
+    {
+        $this->autorizarAccesoUnidad($unidad);
 
-        $puntosAsignados = $unidad->puntosSeguridad()
-            ->where('estado', 'activo')
-            ->whereNotNull('marchamo_actual_id')
-            ->count();
+        if ($unidad->estado === 'activa') {
+            return redirect()
+                ->route('marchamos.detalle-unidad.ventana', $unidad)
+                ->with('success', 'La asignación inicial de esta unidad ya fue completada. Use Consulta de marchamos o Administración de marchamos para continuar.');
+        }
 
-        $puntosPendientes = $totalPuntos - $puntosAsignados;
-
-        $porcentajeAvance = $totalPuntos > 0
-            ? round(($puntosAsignados / $totalPuntos) * 100)
-            : 0;
-
-        return view('marchamos.asignacion-inicial.show', [
-            'unidad' => $unidad,
-            'totalPuntos' => $totalPuntos,
-            'puntosAsignados' => $puntosAsignados,
-            'puntosPendientes' => $puntosPendientes,
-            'porcentajeAvance' => $porcentajeAvance,
-        ]);
+        return view('marchamos.asignacion-inicial.show-ventana', $this->datosShow($unidad));
     }
 
     /**
@@ -105,6 +72,7 @@ class MarchamoAsignacionInicialController extends Controller
         $validated = $request->validate([
             'marchamos' => ['nullable', 'array'],
             'marchamos.*' => ['nullable', 'string', 'regex:/^\d{7}$/'],
+            'return_to' => ['nullable', 'string', 'in:ventana'],
         ], [
             'marchamos.*.regex' => 'Cada código de marchamo debe contener exactamente 7 dígitos. Ejemplo: 0006387.',
         ]);
@@ -187,15 +155,19 @@ class MarchamoAsignacionInicialController extends Controller
             }
         });
 
+        $ruta = ($validated['return_to'] ?? null) === 'ventana'
+            ? 'marchamos.asignacion-inicial.show.ventana'
+            : 'marchamos.asignacion-inicial.show';
+
         return redirect()
-            ->route('marchamos.asignacion-inicial.show', $unidad)
+            ->route($ruta, $unidad)
             ->with('success', 'Avance de asignación inicial guardado correctamente.');
     }
 
     /**
      * Finaliza la asignación inicial y activa la unidad.
      */
-    public function finalizar(Unidad $unidad): RedirectResponse
+    public function finalizar(Request $request, Unidad $unidad): RedirectResponse
     {
         $this->autorizarAccesoUnidad($unidad);
 
@@ -206,6 +178,10 @@ class MarchamoAsignacionInicialController extends Controller
         ]);
 
         $this->validarUnidadAsignable($unidad);
+
+        $validated = $request->validate([
+            'return_to' => ['nullable', 'string', 'in:ventana'],
+        ]);
 
         $totalPuntos = $unidad->puntosSeguridad()
             ->where('estado', 'activo')
@@ -240,9 +216,124 @@ class MarchamoAsignacionInicialController extends Controller
             ]);
         });
 
+        $ruta = ($validated['return_to'] ?? null) === 'ventana'
+            ? 'marchamos.detalle-unidad.ventana'
+            : 'marchamos.detalle-unidad';
+
         return redirect()
-            ->route('unidades.show', $unidad)
-            ->with('success', 'Asignación inicial finalizada correctamente. La unidad ahora está activa.');
+            ->route($ruta, $unidad)
+            ->with('success', 'Asignación inicial finalizada correctamente. La unidad ahora está activa y sus marchamos pueden consultarse desde esta pantalla.');
+        }
+
+    private function datosIndex(Request $request): array
+    {
+        $user = Auth::user();
+
+        $hayFiltros = $request->has('consultar');
+        $empresaId = $request->input('empresa_id');
+        $placa = trim((string) $request->input('placa', ''));
+
+        $empresas = Empresa::query()
+            ->when(! is_null($user->empresa_id), function ($query) use ($user) {
+                $query->where('id', $user->empresa_id);
+            })
+            ->where('estado', 'activa')
+            ->orderBy('nombre_comercial')
+            ->orderBy('nombre_legal')
+            ->get();
+
+        if (! $hayFiltros) {
+            $unidades = Unidad::query()
+                ->whereRaw('1 = 0')
+                ->paginate(15);
+
+            return [
+                'unidades' => $unidades,
+                'empresas' => $empresas,
+                'empresaId' => $empresaId,
+                'placa' => $placa,
+                'hayFiltros' => $hayFiltros,
+            ];
+        }
+
+        $unidades = Unidad::query()
+            ->with(['empresa', 'licencia'])
+            ->withCount([
+                'puntosSeguridad as total_puntos' => fn ($query) => $query
+                    ->where('estado', 'activo'),
+
+                'puntosSeguridad as puntos_asignados' => fn ($query) => $query
+                    ->where('estado', 'activo')
+                    ->whereNotNull('marchamo_actual_id'),
+            ])
+            ->where('estado', 'registrada')
+            ->whereHas('empresa', function ($query) {
+                $query->where('estado', 'activa');
+            })
+            ->whereHas('licencia', function ($query) {
+                $query->where('estado', 'activa');
+            })
+            ->whereHas('puntosSeguridad', function ($query) {
+                $query->where('estado', 'activo');
+            })
+            ->whereHas('puntosSeguridad', function ($query) {
+                $query->where('estado', 'activo')
+                    ->whereNull('marchamo_actual_id');
+            })
+            ->when(! is_null($user->empresa_id), function ($query) use ($user) {
+                $query->where('empresa_id', $user->empresa_id);
+            })
+            ->when(is_null($user->empresa_id) && filled($empresaId), function ($query) use ($empresaId) {
+                $query->where('empresa_id', $empresaId);
+            })
+            ->when(filled($placa), function ($query) use ($placa) {
+                $query->where('placa', 'like', '%' . $placa . '%');
+            })
+            ->orderBy('placa')
+            ->paginate(15)
+            ->withQueryString();
+
+        return [
+            'unidades' => $unidades,
+            'empresas' => $empresas,
+            'empresaId' => $empresaId,
+            'placa' => $placa,
+            'hayFiltros' => $hayFiltros,
+        ];
+    }
+
+    private function datosShow(Unidad $unidad): array
+    {
+        $unidad->load([
+            'empresa',
+            'licencia',
+            'puntosSeguridad.marchamoActual',
+        ]);
+
+        $this->validarUnidadAsignable($unidad);
+
+        $totalPuntos = $unidad->puntosSeguridad()
+            ->where('estado', 'activo')
+            ->count();
+
+        $puntosAsignados = $unidad->puntosSeguridad()
+            ->where('estado', 'activo')
+            ->whereNotNull('marchamo_actual_id')
+            ->count();
+
+        $puntosPendientes = $totalPuntos - $puntosAsignados;
+
+        $porcentajeAvance = $totalPuntos > 0
+            ? round(($puntosAsignados / $totalPuntos) * 100)
+            : 0;
+
+        return [
+            'unidad' => $unidad,
+            'totalPuntos' => $totalPuntos,
+            'puntosAsignados' => $puntosAsignados,
+            'puntosPendientes' => $puntosPendientes,
+            'porcentajeAvance' => $porcentajeAvance,
+        ];
     }
 
     /**

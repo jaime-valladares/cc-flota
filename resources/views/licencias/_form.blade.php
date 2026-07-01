@@ -1,6 +1,7 @@
 @php
     $licencia = $licencia ?? null;
     $esEdicion = ! is_null($licencia);
+    $modoVentana = $modoVentana ?? false;
 
     $empresaActual = old(
         'empresa_id',
@@ -16,11 +17,11 @@
     );
 @endphp
 
-<div class="cc-grid">
+<div class="cc-grid cc-grid-compact">
 
-    <div class="cc-form-section">
+    <div class="cc-form-section-slim">
         <div class="cc-form-section-title">
-            Unidad a Asignar Licencia
+            Unidad a asignar licencia
         </div>
     </div>
 
@@ -38,7 +39,7 @@
 
         <div class="cc-field">
             <label>
-                Unidad / placa
+                Unidad / Placa
             </label>
 
             <input type="text"
@@ -132,7 +133,7 @@
         </div>
     @endif
 
-    <div class="cc-form-section">
+    <div class="cc-form-section-slim">
         <div class="cc-form-section-title">
             Vigencia de licencia
         </div>
@@ -188,17 +189,19 @@
 
 </div>
 
-<div class="cc-actions">
+<div class="cc-actions cc-actions-compact">
     <button type="submit" class="cc-btn-primary cc-btn-form-action">
         {{ $submitLabel }}
     </button>
 
     @if ($esEdicion)
-        <a href="{{ route('licencias.show', $licencia) }}" class="cc-btn-secondary cc-btn-form-action">
+        <a href="{{ $modoVentana ? route('licencias.show.ventana', $licencia) : route('licencias.show', $licencia) }}"
+           class="cc-btn-secondary cc-btn-form-action">
             Cancelar
         </a>
     @else
-        <a href="{{ route('licencias.index') }}" class="cc-btn-secondary cc-btn-form-action">
+        <a href="{{ $modoVentana ? route('licencias.consulta.ventana') : route('licencias.index') }}"
+           class="cc-btn-secondary cc-btn-form-action">
             Cancelar
         </a>
     @endif

@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>Registro de licencia | CC-Flota</title>
+        <title>Editar licencia | CC-Flota</title>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,15 +24,19 @@
                         <div class="cc-card-header cc-card-header-compact">
                             <div>
                                 <h3 class="cc-title cc-title-compact">
-                                    Registro de licencia
+                                    Editar licencia
                                 </h3>
                                 <p class="cc-subtitle cc-subtitle-compact">
-                                    Asigne cobertura Diesel Cop a una unidad registrada.
+                                    Actualice la vigencia y fecha de activación de la licencia.
                                 </p>
                             </div>
 
                             <div class="flex items-center gap-3">
-                                <a href="{{ route('licencias.create') }}" class="cc-btn-secondary cc-btn-wide">
+                                <a href="{{ route('licencias.show.ventana', $licencia) }}" class="cc-btn-secondary cc-btn-wide">
+                                    Volver a ficha
+                                </a>
+
+                                <a href="{{ route('licencias.administrar') }}" class="cc-btn-secondary cc-btn-wide">
                                     Volver al sistema
                                 </a>
                             </div>
@@ -52,18 +56,19 @@
                             </div>
                         @endif
 
-                        <form method="POST" action="{{ route('licencias.store') }}" novalidate>
+                        <form method="POST" action="{{ route('licencias.update', $licencia) }}" novalidate>
                             @csrf
+                            @method('PUT')
 
                             <input type="hidden" name="return_to" value="ventana">
 
                             @include('licencias._form', [
-                                'licencia' => null,
-                                'empresas' => $empresas,
-                                'unidades' => $unidades,
+                                'licencia' => $licencia,
+                                'empresas' => $empresas ?? collect(),
+                                'unidades' => $unidades ?? collect(),
                                 'periodosVigencia' => $periodosVigencia,
-                                'esUsuarioDieselCop' => $esUsuarioDieselCop,
-                                'submitLabel' => 'Guardar licencia',
+                                'esUsuarioDieselCop' => $esUsuarioDieselCop ?? true,
+                                'submitLabel' => 'Actualizar licencia',
                                 'modoVentana' => true,
                             ])
                         </form>

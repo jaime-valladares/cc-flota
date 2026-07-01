@@ -1,15 +1,15 @@
 <x-app-layout>
     <div class="cc-page-wrapper">
-        <div class="cc-content-container">
+        <div class="cc-content-container" style="max-width: 79rem;">
             <div class="cc-card">
 
-                <div class="cc-card-header">
+                <div class="cc-card-header cc-card-header-compact">
                     <div>
-                        <h3 class="cc-title">
-                            Detalle de marchamos
+                        <h3 class="cc-title cc-title-compact">
+                            Marchamos de unidad
                         </h3>
-                        <p class="cc-subtitle">
-                            Consulte los marchamos registrados para la unidad seleccionada.
+                        <p class="cc-subtitle cc-subtitle-compact">
+                            Consulte la cobertura actual e histórica de marchamos para la unidad seleccionada.
                         </p>
                     </div>
 
@@ -36,17 +36,58 @@
 
                 <section class="cc-detail-section">
                     <div class="cc-detail-section-header">
-                        <h5>Resumen de unidad</h5>
+                        <h5>
+                            Resumen de unidad
+                        </h5>
                         <p>
-                            Información general de la unidad, licencia y cobertura actual de puntos de seguridad.
+                            Unidad, licencia, puntos de seguridad y estado de cobertura física.
                         </p>
                     </div>
 
-                    <div class="cc-detail-grid">
+                    <div class="cc-summary-strip">
+                        <div class="cc-summary-strip-item">
+                            <span class="cc-summary-strip-label">
+                                Unidad
+                            </span>
+                            <span class="cc-summary-strip-value">
+                                {{ $unidad->placa }}
+                            </span>
+                        </div>
+
+                        <div class="cc-summary-strip-item">
+                            <span class="cc-summary-strip-label">
+                                Puntos
+                            </span>
+                            <span class="cc-summary-strip-value">
+                                {{ $puntosAsignados }} / {{ $totalPuntos }}
+                            </span>
+                        </div>
+
+                        <div class="cc-summary-strip-item">
+                            <span class="cc-summary-strip-label">
+                                Marchamos activos
+                            </span>
+                            <span class="cc-summary-strip-value">
+                                {{ $unidad->marchamos_activos }}
+                            </span>
+                        </div>
+
+                        <div class="cc-summary-strip-item">
+                            <span class="cc-summary-strip-label">
+                                Avance
+                            </span>
+                            <span class="cc-summary-strip-value">
+                                {{ $porcentajeAvance }}%
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="cc-detail-grid mt-5">
                         <div class="cc-detail-item">
                             <div class="cc-detail-label">
                                 Unidad
                             </div>
+
                             <div class="cc-detail-value">
                                 {{ $unidad->placa }}
                                 <span class="text-[var(--cc-text-muted)]">
@@ -59,6 +100,7 @@
                             <div class="cc-detail-label">
                                 Empresa
                             </div>
+
                             <div class="cc-detail-value">
                                 @if ($unidad->empresa)
                                     {{ $unidad->empresa->nombre_comercial ?: $unidad->empresa->nombre_legal }}
@@ -70,8 +112,9 @@
 
                         <div class="cc-detail-item">
                             <div class="cc-detail-label">
-                                Estado de unidad
+                                Estado
                             </div>
+
                             <div class="cc-detail-value">
                                 @if ($unidad->estado === 'registrada')
                                     <span class="cc-badge cc-badge-warning">
@@ -93,6 +136,7 @@
                             <div class="cc-detail-label">
                                 Licencia
                             </div>
+
                             <div class="cc-detail-value">
                                 @if ($unidad->licencia)
                                     {{ $unidad->licencia->periodo_vigencia_texto }}
@@ -109,6 +153,7 @@
                             <div class="cc-detail-label">
                                 Puntos de seguridad
                             </div>
+
                             <div class="cc-detail-value">
                                 {{ $puntosAsignados }} / {{ $totalPuntos }}
                                 <span class="text-[var(--cc-text-muted)]">
@@ -121,6 +166,7 @@
                             <div class="cc-detail-label">
                                 Marchamos
                             </div>
+
                             <div class="cc-detail-value">
                                 {{ $unidad->marchamos_activos }} activos
                                 <span class="text-[var(--cc-text-muted)]">
@@ -131,18 +177,19 @@
 
                         <div class="cc-detail-item cc-detail-item-wide">
                             <div class="cc-detail-label">
-                                Avance de cobertura
+                                Cobertura
                             </div>
+
                             <div class="cc-detail-value">
                                 {{ $porcentajeAvance }}%
 
                                 @if ($puntosPendientes === 0 && $totalPuntos > 0)
                                     <span class="text-[var(--cc-success)]">
-                                        · Cobertura completa
+                                        · Completa
                                     </span>
                                 @elseif ($totalPuntos > 0)
                                     <span class="text-[var(--cc-danger)]">
-                                        · Cobertura pendiente
+                                        · Pendiente
                                     </span>
                                 @else
                                     <span class="text-[var(--cc-text-muted)]">
@@ -156,7 +203,9 @@
 
                 <section class="cc-detail-section mt-6">
                     <div class="cc-detail-section-header">
-                        <h5>Marchamos registrados</h5>
+                        <h5>
+                            Marchamos registrados
+                        </h5>
                         <p>
                             {{ $totalMarchamos }} registros encontrados para la unidad seleccionada.
                         </p>
@@ -191,7 +240,7 @@
 
                                         <td>
                                             @if ($marchamo->empresa)
-                                                <div class="font-bold text-[var(--cc-text-main)]">
+                                                <div class="font-bold text-[var(--cc-text-main)] cc-cell-truncate">
                                                     {{ $marchamo->empresa->nombre_comercial ?: $marchamo->empresa->nombre_legal }}
                                                 </div>
 
@@ -224,7 +273,7 @@
 
                                         <td>
                                             @if ($marchamo->puntoSeguridad)
-                                                <div class="font-bold text-[var(--cc-text-main)]">
+                                                <div class="font-bold text-[var(--cc-text-main)] cc-cell-truncate">
                                                     {{ $marchamo->puntoSeguridad->nombre_punto }}
                                                 </div>
 
@@ -259,7 +308,9 @@
                                         </td>
 
                                         <td>
-                                            {{ $marchamo->origen_creacion_texto }}
+                                            <span class="text-[var(--cc-text-main)]">
+                                                {{ $marchamo->origen_creacion_texto }}
+                                            </span>
                                         </td>
 
                                         <td>
@@ -289,7 +340,7 @@
                         </table>
                     </div>
 
-                    <div class="mt-6">
+                    <div class="mt-8 px-4">
                         {{ $marchamos->links() }}
                     </div>
                 </section>

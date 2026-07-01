@@ -301,6 +301,12 @@ class LicenciaController extends Controller
             }
         });
 
+        if ($request->input('return_to') === 'ventana') {
+            return redirect()
+                ->route('licencias.consulta.ventana', ['consultar' => 1])
+                ->with('success', 'Licencia creada correctamente. Los puntos de seguridad fueron generados.');
+        }
+
         return redirect()
             ->route('licencias.index', ['consultar' => 1])
             ->with('success', 'Licencia creada correctamente. Los puntos de seguridad fueron generados.');
@@ -325,6 +331,24 @@ class LicenciaController extends Controller
     }
 
     /**
+    * Ficha administrativa de la licencia en ventana independiente.
+    */
+    public function showVentana(Licencia $licencia): View
+    {
+        $this->autorizarAccesoLicencia($licencia);
+
+        $licencia->load([
+            'empresa',
+            'unidad.puntosSeguridad.marchamoActual',
+            'creadoPor',
+            'actualizadoPor',
+            'inactivadoPor',
+        ]);
+
+        return view('licencias.show-ventana', compact('licencia'));
+    }
+
+    /**
      * Formulario de edición de licencia.
      */
     public function edit(Licencia $licencia): View
@@ -334,6 +358,21 @@ class LicenciaController extends Controller
         $licencia->load(['empresa', 'unidad']);
 
         return view('licencias.edit', [
+            'licencia' => $licencia,
+            'periodosVigencia' => $this->periodosVigencia(),
+        ]);
+    }
+
+    /**
+    * Formulario de edición de licencia en ventana independiente.
+    */
+    public function editVentana(Licencia $licencia): View
+    {
+        $this->autorizarAccesoLicencia($licencia);
+
+        $licencia->load(['empresa', 'unidad']);
+
+        return view('licencias.edit-ventana', [
             'licencia' => $licencia,
             'periodosVigencia' => $this->periodosVigencia(),
         ]);
@@ -358,10 +397,16 @@ class LicenciaController extends Controller
             'actualizado_por' => Auth::id(),
         ]);
 
+        if ($request->input('return_to') === 'ventana') {
+            return redirect()
+                ->route('licencias.show.ventana', $licencia)
+                ->with('success', 'Licencia actualizada correctamente.');
+        }
+
         return redirect()
             ->route('licencias.show', $licencia)
             ->with('success', 'Licencia actualizada correctamente.');
-    }
+        }
 
     /**
      * Inactiva una licencia sin eliminarla físicamente.
@@ -386,6 +431,12 @@ class LicenciaController extends Controller
             'motivo_inactivacion' => $validated['motivo_inactivacion'],
             'actualizado_por' => Auth::id(),
         ]);
+
+        if ($request->input('return_to') === 'ventana') {
+            return redirect()
+                ->route('licencias.show.ventana', $licencia)
+                ->with('success', 'Licencia inactivada correctamente.');
+        }
 
         return redirect()
             ->route('licencias.show', $licencia)

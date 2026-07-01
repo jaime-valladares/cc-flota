@@ -1,14 +1,14 @@
 <x-app-layout>
     <div class="cc-page-wrapper">
-        <div class="cc-content-container">
+        <div class="cc-content-container" style="max-width: 80rem;">
             <div class="cc-card">
 
-                <div class="cc-card-header">
+                <div class="cc-card-header cc-card-header-compact">
                     <div>
-                        <h3 class="cc-title">
+                        <h3 class="cc-title cc-title-compact">
                             Administrar licencia
                         </h3>
-                        <p class="cc-subtitle">
+                        <p class="cc-subtitle cc-subtitle-compact">
                             Localice una licencia para consultar su ficha, editar su vigencia o gestionar su estado.
                         </p>
                     </div>
@@ -29,20 +29,20 @@
                     </div>
                 @endif
 
-                <form method="GET" action="{{ route('licencias.administrar') }}" class="mb-6">
+                <form method="GET" action="{{ route('licencias.administrar') }}" class="mb-5">
                     <input type="hidden" name="consultar" value="1">
 
-                    <div class="cc-filter-panel">
+                    <div class="cc-filter-panel cc-filter-panel-compact cc-filter-panel-inline">
 
-                        <div class="cc-form-section" style="margin-top: 0; margin-bottom: 1.25rem;">
+                        <div class="cc-form-section cc-form-section-compact" style="margin-top: 0;">
                             <div class="cc-form-section-title">
                                 Búsqueda administrativa
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
+                        <div class="cc-filter-inline-grid-unidades">
 
-                            <div class="lg:col-span-3 cc-field">
+                            <div class="cc-field">
                                 <label for="empresa_id">
                                     Empresa
                                 </label>
@@ -59,7 +59,7 @@
                                 </select>
                             </div>
 
-                            <div class="lg:col-span-2 cc-field">
+                            <div class="cc-field">
                                 <label for="placa">
                                     Placa
                                 </label>
@@ -72,7 +72,7 @@
                                        placeholder="Ej. C123ABC">
                             </div>
 
-                            <div class="lg:col-span-2 cc-field">
+                            <div class="cc-field">
                                 <label for="estado">
                                     Estado licencia
                                 </label>
@@ -88,7 +88,7 @@
                                 </select>
                             </div>
 
-                            <div class="lg:col-span-5 cc-field">
+                            <div class="cc-field">
                                 <label for="periodo_vigencia_meses">
                                     Período de vigencia
                                 </label>
@@ -104,18 +104,16 @@
                                 </select>
                             </div>
 
-                        </div>
-
-                        <div class="mt-5 border-t border-[var(--cc-card-border)] pt-5">
-                            <div class="flex items-center justify-end gap-3">
+                            <div class="cc-filter-inline-actions">
                                 <button type="submit" class="cc-btn-primary">
-                                    Buscar
+                                    Consultar
                                 </button>
 
                                 <a href="{{ route('licencias.administrar') }}" class="cc-btn-secondary">
-                                    Resetear
+                                    Limpiar
                                 </a>
                             </div>
+
                         </div>
                     </div>
                 </form>
@@ -132,7 +130,7 @@
                 @endif
 
                 @if (! $hayFiltros)
-                    <div class="cc-empty-panel">
+                    <div class="cc-empty-panel cc-empty-panel-compact">
                         <h5>
                             Búsqueda pendiente
                         </h5>
@@ -141,7 +139,7 @@
                         </p>
                     </div>
                 @elseif ($licencias->isEmpty())
-                    <div class="cc-empty-panel">
+                    <div class="cc-empty-panel cc-empty-panel-compact">
                         <h5>
                             Sin resultados
                         </h5>
@@ -150,35 +148,42 @@
                         </p>
                     </div>
                 @else
-                    <div class="space-y-4">
+                    <div class="space-y-3">
                         @foreach ($licencias as $licencia)
-                            <article class="cc-result-card">
+                            <article class="cc-result-card cc-result-card-compact">
                                 <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
 
                                     <div class="flex-1 min-w-0">
-                                        <div class="flex flex-wrap items-center gap-3">
-                                            <h5 class="font-[var(--cc-font-heading)] text-xl font-extrabold text-[var(--cc-text-heading)] tracking-[-0.03em] cc-cell-truncate">
-                                                {{ $licencia->unidad->placa ?? 'Sin placa' }}
-                                            </h5>
+                                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
 
-                                            @if ($licencia->estado === 'activa')
-                                                <span class="cc-badge cc-badge-active">
-                                                    Activa
-                                                </span>
-                                            @else
-                                                <span class="cc-badge cc-badge-inactive">
-                                                    Inactiva
-                                                </span>
-                                            @endif
-                                        </div>
-
-                                        <div class="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
                                             <div>
-                                                <div class="font-[var(--cc-font-heading)] text-xs font-extrabold text-[var(--cc-text-muted)] uppercase tracking-wider">
+                                                <div class="flex flex-wrap items-center gap-2">
+                                                    <h5 class="cc-result-title cc-cell-truncate">
+                                                        {{ $licencia->unidad->placa ?? 'Sin placa' }}
+                                                    </h5>
+
+                                                    @if ($licencia->estado === 'activa')
+                                                        <span class="cc-badge cc-badge-active">
+                                                            Activa
+                                                        </span>
+                                                    @else
+                                                        <span class="cc-badge cc-badge-inactive">
+                                                            Inactiva
+                                                        </span>
+                                                    @endif
+                                                </div>
+
+                                                <div class="cc-result-subtitle cc-cell-truncate">
+                                                    {{ $licencia->unidad->marca ?? 'Sin marca registrada' }}
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <div class="cc-result-label">
                                                     Empresa
                                                 </div>
 
-                                                <div class="mt-1 text-sm font-bold text-[var(--cc-text-main)] cc-cell-truncate">
+                                                <div class="cc-result-value cc-cell-truncate">
                                                     @if ($licencia->empresa)
                                                         {{ $licencia->empresa->nombre_comercial ?: $licencia->empresa->nombre_legal }}
                                                     @else
@@ -188,43 +193,42 @@
                                             </div>
 
                                             <div>
-                                                <div class="font-[var(--cc-font-heading)] text-xs font-extrabold text-[var(--cc-text-muted)] uppercase tracking-wider">
+                                                <div class="cc-result-label">
                                                     Vigencia
                                                 </div>
 
-                                                <div class="mt-1 text-sm font-bold text-[var(--cc-text-main)]">
+                                                <div class="cc-result-value">
                                                     {{ $licencia->periodo_vigencia_texto }}
                                                 </div>
-                                            </div>
 
-                                            <div>
-                                                <div class="font-[var(--cc-font-heading)] text-xs font-extrabold text-[var(--cc-text-muted)] uppercase tracking-wider">
-                                                    Vencimiento
-                                                </div>
-
-                                                <div class="mt-1 text-sm font-bold text-[var(--cc-text-main)]">
-                                                    {{ $licencia->fecha_vencimiento?->format('d/m/Y') ?? 'No registrado' }}
+                                                <div class="cc-result-value-muted">
+                                                    Vence {{ $licencia->fecha_vencimiento?->format('d/m/Y') ?? 'no registrado' }}
                                                 </div>
                                             </div>
 
                                             <div>
-                                                <div class="font-[var(--cc-font-heading)] text-xs font-extrabold text-[var(--cc-text-muted)] uppercase tracking-wider">
+                                                <div class="cc-result-label">
                                                     Puntos esperados
                                                 </div>
 
-                                                <div class="mt-1 text-sm font-bold text-[var(--cc-text-main)]">
+                                                <div class="cc-result-value">
                                                     {{ $licencia->cantidad_puntos_seguridad_esperados }}
                                                 </div>
+
+                                                <div class="cc-result-value-muted cc-cell-truncate">
+                                                    {{ $licencia->plantilla_puntos_seguridad_texto }}
+                                                </div>
                                             </div>
+
                                         </div>
                                     </div>
 
-                                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 xl:justify-end">
-                                        <a href="{{ route('licencias.show', $licencia) }}" class="cc-btn-primary cc-btn-wide">
+                                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 xl:justify-end xl:min-w-[15rem]">
+                                        <a href="{{ route('licencias.show', $licencia) }}" class="cc-btn-primary cc-btn-result">
                                             Ver ficha
                                         </a>
 
-                                        <a href="{{ route('licencias.edit', $licencia) }}" class="cc-btn-secondary cc-btn-wide">
+                                        <a href="{{ route('licencias.edit', $licencia) }}" class="cc-btn-secondary cc-btn-result">
                                             Editar
                                         </a>
                                     </div>

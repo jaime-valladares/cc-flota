@@ -1,16 +1,31 @@
 <x-app-layout>
     <div class="cc-page-wrapper">
-        <div class="cc-content-container">
+        <div class="cc-content-container" style="max-width: 80rem;">
             <div class="cc-card">
 
-                <div class="cc-card-header">
+                @php
+                    $rutaVentanaAdministracion = \Illuminate\Support\Facades\Route::has('marchamos.reemplazos.index.ventana')
+                        ? route('marchamos.reemplazos.index.ventana', request()->query())
+                        : route('marchamos.reemplazos.index', request()->query());
+                @endphp
+
+                <div class="cc-card-header cc-card-header-compact">
                     <div>
-                        <h3 class="cc-title">
+                        <h3 class="cc-title cc-title-compact">
                             Administración de marchamos
                         </h3>
-                        <p class="cc-subtitle">
-                            Seleccione una unidad activa para registrar reemplazos de marchamos.
+                        <p class="cc-subtitle cc-subtitle-compact">
+                            Localice unidades activas para registrar reemplazos operativos de marchamos.
                         </p>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <a href="{{ $rutaVentanaAdministracion }}"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="cc-btn-secondary cc-btn-wide">
+                            Abrir en nueva pestaña
+                        </a>
                     </div>
                 </div>
 
@@ -20,12 +35,20 @@
                     </div>
                 @endif
 
-                <section class="cc-filter-panel">
-                    <form method="GET" action="{{ route('marchamos.reemplazos.index') }}">
-                        <input type="hidden" name="consultar" value="1">
+                <form method="GET" action="{{ route('marchamos.reemplazos.index') }}" class="mb-5">
+                    <input type="hidden" name="consultar" value="1">
 
-                        <div class="flex flex-col lg:flex-row lg:items-end gap-4">
-                            <div class="cc-field flex-1">
+                    <div class="cc-filter-panel cc-filter-panel-compact cc-filter-panel-inline">
+
+                        <div class="cc-form-section cc-form-section-compact" style="margin-top: 0;">
+                            <div class="cc-form-section-title">
+                                Filtros de reemplazo
+                            </div>
+                        </div>
+
+                        <div class="cc-filter-inline-grid">
+
+                            <div class="cc-field">
                                 <label for="empresa_id">
                                     Empresa
                                 </label>
@@ -41,7 +64,7 @@
                                 </select>
                             </div>
 
-                            <div class="cc-field flex-1">
+                            <div class="cc-field">
                                 <label for="unidad_id">
                                     Unidad
                                 </label>
@@ -60,21 +83,22 @@
                                 </select>
                             </div>
 
-                            <div class="flex items-center gap-3 lg:pb-[0.05rem]">
-                                <button type="submit" class="cc-btn-primary cc-btn-form-action">
+                            <div class="cc-filter-inline-actions">
+                                <button type="submit" class="cc-btn-primary">
                                     Consultar
                                 </button>
 
-                                <a href="{{ route('marchamos.reemplazos.index') }}" class="cc-btn-secondary cc-btn-form-action">
+                                <a href="{{ route('marchamos.reemplazos.index') }}" class="cc-btn-secondary">
                                     Limpiar
                                 </a>
                             </div>
+
                         </div>
-                    </form>
-                </section>
+                    </div>
+                </form>
 
                 @if (! $hayFiltros)
-                    <section class="cc-empty-panel mt-6">
+                    <section class="cc-empty-panel cc-empty-panel-compact">
                         <h5>
                             Inicie una consulta
                         </h5>
@@ -86,7 +110,7 @@
                 @endif
 
                 @if ($hayFiltros)
-                    <section class="cc-detail-section mt-6">
+                    <section class="cc-detail-section">
                         <div class="cc-detail-section-header">
                             <h5>
                                 Unidades disponibles para reemplazo
@@ -132,7 +156,7 @@
 
                                             <td>
                                                 @if ($unidad->empresa)
-                                                    <div class="font-bold text-[var(--cc-text-main)]">
+                                                    <div class="font-bold text-[var(--cc-text-main)] cc-cell-truncate">
                                                         {{ $unidad->empresa->nombre_comercial ?: $unidad->empresa->nombre_legal }}
                                                     </div>
 
@@ -152,7 +176,7 @@
                                                         {{ $unidad->licencia->periodo_vigencia_texto }}
                                                     </div>
 
-                                                    <div class="text-sm text-[var(--cc-text-muted)]">
+                                                    <div class="text-sm text-[var(--cc-text-muted)] cc-cell-truncate">
                                                         {{ $unidad->licencia->plantilla_puntos_seguridad_texto }}
                                                     </div>
                                                 @else
@@ -193,7 +217,7 @@
                                             </td>
 
                                             <td class="text-right">
-                                                <div class="flex justify-end gap-2">
+                                                <div class="flex justify-end">
                                                     <a href="{{ route('marchamos.reemplazos.show', $unidad) }}"
                                                        class="cc-btn-primary cc-btn-table">
                                                         Reemplazar
