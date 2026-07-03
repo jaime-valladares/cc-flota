@@ -1,24 +1,42 @@
 <x-app-layout>
     <div class="cc-page-wrapper">
-        <div class="cc-content-container">
+        <div class="cc-content-container" style="max-width: 79rem;">
             <div class="cc-card">
 
-                <div class="cc-card-header">
+                @php
+                    $totalPuntos = $puntos->count();
+                    $totalMarchamosActuales = $puntos->filter(fn ($punto) => ! is_null($punto->marchamo_actual_id))->count();
+
+                    $rutaVolver = route('marchamos.reemplazos.index', [
+                        'empresa_id' => $unidad->empresa_id,
+                        'unidad_id' => $unidad->id,
+                        'consultar' => 1,
+                    ]);
+
+                    $rutaVentana = \Illuminate\Support\Facades\Route::has('marchamos.reemplazos.show.ventana')
+                        ? route('marchamos.reemplazos.show.ventana', $unidad)
+                        : route('marchamos.reemplazos.show', $unidad);
+                @endphp
+
+                <div class="cc-card-header cc-card-header-compact">
                     <div>
-                        <h3 class="cc-title">
+                        <h3 class="cc-title cc-title-compact">
                             Reemplazo de marchamos
                         </h3>
-                        <p class="cc-subtitle">
-                            Seleccione uno o varios puntos de seguridad e ingrese los nuevos códigos de marchamo.
+                        <p class="cc-subtitle cc-subtitle-compact">
+                            Seleccione puntos de seguridad e ingrese los nuevos códigos de marchamo.
                         </p>
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <a href="{{ route('marchamos.reemplazos.index', [
-                            'empresa_id' => $unidad->empresa_id,
-                            'unidad_id' => $unidad->id,
-                            'consultar' => 1,
-                        ]) }}" class="cc-btn-secondary cc-btn-wide">
+                        <a href="{{ $rutaVentana }}"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="cc-btn-secondary cc-btn-wide">
+                            Abrir en nueva pestaña
+                        </a>
+
+                        <a href="{{ $rutaVolver }}" class="cc-btn-secondary cc-btn-wide">
                             Volver
                         </a>
                     </div>
@@ -32,7 +50,9 @@
 
                 @if ($errors->any())
                     <div class="cc-alert-danger">
-                        <strong>Revise la información ingresada.</strong>
+                        <div class="font-bold">
+                            Revise la información ingresada.
+                        </div>
 
                         <ul class="mt-2 list-disc list-inside">
                             @foreach ($errors->all() as $error)
@@ -42,73 +62,101 @@
                     </div>
                 @endif
 
-                @php
-                    $totalPuntos = $puntos->count();
-                    $totalMarchamosActuales = $puntos->filter(fn ($punto) => ! is_null($punto->marchamo_actual_id))->count();
-                @endphp
+                <div class="cc-profile-summary">
+                    <div>
+                        <div class="cc-profile-eyebrow">
+                            Unidad
+                        </div>
 
-                <section class="cc-detail-section">
+                        <div class="cc-profile-title">
+                            {{ $unidad->placa }}
+                        </div>
+
+                        <div class="cc-profile-meta flex flex-wrap gap-x-5 gap-y-2">
+                            <span>
+                                <strong>Marca:</strong>
+                                {{ $unidad->marca ?: 'Sin marca registrada' }}
+                            </span>
+
+                            @if ($unidad->empresa)
+                                <span>
+                                    <strong>Empresa:</strong>
+                                    {{ $unidad->empresa->nombre_comercial ?: $unidad->empresa->nombre_legal }}
+                                </span>
+                            @else
+                                <span>
+                                    <strong>Empresa:</strong>
+                                    Sin empresa
+                                </span>
+                            @endif
+
+                            @if ($unidad->licencia)
+                                <span>
+                                    <strong>Licencia:</strong>
+                                    {{ $unidad->licencia->periodo_vigencia_texto }}
+                                </span>
+
+                                <span>
+                                    <strong>Plantilla:</strong>
+                                    {{ $unidad->licencia->plantilla_puntos_seguridad_texto }}
+                                </span>
+                            @else
+                                <span>
+                                    <strong>Licencia:</strong>
+                                    Sin licencia
+                                </span>
+
+                                <span>
+                                    <strong>Plantilla:</strong>
+                                    Sin plantilla
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="cc-profile-status">
+                        <span class="cc-badge cc-badge-active">
+                            Activa
+                        </span>
+                    </div>
+                </div>
+
+                <section class="cc-detail-section mt-5">
                     <div class="cc-detail-section-header">
                         <h5>
-                            Unidad seleccionada
+                            Cobertura actual
                         </h5>
                         <p>
-                            Esta unidad está activa y cuenta con cobertura completa. El reemplazo no desactiva la unidad.
+                            La unidad cuenta con marchamos activos. El reemplazo registra historial y conserva trazabilidad.
                         </p>
                     </div>
 
-                    <div class="cc-detail-grid">
-                        <div class="cc-detail-item">
-                            <div class="cc-detail-label">
-                                Unidad
-                            </div>
-                            <div class="cc-detail-value">
-                                {{ $unidad->placa }}
-                                <span class="text-[var(--cc-text-muted)]">
-                                    · {{ $unidad->marca ?: 'Sin marca' }}
-                                </span>
-                            </div>
+                    <div class="cc-summary-strip">
+                        <div class="cc-summary-strip-item">
+                            <span class="cc-summary-strip-label">
+                                Total puntos
+                            </span>
+                            <span class="cc-summary-strip-value">
+                                {{ $totalPuntos }}
+                            </span>
                         </div>
 
-                        <div class="cc-detail-item">
-                            <div class="cc-detail-label">
-                                Empresa
-                            </div>
-                            <div class="cc-detail-value">
-                                @if ($unidad->empresa)
-                                    {{ $unidad->empresa->nombre_comercial ?: $unidad->empresa->nombre_legal }}
-                                @else
-                                    Sin empresa
-                                @endif
-                            </div>
+                        <div class="cc-summary-strip-item">
+                            <span class="cc-summary-strip-label">
+                                Marchamos actuales
+                            </span>
+                            <span class="cc-summary-strip-value cc-summary-strip-value-success">
+                                {{ $totalMarchamosActuales }}
+                            </span>
                         </div>
 
-                        <div class="cc-detail-item">
-                            <div class="cc-detail-label">
-                                Licencia
-                            </div>
-                            <div class="cc-detail-value">
-                                @if ($unidad->licencia)
-                                    {{ $unidad->licencia->periodo_vigencia_texto }}
-                                    <span class="text-[var(--cc-text-muted)]">
-                                        · {{ $unidad->licencia->plantilla_puntos_seguridad_texto }}
-                                    </span>
-                                @else
-                                    Sin licencia
-                                @endif
-                            </div>
-                        </div>
-
-                        <div class="cc-detail-item">
-                            <div class="cc-detail-label">
+                        <div class="cc-summary-strip-item">
+                            <span class="cc-summary-strip-label">
                                 Cobertura
-                            </div>
-                            <div class="cc-detail-value">
-                                {{ $totalMarchamosActuales }} / {{ $totalPuntos }}
-                                <span class="text-[var(--cc-success)]">
-                                    · Completa
-                                </span>
-                            </div>
+                            </span>
+                            <span class="cc-summary-strip-value cc-summary-strip-value-success">
+                                Completa
+                            </span>
                         </div>
                     </div>
                 </section>
@@ -133,7 +181,7 @@
                                         <th style="width: 80px;">Sel.</th>
                                         <th style="width: 90px;">Orden</th>
                                         <th>Punto de seguridad</th>
-                                        <th style="width: 150px;">Marchamo actual</th>
+                                        <th style="width: 160px;">Marchamo actual</th>
                                         <th style="width: 220px;">Nuevo marchamo</th>
                                         <th style="width: 260px;">Motivo</th>
                                     </tr>
@@ -210,7 +258,8 @@
                                                     class="cc-input"
                                                     placeholder="0000000"
                                                     maxlength="7"
-                                                    inputmode="numeric">
+                                                    inputmode="numeric"
+                                                    pattern="\d{7}">
                                             </td>
 
                                             <td>
@@ -239,11 +288,7 @@
                         </div>
 
                         <div class="cc-form-actions mt-6">
-                            <a href="{{ route('marchamos.reemplazos.index', [
-                                'empresa_id' => $unidad->empresa_id,
-                                'unidad_id' => $unidad->id,
-                                'consultar' => 1,
-                            ]) }}" class="cc-btn-secondary cc-btn-form-action">
+                            <a href="{{ $rutaVolver }}" class="cc-btn-secondary cc-btn-form-action">
                                 Cancelar
                             </a>
 

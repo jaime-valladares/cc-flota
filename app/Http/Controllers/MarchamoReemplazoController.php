@@ -37,24 +37,12 @@ class MarchamoReemplazoController extends Controller
 
     public function show(Unidad $unidad): View
     {
-        $this->validarAccesoUnidad($unidad);
-        $this->validarUnidadReemplazable($unidad);
+        return view('marchamos.reemplazos.show', $this->datosShow($unidad));
+    }
 
-        $unidad->load(['empresa', 'licencia']);
-
-        $puntos = PuntoSeguridadUnidad::query()
-            ->with(['marchamoActual'])
-            ->where('unidad_id', $unidad->id)
-            ->where('estado', 'activo')
-            ->where('requiere_marchamo', true)
-            ->orderBy('orden')
-            ->get();
-
-        return view('marchamos.reemplazos.show', [
-            'unidad' => $unidad,
-            'puntos' => $puntos,
-            'motivosReemplazo' => self::MOTIVOS_REEMPLAZO,
-        ]);
+    public function showVentana(Unidad $unidad): View
+    {
+        return view('marchamos.reemplazos.show-ventana', $this->datosShow($unidad));
     }
 
     public function store(Request $request, Unidad $unidad): RedirectResponse
@@ -68,6 +56,7 @@ class MarchamoReemplazoController extends Controller
             'reemplazos.*.punto_seguridad_id' => ['required', 'integer', 'exists:puntos_seguridad_unidad,id'],
             'reemplazos.*.nuevo_codigo_marchamo' => ['nullable', 'regex:/^\d{7}$/'],
             'reemplazos.*.motivo_reemplazo' => ['nullable', Rule::in(array_keys(self::MOTIVOS_REEMPLAZO))],
+            'return_to' => ['nullable', 'string', 'in:ventana'],
         ], [
             'reemplazos.required' => 'Debe seleccionar al menos un marchamo para reemplazar.',
             'reemplazos.array' => 'La información de reemplazos no tiene el formato esperado.',
@@ -180,6 +169,7 @@ class MarchamoReemplazoController extends Controller
                     'activo_actual' => true,
                     'origen_creacion' => 'reemplazo_dano_desgaste',
                     'creado_por' => Auth::id(),
+                    'actualizado_por' => Auth::id(),
                 ]);
 
                 $punto->update([
@@ -198,8 +188,12 @@ class MarchamoReemplazoController extends Controller
             }
         });
 
+        $ruta = ($validated['return_to'] ?? null) === 'ventana'
+            ? 'marchamos.reemplazos.show.ventana'
+            : 'marchamos.reemplazos.show';
+
         return redirect()
-            ->route('marchamos.reemplazos.show', $unidad)
+            ->route($ruta, $unidad)
             ->with('success', 'Reemplazos de marchamos registrados correctamente.');
     }
 
@@ -305,6 +299,28 @@ class MarchamoReemplazoController extends Controller
 
             'hayFiltros' => $hayFiltros,
             'consultaEjecutada' => $consultaEjecutada,
+        ];
+    }
+
+    private function datosShow(Unidad $unidad): array
+    {
+        $this->validarAccesoUnidad($unidad);
+        $this->validarUnidadReemplazable($unidad);
+
+        $unidad->load(['empresa', 'licencia']);
+
+        $puntos = PuntoSeguridadUnidad::query()
+            ->with(['marchamoActual'])
+            ->where('unidad_id', $unidad->id)
+            ->where('estado', 'activo')
+            ->where('requiere_marchamo', true)
+            ->orderBy('orden')
+            ->get();
+
+        return [
+            'unidad' => $unidad,
+            'puntos' => $puntos,
+            'motivosReemplazo' => self::MOTIVOS_REEMPLAZO,
         ];
     }
 

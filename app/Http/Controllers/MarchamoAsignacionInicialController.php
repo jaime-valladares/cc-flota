@@ -55,7 +55,12 @@ class MarchamoAsignacionInicialController extends Controller
     }
 
     /**
-     * Guarda parcialmente códigos de marchamo para puntos pendientes.
+     * Guarda o corrige códigos de marchamo durante la asignación inicial.
+     *
+     * Mientras la unidad siga registrada, la asignación funciona como un
+     * borrador operativo: los códigos pueden asignarse, corregirse o moverse
+     * entre puntos de la misma unidad. La validación sigue bloqueando códigos
+     * usados fuera de esta asignación inicial.
      */
     public function guardarAvance(Request $request, Unidad $unidad): RedirectResponse
     {
@@ -77,16 +82,25 @@ class MarchamoAsignacionInicialController extends Controller
             'marchamos.*.regex' => 'Cada código de marchamo debe contener exactamente 7 dígitos. Ejemplo: 0006387.',
         ]);
 
-        $codigosPorPunto = collect($validated['marchamos'] ?? [])
-            ->map(fn ($codigo) => is_string($codigo) ? trim($codigo) : null)
-            ->filter(fn ($codigo) => filled($codigo));
+        $marchamosFormulario = collect($validated['marchamos'] ?? [])
+            ->mapWithKeys(function ($codigo, $puntoId) {
+                $codigoNormalizado = is_string($codigo) ? trim($codigo) : null;
 
-        if ($codigosPorPunto->isEmpty()) {
+                return [
+                    (int) $puntoId => filled($codigoNormalizado) ? $codigoNormalizado : null,
+                ];
+            });
+
+        if ($marchamosFormulario->isEmpty()) {
             return back()
-                ->with('success', 'No se ingresaron nuevos marchamos para guardar.');
+                ->with('success', 'No se recibieron cambios de marchamos para guardar.');
         }
 
-        $codigosDuplicadosEnFormulario = $codigosPorPunto
+        $codigosIngresados = $marchamosFormulario
+            ->filter(fn ($codigo) => filled($codigo))
+            ->values();
+
+        $codigosDuplicadosEnFormulario = $codigosIngresados
             ->duplicates()
             ->values();
 
@@ -96,56 +110,132 @@ class MarchamoAsignacionInicialController extends Controller
             ]);
         }
 
-        DB::transaction(function () use ($unidad, $codigosPorPunto): void {
-            foreach ($codigosPorPunto as $puntoId => $codigoMarchamo) {
-                $punto = PuntoSeguridadUnidad::query()
-                    ->where('id', $puntoId)
-                    ->where('unidad_id', $unidad->id)
-                    ->lockForUpdate()
-                    ->first();
+        DB::transaction(function () use ($unidad, $marchamosFormulario, $codigosIngresados): void {
+            $puntoIdsFormulario = $marchamosFormulario
+                ->keys()
+                ->map(fn ($puntoId) => (int) $puntoId)
+                ->values();
 
-                if (! $punto) {
-                    throw ValidationException::withMessages([
-                        'marchamos' => 'Uno de los puntos enviados no pertenece a esta unidad.',
-                    ]);
-                }
+            $puntos = PuntoSeguridadUnidad::query()
+                ->where('unidad_id', $unidad->id)
+                ->whereIn('id', $puntoIdsFormulario)
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
 
+            if ($puntos->count() !== $puntoIdsFormulario->count()) {
+                throw ValidationException::withMessages([
+                    'marchamos' => 'Uno o más puntos enviados no pertenecen a esta unidad.',
+                ]);
+            }
+
+            foreach ($puntos as $punto) {
                 if ($punto->estado !== 'activo') {
                     throw ValidationException::withMessages([
-                        "marchamos.$puntoId" => 'No se puede asignar marchamo a un punto inactivo.',
+                        "marchamos.{$punto->id}" => 'No se puede asignar marchamo a un punto inactivo.',
                     ]);
                 }
+            }
 
-                if (! is_null($punto->marchamo_actual_id)) {
+            if ($codigosIngresados->isNotEmpty()) {
+                $codigosNoDisponibles = Marchamo::query()
+                    ->whereIn('codigo_marchamo', $codigosIngresados)
+                    ->where(function ($query) use ($unidad, $puntoIdsFormulario) {
+                        $query->whereNull('unidad_id')
+                            ->orWhere('unidad_id', '!=', $unidad->id)
+                            ->orWhere('origen_creacion', '!=', 'asignacion_inicial')
+                            ->orWhere(function ($sameUnidadQuery) use ($unidad, $puntoIdsFormulario) {
+                                $sameUnidadQuery
+                                    ->where('unidad_id', $unidad->id)
+                                    ->whereNotIn('punto_seguridad_id', $puntoIdsFormulario);
+                            });
+                    })
+                    ->pluck('codigo_marchamo')
+                    ->unique()
+                    ->values();
+
+                if ($codigosNoDisponibles->isNotEmpty()) {
                     throw ValidationException::withMessages([
-                        "marchamos.$puntoId" => 'Este punto ya tiene un marchamo asignado.',
+                        'marchamos' => 'Los siguientes marchamos no están disponibles para esta asignación inicial: ' . $codigosNoDisponibles->implode(', '),
                     ]);
                 }
+            }
 
-                $codigoExiste = Marchamo::query()
-                    ->where('codigo_marchamo', $codigoMarchamo)
-                    ->exists();
+            $marchamosProvisionales = Marchamo::query()
+                ->where('unidad_id', $unidad->id)
+                ->where('origen_creacion', 'asignacion_inicial')
+                ->where(function ($query) use ($puntoIdsFormulario, $codigosIngresados) {
+                    $query->whereIn('punto_seguridad_id', $puntoIdsFormulario);
 
-                if ($codigoExiste) {
-                    throw ValidationException::withMessages([
-                        "marchamos.$puntoId" => "El marchamo {$codigoMarchamo} ya existe en el sistema.",
-                    ]);
-                }
+                    if ($codigosIngresados->isNotEmpty()) {
+                        $query->orWhereIn('codigo_marchamo', $codigosIngresados);
+                    }
+                })
+                ->lockForUpdate()
+                ->get();
 
-                $marchamo = Marchamo::create([
-                    'empresa_id' => $unidad->empresa_id,
-                    'unidad_id' => $unidad->id,
-                    'punto_seguridad_id' => $punto->id,
-                    'codigo_marchamo' => $codigoMarchamo,
-                    'fecha_activacion' => now(),
-                    'estado' => 'activo',
-                    'activo_actual' => 1,
-                    'fecha_desactivacion' => null,
-                    'motivo_desactivacion' => null,
-                    'origen_creacion' => 'asignacion_inicial',
-                    'creado_por' => Auth::id(),
+            $marchamosPorCodigo = $marchamosProvisionales
+                ->keyBy('codigo_marchamo');
+
+            foreach ($puntos as $punto) {
+                $punto->update([
+                    'marchamo_actual_id' => null,
+                    'estado_asignacion' => 'pendiente',
                     'actualizado_por' => Auth::id(),
                 ]);
+            }
+
+            $codigosDeseados = $codigosIngresados
+                ->unique()
+                ->values();
+
+            $marchamosAEliminar = $marchamosProvisionales
+                ->filter(function ($marchamo) use ($puntoIdsFormulario, $codigosDeseados) {
+                    return $puntoIdsFormulario->contains((int) $marchamo->punto_seguridad_id)
+                        && ! $codigosDeseados->contains($marchamo->codigo_marchamo);
+                });
+
+            foreach ($marchamosAEliminar as $marchamo) {
+                $marchamo->delete();
+            }
+
+            foreach ($marchamosFormulario as $puntoId => $codigoMarchamo) {
+                if (blank($codigoMarchamo)) {
+                    continue;
+                }
+
+                $punto = $puntos->get((int) $puntoId);
+
+                $marchamo = $marchamosPorCodigo->get($codigoMarchamo);
+
+                if ($marchamo) {
+                    $marchamo->update([
+                        'empresa_id' => $unidad->empresa_id,
+                        'unidad_id' => $unidad->id,
+                        'punto_seguridad_id' => $punto->id,
+                        'fecha_activacion' => $marchamo->fecha_activacion ?: now(),
+                        'estado' => 'activo',
+                        'activo_actual' => 1,
+                        'fecha_desactivacion' => null,
+                        'motivo_desactivacion' => null,
+                        'actualizado_por' => Auth::id(),
+                    ]);
+                } else {
+                    $marchamo = Marchamo::create([
+                        'empresa_id' => $unidad->empresa_id,
+                        'unidad_id' => $unidad->id,
+                        'punto_seguridad_id' => $punto->id,
+                        'codigo_marchamo' => $codigoMarchamo,
+                        'fecha_activacion' => now(),
+                        'estado' => 'activo',
+                        'activo_actual' => 1,
+                        'fecha_desactivacion' => null,
+                        'motivo_desactivacion' => null,
+                        'origen_creacion' => 'asignacion_inicial',
+                        'creado_por' => Auth::id(),
+                        'actualizado_por' => Auth::id(),
+                    ]);
+                }
 
                 $punto->update([
                     'marchamo_actual_id' => $marchamo->id,
@@ -155,12 +245,7 @@ class MarchamoAsignacionInicialController extends Controller
             }
         });
 
-        $ruta = ($validated['return_to'] ?? null) === 'ventana'
-            ? 'marchamos.asignacion-inicial.show.ventana'
-            : 'marchamos.asignacion-inicial.show';
-
-        return redirect()
-            ->route($ruta, $unidad)
+        return back()
             ->with('success', 'Avance de asignación inicial guardado correctamente.');
     }
 
@@ -202,7 +287,7 @@ class MarchamoAsignacionInicialController extends Controller
         if ($puntosPendientes > 0) {
             return back()
                 ->withErrors([
-                    'finalizar' => "No se puede finalizar la asignación inicial. Aún hay {$puntosPendientes} puntos pendientes.",
+                    'finalizar' => "La asignación de marchamos no está completa. Aún hay {$puntosPendientes} puntos pendientes por asignar o corregir.",
                 ]);
         }
 
@@ -217,13 +302,16 @@ class MarchamoAsignacionInicialController extends Controller
         });
 
         $ruta = ($validated['return_to'] ?? null) === 'ventana'
-            ? 'marchamos.detalle-unidad.ventana'
-            : 'marchamos.detalle-unidad';
+            ? 'marchamos.asignacion-inicial.index.ventana'
+            : 'marchamos.asignacion-inicial.index';
 
         return redirect()
-            ->route($ruta, $unidad)
-            ->with('success', 'Asignación inicial finalizada correctamente. La unidad ahora está activa y sus marchamos pueden consultarse desde esta pantalla.');
-        }
+            ->route($ruta, [
+                'empresa_id' => $unidad->empresa_id,
+                'consultar' => 1,
+            ])
+            ->with('success', 'Asignación inicial finalizada correctamente. La unidad ahora está activa.');
+    }
 
     private function datosIndex(Request $request): array
     {
@@ -275,10 +363,6 @@ class MarchamoAsignacionInicialController extends Controller
             })
             ->whereHas('puntosSeguridad', function ($query) {
                 $query->where('estado', 'activo');
-            })
-            ->whereHas('puntosSeguridad', function ($query) {
-                $query->where('estado', 'activo')
-                    ->whereNull('marchamo_actual_id');
             })
             ->when(! is_null($user->empresa_id), function ($query) use ($user) {
                 $query->where('empresa_id', $user->empresa_id);

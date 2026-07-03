@@ -69,6 +69,7 @@
                                     @foreach ($unidades as $unidad)
                                         <option value="{{ $unidad->id }}" @selected((string) $unidadId === (string) $unidad->id)>
                                             {{ $unidad->placa }}
+
                                             @if ($unidad->marca)
                                                 · {{ $unidad->marca }}
                                             @endif
@@ -92,175 +93,136 @@
                 </form>
 
                 @if (! $hayFiltros)
-                    <section class="cc-empty-panel cc-empty-panel-compact">
+                    <div class="cc-empty-panel cc-empty-panel-compact">
                         <h5>
-                            Inicie una consulta
+                            Consulta pendiente
                         </h5>
 
                         <p>
-                            Use los filtros para consultar la cobertura de marchamos por empresa o unidad. También puede consultar sin filtros para ver todas las unidades con cobertura registrada.
+                            Los resultados permanecerán vacíos hasta que consulte la cobertura de marchamos por empresa o unidad.
                         </p>
-                    </section>
-                @endif
+                    </div>
+                @elseif ($unidadesConCobertura->isEmpty())
+                    <div class="cc-empty-panel cc-empty-panel-compact">
+                        <h5>
+                            Sin resultados
+                        </h5>
 
-                @if ($hayFiltros)
-                    <section class="cc-detail-section">
-                        <div class="cc-detail-section-header">
-                            <h5>
-                                Cobertura por unidad
-                            </h5>
-                            <p>
-                                Unidades con licencia, puntos de seguridad y avance de asignación de marchamos.
-                            </p>
-                        </div>
+                        <p>
+                            No hay unidades con puntos de seguridad generados para los filtros aplicados.
+                        </p>
+                    </div>
+                @else
+                    <div class="space-y-3">
+                        @foreach ($unidadesConCobertura as $unidad)
+                            @php
+                                $totalPuntos = (int) ($unidad->total_puntos ?? 0);
+                                $puntosAsignados = (int) ($unidad->puntos_asignados ?? 0);
+                                $puntosPendientes = max($totalPuntos - $puntosAsignados, 0);
 
-                        <div class="overflow-x-auto">
-                            <table class="cc-table">
-                                <thead>
-                                    <tr>
-                                        <th>Unidad</th>
-                                        <th>Empresa</th>
-                                        <th>Estado</th>
-                                        <th>Licencia</th>
-                                        <th>Puntos</th>
-                                        <th>Marchamos</th>
-                                        <th>Avance</th>
-                                        <th class="text-right">Acciones</th>
-                                    </tr>
-                                </thead>
+                                $porcentajeAvance = $totalPuntos > 0
+                                    ? round(($puntosAsignados / $totalPuntos) * 100)
+                                    : 0;
+                            @endphp
 
-                                <tbody>
-                                    @forelse ($unidadesConCobertura as $unidad)
-                                        @php
-                                            $totalPuntos = (int) ($unidad->total_puntos ?? 0);
-                                            $puntosAsignados = (int) ($unidad->puntos_asignados ?? 0);
-                                            $puntosPendientes = max($totalPuntos - $puntosAsignados, 0);
+                            <article class="cc-result-card cc-result-card-compact">
+                                <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
 
-                                            $porcentajeAvance = $totalPuntos > 0
-                                                ? round(($puntosAsignados / $totalPuntos) * 100)
-                                                : 0;
-                                        @endphp
+                                    <div class="flex-1 min-w-0">
+                                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
 
-                                        <tr>
-                                            <td>
-                                                <a href="{{ route('unidades.show', $unidad) }}"
-                                                   class="font-bold text-[var(--cc-primary)] hover:underline">
-                                                    {{ $unidad->placa }}
-                                                </a>
+                                            <div>
+                                                <div class="flex flex-wrap items-center gap-2">
+                                                    <h5 class="cc-result-title cc-cell-truncate">
+                                                        {{ $unidad->placa }}
+                                                    </h5>
 
-                                                <div class="text-sm text-[var(--cc-text-muted)]">
-                                                    {{ $unidad->marca ?: 'Sin marca' }}
+                                                    @if ($unidad->estado === 'registrada')
+                                                        <span class="cc-badge cc-badge-warning">
+                                                            Registrada
+                                                        </span>
+                                                    @elseif ($unidad->estado === 'activa')
+                                                        <span class="cc-badge cc-badge-active">
+                                                            Activa
+                                                        </span>
+                                                    @else
+                                                        <span class="cc-badge cc-badge-inactive">
+                                                            Inactiva
+                                                        </span>
+                                                    @endif
                                                 </div>
-                                            </td>
 
-                                            <td>
-                                                @if ($unidad->empresa)
-                                                    <div class="font-bold text-[var(--cc-text-main)] cc-cell-truncate">
+                                                <div class="cc-result-subtitle cc-cell-truncate">
+                                                    {{ $unidad->marca ?: 'Sin marca registrada' }}
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <div class="cc-result-label">
+                                                    Empresa
+                                                </div>
+
+                                                <div class="cc-result-value cc-cell-truncate">
+                                                    @if ($unidad->empresa)
                                                         {{ $unidad->empresa->nombre_comercial ?: $unidad->empresa->nombre_legal }}
-                                                    </div>
-
-                                                    <div class="text-sm text-[var(--cc-text-muted)]">
-                                                        {{ $unidad->empresa->nit }}
-                                                    </div>
-                                                @else
-                                                    <span class="text-[var(--cc-text-muted)]">
+                                                    @else
                                                         Sin empresa
-                                                    </span>
-                                                @endif
-                                            </td>
+                                                    @endif
+                                                </div>
+                                            </div>
 
-                                            <td>
-                                                @if ($unidad->estado === 'registrada')
-                                                    <span class="cc-badge cc-badge-warning">
-                                                        Registrada
-                                                    </span>
-                                                @elseif ($unidad->estado === 'activa')
-                                                    <span class="cc-badge cc-badge-active">
-                                                        Activa
-                                                    </span>
-                                                @else
-                                                    <span class="cc-badge cc-badge-inactive">
-                                                        Inactiva
-                                                    </span>
-                                                @endif
-                                            </td>
-
-                                            <td>
-                                                @if ($unidad->licencia)
-                                                    <div class="font-bold text-[var(--cc-text-main)]">
-                                                        {{ $unidad->licencia->periodo_vigencia_texto }}
-                                                    </div>
-
-                                                    <div class="text-sm text-[var(--cc-text-muted)] cc-cell-truncate">
-                                                        {{ $unidad->licencia->plantilla_puntos_seguridad_texto }}
-                                                    </div>
-                                                @else
-                                                    <span class="text-[var(--cc-text-muted)]">
-                                                        Sin licencia
-                                                    </span>
-                                                @endif
-                                            </td>
-
-                                            <td>
-                                                <div class="font-bold text-[var(--cc-text-main)]">
-                                                    {{ $puntosAsignados }} / {{ $totalPuntos }}
+                                            <div>
+                                                <div class="cc-result-label">
+                                                    Marchamos
                                                 </div>
 
-                                                <div class="text-sm text-[var(--cc-text-muted)]">
-                                                    {{ $puntosPendientes }} pendientes
-                                                </div>
-                                            </td>
-
-                                            <td>
-                                                <div class="font-bold text-[var(--cc-text-main)]">
+                                                <div class="cc-result-value">
                                                     {{ $unidad->marchamos_activos }} activos
                                                 </div>
 
-                                                <div class="text-sm text-[var(--cc-text-muted)]">
+                                                <div class="cc-result-value-muted">
                                                     {{ $unidad->marchamos_historicos }} históricos
                                                 </div>
-                                            </td>
+                                            </div>
 
-                                            <td>
-                                                <div class="font-bold text-[var(--cc-text-main)]">
+                                            <div>
+                                                <div class="cc-result-label">
+                                                    Avance
+                                                </div>
+
+                                                <div class="cc-result-value">
                                                     {{ $porcentajeAvance }}%
                                                 </div>
 
                                                 @if ($puntosPendientes === 0 && $totalPuntos > 0)
-                                                    <div class="text-sm text-[var(--cc-success)]">
+                                                    <div class="cc-result-value-muted text-[var(--cc-success)]">
                                                         Completa
                                                     </div>
                                                 @elseif ($totalPuntos > 0)
-                                                    <div class="text-sm text-[var(--cc-danger)]">
-                                                        Pendiente
+                                                    <div class="cc-result-value-muted text-[var(--cc-danger)]">
+                                                        {{ $puntosPendientes }} pendientes
                                                     </div>
                                                 @else
-                                                    <div class="text-sm text-[var(--cc-text-muted)]">
+                                                    <div class="cc-result-value-muted">
                                                         Sin puntos
                                                     </div>
                                                 @endif
-                                            </td>
+                                            </div>
 
-                                            <td class="text-right">
-                                                <div class="flex justify-end gap-2">
-                                                    <a href="{{ route('marchamos.detalle-unidad', $unidad) }}"
-                                                       class="cc-btn-secondary cc-btn-table">
-                                                        Marchamos
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="8" class="text-center text-[var(--cc-text-muted)] py-8">
-                                                No hay unidades con puntos de seguridad generados para los filtros aplicados.
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                    </section>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 xl:justify-end xl:min-w-[10rem]">
+                                        <a href="{{ route('marchamos.detalle-unidad', $unidad) }}"
+                                           class="cc-btn-secondary cc-btn-result">
+                                            Ver Marchamos
+                                        </a>
+                                    </div>
+
+                                </div>
+                            </article>
+                        @endforeach
+                    </div>
                 @endif
 
             </div>

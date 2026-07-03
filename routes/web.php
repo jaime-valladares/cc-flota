@@ -223,6 +223,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/marchamos/reemplazos/unidades/{unidad}', [MarchamoReemplazoController::class, 'show'])
         ->name('marchamos.reemplazos.show');
 
+    Route::get('/marchamos/reemplazos/unidades/{unidad}/ventana', [MarchamoReemplazoController::class, 'showVentana'])
+        ->name('marchamos.reemplazos.show.ventana');
+
     Route::post('/marchamos/reemplazos/unidades/{unidad}', [MarchamoReemplazoController::class, 'store'])
         ->name('marchamos.reemplazos.store');
 

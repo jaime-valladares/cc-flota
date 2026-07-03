@@ -9,7 +9,7 @@
                             Asignación inicial de marchamos
                         </h3>
                         <p class="cc-subtitle cc-subtitle-compact">
-                            Registre los marchamos físicos instalados en cada punto de seguridad de la unidad.
+                            Registre, revise o corrija los marchamos físicos instalados en cada punto de seguridad de la unidad.
                         </p>
                     </div>
 
@@ -175,7 +175,7 @@
                             Registro de marchamos
                         </h5>
                         <p>
-                            Puede guardar avances parciales. Los códigos deben tener exactamente 7 dígitos, conservando ceros a la izquierda.
+                            Puede guardar avances parciales o corregir códigos antes de finalizar. Los códigos deben tener exactamente 7 dígitos, conservando ceros a la izquierda.
                         </p>
                     </div>
 
@@ -197,6 +197,10 @@
 
                                 <tbody>
                                     @foreach ($unidad->puntosSeguridad as $punto)
+                                        @php
+                                            $codigoActual = $punto->marchamoActual?->codigo_marchamo;
+                                        @endphp
+
                                         <tr>
                                             <td>
                                                 <span class="font-bold">
@@ -229,7 +233,7 @@
                                             </td>
 
                                             <td>
-                                                @if ($punto->marchamo_actual_id)
+                                                @if ($codigoActual)
                                                     <span class="cc-badge cc-badge-active">
                                                         Asignado
                                                     </span>
@@ -241,24 +245,24 @@
                                             </td>
 
                                             <td>
-                                                @if ($punto->marchamo_actual_id && $punto->marchamoActual)
-                                                    <div class="font-bold text-[var(--cc-text-main)]">
-                                                        {{ $punto->marchamoActual->codigo_marchamo }}
-                                                    </div>
+                                                <input
+                                                    type="text"
+                                                    name="marchamos[{{ $punto->id }}]"
+                                                    value="{{ old('marchamos.' . $punto->id, $codigoActual) }}"
+                                                    class="cc-input"
+                                                    placeholder="Ej. 0006387"
+                                                    maxlength="7"
+                                                    inputmode="numeric"
+                                                    pattern="\d{7}">
 
-                                                    <div class="text-xs text-[var(--cc-text-muted)]">
-                                                        Activo
+                                                @if ($codigoActual)
+                                                    <div class="text-xs text-[var(--cc-text-muted)] mt-1">
+                                                        Código provisional editable
                                                     </div>
                                                 @else
-                                                    <input
-                                                        type="text"
-                                                        name="marchamos[{{ $punto->id }}]"
-                                                        value="{{ old('marchamos.' . $punto->id) }}"
-                                                        class="cc-input"
-                                                        placeholder="Ej. 0006387"
-                                                        maxlength="7"
-                                                        inputmode="numeric"
-                                                        pattern="\d{7}">
+                                                    <div class="text-xs text-[var(--cc-text-muted)] mt-1">
+                                                        Pendiente de asignar
+                                                    </div>
                                                 @endif
                                             </td>
                                         </tr>
@@ -303,8 +307,7 @@
                             @csrf
 
                             <button type="submit"
-                                    class="cc-btn-success cc-btn-form-action"
-                                    @disabled($puntosPendientes > 0)>
+                                    class="cc-btn-success cc-btn-form-action">
                                 Finalizar asignación inicial
                             </button>
                         </form>

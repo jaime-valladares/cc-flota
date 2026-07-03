@@ -184,36 +184,81 @@
                     <div class="cc-table-wrapper">
                         <table class="cc-table">
                             <colgroup>
-                                <col style="width: 27%;">
-                                <col style="width: 16%;">
-                                <col style="width: 17%;">
-                                <col style="width: 14%;">
-                                <col style="width: 26%;">
+                                <col style="width: 24%;">
+                                <col style="width: 13%;">
+                                <col style="width: 19%;">
+                                <col style="width: 13%;">
+                                <col style="width: 21%;">
+                                <col style="width: 10%;">
                             </colgroup>
 
                             <thead>
                                 <tr>
                                     <th class="cc-text-left">Nombre legal</th>
-                                    <th class="cc-text-left">NIT</th>
+                                    <th class="cc-text-left">Estado</th>
                                     <th class="cc-text-left">Contacto</th>
                                     <th class="cc-text-left">Teléfono</th>
                                     <th class="cc-text-left">Correo empresa</th>
+                                    <th class="cc-text-left">Unidades</th>
                                 </tr>
                             </thead>
 
                             <tbody>
                                 @foreach ($empresas as $empresa)
+                                    @php
+                                        $unidadesActivas = $empresa->unidades_activas_count
+                                            ?? $empresa->unidadesActivas_count
+                                            ?? null;
+
+                                        $unidadesRegistradas = $empresa->unidades_registradas_count
+                                            ?? $empresa->unidadesRegistradas_count
+                                            ?? null;
+
+                                        if (is_null($unidadesActivas) || is_null($unidadesRegistradas)) {
+                                            if (method_exists($empresa, 'unidades')) {
+                                                $unidadesActivas = \App\Models\Unidad::query()
+                                                    ->where('empresa_id', $empresa->id)
+                                                    ->where('estado', 'activa')
+                                                    ->count();
+
+                                                $unidadesRegistradas = \App\Models\Unidad::query()
+                                                    ->where('empresa_id', $empresa->id)
+                                                    ->where('estado', 'registrada')
+                                                    ->count();
+                                            } else {
+                                                $unidadesActivas = 0;
+                                                $unidadesRegistradas = 0;
+                                            }
+                                        }
+                                    @endphp
+
                                     <tr>
                                         <td class="cc-text-left cc-cell-truncate">
-                                            {{ $empresa->nombre_legal }}
+                                            <span class="cc-table-strong">
+                                                {{ $empresa->nombre_legal }}
+                                            </span>
+
+                                            @if ($empresa->nombre_comercial && $empresa->nombre_comercial !== $empresa->nombre_legal)
+                                                <div class="text-xs text-[var(--cc-text-muted)]">
+                                                    {{ $empresa->nombre_comercial }}
+                                                </div>
+                                            @endif
                                         </td>
 
                                         <td class="cc-text-left">
-                                            {{ $empresa->nit }}
+                                            @if ($empresa->estado === 'activa')
+                                                <span class="cc-badge cc-badge-active">
+                                                    Activa
+                                                </span>
+                                            @else
+                                                <span class="cc-badge cc-badge-inactive">
+                                                    Inactiva
+                                                </span>
+                                            @endif
                                         </td>
 
                                         <td class="cc-text-left cc-cell-truncate">
-                                            {{ $empresa->poc_nombre }}
+                                            {{ $empresa->poc_nombre ?: '—' }}
                                         </td>
 
                                         <td class="cc-text-left">
@@ -221,7 +266,17 @@
                                         </td>
 
                                         <td class="cc-text-left cc-cell-truncate">
-                                            {{ $empresa->correo_empresa }}
+                                            {{ $empresa->correo_empresa ?: '—' }}
+                                        </td>
+
+                                        <td class="cc-text-left">
+                                            <div class="font-bold text-[var(--cc-text-main)]">
+                                                {{ $unidadesActivas }} activas
+                                            </div>
+
+                                            <div class="text-xs text-[var(--cc-text-muted)]">
+                                                {{ $unidadesRegistradas }} registradas
+                                            </div>
                                         </td>
                                     </tr>
                                 @endforeach

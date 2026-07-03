@@ -7,26 +7,25 @@
 
         <title>Asignación inicial de marchamos | CC-Flota</title>
 
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+        <link rel="preconnect" href="https://fonts.bunny.net">
+        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900&display=swap" rel="stylesheet" />
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
 
-    <body class="antialiased">
+    <body class="font-sans antialiased">
         <div class="min-h-screen" style="background: var(--cc-bg-main);">
-            <div class="cc-page-wrapper">
+            <div class="cc-window-wrapper" style="padding-top: 2.0rem;">
                 <div class="cc-window-container" style="max-width: 79rem;">
                     <div class="cc-card">
 
                         <div class="cc-card-header cc-card-header-compact">
                             <div>
-                                <h3 class="cc-title cc-title-compact">
+                                <h3 class="cc-title cc-title-compact" style="font-size: 1.96rem;">
                                     Asignación inicial de marchamos
                                 </h3>
                                 <p class="cc-subtitle cc-subtitle-compact">
-                                    Registre los marchamos físicos instalados en cada punto de seguridad de la unidad.
+                                    Registre, revise o corrija los marchamos físicos instalados en cada punto de seguridad de la unidad.
                                 </p>
                             </div>
 
@@ -189,13 +188,12 @@
                                     Registro de marchamos
                                 </h5>
                                 <p>
-                                    Puede guardar avances parciales. Los códigos deben tener exactamente 7 dígitos, conservando ceros a la izquierda.
+                                    Puede guardar avances parciales o corregir códigos antes de finalizar. Los códigos deben tener exactamente 7 dígitos, conservando ceros a la izquierda.
                                 </p>
                             </div>
 
                             <form method="POST" action="{{ route('marchamos.asignacion-inicial.guardar-avance', $unidad) }}">
                                 @csrf
-
                                 <input type="hidden" name="return_to" value="ventana">
 
                                 <div class="overflow-x-auto">
@@ -213,6 +211,10 @@
 
                                         <tbody>
                                             @foreach ($unidad->puntosSeguridad as $punto)
+                                                @php
+                                                    $codigoActual = $punto->marchamoActual?->codigo_marchamo;
+                                                @endphp
+
                                                 <tr>
                                                     <td>
                                                         <span class="font-bold">
@@ -245,7 +247,7 @@
                                                     </td>
 
                                                     <td>
-                                                        @if ($punto->marchamo_actual_id)
+                                                        @if ($codigoActual)
                                                             <span class="cc-badge cc-badge-active">
                                                                 Asignado
                                                             </span>
@@ -257,24 +259,24 @@
                                                     </td>
 
                                                     <td>
-                                                        @if ($punto->marchamo_actual_id && $punto->marchamoActual)
-                                                            <div class="font-bold text-[var(--cc-text-main)]">
-                                                                {{ $punto->marchamoActual->codigo_marchamo }}
-                                                            </div>
+                                                        <input
+                                                            type="text"
+                                                            name="marchamos[{{ $punto->id }}]"
+                                                            value="{{ old('marchamos.' . $punto->id, $codigoActual) }}"
+                                                            class="cc-input"
+                                                            placeholder="Ej. 0006387"
+                                                            maxlength="7"
+                                                            inputmode="numeric"
+                                                            pattern="\d{7}">
 
-                                                            <div class="text-xs text-[var(--cc-text-muted)]">
-                                                                Activo
+                                                        @if ($codigoActual)
+                                                            <div class="text-xs text-[var(--cc-text-muted)] mt-1">
+                                                                Código provisional editable
                                                             </div>
                                                         @else
-                                                            <input
-                                                                type="text"
-                                                                name="marchamos[{{ $punto->id }}]"
-                                                                value="{{ old('marchamos.' . $punto->id) }}"
-                                                                class="cc-input"
-                                                                placeholder="Ej. 0006387"
-                                                                maxlength="7"
-                                                                inputmode="numeric"
-                                                                pattern="\d{7}">
+                                                            <div class="text-xs text-[var(--cc-text-muted)] mt-1">
+                                                                Pendiente de asignar
+                                                            </div>
                                                         @endif
                                                     </td>
                                                 </tr>
@@ -317,12 +319,10 @@
                                       action="{{ route('marchamos.asignacion-inicial.finalizar', $unidad) }}"
                                       onsubmit="return confirm('¿Está seguro de finalizar la asignación inicial? La unidad pasará a estado activa.');">
                                     @csrf
-
                                     <input type="hidden" name="return_to" value="ventana">
 
                                     <button type="submit"
-                                            class="cc-btn-success cc-btn-form-action"
-                                            @disabled($puntosPendientes > 0)>
+                                            class="cc-btn-success cc-btn-form-action">
                                         Finalizar asignación inicial
                                     </button>
                                 </form>
