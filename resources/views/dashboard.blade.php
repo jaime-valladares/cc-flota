@@ -76,9 +76,13 @@
             <div class="cc-content-container">
 
                 <section class="cc-page-intro mb-6">
-                    <div class="cc-page-intro-icon">
-                        CC
-                    </div>
+                <div class="cc-page-intro-icon cc-page-intro-icon-image">
+                    <img
+                        src="{{ asset('images/cc-flota/favicon.png') }}"
+                        alt="CC-Flota"
+                        class="cc-page-intro-icon-img"
+                    >
+                </div>
 
                     <div>
                         <div class="cc-page-intro-kicker">
@@ -114,8 +118,12 @@
                     </div>
 
                     <div class="cc-home-visual" aria-hidden="true">
-                        <div class="cc-home-mark">
-                            CC
+                        <div class="cc-home-mark cc-home-mark-image">
+                            <img
+                                src="{{ asset('images/cc-flota/favicon.png') }}"
+                                alt="CC-Flota"
+                                class="cc-home-mark-img"
+                            >
                         </div>
 
                         <div class="cc-home-orbit cc-home-orbit-one"></div>

@@ -12,8 +12,12 @@
         <div class="cc-login-grid">
 
             <section class="cc-login-brand-panel cc-login-brand-panel-minimal">
-                <div class="cc-login-brand-mark">
-                    CC
+                <div class="cc-login-brand-mark cc-login-brand-mark-image">
+                    <img
+                        src="{{ asset('images/cc-flota/favicon.png') }}"
+                        alt="CC-Flota"
+                        class="cc-login-brand-mark-img"
+                    >
                 </div>
 
                 <div class="cc-login-brand-content">

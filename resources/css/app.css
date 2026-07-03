@@ -2906,3 +2906,67 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     line-height: 1.6;
     color: var(--cc-text-muted);
 }
+
+/* =========================================================
+   CC-Flota — Brand assets
+   ========================================================= */
+
+.cc-sidebar-logo-image {
+    background: #ffffff;
+    padding: 0.32rem;
+}
+
+.cc-sidebar-logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.cc-login-brand-mark-image {
+    background: #ffffff;
+    padding: 0.48rem;
+}
+
+.cc-login-brand-mark-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.cc-application-logo {
+    display: block;
+    width: auto;
+    height: 2.25rem;
+    object-fit: contain;
+}
+
+.cc-page-intro-icon-image {
+    background: #ffffff;
+    padding: 0.36rem;
+    overflow: hidden;
+}
+
+.cc-page-intro-icon-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.cc-home-mark-image {
+    background: #ffffff;
+    padding: 0.72rem;
+    overflow: hidden;
+    box-shadow:
+        0 24px 55px rgba(6, 59, 74, 0.18),
+        0 0 0 1px rgba(255, 255, 255, 0.38);
+}
+
+.cc-home-mark-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
