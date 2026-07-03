@@ -51,8 +51,8 @@
 
             $empresasActivo = request()->routeIs('empresas.*');
             $usuariosActivo = request()->routeIs('usuarios.*');
-            $unidadesActivo = request()->routeIs('unidades.*');
             $licenciasActivo = request()->routeIs('licencias.*');
+            $unidadesActivo = request()->routeIs('unidades.*');
             $marchamosActivo = request()->routeIs('marchamos.*');
         @endphp
 
@@ -80,8 +80,9 @@
                 </div>
 
                 <nav class="cc-sidebar-nav">
+
                     <div class="cc-sidebar-section">
-                        Administración
+                        Administración Diesel Cop
                     </div>
 
                     <!-- Empresas -->
@@ -132,8 +133,32 @@
                         </div>
                     </div>
 
+                    <!-- Licencias -->
+                    <div class="cc-sidebar-group">
+                        <div class="cc-sidebar-parent cc-sidebar-static-parent {{ $licenciasActivo ? 'cc-sidebar-parent-active' : '' }}">
+                            <span>Licencias</span>
+                        </div>
+
+                        <div class="cc-sidebar-subnav">
+                            <a href="{{ route('licencias.index') }}"
+                               class="cc-sidebar-sublink {{ request()->routeIs('licencias.index') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Consulta licencias
+                            </a>
+
+                            <a href="{{ route('licencias.administrar') }}"
+                               class="cc-sidebar-sublink {{ request()->routeIs('licencias.administrar') || request()->routeIs('licencias.show') || request()->routeIs('licencias.edit') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Administrar licencia
+                            </a>
+
+                            <a href="{{ route('licencias.create') }}"
+                               class="cc-sidebar-sublink {{ request()->routeIs('licencias.create') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Nueva licencia
+                            </a>
+                        </div>
+                    </div>
+
                     <div class="cc-sidebar-section">
-                        Operación
+                        Configuración técnica
                     </div>
 
                     <!-- Unidades -->
@@ -156,30 +181,6 @@
                             <a href="{{ route('unidades.create') }}"
                                class="cc-sidebar-sublink {{ request()->routeIs('unidades.create') ? 'cc-sidebar-sublink-active' : '' }}">
                                 Nueva unidad
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Licencias -->
-                    <div class="cc-sidebar-group">
-                        <div class="cc-sidebar-parent cc-sidebar-static-parent {{ $licenciasActivo ? 'cc-sidebar-parent-active' : '' }}">
-                            <span>Licencias</span>
-                        </div>
-
-                        <div class="cc-sidebar-subnav">
-                            <a href="{{ route('licencias.index') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('licencias.index') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Consulta licencias
-                            </a>
-
-                            <a href="{{ route('licencias.administrar') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('licencias.administrar') || request()->routeIs('licencias.show') || request()->routeIs('licencias.edit') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Administrar licencia
-                            </a>
-
-                            <a href="{{ route('licencias.create') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('licencias.create') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Nueva licencia
                             </a>
                         </div>
                     </div>
@@ -208,12 +209,12 @@
                         </div>
                     </div>
 
-                    <span class="cc-sidebar-link cc-sidebar-link-disabled">
-                        Gasolineras
-                    </span>
+                    <div class="cc-sidebar-section">
+                        Operación cliente
+                    </div>
 
                     <span class="cc-sidebar-link cc-sidebar-link-disabled">
-                        Tanques
+                        Gasolineras
                     </span>
 
                     <span class="cc-sidebar-link cc-sidebar-link-disabled">
@@ -238,6 +239,10 @@
 
                     <span class="cc-sidebar-link cc-sidebar-link-disabled">
                         Auditoría
+                    </span>
+
+                    <span class="cc-sidebar-link cc-sidebar-link-disabled">
+                        Análisis
                     </span>
                 </nav>
             </aside>
