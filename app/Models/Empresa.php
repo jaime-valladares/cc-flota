@@ -62,4 +62,9 @@ class Empresa extends Model
         return $this->hasMany(ReemplazoMarchamoEvento::class, 'empresa_id');
     }
 
+    public function gasolineras(): HasMany
+    {
+        return $this->hasMany(Gasolinera::class, 'empresa_id');
+    }
+
 }

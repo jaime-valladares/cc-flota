@@ -54,6 +54,7 @@
             $licenciasActivo = request()->routeIs('licencias.*');
             $unidadesActivo = request()->routeIs('unidades.*');
             $marchamosActivo = request()->routeIs('marchamos.*');
+            $gasolinerasActivo = request()->routeIs('gasolineras.*');
         @endphp
 
         <div class="cc-admin-shell">
@@ -213,9 +214,29 @@
                         Operación cliente
                     </div>
 
-                    <span class="cc-sidebar-link cc-sidebar-link-disabled">
-                        Gasolineras
-                    </span>
+                    <!-- Gasolineras -->
+                    <div class="cc-sidebar-group">
+                        <div class="cc-sidebar-parent cc-sidebar-static-parent {{ $gasolinerasActivo ? 'cc-sidebar-parent-active' : '' }}">
+                            <span>Gasolineras</span>
+                        </div>
+
+                        <div class="cc-sidebar-subnav">
+                            <a href="{{ route('gasolineras.index') }}"
+                            class="cc-sidebar-sublink {{ request()->routeIs('gasolineras.index') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Consulta gasolineras
+                            </a>
+
+                            <a href="{{ route('gasolineras.administrar') }}"
+                            class="cc-sidebar-sublink {{ request()->routeIs('gasolineras.administrar') || request()->routeIs('gasolineras.show') || request()->routeIs('gasolineras.edit') || request()->routeIs('gasolineras.tanques.*') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Administrar gasolinera
+                            </a>
+
+                            <a href="{{ route('gasolineras.create') }}"
+                            class="cc-sidebar-sublink {{ request()->routeIs('gasolineras.create') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Nueva gasolinera
+                            </a>
+                        </div>
+                    </div>
 
                     <span class="cc-sidebar-link cc-sidebar-link-disabled">
                         Motoristas
