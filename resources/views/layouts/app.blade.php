@@ -236,10 +236,8 @@
                                 Gestión de tanques
                             </a>
 
-                            <a href="#"
-                               onclick="return false;"
-                               class="cc-sidebar-sublink"
-                               style="opacity: 0.58; cursor: default;">
+                            <a href="{{ route('gasolineras.tanques.recargas.index') }}"
+                                class="cc-sidebar-sublink {{ request()->routeIs('gasolineras.tanques.recargas.index') || request()->routeIs('gasolineras.tanques.recargas.show') ? 'cc-sidebar-sublink-active' : '' }}">
                                 Recarga de tanques
                             </a>
 

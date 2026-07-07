@@ -3,6 +3,7 @@
 use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\GasolineraController;
 use App\Http\Controllers\LicenciaController;
+use App\Http\Controllers\RecargaTanqueController;
 use App\Http\Controllers\MarchamoAsignacionInicialController;
 use App\Http\Controllers\MarchamoController;
 use App\Http\Controllers\MarchamoReemplazoController;
@@ -201,6 +202,27 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/gasolineras/{gasolinera}/tanques/{tanque}/recarga', [GasolineraController::class, 'guardarRecargaTanque'])
         ->name('gasolineras.tanques.recarga.store');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Recarga de tanques
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/gasolineras/tanques/recargas', [RecargaTanqueController::class, 'index'])
+        ->name('gasolineras.tanques.recargas.index');
+
+    Route::get('/gasolineras/tanques/recargas/ventana', [RecargaTanqueController::class, 'indexVentana'])
+        ->name('gasolineras.tanques.recargas.index.ventana');
+
+    Route::get('/gasolineras/{gasolinera}/tanques/{tanque}/recargar', [RecargaTanqueController::class, 'show'])
+        ->name('gasolineras.tanques.recargas.show');
+
+    Route::get('/gasolineras/{gasolinera}/tanques/{tanque}/recargar/ventana', [RecargaTanqueController::class, 'showVentana'])
+        ->name('gasolineras.tanques.recargas.show.ventana');
+
+    Route::post('/gasolineras/{gasolinera}/tanques/{tanque}/recargar', [RecargaTanqueController::class, 'store'])
+        ->name('gasolineras.tanques.recargas.store');
 
     /*
     |--------------------------------------------------------------------------

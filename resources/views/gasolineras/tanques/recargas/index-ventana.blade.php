@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>Gestión de tanques | CC-Flota</title>
+        <title>Recarga de tanques | CC-Flota</title>
 
         <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/cc-flota/favicon.png') }}?v=3">
         <link rel="shortcut icon" type="image/png" href="{{ asset('images/cc-flota/favicon.png') }}?v=3">
@@ -26,16 +26,16 @@
                     <div class="cc-card-header cc-card-header-compact">
                         <div>
                             <h3 class="cc-title cc-title-compact">
-                                Gestión de tanques
+                                Recarga de tanques
                             </h3>
 
                             <p class="cc-subtitle cc-subtitle-compact">
-                                Localice tanques registrados para revisar su estado operativo, capacidad y configuración de alerta.
+                                Localice tanques activos para registrar entradas de combustible de forma controlada.
                             </p>
                         </div>
 
                         <div class="flex items-center gap-3">
-                            <a href="{{ route('gasolineras.tanques.index', request()->query()) }}" class="cc-btn-secondary cc-btn-wide">
+                            <a href="{{ route('gasolineras.tanques.recargas.index', request()->query()) }}" class="cc-btn-secondary cc-btn-wide">
                                 Volver al sistema
                             </a>
                         </div>
@@ -57,20 +57,20 @@
                         </div>
                     @endif
 
-                    <form method="GET" action="{{ route('gasolineras.tanques.index.ventana') }}" class="mb-5">
+                    <form method="GET" action="{{ route('gasolineras.tanques.recargas.index.ventana') }}" class="mb-5">
                         <input type="hidden" name="consultar" value="1">
 
                         <div class="cc-filter-panel cc-filter-panel-compact cc-filter-panel-inline">
 
                             <div class="cc-form-section cc-form-section-compact" style="margin-top: 0;">
                                 <div class="cc-form-section-title">
-                                    Búsqueda de tanques
+                                    Búsqueda de tanques recargables
                                 </div>
                             </div>
 
                             <div
                                 class="cc-filter-inline-grid"
-                                style="grid-template-columns: minmax(240px, 2fr) minmax(220px, 1.4fr) minmax(150px, 0.8fr) auto auto; align-items: end;"
+                                style="grid-template-columns: minmax(240px, 2fr) minmax(220px, 1.4fr) auto auto; align-items: end;"
                             >
                                 @if ($esUsuarioDieselCop)
                                     <div class="cc-field" style="margin-bottom: 0;">
@@ -132,28 +132,6 @@
                                     @enderror
                                 </div>
 
-                                <div class="cc-field" style="margin-bottom: 0;">
-                                    <label for="estado">
-                                        Estado
-                                    </label>
-
-                                    <select id="estado" name="estado" class="cc-input">
-                                        <option value="">Seleccione</option>
-                                        <option value="activo" @selected($estado === 'activo')>
-                                            Activos
-                                        </option>
-                                        <option value="inactivo" @selected($estado === 'inactivo')>
-                                            Inactivos
-                                        </option>
-                                    </select>
-
-                                    @error('estado')
-                                        <div class="cc-error">
-                                            {{ $message }}
-                                        </div>
-                                    @enderror
-                                </div>
-
                                 <div style="display: flex; align-items: end;">
                                     <button type="submit" class="cc-btn-primary">
                                         Consultar
@@ -161,7 +139,7 @@
                                 </div>
 
                                 <div style="display: flex; align-items: end;">
-                                    <a href="{{ route('gasolineras.tanques.index.ventana') }}" class="cc-btn-secondary">
+                                    <a href="{{ route('gasolineras.tanques.recargas.index.ventana') }}" class="cc-btn-secondary">
                                         Limpiar
                                     </a>
                                 </div>
@@ -187,7 +165,7 @@
                             </h5>
 
                             <p>
-                                Los resultados permanecerán vacíos hasta que localice tanques por empresa, gasolinera o estado.
+                                Los resultados permanecerán vacíos hasta que localice tanques activos por empresa o gasolinera.
                             </p>
                         </div>
                     @elseif ($tanques->isEmpty())
@@ -197,7 +175,7 @@
                             </h5>
 
                             <p>
-                                No hay tanques que coincidan con los criterios seleccionados.
+                                No hay tanques activos disponibles para recarga con los criterios seleccionados.
                             </p>
                         </div>
                     @else
@@ -210,6 +188,7 @@
                                     $capacidadTotal = (float) $tanque->capacidad_total;
                                     $volumenActual = (float) $tanque->volumen_actual;
                                     $volumenMinimoAlerta = (float) $tanque->volumen_minimo_alerta;
+                                    $capacidadDisponibleTanque = max(0, $capacidadTotal - $volumenActual);
 
                                     $porcentajeDisponible = $capacidadTotal > 0
                                         ? round(($volumenActual / $capacidadTotal) * 100, 2)
@@ -235,15 +214,9 @@
                                                 </div>
 
                                                 <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                                                    @if ($tanque->estado === 'activo')
-                                                        <span class="cc-badge cc-badge-active">
-                                                            Activo
-                                                        </span>
-                                                    @else
-                                                        <span class="cc-badge cc-badge-inactive">
-                                                            Inactivo
-                                                        </span>
-                                                    @endif
+                                                    <span class="cc-badge cc-badge-active">
+                                                        Recargable
+                                                    </span>
 
                                                     @if ($bajoAlerta)
                                                         <span class="cc-badge cc-badge-warning">
@@ -268,7 +241,7 @@
 
                                                 <div>
                                                     <div class="cc-result-label">
-                                                        Inventario
+                                                        Inventario actual
                                                     </div>
 
                                                     <div class="cc-result-value">
@@ -276,21 +249,21 @@
                                                     </div>
 
                                                     <div class="cc-result-value-muted">
-                                                        {{ number_format($porcentajeDisponible, 2) }}% disponible
+                                                        {{ number_format($porcentajeDisponible, 2) }}% ocupado
                                                     </div>
                                                 </div>
 
                                                 <div>
                                                     <div class="cc-result-label">
-                                                        Capacidad / alerta
+                                                        Disponible para recarga
                                                     </div>
 
                                                     <div class="cc-result-value">
-                                                        {{ number_format($capacidadTotal, 2) }} gal
+                                                        {{ number_format($capacidadDisponibleTanque, 2) }} gal
                                                     </div>
 
                                                     <div class="cc-result-value-muted">
-                                                        Mínimo: {{ number_format($volumenMinimoAlerta, 2) }} gal
+                                                        Capacidad: {{ number_format($capacidadTotal, 2) }} gal
                                                     </div>
                                                 </div>
 
@@ -298,8 +271,8 @@
                                         </div>
 
                                         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 xl:justify-end xl:min-w-[9rem]">
-                                            <a href="{{ route('gasolineras.tanques.show.ventana', [$gasolinera, $tanque]) }}" class="cc-btn-primary cc-btn-result">
-                                                Administrar
+                                            <a href="{{ route('gasolineras.tanques.recargas.show.ventana', [$gasolinera, $tanque]) }}" class="cc-btn-primary cc-btn-result">
+                                                Recargar
                                             </a>
                                         </div>
 
