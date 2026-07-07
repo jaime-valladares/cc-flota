@@ -33,7 +33,7 @@
 
                             <div class="flex items-center gap-3">
                                 <a href="{{ route('unidades.administrar') }}" class="cc-btn-secondary cc-btn-wide">
-                                    Volver al sistema
+                                    Volver a Administrar
                                 </a>
                             </div>
                         </div>

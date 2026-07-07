@@ -38,7 +38,7 @@
 
                             <div class="flex items-center gap-3">
                                 <a href="{{ route('marchamos.asignacion-inicial.index') }}" class="cc-btn-secondary cc-btn-wide">
-                                    Volver al sistema
+                                    Volver a Asignación
                                 </a>
                             </div>
                         </div>

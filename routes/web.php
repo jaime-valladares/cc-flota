@@ -4,9 +4,10 @@ use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\GasolineraController;
 use App\Http\Controllers\LicenciaController;
 use App\Http\Controllers\MarchamoAsignacionInicialController;
-use App\Http\Controllers\MarchamoReemplazoController;
 use App\Http\Controllers\MarchamoController;
+use App\Http\Controllers\MarchamoReemplazoController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\TanqueController;
 use App\Http\Controllers\UnidadController;
 use App\Http\Controllers\UsuarioController;
 use Illuminate\Support\Facades\Route;
@@ -131,7 +132,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/unidades/{unidad}/reactivar', [UnidadController::class, 'reactivar'])
         ->name('unidades.reactivar');
 
-         /*
+    /*
     |--------------------------------------------------------------------------
     | Gasolineras
     |--------------------------------------------------------------------------
@@ -158,6 +159,59 @@ Route::middleware('auth')->group(function () {
     Route::post('/gasolineras', [GasolineraController::class, 'store'])
         ->name('gasolineras.store');
 
+    /*
+    |--------------------------------------------------------------------------
+    | Gestión de tanques
+    |--------------------------------------------------------------------------
+    |
+    | Estas rutas deben estar antes de /gasolineras/{gasolinera},
+    | porque /gasolineras/tanques es una ruta fija.
+    |
+    */
+
+    Route::get('/gasolineras/tanques', [TanqueController::class, 'index'])
+        ->name('gasolineras.tanques.index');
+
+    Route::get('/gasolineras/tanques/ventana', [TanqueController::class, 'indexVentana'])
+        ->name('gasolineras.tanques.index.ventana');
+
+    Route::post('/gasolineras/{gasolinera}/tanques', [GasolineraController::class, 'storeTanque'])
+        ->name('gasolineras.tanques.store');
+
+    Route::get('/gasolineras/{gasolinera}/tanques/{tanque}/administrar', [TanqueController::class, 'show'])
+        ->name('gasolineras.tanques.show');
+
+    Route::get('/gasolineras/{gasolinera}/tanques/{tanque}/administrar/ventana', [TanqueController::class, 'showVentana'])
+        ->name('gasolineras.tanques.show.ventana');
+
+    Route::put('/gasolineras/{gasolinera}/tanques/{tanque}', [TanqueController::class, 'update'])
+        ->name('gasolineras.tanques.update');
+
+    Route::patch('/gasolineras/{gasolinera}/tanques/{tanque}/inactivar', [GasolineraController::class, 'inactivarTanque'])
+        ->name('gasolineras.tanques.inactivar');
+
+    Route::patch('/gasolineras/{gasolinera}/tanques/{tanque}/reactivar', [GasolineraController::class, 'reactivarTanque'])
+        ->name('gasolineras.tanques.reactivar');
+
+    Route::get('/gasolineras/{gasolinera}/tanques/{tanque}/recarga', [GasolineraController::class, 'recargarTanque'])
+        ->name('gasolineras.tanques.recarga');
+
+    Route::get('/gasolineras/{gasolinera}/tanques/{tanque}/recarga/ventana', [GasolineraController::class, 'recargarTanqueVentana'])
+        ->name('gasolineras.tanques.recarga.ventana');
+
+    Route::post('/gasolineras/{gasolinera}/tanques/{tanque}/recarga', [GasolineraController::class, 'guardarRecargaTanque'])
+        ->name('gasolineras.tanques.recarga.store');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Gasolineras - Rutas dinámicas
+    |--------------------------------------------------------------------------
+    |
+    | Estas rutas deben quedar después de las rutas fijas de gasolineras
+    | y después de gestión de tanques.
+    |
+    */
+
     Route::get('/gasolineras/{gasolinera}/ficha/ventana', [GasolineraController::class, 'showVentana'])
         ->name('gasolineras.show.ventana');
 
@@ -178,24 +232,6 @@ Route::middleware('auth')->group(function () {
 
     Route::patch('/gasolineras/{gasolinera}/reactivar', [GasolineraController::class, 'reactivar'])
         ->name('gasolineras.reactivar');
-
-    Route::post('/gasolineras/{gasolinera}/tanques', [GasolineraController::class, 'storeTanque'])
-        ->name('gasolineras.tanques.store');
-
-    Route::patch('/gasolineras/{gasolinera}/tanques/{tanque}/inactivar', [GasolineraController::class, 'inactivarTanque'])
-        ->name('gasolineras.tanques.inactivar');
-
-    Route::patch('/gasolineras/{gasolinera}/tanques/{tanque}/reactivar', [GasolineraController::class, 'reactivarTanque'])
-        ->name('gasolineras.tanques.reactivar');
-
-    Route::get('/gasolineras/{gasolinera}/tanques/{tanque}/recarga', [GasolineraController::class, 'recargarTanque'])
-        ->name('gasolineras.tanques.recarga');
-
-    Route::get('/gasolineras/{gasolinera}/tanques/{tanque}/recarga/ventana', [GasolineraController::class, 'recargarTanqueVentana'])
-        ->name('gasolineras.tanques.recarga.ventana');
-
-    Route::post('/gasolineras/{gasolinera}/tanques/{tanque}/recarga', [GasolineraController::class, 'guardarRecargaTanque'])
-        ->name('gasolineras.tanques.recarga.store');   
 
     /*
     |--------------------------------------------------------------------------

@@ -35,7 +35,7 @@
 
                             <div class="flex items-center gap-3">
                                 <a href="{{ route('marchamos.reemplazos.index') }}" class="cc-btn-secondary cc-btn-wide">
-                                    Volver al sistema
+                                    Volver a Administración
                                 </a>
                             </div>
                         </div>

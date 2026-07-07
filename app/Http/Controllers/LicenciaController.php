@@ -89,7 +89,6 @@ class LicenciaController extends Controller
             ->get();
 
         $baseQuery = Licencia::query()
-            ->with(['empresa', 'unidad'])
             ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
                 $query->where('empresa_id', $user->empresa_id);
             });
@@ -98,7 +97,7 @@ class LicenciaController extends Controller
         $totalActivas = (clone $baseQuery)->where('estado', 'activa')->count();
         $totalInactivas = (clone $baseQuery)->where('estado', 'inactiva')->count();
 
-        $licencias = Licencia::query()
+        $licenciasQuery = Licencia::query()
             ->with(['empresa', 'unidad'])
             ->join('unidades', 'licencias.unidad_id', '=', 'unidades.id')
             ->select('licencias.*')
@@ -119,7 +118,23 @@ class LicenciaController extends Controller
             })
             ->when(! $hayFiltros, function ($query) {
                 $query->whereRaw('1 = 0');
-            })
+            });
+
+        $resumenLicencias = [
+            'total' => $hayFiltros
+                ? (clone $licenciasQuery)->count('licencias.id')
+                : $totalLicencias,
+
+            'activas' => $hayFiltros
+                ? (clone $licenciasQuery)->where('licencias.estado', 'activa')->count('licencias.id')
+                : $totalActivas,
+
+            'inactivas' => $hayFiltros
+                ? (clone $licenciasQuery)->where('licencias.estado', 'inactiva')->count('licencias.id')
+                : $totalInactivas,
+        ];
+
+        $licencias = $licenciasQuery
             ->orderBy('unidades.placa')
             ->paginate(10)
             ->withQueryString();
@@ -135,6 +150,7 @@ class LicenciaController extends Controller
             'totalLicencias' => $totalLicencias,
             'totalActivas' => $totalActivas,
             'totalInactivas' => $totalInactivas,
+            'resumenLicencias' => $resumenLicencias,
             'esUsuarioDieselCop' => $esUsuarioDieselCop,
             'periodosVigencia' => $this->periodosVigencia(),
         ];
@@ -331,8 +347,8 @@ class LicenciaController extends Controller
     }
 
     /**
-    * Ficha administrativa de la licencia en ventana independiente.
-    */
+     * Ficha administrativa de la licencia en ventana independiente.
+     */
     public function showVentana(Licencia $licencia): View
     {
         $this->autorizarAccesoLicencia($licencia);
@@ -364,8 +380,8 @@ class LicenciaController extends Controller
     }
 
     /**
-    * Formulario de edición de licencia en ventana independiente.
-    */
+     * Formulario de edición de licencia en ventana independiente.
+     */
     public function editVentana(Licencia $licencia): View
     {
         $this->autorizarAccesoLicencia($licencia);
@@ -406,7 +422,7 @@ class LicenciaController extends Controller
         return redirect()
             ->route('licencias.show', $licencia)
             ->with('success', 'Licencia actualizada correctamente.');
-        }
+    }
 
     /**
      * Inactiva una licencia sin eliminarla físicamente.
@@ -475,6 +491,12 @@ class LicenciaController extends Controller
             'motivo_inactivacion' => null,
             'actualizado_por' => Auth::id(),
         ]);
+
+        if ($request->input('return_to') === 'ventana') {
+            return redirect()
+                ->route('licencias.show.ventana', $licencia)
+                ->with('success', 'Licencia reactivada correctamente.');
+        }
 
         return redirect()
             ->route('licencias.show', $licencia)

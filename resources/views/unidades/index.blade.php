@@ -32,10 +32,10 @@
                 <div class="cc-summary-strip">
                     <div class="cc-summary-strip-item">
                         <span class="cc-summary-strip-label">
-                            Total unidades
+                            {{ $hayFiltros ? 'Resultados' : 'Total unidades' }}
                         </span>
                         <span class="cc-summary-strip-value">
-                            {{ $totalUnidades }}
+                            {{ $resumenUnidades['total'] ?? $totalUnidades }}
                         </span>
                     </div>
 
@@ -44,7 +44,7 @@
                             Registradas
                         </span>
                         <span class="cc-summary-strip-value">
-                            {{ $totalRegistradas ?? 0 }}
+                            {{ $resumenUnidades['registradas'] ?? ($totalRegistradas ?? 0) }}
                         </span>
                     </div>
 
@@ -53,7 +53,7 @@
                             Activas
                         </span>
                         <span class="cc-summary-strip-value cc-summary-strip-value-success">
-                            {{ $totalActivas }}
+                            {{ $resumenUnidades['activas'] ?? $totalActivas }}
                         </span>
                     </div>
 
@@ -62,7 +62,7 @@
                             Inactivas
                         </span>
                         <span class="cc-summary-strip-value cc-summary-strip-value-danger">
-                            {{ $totalInactivas }}
+                            {{ $resumenUnidades['inactivas'] ?? $totalInactivas }}
                         </span>
                     </div>
                 </div>
@@ -261,7 +261,7 @@
                     </div>
 
                     <div class="mt-6">
-                        {{ $unidades->links() }}
+                        {{ $unidades->appends(array_merge(request()->query(), ['consultar' => 1]))->links() }}
                     </div>
                 @endif
 

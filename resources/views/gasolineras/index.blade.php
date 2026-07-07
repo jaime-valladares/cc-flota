@@ -21,10 +21,6 @@
                            class="cc-btn-secondary cc-btn-wide">
                             Abrir en nueva pestaña
                         </a>
-
-                        <a href="{{ route('gasolineras.create') }}" class="cc-btn-primary">
-                            Nueva gasolinera
-                        </a>
                     </div>
                 </div>
 
@@ -44,20 +40,40 @@
                     </div>
                 @endif
 
+                @php
+                    $resultadosEncontrados = $hayFiltros ? $gasolineras->total() : 0;
+                    $resultadosMostrados = $hayFiltros ? $gasolineras->count() : 0;
+
+                    $resultadosActivosPagina = $hayFiltros
+                        ? $gasolineras->getCollection()->where('estado', 'activa')->count()
+                        : 0;
+
+                    $resultadosInactivosPagina = $hayFiltros
+                        ? $gasolineras->getCollection()->where('estado', 'inactiva')->count()
+                        : 0;
+                @endphp
+
                 <div class="cc-summary-strip">
                     <div class="cc-summary-strip-item">
-                        <span class="cc-summary-strip-label">Gasolineras</span>
-                        <span class="cc-summary-strip-value">{{ $totalGasolineras }}</span>
+                        <span class="cc-summary-strip-label">Resultados</span>
+                        <span class="cc-summary-strip-value">{{ $resultadosEncontrados }}</span>
                     </div>
 
                     <div class="cc-summary-strip-item">
-                        <span class="cc-summary-strip-label">Activas</span>
-                        <span class="cc-summary-strip-value">{{ $gasolinerasActivas }}</span>
+                        <span class="cc-summary-strip-label">Mostrando</span>
+                        <span class="cc-summary-strip-value">{{ $resultadosMostrados }}</span>
                     </div>
 
                     <div class="cc-summary-strip-item">
-                        <span class="cc-summary-strip-label">Inactivas</span>
-                        <span class="cc-summary-strip-value">{{ $gasolinerasInactivas }}</span>
+                        <span class="cc-summary-strip-label">Activas página</span>
+                        <span class="cc-summary-strip-value cc-summary-strip-value-success">{{ $resultadosActivosPagina }}</span>
+                    </div>
+
+                    <div class="cc-summary-strip-item">
+                        <span class="cc-summary-strip-label">Inactivas página</span>
+                        <span class="cc-summary-strip-value {{ $resultadosInactivosPagina > 0 ? 'cc-summary-strip-value-danger' : '' }}">
+                            {{ $resultadosInactivosPagina }}
+                        </span>
                     </div>
                 </div>
 
@@ -150,42 +166,53 @@
                                 $tanquesBajoAlerta = $tanques
                                     ->filter(fn ($tanque) => (float) $tanque->volumen_actual <= (float) $tanque->volumen_minimo_alerta)
                                     ->count();
+
+                                $estadoClase = $gasolinera->estado === 'activa'
+                                    ? 'cc-badge-active'
+                                    : 'cc-badge-inactive';
                             @endphp
 
-                            <article class="cc-result-card cc-result-card-compact">
-                                <div class="cc-result-main">
-                                    <div>
+                            <article class="cc-result-card cc-result-card-compact" style="padding: 1.15rem 1.25rem;">
+                                <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); gap: 1.35rem; align-items: start;">
+
+                                    <div style="grid-column: 1 / 3;">
                                         <div class="cc-result-title">
                                             {{ $gasolinera->nombre }}
                                         </div>
 
-                                        <div class="cc-result-meta">
-                                            @if ($esUsuarioDieselCop)
-                                                <span>
-                                                    {{ $gasolinera->empresa?->nombre_comercial ?: $gasolinera->empresa?->nombre_legal }}
-                                                </span>
-                                            @endif
-
-                                            <span>
-                                                {{ $gasolinera->direccion }}
-                                            </span>
+                                        <div class="cc-result-subtitle">
+                                            Resumen operativo de ubicación, tanques e inventario disponible.
                                         </div>
                                     </div>
 
-                                    <div class="cc-result-status">
-                                        <span class="cc-status-pill {{ $gasolinera->estado === 'activa' ? 'cc-status-active' : 'cc-status-inactive' }}">
+                                    <div style="display: flex; justify-content: flex-end; align-items: flex-start;">
+                                        <span class="cc-badge {{ $estadoClase }}">
                                             {{ ucfirst($gasolinera->estado) }}
                                         </span>
                                     </div>
-                                </div>
 
-                                <div class="cc-result-grid">
+                                    <div>
+                                        <div class="cc-result-label">Empresa</div>
+                                        <div class="cc-result-value">
+                                            {{ $gasolinera->empresa?->nombre_comercial ?: $gasolinera->empresa?->nombre_legal }}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div class="cc-result-label">Ubicación</div>
+                                        <div class="cc-result-value">
+                                            {{ $gasolinera->direccion }}
+                                        </div>
+                                    </div>
+
                                     <div>
                                         <div class="cc-result-label">Tanques</div>
                                         <div class="cc-result-value">
                                             {{ $gasolinera->tanques_activos_count ?? 0 }} activos / {{ $gasolinera->tanques_count ?? $tanques->count() }} total
                                         </div>
                                     </div>
+
+                                    <div style="grid-column: 1 / 4; border-top: 1px solid var(--cc-card-border); margin-top: 0.1rem;"></div>
 
                                     <div>
                                         <div class="cc-result-label">Inventario disponible</div>
@@ -207,25 +234,13 @@
                                             {{ number_format($porcentajeDisponible, 2) }}%
                                         </div>
                                     </div>
-                                </div>
 
-                                @if ($tanquesBajoAlerta > 0)
-                                    <div class="cc-alert cc-alert-warning" style="margin-top: 0.9rem;">
-                                        {{ $tanquesBajoAlerta }} tanque(s) se encuentran en nivel mínimo o por debajo del mínimo definido.
-                                    </div>
-                                @endif
+                                    @if ($tanquesBajoAlerta > 0)
+                                        <div class="cc-alert cc-alert-warning" style="grid-column: 1 / 4; margin-top: 0.2rem;">
+                                            {{ $tanquesBajoAlerta }} tanque(s) se encuentran en nivel mínimo o por debajo del mínimo definido.
+                                        </div>
+                                    @endif
 
-                                <div class="cc-result-actions">
-                                    <a href="{{ route('gasolineras.show', $gasolinera) }}" class="cc-btn-result">
-                                        Ver ficha
-                                    </a>
-
-                                    <a href="{{ route('gasolineras.show.ventana', $gasolinera) }}"
-                                       target="_blank"
-                                       rel="noopener noreferrer"
-                                       class="cc-btn-result">
-                                        Nueva pestaña
-                                    </a>
                                 </div>
                             </article>
                         @endforeach

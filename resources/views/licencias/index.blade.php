@@ -32,10 +32,10 @@
                 <div class="cc-summary-strip">
                     <div class="cc-summary-strip-item">
                         <span class="cc-summary-strip-label">
-                            Total licencias
+                            {{ $hayFiltros ? 'Resultados' : 'Total licencias' }}
                         </span>
                         <span class="cc-summary-strip-value">
-                            {{ $totalLicencias }}
+                            {{ $resumenLicencias['total'] ?? $totalLicencias }}
                         </span>
                     </div>
 
@@ -44,7 +44,7 @@
                             Activas
                         </span>
                         <span class="cc-summary-strip-value cc-summary-strip-value-success">
-                            {{ $totalActivas }}
+                            {{ $resumenLicencias['activas'] ?? $totalActivas }}
                         </span>
                     </div>
 
@@ -53,7 +53,7 @@
                             Inactivas
                         </span>
                         <span class="cc-summary-strip-value cc-summary-strip-value-danger">
-                            {{ $totalInactivas }}
+                            {{ $resumenLicencias['inactivas'] ?? $totalInactivas }}
                         </span>
                     </div>
                 </div>
@@ -245,7 +245,7 @@
                     </div>
 
                     <div class="mt-6">
-                        {{ $licencias->links() }}
+                        {{ $licencias->appends(array_merge(request()->query(), ['consultar' => 1]))->links() }}
                     </div>
                 @endif
 

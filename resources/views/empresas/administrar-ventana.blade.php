@@ -31,7 +31,7 @@
 
                             <div class="flex items-center gap-3">
                                 <a href="{{ route('empresas.administrar') }}" class="cc-btn-secondary cc-btn-wide">
-                                    Volver al sistema
+                                    Volver a Administrar
                                 </a>
                             </div>
                         </div>
@@ -43,6 +43,7 @@
                         @endif
 
                         <form method="GET" action="{{ route('empresas.administrar.ventana') }}" class="mb-5">
+                            <input type="hidden" name="consultar" value="1">
                             <div class="cc-filter-panel cc-filter-panel-compact cc-filter-panel-inline">
 
                                 <div class="cc-form-section cc-form-section-compact" style="margin-top: 0;">
@@ -245,7 +246,7 @@
                             </div>
 
                             <div class="mt-6">
-                                {{ $empresas->links() }}
+                                {{ $empresas->appends(array_merge(request()->query(), ['consultar' => 1]))->links() }}
                             </div>
                         @endif
 

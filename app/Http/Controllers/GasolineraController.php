@@ -78,17 +78,6 @@ class GasolineraController extends Controller
         $nombre = trim((string) ($validated['nombre'] ?? ''));
         $estado = $validated['estado'] ?? null;
 
-        /*
-        |--------------------------------------------------------------------------
-        | Alcance multiempresa
-        |--------------------------------------------------------------------------
-        |
-        | Diesel Cop puede consultar todas o una empresa específica.
-        | Un usuario de empresa siempre queda limitado a su propia empresa,
-        | sin importar lo que llegue en la URL.
-        |
-        */
-
         if (! $esUsuarioDieselCop) {
             $empresaId = $user->empresa_id;
         }
@@ -302,7 +291,7 @@ class GasolineraController extends Controller
             }
         }
 
-        $gasolinera = DB::transaction(function () use ($validated, $empresaId) {
+        DB::transaction(function () use ($validated, $empresaId) {
             $gasolinera = Gasolinera::create([
                 'empresa_id' => $empresaId,
                 'nombre' => $validated['nombre'],
@@ -346,19 +335,17 @@ class GasolineraController extends Controller
                     'fecha_creacion' => now(),
                 ]);
             }
-
-            return $gasolinera;
         });
 
         if ($request->input('return_to') === 'ventana') {
             return redirect()
-                ->route('gasolineras.show.ventana', $gasolinera)
-                ->with('success', 'Gasolinera creada correctamente con sus tanques iniciales.');
+                ->route('gasolineras.create.ventana')
+                ->with('success', 'Gasolinera guardada correctamente.');
         }
 
         return redirect()
-            ->route('gasolineras.show', $gasolinera)
-            ->with('success', 'Gasolinera creada correctamente con sus tanques iniciales.');
+            ->route('gasolineras.create')
+            ->with('success', 'Gasolinera guardada correctamente.');
     }
 
     /**
@@ -466,17 +453,7 @@ class GasolineraController extends Controller
     {
         $this->autorizarAccesoGasolinera($gasolinera);
 
-        $user = Auth::user();
-        $esUsuarioDieselCop = is_null($user->empresa_id);
-
         $validated = $request->validate([
-            'empresa_id' => $esUsuarioDieselCop
-                ? [
-                    'required',
-                    'integer',
-                    Rule::exists('empresas', 'id')->where('estado', 'activa'),
-                ]
-                : ['nullable'],
             'nombre' => ['required', 'string', 'max:150'],
             'direccion' => ['required', 'string', 'max:255'],
             'encargado' => ['nullable', 'string', 'max:150'],
@@ -488,17 +465,13 @@ class GasolineraController extends Controller
             ],
             'correo' => ['nullable', 'email', 'max:150'],
         ], [
-            'empresa_id.required' => 'Debe seleccionar una empresa.',
-            'empresa_id.exists' => 'La empresa seleccionada no es válida o no está activa.',
             'nombre.required' => 'Debe ingresar el nombre de la gasolinera.',
             'direccion.required' => 'Debe ingresar la dirección de la gasolinera.',
             'telefono.regex' => 'El teléfono debe tener el formato 0000-0000.',
             'correo.email' => 'Debe ingresar un correo válido.',
         ]);
 
-        $empresaId = $esUsuarioDieselCop
-            ? (int) $validated['empresa_id']
-            : (int) $user->empresa_id;
+        $empresaId = (int) $gasolinera->empresa_id;
 
         $request->validate([
             'nombre' => [
@@ -507,11 +480,10 @@ class GasolineraController extends Controller
                     ->ignore($gasolinera->id),
             ],
         ], [
-            'nombre.unique' => 'Ya existe una gasolinera con ese nombre para la empresa seleccionada.',
+            'nombre.unique' => 'Ya existe una gasolinera con ese nombre para la empresa actual.',
         ]);
 
         $gasolinera->update([
-            'empresa_id' => $empresaId,
             'nombre' => $validated['nombre'],
             'direccion' => $validated['direccion'],
             'encargado' => $validated['encargado'] ?? null,
@@ -671,24 +643,24 @@ class GasolineraController extends Controller
         }
 
         $validated = $request->validate([
-            'volumen_recarga' => ['required', 'numeric', 'gt:0'],
+            'volumen_movimiento' => ['required', 'numeric', 'gt:0'],
             'observaciones' => ['nullable', 'string', 'max:1000'],
         ], [
-            'volumen_recarga.required' => 'Debe ingresar el volumen a recargar.',
-            'volumen_recarga.numeric' => 'El volumen a recargar debe ser numérico.',
-            'volumen_recarga.gt' => 'El volumen a recargar debe ser mayor que cero.',
+            'volumen_movimiento.required' => 'Debe ingresar el volumen a recargar.',
+            'volumen_movimiento.numeric' => 'El volumen a recargar debe ser numérico.',
+            'volumen_movimiento.gt' => 'El volumen a recargar debe ser mayor que cero.',
             'observaciones.max' => 'Las observaciones no deben exceder 1000 caracteres.',
         ]);
 
         $volumenAnterior = (float) $tanque->volumen_actual;
-        $volumenMovimiento = (float) $validated['volumen_recarga'];
+        $volumenMovimiento = (float) $validated['volumen_movimiento'];
         $volumenResultante = $volumenAnterior + $volumenMovimiento;
         $capacidadTotal = (float) $tanque->capacidad_total;
 
         if ($volumenResultante > $capacidadTotal) {
             return back()
                 ->withErrors([
-                    'volumen_recarga' => 'La recarga excede la capacidad total del tanque.',
+                    'volumen_movimiento' => 'La recarga excede la capacidad total del tanque.',
                 ])
                 ->withInput();
         }
@@ -859,12 +831,12 @@ class GasolineraController extends Controller
 
         if ($request->input('return_to') === 'ventana') {
             return redirect()
-                ->route('gasolineras.show.ventana', $gasolinera)
+                ->route('gasolineras.tanques.show.ventana', [$gasolinera, $tanque])
                 ->with('success', 'Tanque inactivado correctamente.');
         }
 
         return redirect()
-            ->route('gasolineras.show', $gasolinera)
+            ->route('gasolineras.tanques.show', [$gasolinera, $tanque])
             ->with('success', 'Tanque inactivado correctamente.');
     }
 
@@ -894,12 +866,12 @@ class GasolineraController extends Controller
 
         if ($request->input('return_to') === 'ventana') {
             return redirect()
-                ->route('gasolineras.show.ventana', $gasolinera)
+                ->route('gasolineras.tanques.show.ventana', [$gasolinera, $tanque])
                 ->with('success', 'Tanque reactivado correctamente.');
         }
 
         return redirect()
-            ->route('gasolineras.show', $gasolinera)
+            ->route('gasolineras.tanques.show', [$gasolinera, $tanque])
             ->with('success', 'Tanque reactivado correctamente.');
     }
 

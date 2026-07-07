@@ -83,7 +83,7 @@
                 <nav class="cc-sidebar-nav">
 
                     <div class="cc-sidebar-section">
-                        Administración Diesel Cop
+                        Administración
                     </div>
 
                     <!-- Empresas -->
@@ -134,32 +134,8 @@
                         </div>
                     </div>
 
-                    <!-- Licencias -->
-                    <div class="cc-sidebar-group">
-                        <div class="cc-sidebar-parent cc-sidebar-static-parent {{ $licenciasActivo ? 'cc-sidebar-parent-active' : '' }}">
-                            <span>Licencias</span>
-                        </div>
-
-                        <div class="cc-sidebar-subnav">
-                            <a href="{{ route('licencias.index') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('licencias.index') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Consulta licencias
-                            </a>
-
-                            <a href="{{ route('licencias.administrar') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('licencias.administrar') || request()->routeIs('licencias.show') || request()->routeIs('licencias.edit') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Administrar licencia
-                            </a>
-
-                            <a href="{{ route('licencias.create') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('licencias.create') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Nueva licencia
-                            </a>
-                        </div>
-                    </div>
-
                     <div class="cc-sidebar-section">
-                        Configuración técnica
+                        Configuración operativa
                     </div>
 
                     <!-- Unidades -->
@@ -182,6 +158,30 @@
                             <a href="{{ route('unidades.create') }}"
                                class="cc-sidebar-sublink {{ request()->routeIs('unidades.create') ? 'cc-sidebar-sublink-active' : '' }}">
                                 Nueva unidad
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Licencias -->
+                    <div class="cc-sidebar-group">
+                        <div class="cc-sidebar-parent cc-sidebar-static-parent {{ $licenciasActivo ? 'cc-sidebar-parent-active' : '' }}">
+                            <span>Licencias</span>
+                        </div>
+
+                        <div class="cc-sidebar-subnav">
+                            <a href="{{ route('licencias.index') }}"
+                               class="cc-sidebar-sublink {{ request()->routeIs('licencias.index') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Consulta licencias
+                            </a>
+
+                            <a href="{{ route('licencias.administrar') }}"
+                               class="cc-sidebar-sublink {{ request()->routeIs('licencias.administrar') || request()->routeIs('licencias.show') || request()->routeIs('licencias.edit') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Administrar licencia
+                            </a>
+
+                            <a href="{{ route('licencias.create') }}"
+                               class="cc-sidebar-sublink {{ request()->routeIs('licencias.create') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Nueva licencia
                             </a>
                         </div>
                     </div>
@@ -217,22 +217,34 @@
                     <!-- Gasolineras -->
                     <div class="cc-sidebar-group">
                         <div class="cc-sidebar-parent cc-sidebar-static-parent {{ $gasolinerasActivo ? 'cc-sidebar-parent-active' : '' }}">
-                            <span>Gasolineras</span>
+                            <span>Gasolineras Internas</span>
                         </div>
 
                         <div class="cc-sidebar-subnav">
                             <a href="{{ route('gasolineras.index') }}"
-                            class="cc-sidebar-sublink {{ request()->routeIs('gasolineras.index') ? 'cc-sidebar-sublink-active' : '' }}">
+                               class="cc-sidebar-sublink {{ request()->routeIs('gasolineras.index') ? 'cc-sidebar-sublink-active' : '' }}">
                                 Consulta gasolineras
                             </a>
 
                             <a href="{{ route('gasolineras.administrar') }}"
-                            class="cc-sidebar-sublink {{ request()->routeIs('gasolineras.administrar') || request()->routeIs('gasolineras.show') || request()->routeIs('gasolineras.edit') || request()->routeIs('gasolineras.tanques.*') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Administrar gasolinera
+                               class="cc-sidebar-sublink {{ request()->routeIs('gasolineras.administrar') || request()->routeIs('gasolineras.show') || request()->routeIs('gasolineras.edit') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Administrar gasolineras
+                            </a>
+
+                            <a href="{{ route('gasolineras.tanques.index') }}"
+                                class="cc-sidebar-sublink {{ request()->routeIs('gasolineras.tanques.index') || request()->routeIs('gasolineras.tanques.show') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Gestión de tanques
+                            </a>
+
+                            <a href="#"
+                               onclick="return false;"
+                               class="cc-sidebar-sublink"
+                               style="opacity: 0.58; cursor: default;">
+                                Recarga de tanques
                             </a>
 
                             <a href="{{ route('gasolineras.create') }}"
-                            class="cc-sidebar-sublink {{ request()->routeIs('gasolineras.create') ? 'cc-sidebar-sublink-active' : '' }}">
+                               class="cc-sidebar-sublink {{ request()->routeIs('gasolineras.create') ? 'cc-sidebar-sublink-active' : '' }}">
                                 Nueva gasolinera
                             </a>
                         </div>

@@ -7,7 +7,6 @@
 
         <title>Consulta unidades | CC-Flota</title>
 
-        <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
@@ -33,18 +32,24 @@
 
                             <div class="flex items-center gap-3">
                                 <a href="{{ route('unidades.index') }}" class="cc-btn-secondary cc-btn-wide">
-                                    Volver al sistema
+                                    Volver a Consulta
                                 </a>
                             </div>
                         </div>
 
+                        @if (session('success'))
+                            <div class="cc-alert-success">
+                                {{ session('success') }}
+                            </div>
+                        @endif
+
                         <div class="cc-summary-strip">
                             <div class="cc-summary-strip-item">
                                 <span class="cc-summary-strip-label">
-                                    Total unidades
+                                    {{ $hayFiltros ? 'Resultados' : 'Total unidades' }}
                                 </span>
                                 <span class="cc-summary-strip-value">
-                                    {{ $totalUnidades }}
+                                    {{ $resumenUnidades['total'] ?? $totalUnidades }}
                                 </span>
                             </div>
 
@@ -53,7 +58,7 @@
                                     Registradas
                                 </span>
                                 <span class="cc-summary-strip-value">
-                                    {{ $totalRegistradas ?? 0 }}
+                                    {{ $resumenUnidades['registradas'] ?? ($totalRegistradas ?? 0) }}
                                 </span>
                             </div>
 
@@ -62,7 +67,7 @@
                                     Activas
                                 </span>
                                 <span class="cc-summary-strip-value cc-summary-strip-value-success">
-                                    {{ $totalActivas }}
+                                    {{ $resumenUnidades['activas'] ?? $totalActivas }}
                                 </span>
                             </div>
 
@@ -71,7 +76,7 @@
                                     Inactivas
                                 </span>
                                 <span class="cc-summary-strip-value cc-summary-strip-value-danger">
-                                    {{ $totalInactivas }}
+                                    {{ $resumenUnidades['inactivas'] ?? $totalInactivas }}
                                 </span>
                             </div>
                         </div>
@@ -270,7 +275,7 @@
                             </div>
 
                             <div class="mt-6">
-                                {{ $unidades->links() }}
+                                {{ $unidades->appends(array_merge(request()->query(), ['consultar' => 1]))->links() }}
                             </div>
                         @endif
 

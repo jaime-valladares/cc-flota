@@ -61,6 +61,7 @@ class EmpresaController extends Controller
             : Empresa::find($user->empresa_id);
 
         $validated = $request->validate([
+            'consultar' => ['nullable', 'boolean'],
             'empresa_id' => ['nullable', 'integer', 'exists:empresas,id'],
             'nit' => [
                 'nullable',
@@ -95,6 +96,7 @@ class EmpresaController extends Controller
         }
 
         $hayFiltros = ! $esUsuarioDieselCop
+            || $request->boolean('consultar')
             || $request->hasAny(['empresa_id', 'nit', 'estado']);
 
         $query = Empresa::query();

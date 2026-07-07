@@ -55,6 +55,9 @@ class UnidadController extends Controller
     /**
      * Prepara filtros, catálogos y resultados para consulta/administración.
      */
+    /**
+     * Prepara filtros, catálogos y resultados para consulta/administración.
+     */
     private function prepararConsultaUnidades(Request $request): array
     {
         $user = Auth::user();
@@ -94,7 +97,7 @@ class UnidadController extends Controller
         $totalActivas = (clone $baseQuery)->where('estado', 'activa')->count();
         $totalInactivas = (clone $baseQuery)->where('estado', 'inactiva')->count();
 
-        $unidades = Unidad::query()
+        $unidadesQuery = Unidad::query()
             ->with(['empresa'])
             ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
                 $query->where('empresa_id', $user->empresa_id);
@@ -113,7 +116,27 @@ class UnidadController extends Controller
             })
             ->when(! $hayFiltros, function ($query) {
                 $query->whereRaw('1 = 0');
-            })
+            });
+
+        $resumenUnidades = [
+            'total' => $hayFiltros
+                ? (clone $unidadesQuery)->count()
+                : $totalUnidades,
+
+            'registradas' => $hayFiltros
+                ? (clone $unidadesQuery)->where('estado', 'registrada')->count()
+                : $totalRegistradas,
+
+            'activas' => $hayFiltros
+                ? (clone $unidadesQuery)->where('estado', 'activa')->count()
+                : $totalActivas,
+
+            'inactivas' => $hayFiltros
+                ? (clone $unidadesQuery)->where('estado', 'inactiva')->count()
+                : $totalInactivas,
+        ];
+
+        $unidades = $unidadesQuery
             ->orderBy('placa')
             ->paginate(10)
             ->withQueryString();
@@ -130,6 +153,7 @@ class UnidadController extends Controller
             'totalRegistradas' => $totalRegistradas,
             'totalActivas' => $totalActivas,
             'totalInactivas' => $totalInactivas,
+            'resumenUnidades' => $resumenUnidades,
             'esUsuarioDieselCop' => $esUsuarioDieselCop,
             'modelosMedicion' => $this->modelosMedicion(),
             'estadosUnidad' => $this->estadosUnidad(),

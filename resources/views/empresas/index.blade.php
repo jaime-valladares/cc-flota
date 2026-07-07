@@ -59,6 +59,7 @@
                 </div>
 
                 <form method="GET" action="{{ route('empresas.index') }}" class="mb-5">
+                    <input type="hidden" name="consultar" value="1">
                     <div class="cc-filter-panel cc-filter-panel-compact cc-filter-panel-inline">
 
                         <div class="cc-form-section cc-form-section-compact" style="margin-top: 0;">
@@ -285,7 +286,7 @@
                     </div>
 
                     <div class="mt-6">
-                        {{ $empresas->links() }}
+                        {{ $empresas->appends(request()->query())->links() }}
                     </div>
                 @endif
 

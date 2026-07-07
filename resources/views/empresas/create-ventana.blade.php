@@ -32,8 +32,8 @@
                             </div>
 
                             <div class="flex items-center gap-3">
-                                <a href="{{ route('empresas.index') }}" class="cc-btn-secondary cc-btn-wide">
-                                    Volver al sistema
+                                <a href="{{ route('empresas.create') }}" class="cc-btn-secondary cc-btn-wide">
+                                    Volver a Registro
                                 </a>
                             </div>
                         </div>

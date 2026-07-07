@@ -22,7 +22,7 @@
                         </a>
 
                         <a href="{{ route('empresas.index') }}" class="cc-btn-secondary cc-btn-wide">
-                            Volver a consulta
+                            Ir a consulta
                         </a>
                     </div>
                 </div>
