@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\GasolineraController;
+use App\Http\Controllers\GasolineraExternaController;
+use App\Http\Controllers\PuntoRutaController;
 use App\Http\Controllers\LicenciaController;
 use App\Http\Controllers\RecargaTanqueController;
 use App\Http\Controllers\MarchamoAsignacionInicialController;
@@ -254,6 +256,102 @@ Route::middleware('auth')->group(function () {
 
     Route::patch('/gasolineras/{gasolinera}/reactivar', [GasolineraController::class, 'reactivar'])
         ->name('gasolineras.reactivar');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Gasolineras externas
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/gasolineras-externas', [GasolineraExternaController::class, 'index'])
+        ->name('gasolineras-externas.index');
+
+    Route::get('/gasolineras-externas/consulta/ventana', [GasolineraExternaController::class, 'consultaVentana'])
+        ->name('gasolineras-externas.consulta.ventana');
+
+    Route::get('/gasolineras-externas/administrar', [GasolineraExternaController::class, 'administrar'])
+        ->name('gasolineras-externas.administrar');
+
+    Route::get('/gasolineras-externas/administrar/ventana', [GasolineraExternaController::class, 'administrarVentana'])
+        ->name('gasolineras-externas.administrar.ventana');
+
+    Route::get('/gasolineras-externas/nueva', [GasolineraExternaController::class, 'create'])
+        ->name('gasolineras-externas.create');
+
+    Route::get('/gasolineras-externas/nueva/ventana', [GasolineraExternaController::class, 'createVentana'])
+        ->name('gasolineras-externas.create.ventana');
+
+    Route::post('/gasolineras-externas', [GasolineraExternaController::class, 'store'])
+        ->name('gasolineras-externas.store');
+
+    Route::get('/gasolineras-externas/{gasolineraExterna}/ficha/ventana', [GasolineraExternaController::class, 'showVentana'])
+        ->name('gasolineras-externas.show.ventana');
+
+    Route::get('/gasolineras-externas/{gasolineraExterna}/editar/ventana', [GasolineraExternaController::class, 'editVentana'])
+        ->name('gasolineras-externas.edit.ventana');
+
+    Route::get('/gasolineras-externas/{gasolineraExterna}', [GasolineraExternaController::class, 'show'])
+        ->name('gasolineras-externas.show');
+
+    Route::get('/gasolineras-externas/{gasolineraExterna}/editar', [GasolineraExternaController::class, 'edit'])
+        ->name('gasolineras-externas.edit');
+
+    Route::put('/gasolineras-externas/{gasolineraExterna}', [GasolineraExternaController::class, 'update'])
+        ->name('gasolineras-externas.update');
+
+    Route::patch('/gasolineras-externas/{gasolineraExterna}/inactivar', [GasolineraExternaController::class, 'inactivar'])
+        ->name('gasolineras-externas.inactivar');
+
+    Route::patch('/gasolineras-externas/{gasolineraExterna}/reactivar', [GasolineraExternaController::class, 'reactivar'])
+        ->name('gasolineras-externas.reactivar');
+
+        /*
+    |--------------------------------------------------------------------------
+    | Puntos de ruta
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/puntos-ruta', [PuntoRutaController::class, 'index'])
+        ->name('puntos-ruta.index');
+
+    Route::get('/puntos-ruta/consulta/ventana', [PuntoRutaController::class, 'consultaVentana'])
+        ->name('puntos-ruta.consulta.ventana');
+
+    Route::get('/puntos-ruta/administrar', [PuntoRutaController::class, 'administrar'])
+        ->name('puntos-ruta.administrar');
+
+    Route::get('/puntos-ruta/administrar/ventana', [PuntoRutaController::class, 'administrarVentana'])
+        ->name('puntos-ruta.administrar.ventana');
+
+    Route::get('/puntos-ruta/nuevo', [PuntoRutaController::class, 'create'])
+        ->name('puntos-ruta.create');
+
+    Route::get('/puntos-ruta/nuevo/ventana', [PuntoRutaController::class, 'createVentana'])
+        ->name('puntos-ruta.create.ventana');
+
+    Route::post('/puntos-ruta', [PuntoRutaController::class, 'store'])
+        ->name('puntos-ruta.store');
+
+    Route::get('/puntos-ruta/{puntoRuta}/ficha/ventana', [PuntoRutaController::class, 'showVentana'])
+        ->name('puntos-ruta.show.ventana');
+
+    Route::get('/puntos-ruta/{puntoRuta}/editar/ventana', [PuntoRutaController::class, 'editVentana'])
+        ->name('puntos-ruta.edit.ventana');
+
+    Route::get('/puntos-ruta/{puntoRuta}', [PuntoRutaController::class, 'show'])
+        ->name('puntos-ruta.show');
+
+    Route::get('/puntos-ruta/{puntoRuta}/editar', [PuntoRutaController::class, 'edit'])
+        ->name('puntos-ruta.edit');
+
+    Route::put('/puntos-ruta/{puntoRuta}', [PuntoRutaController::class, 'update'])
+        ->name('puntos-ruta.update');
+
+    Route::patch('/puntos-ruta/{puntoRuta}/inactivar', [PuntoRutaController::class, 'inactivar'])
+        ->name('puntos-ruta.inactivar');
+
+    Route::patch('/puntos-ruta/{puntoRuta}/reactivar', [PuntoRutaController::class, 'reactivar'])
+        ->name('puntos-ruta.reactivar');
 
     /*
     |--------------------------------------------------------------------------

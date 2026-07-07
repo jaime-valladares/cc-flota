@@ -55,6 +55,8 @@
             $unidadesActivo = request()->routeIs('unidades.*');
             $marchamosActivo = request()->routeIs('marchamos.*');
             $gasolinerasActivo = request()->routeIs('gasolineras.*');
+            $gasolinerasExternasActivo = request()->routeIs('gasolineras-externas.*');
+            $puntosRutaActivo = request()->routeIs('puntos-ruta.*');
         @endphp
 
         <div class="cc-admin-shell">
@@ -214,7 +216,7 @@
                         Operación cliente
                     </div>
 
-                    <!-- Gasolineras -->
+                    <!-- Gasolineras internas -->
                     <div class="cc-sidebar-group">
                         <div class="cc-sidebar-parent cc-sidebar-static-parent {{ $gasolinerasActivo ? 'cc-sidebar-parent-active' : '' }}">
                             <span>Gasolineras Internas</span>
@@ -232,12 +234,12 @@
                             </a>
 
                             <a href="{{ route('gasolineras.tanques.index') }}"
-                                class="cc-sidebar-sublink {{ request()->routeIs('gasolineras.tanques.index') || request()->routeIs('gasolineras.tanques.show') ? 'cc-sidebar-sublink-active' : '' }}">
+                               class="cc-sidebar-sublink {{ request()->routeIs('gasolineras.tanques.index') || request()->routeIs('gasolineras.tanques.show') ? 'cc-sidebar-sublink-active' : '' }}">
                                 Gestión de tanques
                             </a>
 
                             <a href="{{ route('gasolineras.tanques.recargas.index') }}"
-                                class="cc-sidebar-sublink {{ request()->routeIs('gasolineras.tanques.recargas.index') || request()->routeIs('gasolineras.tanques.recargas.show') ? 'cc-sidebar-sublink-active' : '' }}">
+                               class="cc-sidebar-sublink {{ request()->routeIs('gasolineras.tanques.recargas.index') || request()->routeIs('gasolineras.tanques.recargas.show') ? 'cc-sidebar-sublink-active' : '' }}">
                                 Recarga de tanques
                             </a>
 
@@ -248,9 +250,74 @@
                         </div>
                     </div>
 
-                    <span class="cc-sidebar-link cc-sidebar-link-disabled">
-                        Motoristas
-                    </span>
+                    <!-- Gasolineras externas -->
+                    <div class="cc-sidebar-group">
+                        <div class="cc-sidebar-parent cc-sidebar-static-parent {{ $gasolinerasExternasActivo ? 'cc-sidebar-parent-active' : '' }}">
+                            <span>Gasolineras Externas</span>
+                        </div>
+
+                        <div class="cc-sidebar-subnav">
+                            <a href="{{ route('gasolineras-externas.index') }}"
+                               class="cc-sidebar-sublink {{ request()->routeIs('gasolineras-externas.index') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Consulta gasolineras
+                            </a>
+
+                            <a href="{{ route('gasolineras-externas.administrar') }}"
+                               class="cc-sidebar-sublink {{ request()->routeIs('gasolineras-externas.administrar') || request()->routeIs('gasolineras-externas.show') || request()->routeIs('gasolineras-externas.edit') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Administrar gasolineras
+                            </a>
+
+                            <a href="{{ route('gasolineras-externas.create') }}"
+                               class="cc-sidebar-sublink {{ request()->routeIs('gasolineras-externas.create') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Nueva gasolinera
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Puntos de ruta -->
+                    <div class="cc-sidebar-group">
+                        <div class="cc-sidebar-parent cc-sidebar-static-parent {{ $puntosRutaActivo ? 'cc-sidebar-parent-active' : '' }}">
+                            <span>Puntos de Ruta</span>
+                        </div>
+
+                        <div class="cc-sidebar-subnav">
+                            <a href="{{ route('puntos-ruta.index') }}"
+                               class="cc-sidebar-sublink {{ request()->routeIs('puntos-ruta.index') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Consulta puntos
+                            </a>
+
+                            <a href="{{ route('puntos-ruta.administrar') }}"
+                               class="cc-sidebar-sublink {{ request()->routeIs('puntos-ruta.administrar') || request()->routeIs('puntos-ruta.show') || request()->routeIs('puntos-ruta.edit') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Administrar puntos
+                            </a>
+
+                            <a href="{{ route('puntos-ruta.create') }}"
+                               class="cc-sidebar-sublink {{ request()->routeIs('puntos-ruta.create') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Nuevo punto
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Motoristas -->
+                    <div class="cc-sidebar-group">
+                        <div class="cc-sidebar-parent cc-sidebar-static-parent">
+                            <span>Motoristas</span>
+                        </div>
+
+                        <div class="cc-sidebar-subnav">
+                            <span class="cc-sidebar-sublink cc-sidebar-link-disabled">
+                                Consulta motoristas
+                            </span>
+
+                            <span class="cc-sidebar-sublink cc-sidebar-link-disabled">
+                                Administrar motoristas
+                            </span>
+
+                            <span class="cc-sidebar-sublink cc-sidebar-link-disabled">
+                                Nuevo motorista
+                            </span>
+                        </div>
+                    </div>
 
                     <div class="cc-sidebar-section">
                         Transacciones

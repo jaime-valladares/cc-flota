@@ -8,13 +8,14 @@ use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Throwable;
 
 class CcFlotaDemoSeeder extends Seeder
 {
     private int $cantidadEmpresas = 35;
 
     private int $unidadesPorEmpresa = 20;
+
+    private int $gasolinerasPorEmpresa = 10;
 
     private int $marchamoSecuencia = 0;
 
@@ -41,6 +42,16 @@ class CcFlotaDemoSeeder extends Seeder
         'Hino',
     ];
 
+    private array $capacidadesTanques = [
+        3000,
+        4500,
+        5000,
+        6500,
+        8000,
+        10000,
+        12000,
+    ];
+
     public function run(): void
     {
         $usuarioResponsableId = $this->resolverUsuarioResponsableId();
@@ -50,6 +61,8 @@ class CcFlotaDemoSeeder extends Seeder
 
             return;
         }
+
+        $this->marchamoSecuencia = 0;
 
         $this->command?->warn('Limpiando datos operativos actuales sin tocar la tabla users...');
 
@@ -67,6 +80,9 @@ class CcFlotaDemoSeeder extends Seeder
             'licencias' => 0,
             'puntos' => 0,
             'marchamos' => 0,
+            'gasolineras' => 0,
+            'tanques' => 0,
+            'movimientos_inventario' => 0,
         ];
 
         DB::transaction(function () use (
@@ -77,6 +93,8 @@ class CcFlotaDemoSeeder extends Seeder
             &$totales
         ) {
             $indiceGlobalUnidad = 0;
+            $indiceGlobalGasolinera = 0;
+            $indiceGlobalTanque = 0;
 
             for ($empresaNumero = 1; $empresaNumero <= $this->cantidadEmpresas; $empresaNumero++) {
                 $empresaId = $this->crearEmpresa(
@@ -128,6 +146,49 @@ class CcFlotaDemoSeeder extends Seeder
                     $totales['puntos'] += $resultadoPuntos['puntos'];
                     $totales['marchamos'] += $resultadoPuntos['marchamos'];
                 }
+
+                for ($gasolineraNumero = 1; $gasolineraNumero <= $this->gasolinerasPorEmpresa; $gasolineraNumero++) {
+                    $indiceGlobalGasolinera++;
+
+                    $gasolineraId = $this->crearGasolinera(
+                        empresaId: $empresaId,
+                        empresaNumero: $empresaNumero,
+                        gasolineraNumero: $gasolineraNumero,
+                        usuarioResponsableId: $usuarioResponsableId,
+                        fechaBase: $fechaBase
+                    );
+
+                    $totales['gasolineras']++;
+
+                    $cantidadTanquesGasolinera = $this->cantidadTanquesParaGasolinera($indiceGlobalGasolinera);
+
+                    for ($tanqueNumero = 1; $tanqueNumero <= $cantidadTanquesGasolinera; $tanqueNumero++) {
+                        $indiceGlobalTanque++;
+
+                        $tanqueId = $this->crearTanque(
+                            empresaId: $empresaId,
+                            gasolineraId: $gasolineraId,
+                            empresaNumero: $empresaNumero,
+                            gasolineraNumero: $gasolineraNumero,
+                            tanqueNumero: $tanqueNumero,
+                            indiceGlobalTanque: $indiceGlobalTanque,
+                            usuarioResponsableId: $usuarioResponsableId,
+                            fechaBase: $fechaBase
+                        );
+
+                        $totales['tanques']++;
+
+                        $this->crearMovimientoCargaInicial(
+                            empresaId: $empresaId,
+                            tanqueId: $tanqueId,
+                            indiceGlobalTanque: $indiceGlobalTanque,
+                            usuarioResponsableId: $usuarioResponsableId,
+                            fechaBase: $fechaBase
+                        );
+
+                        $totales['movimientos_inventario']++;
+                    }
+                }
             }
         });
 
@@ -137,6 +198,9 @@ class CcFlotaDemoSeeder extends Seeder
         $this->command?->line("Licencias creadas: {$totales['licencias']}");
         $this->command?->line("Puntos creados: {$totales['puntos']}");
         $this->command?->line("Marchamos creados: {$totales['marchamos']}");
+        $this->command?->line("Gasolineras creadas: {$totales['gasolineras']}");
+        $this->command?->line("Tanques creados: {$totales['tanques']}");
+        $this->command?->line("Movimientos iniciales de inventario creados: {$totales['movimientos_inventario']}");
     }
 
     private function limpiarDatosOperativos(): void
@@ -145,14 +209,16 @@ class CcFlotaDemoSeeder extends Seeder
 
         try {
             /*
-             * Limpieza de tablas dependientes.
+             * Limpieza de tablas operativas y dependientes.
              *
              * No se toca users.
-             * No se crean gasolineras/tanques en este seeder, pero si esas tablas
-             * tienen datos, se limpian para evitar residuos asociados a empresas anteriores.
+             * No se tocan roles, permisos ni rol_permisos.
+             * truncateSiExiste permite ejecutar este seeder aunque algunos módulos futuros aún no existan.
              */
             $tablas = [
+                'abastecimiento_marchamos',
                 'movimientos_inventario_combustible',
+                'abastecimientos',
                 'tanques',
                 'gasolineras',
                 'reemplazo_marchamos_detalle',
@@ -361,6 +427,139 @@ class CcFlotaDemoSeeder extends Seeder
         ];
     }
 
+    private function crearGasolinera(
+        int $empresaId,
+        int $empresaNumero,
+        int $gasolineraNumero,
+        int $usuarioResponsableId,
+        Carbon $fechaBase
+    ): int {
+        return (int) DB::table('gasolineras')->insertGetId([
+            'empresa_id' => $empresaId,
+            'nombre' => sprintf('Gasolinera Demo %03d-%02d', $empresaNumero, $gasolineraNumero),
+            'direccion' => sprintf('Plantel de combustible %02d, Empresa Demo %03d, El Salvador', $gasolineraNumero, $empresaNumero),
+            'encargado' => sprintf('Encargado Gasolinera %03d-%02d', $empresaNumero, $gasolineraNumero),
+            'telefono' => sprintf('2510-%04d', ($empresaNumero * 100) + $gasolineraNumero),
+            'correo' => sprintf('gasolinera%03d_%02d@demo.ccflota.test', $empresaNumero, $gasolineraNumero),
+            'estado' => 'activa',
+            'fecha_creacion' => $fechaBase,
+            'creado_por' => $usuarioResponsableId,
+            'fecha_actualizacion' => null,
+            'actualizado_por' => null,
+            'fecha_inactivacion' => null,
+            'inactivado_por' => null,
+            'motivo_inactivacion' => null,
+        ]);
+    }
+
+    private function crearTanque(
+        int $empresaId,
+        int $gasolineraId,
+        int $empresaNumero,
+        int $gasolineraNumero,
+        int $tanqueNumero,
+        int $indiceGlobalTanque,
+        int $usuarioResponsableId,
+        Carbon $fechaBase
+    ): int {
+        $inventario = $this->datosInventarioTanque($indiceGlobalTanque);
+
+        return (int) DB::table('tanques')->insertGetId([
+            'gasolinera_id' => $gasolineraId,
+            'nombre' => sprintf('Tanque %d', $tanqueNumero),
+            'capacidad_total' => $inventario['capacidad_total'],
+            'volumen_actual' => $inventario['volumen_actual'],
+            'volumen_minimo_alerta' => $inventario['volumen_minimo_alerta'],
+            'estado' => 'activo',
+            'inactivado_por_gasolinera' => false,
+            'fecha_creacion' => $fechaBase,
+            'creado_por' => $usuarioResponsableId,
+            'fecha_actualizacion' => null,
+            'actualizado_por' => null,
+            'fecha_inactivacion' => null,
+            'inactivado_por' => null,
+            'motivo_inactivacion' => null,
+        ]);
+    }
+
+    private function crearMovimientoCargaInicial(
+        int $empresaId,
+        int $tanqueId,
+        int $indiceGlobalTanque,
+        int $usuarioResponsableId,
+        Carbon $fechaBase
+    ): void {
+        $inventario = $this->datosInventarioTanque($indiceGlobalTanque);
+
+        DB::table('movimientos_inventario_combustible')->insert([
+            'empresa_id' => $empresaId,
+            'tanque_id' => $tanqueId,
+            'abastecimiento_id' => null,
+            'tipo_movimiento' => 'carga_inicial',
+            'volumen_anterior' => 0,
+            'sentido_movimiento' => 'entrada',
+            'volumen_movimiento' => $inventario['volumen_actual'],
+            'volumen_resultante' => $inventario['volumen_actual'],
+            'fecha_hora_movimiento' => $fechaBase,
+            'observaciones' => sprintf(
+                'Carga inicial generada por seeder demo. Escenario de inventario: %s.',
+                $inventario['escenario']
+            ),
+            'usuario_registra_id' => $usuarioResponsableId,
+            'estado' => 'registrado',
+            'fecha_creacion' => $fechaBase,
+            'fecha_actualizacion' => null,
+            'actualizado_por' => null,
+            'fecha_anulacion' => null,
+            'anulado_por' => null,
+            'motivo_anulacion' => null,
+        ]);
+    }
+
+    private function datosInventarioTanque(int $indiceGlobalTanque): array
+    {
+        $capacidadTotal = $this->capacidadesTanques[($indiceGlobalTanque - 1) % count($this->capacidadesTanques)];
+        $escenario = $this->escenarioInventario($indiceGlobalTanque);
+
+        $volumenMinimoAlerta = match ($escenario) {
+            'bajo_alerta' => round($capacidadTotal * 0.20, 2),
+            'cerca_alerta' => round($capacidadTotal * 0.18, 2),
+            'medio' => round($capacidadTotal * 0.22, 2),
+            'casi_lleno' => round($capacidadTotal * 0.15, 2),
+            default => round($capacidadTotal * 0.20, 2),
+        };
+
+        $volumenActual = match ($escenario) {
+            'saludable' => round($capacidadTotal * 0.72, 2),
+            'medio' => round($capacidadTotal * 0.48, 2),
+            'cerca_alerta' => round($volumenMinimoAlerta + ($capacidadTotal * 0.04), 2),
+            'bajo_alerta' => round($volumenMinimoAlerta * 0.72, 2),
+            'casi_lleno' => round($capacidadTotal * 0.93, 2),
+            default => round($capacidadTotal * 0.60, 2),
+        };
+
+        $volumenActual = min($volumenActual, $capacidadTotal);
+        $volumenMinimoAlerta = min($volumenMinimoAlerta, $capacidadTotal - 1);
+
+        return [
+            'capacidad_total' => $capacidadTotal,
+            'volumen_actual' => $volumenActual,
+            'volumen_minimo_alerta' => $volumenMinimoAlerta,
+            'escenario' => $escenario,
+        ];
+    }
+
+    private function escenarioInventario(int $indiceGlobalTanque): string
+    {
+        return match (($indiceGlobalTanque - 1) % 10) {
+            0, 1, 2 => 'saludable',
+            3, 4 => 'medio',
+            5, 6 => 'cerca_alerta',
+            7, 8 => 'bajo_alerta',
+            default => 'casi_lleno',
+        };
+    }
+
     private function plantillaParaUnidad(int $indiceGlobalUnidad): string
     {
         return $this->plantillas[($indiceGlobalUnidad - 1) % count($this->plantillas)];
@@ -374,6 +573,11 @@ class CcFlotaDemoSeeder extends Seeder
             'plantilla_3_tanques' => 3,
             default => 1,
         };
+    }
+
+    private function cantidadTanquesParaGasolinera(int $indiceGlobalGasolinera): int
+    {
+        return (($indiceGlobalGasolinera - 1) % 3) + 1;
     }
 
     private function siguienteCodigoMarchamo(): string

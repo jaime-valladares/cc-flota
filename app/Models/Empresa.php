@@ -67,4 +67,14 @@ class Empresa extends Model
         return $this->hasMany(Gasolinera::class, 'empresa_id');
     }
 
+    public function gasolinerasExternas(): HasMany
+    {
+        return $this->hasMany(GasolineraExterna::class, 'empresa_id');
+    }
+
+    public function puntosRuta(): HasMany
+    {
+        return $this->hasMany(PuntoRuta::class, 'empresa_id');
+    }
+
 }
