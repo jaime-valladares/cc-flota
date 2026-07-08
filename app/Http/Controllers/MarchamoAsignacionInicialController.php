@@ -32,6 +32,10 @@ class MarchamoAsignacionInicialController extends Controller
     {
         $this->autorizarAccesoUnidad($unidad);
 
+        $unidad->loadMissing(['empresa', 'licencia']);
+
+        $this->validarEmpresaActivaUnidad($unidad);
+
         if ($unidad->estado === 'activa') {
             return redirect()
                 ->route('marchamos.detalle-unidad', $unidad)
@@ -45,6 +49,10 @@ class MarchamoAsignacionInicialController extends Controller
     {
         $this->autorizarAccesoUnidad($unidad);
 
+        $unidad->loadMissing(['empresa', 'licencia']);
+
+        $this->validarEmpresaActivaUnidad($unidad);
+
         if ($unidad->estado === 'activa') {
             return redirect()
                 ->route('marchamos.detalle-unidad.ventana', $unidad)
@@ -56,11 +64,6 @@ class MarchamoAsignacionInicialController extends Controller
 
     /**
      * Guarda o corrige códigos de marchamo durante la asignación inicial.
-     *
-     * Mientras la unidad siga registrada, la asignación funciona como un
-     * borrador operativo: los códigos pueden asignarse, corregirse o moverse
-     * entre puntos de la misma unidad. La validación sigue bloqueando códigos
-     * usados fuera de esta asignación inicial.
      */
     public function guardarAvance(Request $request, Unidad $unidad): RedirectResponse
     {
@@ -425,9 +428,7 @@ class MarchamoAsignacionInicialController extends Controller
      */
     private function validarUnidadAsignable(Unidad $unidad): void
     {
-        if (! $unidad->empresa || $unidad->empresa->estado !== 'activa') {
-            abort(422, 'La empresa asociada a la unidad debe estar activa.');
-        }
+        $this->validarEmpresaActivaUnidad($unidad);
 
         if (! $unidad->licencia) {
             abort(422, 'La unidad debe tener una licencia registrada antes de asignar marchamos.');
@@ -443,6 +444,15 @@ class MarchamoAsignacionInicialController extends Controller
 
         if ($unidad->puntosSeguridad()->count() === 0) {
             abort(422, 'La unidad no tiene puntos de seguridad generados.');
+        }
+    }
+
+    private function validarEmpresaActivaUnidad(Unidad $unidad): void
+    {
+        $unidad->loadMissing('empresa');
+
+        if (! $unidad->empresa || $unidad->empresa->estado !== 'activa') {
+            abort(403, 'No se puede operar sobre marchamos porque la empresa está inactiva.');
         }
     }
 

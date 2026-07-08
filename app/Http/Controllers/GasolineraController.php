@@ -18,7 +18,7 @@ class GasolineraController extends Controller
      */
     public function index(Request $request)
     {
-        $data = $this->prepararConsultaGasolineras($request);
+        $data = $this->prepararConsultaGasolineras($request, false);
 
         return view('gasolineras.index', $data);
     }
@@ -28,7 +28,7 @@ class GasolineraController extends Controller
      */
     public function consultaVentana(Request $request)
     {
-        $data = $this->prepararConsultaGasolineras($request);
+        $data = $this->prepararConsultaGasolineras($request, false);
 
         return view('gasolineras.index-ventana', $data);
     }
@@ -38,7 +38,7 @@ class GasolineraController extends Controller
      */
     public function administrar(Request $request)
     {
-        $data = $this->prepararConsultaGasolineras($request);
+        $data = $this->prepararConsultaGasolineras($request, true);
 
         return view('gasolineras.administrar', $data);
     }
@@ -48,7 +48,7 @@ class GasolineraController extends Controller
      */
     public function administrarVentana(Request $request)
     {
-        $data = $this->prepararConsultaGasolineras($request);
+        $data = $this->prepararConsultaGasolineras($request, true);
 
         return view('gasolineras.administrar-ventana', $data);
     }
@@ -56,7 +56,7 @@ class GasolineraController extends Controller
     /**
      * Prepare gas station query data for normal and standalone screens.
      */
-    private function prepararConsultaGasolineras(Request $request): array
+    private function prepararConsultaGasolineras(Request $request, bool $soloEmpresasActivas): array
     {
         $user = Auth::user();
 
@@ -97,7 +97,12 @@ class GasolineraController extends Controller
                 'tanques as tanques_activos_count' => function ($query) {
                     $query->where('estado', 'activo');
                 },
-            ]);
+            ])
+            ->when($soloEmpresasActivas, function ($query) {
+                $query->whereHas('empresa', function ($empresaQuery) {
+                    $empresaQuery->where('estado', 'activa');
+                });
+            });
 
         if ($hayFiltros) {
             if ($empresaId) {
@@ -120,7 +125,12 @@ class GasolineraController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        $baseResumen = Gasolinera::query();
+        $baseResumen = Gasolinera::query()
+            ->when($soloEmpresasActivas, function ($query) {
+                $query->whereHas('empresa', function ($empresaQuery) {
+                    $empresaQuery->where('estado', 'activa');
+                });
+            });
 
         if (! $esUsuarioDieselCop) {
             $baseResumen->where('empresa_id', $user->empresa_id);
@@ -130,12 +140,29 @@ class GasolineraController extends Controller
         $gasolinerasActivas = (clone $baseResumen)->where('estado', 'activa')->count();
         $gasolinerasInactivas = (clone $baseResumen)->where('estado', 'inactiva')->count();
 
-        $empresasSelector = $esUsuarioDieselCop
-            ? Empresa::where('estado', 'activa')
+        if ($esUsuarioDieselCop) {
+            $empresasSelector = Empresa::query()
+                ->when($soloEmpresasActivas, function ($query) {
+                    $query->where('estado', 'activa');
+                })
                 ->orderBy('nombre_comercial')
                 ->orderBy('nombre_legal')
-                ->get()
-            : collect([$empresaUsuario])->filter();
+                ->get();
+        } else {
+            $empresasSelector = collect([$empresaUsuario])
+                ->filter(function ($empresa) use ($soloEmpresasActivas) {
+                    if (! $empresa) {
+                        return false;
+                    }
+
+                    if ($soloEmpresasActivas && $empresa->estado !== 'activa') {
+                        return false;
+                    }
+
+                    return true;
+                })
+                ->values();
+        }
 
         return [
             'gasolineras' => $gasolineras,
@@ -183,6 +210,10 @@ class GasolineraController extends Controller
         $empresaUsuario = $esUsuarioDieselCop
             ? null
             : Empresa::find($user->empresa_id);
+
+        if (! $esUsuarioDieselCop && (! $empresaUsuario || $empresaUsuario->estado !== 'activa')) {
+            abort(403, 'No se puede operar sobre gasolineras porque la empresa está inactiva.');
+        }
 
         $empresasSelector = $esUsuarioDieselCop
             ? Empresa::where('estado', 'activa')
@@ -259,6 +290,8 @@ class GasolineraController extends Controller
         $empresaId = $esUsuarioDieselCop
             ? (int) $validated['empresa_id']
             : (int) $user->empresa_id;
+
+        $this->validarEmpresaActivaPorId($empresaId);
 
         $request->validate([
             'nombre' => [
@@ -354,6 +387,7 @@ class GasolineraController extends Controller
     public function show(Gasolinera $gasolinera)
     {
         $this->autorizarAccesoGasolinera($gasolinera);
+        $this->validarEmpresaActivaGasolinera($gasolinera);
 
         $gasolinera->load([
             'empresa',
@@ -376,6 +410,7 @@ class GasolineraController extends Controller
     public function showVentana(Gasolinera $gasolinera)
     {
         $this->autorizarAccesoGasolinera($gasolinera);
+        $this->validarEmpresaActivaGasolinera($gasolinera);
 
         $gasolinera->load([
             'empresa',
@@ -426,6 +461,7 @@ class GasolineraController extends Controller
     public function edit(Gasolinera $gasolinera)
     {
         $this->autorizarAccesoGasolinera($gasolinera);
+        $this->validarEmpresaActivaGasolinera($gasolinera);
 
         $data = $this->prepararFormularioGasolinera();
         $data['gasolinera'] = $gasolinera;
@@ -439,6 +475,7 @@ class GasolineraController extends Controller
     public function editVentana(Gasolinera $gasolinera)
     {
         $this->autorizarAccesoGasolinera($gasolinera);
+        $this->validarEmpresaActivaGasolinera($gasolinera);
 
         $data = $this->prepararFormularioGasolinera();
         $data['gasolinera'] = $gasolinera;
@@ -452,6 +489,7 @@ class GasolineraController extends Controller
     public function update(Request $request, Gasolinera $gasolinera)
     {
         $this->autorizarAccesoGasolinera($gasolinera);
+        $this->validarEmpresaActivaGasolinera($gasolinera);
 
         $validated = $request->validate([
             'nombre' => ['required', 'string', 'max:150'],
@@ -510,6 +548,7 @@ class GasolineraController extends Controller
     public function inactivar(Request $request, Gasolinera $gasolinera)
     {
         $this->autorizarAccesoGasolinera($gasolinera);
+        $this->validarEmpresaActivaGasolinera($gasolinera);
 
         $validated = $request->validate([
             'motivo_inactivacion' => [
@@ -564,6 +603,7 @@ class GasolineraController extends Controller
     public function reactivar(Request $request, Gasolinera $gasolinera)
     {
         $this->autorizarAccesoGasolinera($gasolinera);
+        $this->validarEmpresaActivaGasolinera($gasolinera);
 
         DB::transaction(function () use ($gasolinera) {
             $gasolinera->update([
@@ -606,7 +646,9 @@ class GasolineraController extends Controller
     public function recargarTanque(Gasolinera $gasolinera, Tanque $tanque)
     {
         $this->autorizarAccesoGasolinera($gasolinera);
+        $this->validarEmpresaActivaGasolinera($gasolinera);
         $this->validarTanquePerteneceGasolinera($gasolinera, $tanque);
+        $this->validarGasolineraYTanqueOperativos($gasolinera, $tanque);
 
         return view('gasolineras.recarga', compact('gasolinera', 'tanque'));
     }
@@ -617,7 +659,9 @@ class GasolineraController extends Controller
     public function recargarTanqueVentana(Gasolinera $gasolinera, Tanque $tanque)
     {
         $this->autorizarAccesoGasolinera($gasolinera);
+        $this->validarEmpresaActivaGasolinera($gasolinera);
         $this->validarTanquePerteneceGasolinera($gasolinera, $tanque);
+        $this->validarGasolineraYTanqueOperativos($gasolinera, $tanque);
 
         return view('gasolineras.recarga-ventana', compact('gasolinera', 'tanque'));
     }
@@ -628,19 +672,9 @@ class GasolineraController extends Controller
     public function guardarRecargaTanque(Request $request, Gasolinera $gasolinera, Tanque $tanque)
     {
         $this->autorizarAccesoGasolinera($gasolinera);
+        $this->validarEmpresaActivaGasolinera($gasolinera);
         $this->validarTanquePerteneceGasolinera($gasolinera, $tanque);
-
-        if ($gasolinera->estado !== 'activa') {
-            return back()
-                ->withErrors(['gasolinera' => 'No se puede recargar un tanque de una gasolinera inactiva.'])
-                ->withInput();
-        }
-
-        if ($tanque->estado !== 'activo') {
-            return back()
-                ->withErrors(['tanque' => 'No se puede recargar un tanque inactivo.'])
-                ->withInput();
-        }
+        $this->validarGasolineraYTanqueOperativos($gasolinera, $tanque);
 
         $validated = $request->validate([
             'volumen_movimiento' => ['required', 'numeric', 'gt:0'],
@@ -713,6 +747,7 @@ class GasolineraController extends Controller
     public function storeTanque(Request $request, Gasolinera $gasolinera)
     {
         $this->autorizarAccesoGasolinera($gasolinera);
+        $this->validarEmpresaActivaGasolinera($gasolinera);
 
         if ($gasolinera->estado !== 'activa') {
             return back()
@@ -804,6 +839,7 @@ class GasolineraController extends Controller
     public function inactivarTanque(Request $request, Gasolinera $gasolinera, Tanque $tanque)
     {
         $this->autorizarAccesoGasolinera($gasolinera);
+        $this->validarEmpresaActivaGasolinera($gasolinera);
         $this->validarTanquePerteneceGasolinera($gasolinera, $tanque);
 
         $validated = $request->validate([
@@ -846,6 +882,7 @@ class GasolineraController extends Controller
     public function reactivarTanque(Request $request, Gasolinera $gasolinera, Tanque $tanque)
     {
         $this->autorizarAccesoGasolinera($gasolinera);
+        $this->validarEmpresaActivaGasolinera($gasolinera);
         $this->validarTanquePerteneceGasolinera($gasolinera, $tanque);
 
         if ($gasolinera->estado !== 'activa') {
@@ -888,12 +925,53 @@ class GasolineraController extends Controller
     }
 
     /**
+     * Ensure the gas station belongs to an active company before administrative or operational actions.
+     */
+    private function validarEmpresaActivaGasolinera(Gasolinera $gasolinera): void
+    {
+        $gasolinera->loadMissing('empresa');
+
+        if (! $gasolinera->empresa || $gasolinera->empresa->estado !== 'activa') {
+            abort(403, 'No se puede operar sobre esta gasolinera porque la empresa está inactiva.');
+        }
+    }
+
+    /**
+     * Ensure the selected company is active before creating operational records.
+     */
+    private function validarEmpresaActivaPorId(int $empresaId): void
+    {
+        $empresaActiva = Empresa::query()
+            ->where('id', $empresaId)
+            ->where('estado', 'activa')
+            ->exists();
+
+        if (! $empresaActiva) {
+            abort(403, 'No se puede operar sobre gasolineras porque la empresa está inactiva.');
+        }
+    }
+
+    /**
      * Ensure the tank belongs to the selected gas station.
      */
     private function validarTanquePerteneceGasolinera(Gasolinera $gasolinera, Tanque $tanque): void
     {
         if ((int) $tanque->gasolinera_id !== (int) $gasolinera->id) {
             abort(404);
+        }
+    }
+
+    /**
+     * Ensure tank recharge is only available when both gas station and tank are active.
+     */
+    private function validarGasolineraYTanqueOperativos(Gasolinera $gasolinera, Tanque $tanque): void
+    {
+        if ($gasolinera->estado !== 'activa') {
+            abort(403, 'No se puede recargar un tanque de una gasolinera inactiva.');
+        }
+
+        if ($tanque->estado !== 'activo') {
+            abort(403, 'No se puede recargar un tanque inactivo.');
         }
     }
 }

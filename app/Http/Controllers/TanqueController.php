@@ -65,7 +65,9 @@ class TanqueController extends Controller
         }
 
         if ($gasolineraId) {
-            $gasolineraSeleccionada = Gasolinera::find($gasolineraId);
+            $gasolineraSeleccionada = Gasolinera::query()
+                ->with('empresa')
+                ->find($gasolineraId);
 
             if (! $gasolineraSeleccionada) {
                 abort(404);
@@ -76,6 +78,8 @@ class TanqueController extends Controller
             if ($empresaId && (int) $gasolineraSeleccionada->empresa_id !== (int) $empresaId) {
                 abort(403, 'La gasolinera seleccionada no pertenece a la empresa indicada.');
             }
+
+            $this->validarEmpresaActivaGasolinera($gasolineraSeleccionada);
         }
 
         $hayFiltros = ! $esUsuarioDieselCop
@@ -84,7 +88,10 @@ class TanqueController extends Controller
         $query = Tanque::query()
             ->with([
                 'gasolinera.empresa',
-            ]);
+            ])
+            ->whereHas('gasolinera.empresa', function ($query) {
+                $query->where('estado', 'activa');
+            });
 
         if ($hayFiltros) {
             if ($empresaId) {
@@ -121,10 +128,15 @@ class TanqueController extends Controller
                 ->orderBy('nombre_comercial')
                 ->orderBy('nombre_legal')
                 ->get()
-            : collect([$empresaUsuario])->filter();
+            : collect([$empresaUsuario])
+                ->filter(fn ($empresa) => $empresa && $empresa->estado === 'activa')
+                ->values();
 
         $gasolinerasSelectorQuery = Gasolinera::query()
             ->with('empresa')
+            ->whereHas('empresa', function ($query) {
+                $query->where('estado', 'activa');
+            })
             ->orderBy('nombre');
 
         if (! $esUsuarioDieselCop) {
@@ -135,7 +147,10 @@ class TanqueController extends Controller
 
         $gasolinerasSelector = $gasolinerasSelectorQuery->get();
 
-        $baseResumen = Tanque::query();
+        $baseResumen = Tanque::query()
+            ->whereHas('gasolinera.empresa', function ($query) {
+                $query->where('estado', 'activa');
+            });
 
         if (! $esUsuarioDieselCop) {
             $baseResumen->whereHas('gasolinera', function ($query) use ($user) {
@@ -170,6 +185,7 @@ class TanqueController extends Controller
     public function show(Gasolinera $gasolinera, Tanque $tanque)
     {
         $this->autorizarAccesoGasolinera($gasolinera);
+        $this->validarEmpresaActivaGasolinera($gasolinera);
         $this->validarTanquePerteneceGasolinera($gasolinera, $tanque);
 
         $tanque->load([
@@ -190,6 +206,7 @@ class TanqueController extends Controller
     public function showVentana(Gasolinera $gasolinera, Tanque $tanque)
     {
         $this->autorizarAccesoGasolinera($gasolinera);
+        $this->validarEmpresaActivaGasolinera($gasolinera);
         $this->validarTanquePerteneceGasolinera($gasolinera, $tanque);
 
         $tanque->load([
@@ -244,6 +261,7 @@ class TanqueController extends Controller
     public function update(Request $request, Gasolinera $gasolinera, Tanque $tanque)
     {
         $this->autorizarAccesoGasolinera($gasolinera);
+        $this->validarEmpresaActivaGasolinera($gasolinera);
         $this->validarTanquePerteneceGasolinera($gasolinera, $tanque);
 
         $validated = $request->validate([
@@ -314,6 +332,18 @@ class TanqueController extends Controller
 
         if (! is_null($user->empresa_id) && (int) $user->empresa_id !== (int) $gasolinera->empresa_id) {
             abort(403, 'No tiene autorización para acceder a esta gasolinera.');
+        }
+    }
+
+    /**
+     * Ensure the gas station belongs to an active company before tank administration.
+     */
+    private function validarEmpresaActivaGasolinera(Gasolinera $gasolinera): void
+    {
+        $gasolinera->loadMissing('empresa');
+
+        if (! $gasolinera->empresa || $gasolinera->empresa->estado !== 'activa') {
+            abort(403, 'No se puede operar sobre esta gasolinera porque la empresa está inactiva.');
         }
     }
 

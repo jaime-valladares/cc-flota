@@ -329,12 +329,22 @@ class MarchamoReemplazoController extends Controller
         $user = Auth::user();
 
         if (! is_null($user->empresa_id) && (int) $unidad->empresa_id !== (int) $user->empresa_id) {
-            abort(403);
+            abort(403, 'No tiene autorización para acceder a esta unidad.');
         }
     }
 
     private function validarUnidadReemplazable(Unidad $unidad): void
     {
+        $unidad->loadMissing(['empresa', 'licencia']);
+
+        if (! $unidad->empresa || $unidad->empresa->estado !== 'activa') {
+            abort(403, 'No se puede reemplazar marchamos porque la empresa está inactiva.');
+        }
+
+        if (! $unidad->licencia || $unidad->licencia->estado !== 'activa') {
+            abort(403, 'La unidad debe tener una licencia activa para reemplazar marchamos.');
+        }
+
         $unidad->loadCount([
             'puntosSeguridad as total_puntos' => function ($query) {
                 $query->where('estado', 'activo');

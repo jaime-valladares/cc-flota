@@ -12,33 +12,33 @@ class PuntoRutaController extends Controller
 {
     public function index(Request $request)
     {
-        $data = $this->prepararConsultaPuntosRuta($request);
+        $data = $this->prepararConsultaPuntosRuta($request, false);
 
         return view('puntos-ruta.index', $data);
     }
 
     public function consultaVentana(Request $request)
     {
-        $data = $this->prepararConsultaPuntosRuta($request);
+        $data = $this->prepararConsultaPuntosRuta($request, false);
 
         return view('puntos-ruta.index-ventana', $data);
     }
 
     public function administrar(Request $request)
     {
-        $data = $this->prepararConsultaPuntosRuta($request);
+        $data = $this->prepararConsultaPuntosRuta($request, true);
 
         return view('puntos-ruta.administrar', $data);
     }
 
     public function administrarVentana(Request $request)
     {
-        $data = $this->prepararConsultaPuntosRuta($request);
+        $data = $this->prepararConsultaPuntosRuta($request, true);
 
         return view('puntos-ruta.administrar-ventana', $data);
     }
 
-    private function prepararConsultaPuntosRuta(Request $request): array
+    private function prepararConsultaPuntosRuta(Request $request, bool $soloEmpresasActivas): array
     {
         $user = Auth::user();
 
@@ -68,7 +68,12 @@ class PuntoRutaController extends Controller
             || $request->hasAny(['empresa_id', 'nombre', 'estado', 'consultar']);
 
         $query = PuntoRuta::query()
-            ->with('empresa');
+            ->with('empresa')
+            ->when($soloEmpresasActivas, function ($query) {
+                $query->whereHas('empresa', function ($empresaQuery) {
+                    $empresaQuery->where('estado', 'activa');
+                });
+            });
 
         if ($hayFiltros) {
             if ($empresaId) {
@@ -91,7 +96,12 @@ class PuntoRutaController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        $baseResumen = PuntoRuta::query();
+        $baseResumen = PuntoRuta::query()
+            ->when($soloEmpresasActivas, function ($query) {
+                $query->whereHas('empresa', function ($empresaQuery) {
+                    $empresaQuery->where('estado', 'activa');
+                });
+            });
 
         if (! $esUsuarioDieselCop) {
             $baseResumen->where('empresa_id', $user->empresa_id);
@@ -101,12 +111,29 @@ class PuntoRutaController extends Controller
         $puntosRutaActivos = (clone $baseResumen)->where('estado', 'activo')->count();
         $puntosRutaInactivos = (clone $baseResumen)->where('estado', 'inactivo')->count();
 
-        $empresasSelector = $esUsuarioDieselCop
-            ? Empresa::where('estado', 'activa')
+        if ($esUsuarioDieselCop) {
+            $empresasSelector = Empresa::query()
+                ->when($soloEmpresasActivas, function ($query) {
+                    $query->where('estado', 'activa');
+                })
                 ->orderBy('nombre_comercial')
                 ->orderBy('nombre_legal')
-                ->get()
-            : collect([$empresaUsuario])->filter();
+                ->get();
+        } else {
+            $empresasSelector = collect([$empresaUsuario])
+                ->filter(function ($empresa) use ($soloEmpresasActivas) {
+                    if (! $empresa) {
+                        return false;
+                    }
+
+                    if ($soloEmpresasActivas && $empresa->estado !== 'activa') {
+                        return false;
+                    }
+
+                    return true;
+                })
+                ->values();
+        }
 
         return [
             'puntosRuta' => $puntosRuta,
@@ -145,6 +172,10 @@ class PuntoRutaController extends Controller
         $empresaUsuario = $esUsuarioDieselCop
             ? null
             : Empresa::find($user->empresa_id);
+
+        if (! $esUsuarioDieselCop && (! $empresaUsuario || $empresaUsuario->estado !== 'activa')) {
+            abort(403, 'No se puede operar sobre puntos de ruta porque la empresa está inactiva.');
+        }
 
         $empresasSelector = $esUsuarioDieselCop
             ? Empresa::where('estado', 'activa')
@@ -190,6 +221,8 @@ class PuntoRutaController extends Controller
             ? (int) $validated['empresa_id']
             : (int) $user->empresa_id;
 
+        $this->validarEmpresaActivaPorId($empresaId);
+
         $request->validate([
             'nombre' => [
                 Rule::unique('puntos_ruta', 'nombre')
@@ -221,6 +254,7 @@ class PuntoRutaController extends Controller
     public function show(PuntoRuta $puntoRuta)
     {
         $this->autorizarAccesoPuntoRuta($puntoRuta);
+        $this->validarEmpresaActivaPuntoRuta($puntoRuta);
 
         $puntoRuta->load([
             'empresa',
@@ -235,6 +269,7 @@ class PuntoRutaController extends Controller
     public function showVentana(PuntoRuta $puntoRuta)
     {
         $this->autorizarAccesoPuntoRuta($puntoRuta);
+        $this->validarEmpresaActivaPuntoRuta($puntoRuta);
 
         $puntoRuta->load([
             'empresa',
@@ -249,6 +284,7 @@ class PuntoRutaController extends Controller
     public function edit(PuntoRuta $puntoRuta)
     {
         $this->autorizarAccesoPuntoRuta($puntoRuta);
+        $this->validarEmpresaActivaPuntoRuta($puntoRuta);
 
         $data = $this->prepararFormularioPuntoRuta();
         $data['puntoRuta'] = $puntoRuta;
@@ -259,6 +295,7 @@ class PuntoRutaController extends Controller
     public function editVentana(PuntoRuta $puntoRuta)
     {
         $this->autorizarAccesoPuntoRuta($puntoRuta);
+        $this->validarEmpresaActivaPuntoRuta($puntoRuta);
 
         $data = $this->prepararFormularioPuntoRuta();
         $data['puntoRuta'] = $puntoRuta;
@@ -269,6 +306,7 @@ class PuntoRutaController extends Controller
     public function update(Request $request, PuntoRuta $puntoRuta)
     {
         $this->autorizarAccesoPuntoRuta($puntoRuta);
+        $this->validarEmpresaActivaPuntoRuta($puntoRuta);
 
         $validated = $request->validate([
             'nombre' => ['required', 'string', 'max:150'],
@@ -309,6 +347,7 @@ class PuntoRutaController extends Controller
     public function inactivar(Request $request, PuntoRuta $puntoRuta)
     {
         $this->autorizarAccesoPuntoRuta($puntoRuta);
+        $this->validarEmpresaActivaPuntoRuta($puntoRuta);
 
         $validated = $request->validate([
             'motivo_inactivacion' => [
@@ -346,6 +385,7 @@ class PuntoRutaController extends Controller
     public function reactivar(Request $request, PuntoRuta $puntoRuta)
     {
         $this->autorizarAccesoPuntoRuta($puntoRuta);
+        $this->validarEmpresaActivaPuntoRuta($puntoRuta);
 
         $puntoRuta->update([
             'estado' => 'activo',
@@ -373,6 +413,27 @@ class PuntoRutaController extends Controller
 
         if (! is_null($user->empresa_id) && (int) $user->empresa_id !== (int) $puntoRuta->empresa_id) {
             abort(403, 'No tiene autorización para acceder a este punto de ruta.');
+        }
+    }
+
+    private function validarEmpresaActivaPuntoRuta(PuntoRuta $puntoRuta): void
+    {
+        $puntoRuta->loadMissing('empresa');
+
+        if (! $puntoRuta->empresa || $puntoRuta->empresa->estado !== 'activa') {
+            abort(403, 'No se puede operar sobre este punto de ruta porque la empresa está inactiva.');
+        }
+    }
+
+    private function validarEmpresaActivaPorId(int $empresaId): void
+    {
+        $empresaActiva = Empresa::query()
+            ->where('id', $empresaId)
+            ->where('estado', 'activa')
+            ->exists();
+
+        if (! $empresaActiva) {
+            abort(403, 'No se puede operar sobre puntos de ruta porque la empresa está inactiva.');
         }
     }
 }

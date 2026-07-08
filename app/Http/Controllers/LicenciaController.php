@@ -22,7 +22,7 @@ class LicenciaController extends Controller
      */
     public function index(Request $request): View
     {
-        $data = $this->prepararConsultaLicencias($request);
+        $data = $this->prepararConsultaLicencias($request, false);
 
         return view('licencias.index', $data);
     }
@@ -32,7 +32,7 @@ class LicenciaController extends Controller
      */
     public function consultaVentana(Request $request): View
     {
-        $data = $this->prepararConsultaLicencias($request);
+        $data = $this->prepararConsultaLicencias($request, false);
 
         return view('licencias.index-ventana', $data);
     }
@@ -42,7 +42,7 @@ class LicenciaController extends Controller
      */
     public function administrar(Request $request): View
     {
-        $data = $this->prepararConsultaLicencias($request);
+        $data = $this->prepararConsultaLicencias($request, true);
 
         return view('licencias.administrar', $data);
     }
@@ -52,7 +52,7 @@ class LicenciaController extends Controller
      */
     public function administrarVentana(Request $request): View
     {
-        $data = $this->prepararConsultaLicencias($request);
+        $data = $this->prepararConsultaLicencias($request, true);
 
         return view('licencias.administrar-ventana', $data);
     }
@@ -60,7 +60,7 @@ class LicenciaController extends Controller
     /**
      * Prepara filtros, catálogos y resultados para consulta/administración.
      */
-    private function prepararConsultaLicencias(Request $request): array
+    private function prepararConsultaLicencias(Request $request, bool $soloEmpresasActivas): array
     {
         $user = Auth::user();
         $esUsuarioDieselCop = is_null($user->empresa_id);
@@ -84,6 +84,9 @@ class LicenciaController extends Controller
             ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
                 $query->where('id', $user->empresa_id);
             })
+            ->when($soloEmpresasActivas, function ($query) {
+                $query->where('estado', 'activa');
+            })
             ->orderBy('nombre_comercial')
             ->orderBy('nombre_legal')
             ->get();
@@ -91,6 +94,11 @@ class LicenciaController extends Controller
         $baseQuery = Licencia::query()
             ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
                 $query->where('empresa_id', $user->empresa_id);
+            })
+            ->when($soloEmpresasActivas, function ($query) {
+                $query->whereHas('empresa', function ($empresaQuery) {
+                    $empresaQuery->where('estado', 'activa');
+                });
             });
 
         $totalLicencias = (clone $baseQuery)->count();
@@ -103,6 +111,11 @@ class LicenciaController extends Controller
             ->select('licencias.*')
             ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
                 $query->where('licencias.empresa_id', $user->empresa_id);
+            })
+            ->when($soloEmpresasActivas, function ($query) {
+                $query->whereHas('empresa', function ($empresaQuery) {
+                    $empresaQuery->where('estado', 'activa');
+                });
             })
             ->when($hayFiltros && filled($empresaId), function ($query) use ($empresaId) {
                 $query->where('licencias.empresa_id', $empresaId);
@@ -334,6 +347,7 @@ class LicenciaController extends Controller
     public function show(Licencia $licencia): View
     {
         $this->autorizarAccesoLicencia($licencia);
+        $this->validarEmpresaActivaLicencia($licencia);
 
         $licencia->load([
             'empresa',
@@ -352,6 +366,7 @@ class LicenciaController extends Controller
     public function showVentana(Licencia $licencia): View
     {
         $this->autorizarAccesoLicencia($licencia);
+        $this->validarEmpresaActivaLicencia($licencia);
 
         $licencia->load([
             'empresa',
@@ -370,6 +385,7 @@ class LicenciaController extends Controller
     public function edit(Licencia $licencia): View
     {
         $this->autorizarAccesoLicencia($licencia);
+        $this->validarEmpresaActivaLicencia($licencia);
 
         $licencia->load(['empresa', 'unidad']);
 
@@ -385,6 +401,7 @@ class LicenciaController extends Controller
     public function editVentana(Licencia $licencia): View
     {
         $this->autorizarAccesoLicencia($licencia);
+        $this->validarEmpresaActivaLicencia($licencia);
 
         $licencia->load(['empresa', 'unidad']);
 
@@ -400,6 +417,7 @@ class LicenciaController extends Controller
     public function update(Request $request, Licencia $licencia): RedirectResponse
     {
         $this->autorizarAccesoLicencia($licencia);
+        $this->validarEmpresaActivaLicencia($licencia);
 
         $validated = $request->validate($this->reglasValidacionActualizarLicencia());
 
@@ -430,6 +448,7 @@ class LicenciaController extends Controller
     public function inactivar(Request $request, Licencia $licencia): RedirectResponse
     {
         $this->autorizarAccesoLicencia($licencia);
+        $this->validarEmpresaActivaLicencia($licencia);
 
         $validated = $request->validate([
             'motivo_inactivacion' => [
@@ -465,6 +484,7 @@ class LicenciaController extends Controller
     public function reactivar(Request $request, Licencia $licencia): RedirectResponse
     {
         $this->autorizarAccesoLicencia($licencia);
+        $this->validarEmpresaActivaLicencia($licencia);
 
         $validated = $request->validate([
             'periodo_vigencia_meses' => [
@@ -619,6 +639,18 @@ class LicenciaController extends Controller
 
         if (! is_null($user->empresa_id) && (int) $unidad->empresa_id !== (int) $user->empresa_id) {
             abort(403, 'No tiene autorización para acceder a esta unidad.');
+        }
+    }
+
+    /**
+     * Bloquea operaciones administrativas sobre licencias de empresas inactivas.
+     */
+    private function validarEmpresaActivaLicencia(Licencia $licencia): void
+    {
+        $licencia->loadMissing('empresa');
+
+        if (! $licencia->empresa || $licencia->empresa->estado !== 'activa') {
+            abort(403, 'No se puede operar sobre esta licencia porque la empresa está inactiva.');
         }
     }
 }

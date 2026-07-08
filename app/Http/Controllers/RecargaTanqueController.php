@@ -60,7 +60,9 @@ class RecargaTanqueController extends Controller
         }
 
         if ($gasolineraId) {
-            $gasolineraSeleccionada = Gasolinera::find($gasolineraId);
+            $gasolineraSeleccionada = Gasolinera::query()
+                ->with('empresa')
+                ->find($gasolineraId);
 
             if (! $gasolineraSeleccionada) {
                 abort(404);
@@ -71,6 +73,8 @@ class RecargaTanqueController extends Controller
             if ($empresaId && (int) $gasolineraSeleccionada->empresa_id !== (int) $empresaId) {
                 abort(403, 'La gasolinera seleccionada no pertenece a la empresa indicada.');
             }
+
+            $this->validarEmpresaActivaGasolinera($gasolineraSeleccionada);
         }
 
         $hayFiltros = ! $esUsuarioDieselCop
@@ -83,6 +87,9 @@ class RecargaTanqueController extends Controller
             ->where('tanques.estado', 'activo')
             ->whereHas('gasolinera', function ($query) {
                 $query->where('gasolineras.estado', 'activa');
+            })
+            ->whereHas('gasolinera.empresa', function ($query) {
+                $query->where('estado', 'activa');
             });
 
         if ($hayFiltros) {
@@ -112,10 +119,15 @@ class RecargaTanqueController extends Controller
                 ->orderBy('nombre_comercial')
                 ->orderBy('nombre_legal')
                 ->get()
-            : collect([$empresaUsuario])->filter();
+            : collect([$empresaUsuario])
+                ->filter(fn ($empresa) => $empresa && $empresa->estado === 'activa')
+                ->values();
 
         $gasolinerasSelectorQuery = Gasolinera::query()
             ->where('estado', 'activa')
+            ->whereHas('empresa', function ($query) {
+                $query->where('estado', 'activa');
+            })
             ->orderBy('nombre');
 
         if (! $esUsuarioDieselCop) {
@@ -130,6 +142,9 @@ class RecargaTanqueController extends Controller
             ->where('tanques.estado', 'activo')
             ->whereHas('gasolinera', function ($query) {
                 $query->where('gasolineras.estado', 'activa');
+            })
+            ->whereHas('gasolinera.empresa', function ($query) {
+                $query->where('estado', 'activa');
             });
 
         if (! $esUsuarioDieselCop) {
@@ -171,6 +186,7 @@ class RecargaTanqueController extends Controller
     public function show(Gasolinera $gasolinera, Tanque $tanque)
     {
         $this->autorizarAccesoGasolinera($gasolinera);
+        $this->validarEmpresaActivaGasolinera($gasolinera);
         $this->validarTanquePerteneceGasolinera($gasolinera, $tanque);
         $this->validarTanqueRecargable($gasolinera, $tanque);
 
@@ -183,6 +199,7 @@ class RecargaTanqueController extends Controller
     public function showVentana(Gasolinera $gasolinera, Tanque $tanque)
     {
         $this->autorizarAccesoGasolinera($gasolinera);
+        $this->validarEmpresaActivaGasolinera($gasolinera);
         $this->validarTanquePerteneceGasolinera($gasolinera, $tanque);
         $this->validarTanqueRecargable($gasolinera, $tanque);
 
@@ -236,6 +253,7 @@ class RecargaTanqueController extends Controller
     public function store(Request $request, Gasolinera $gasolinera, Tanque $tanque)
     {
         $this->autorizarAccesoGasolinera($gasolinera);
+        $this->validarEmpresaActivaGasolinera($gasolinera);
         $this->validarTanquePerteneceGasolinera($gasolinera, $tanque);
         $this->validarTanqueRecargable($gasolinera, $tanque);
 
@@ -313,6 +331,18 @@ class RecargaTanqueController extends Controller
 
         if (! is_null($user->empresa_id) && (int) $user->empresa_id !== (int) $gasolinera->empresa_id) {
             abort(403, 'No tiene autorización para acceder a esta gasolinera.');
+        }
+    }
+
+    /**
+     * Ensure the gas station belongs to an active company before recharge operations.
+     */
+    private function validarEmpresaActivaGasolinera(Gasolinera $gasolinera): void
+    {
+        $gasolinera->loadMissing('empresa');
+
+        if (! $gasolinera->empresa || $gasolinera->empresa->estado !== 'activa') {
+            abort(403, 'No se puede operar sobre esta gasolinera porque la empresa está inactiva.');
         }
     }
 

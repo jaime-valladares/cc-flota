@@ -12,53 +12,35 @@ use Illuminate\View\View;
 
 class UnidadController extends Controller
 {
-    /**
-     * Consulta informativa de unidades dentro del sistema.
-     */
     public function index(Request $request): View
     {
-        $data = $this->prepararConsultaUnidades($request);
+        $data = $this->prepararConsultaUnidades($request, false);
 
         return view('unidades.index', $data);
     }
 
-    /**
-     * Consulta informativa de unidades en ventana independiente.
-     */
     public function consultaVentana(Request $request): View
     {
-        $data = $this->prepararConsultaUnidades($request);
+        $data = $this->prepararConsultaUnidades($request, false);
 
         return view('unidades.index-ventana', $data);
     }
 
-    /**
-     * Búsqueda administrativa de unidades.
-     */
     public function administrar(Request $request): View
     {
-        $data = $this->prepararConsultaUnidades($request);
+        $data = $this->prepararConsultaUnidades($request, true);
 
         return view('unidades.administrar', $data);
     }
 
-    /**
-     * Búsqueda administrativa de unidades en ventana independiente.
-     */
     public function administrarVentana(Request $request): View
     {
-        $data = $this->prepararConsultaUnidades($request);
+        $data = $this->prepararConsultaUnidades($request, true);
 
         return view('unidades.administrar-ventana', $data);
     }
 
-    /**
-     * Prepara filtros, catálogos y resultados para consulta/administración.
-     */
-    /**
-     * Prepara filtros, catálogos y resultados para consulta/administración.
-     */
-    private function prepararConsultaUnidades(Request $request): array
+    private function prepararConsultaUnidades(Request $request, bool $soloEmpresasActivas): array
     {
         $user = Auth::user();
         $esUsuarioDieselCop = is_null($user->empresa_id);
@@ -82,6 +64,9 @@ class UnidadController extends Controller
             ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
                 $query->where('id', $user->empresa_id);
             })
+            ->when($soloEmpresasActivas, function ($query) {
+                $query->where('estado', 'activa');
+            })
             ->orderBy('nombre_comercial')
             ->orderBy('nombre_legal')
             ->get();
@@ -90,6 +75,11 @@ class UnidadController extends Controller
             ->with(['empresa'])
             ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
                 $query->where('empresa_id', $user->empresa_id);
+            })
+            ->when($soloEmpresasActivas, function ($query) {
+                $query->whereHas('empresa', function ($empresaQuery) {
+                    $empresaQuery->where('estado', 'activa');
+                });
             });
 
         $totalUnidades = (clone $baseQuery)->count();
@@ -101,6 +91,11 @@ class UnidadController extends Controller
             ->with(['empresa'])
             ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
                 $query->where('empresa_id', $user->empresa_id);
+            })
+            ->when($soloEmpresasActivas, function ($query) {
+                $query->whereHas('empresa', function ($empresaQuery) {
+                    $empresaQuery->where('estado', 'activa');
+                });
             })
             ->when($hayFiltros && filled($empresaId), function ($query) use ($empresaId) {
                 $query->where('empresa_id', $empresaId);
@@ -119,21 +114,10 @@ class UnidadController extends Controller
             });
 
         $resumenUnidades = [
-            'total' => $hayFiltros
-                ? (clone $unidadesQuery)->count()
-                : $totalUnidades,
-
-            'registradas' => $hayFiltros
-                ? (clone $unidadesQuery)->where('estado', 'registrada')->count()
-                : $totalRegistradas,
-
-            'activas' => $hayFiltros
-                ? (clone $unidadesQuery)->where('estado', 'activa')->count()
-                : $totalActivas,
-
-            'inactivas' => $hayFiltros
-                ? (clone $unidadesQuery)->where('estado', 'inactiva')->count()
-                : $totalInactivas,
+            'total' => $hayFiltros ? (clone $unidadesQuery)->count() : $totalUnidades,
+            'registradas' => $hayFiltros ? (clone $unidadesQuery)->where('estado', 'registrada')->count() : $totalRegistradas,
+            'activas' => $hayFiltros ? (clone $unidadesQuery)->where('estado', 'activa')->count() : $totalActivas,
+            'inactivas' => $hayFiltros ? (clone $unidadesQuery)->where('estado', 'inactiva')->count() : $totalInactivas,
         ];
 
         $unidades = $unidadesQuery
@@ -160,9 +144,6 @@ class UnidadController extends Controller
         ];
     }
 
-    /**
-     * Formulario de creación de unidad.
-     */
     public function create(): View
     {
         $user = Auth::user();
@@ -185,9 +166,6 @@ class UnidadController extends Controller
         ]);
     }
 
-    /**
-     * Formulario de creación de unidad en ventana independiente.
-     */
     public function createVentana(): View
     {
         $user = Auth::user();
@@ -210,9 +188,6 @@ class UnidadController extends Controller
         ]);
     }
 
-    /**
-     * Guarda una nueva unidad.
-     */
     public function store(Request $request): RedirectResponse
     {
         $user = Auth::user();
@@ -227,12 +202,6 @@ class UnidadController extends Controller
         $validated['placa'] = mb_strtoupper(trim($validated['placa']));
         $validated['creado_por'] = $user->id;
         $validated['actualizado_por'] = $user->id;
-
-        /*
-         * La unidad nace como registrada.
-         * Solo pasará a activa cuando tenga licencia, puntos de seguridad
-         * y asignación inicial de marchamos completa.
-         */
         $validated['estado'] = 'registrada';
 
         Unidad::create($validated);
@@ -248,12 +217,10 @@ class UnidadController extends Controller
             ->with('success', 'Unidad creada correctamente.');
     }
 
-    /**
-     * Ficha administrativa de la unidad.
-     */
     public function show(Unidad $unidad): View
     {
         $this->autorizarAccesoUnidad($unidad);
+        $this->validarEmpresaActivaUnidad($unidad);
 
         $unidad->load([
             'empresa',
@@ -267,12 +234,10 @@ class UnidadController extends Controller
         return view('unidades.show', compact('unidad'));
     }
 
-    /**
-     * Ficha administrativa de la unidad en ventana independiente.
-     */
     public function showVentana(Unidad $unidad): View
     {
         $this->autorizarAccesoUnidad($unidad);
+        $this->validarEmpresaActivaUnidad($unidad);
 
         $unidad->load([
             'empresa',
@@ -286,87 +251,59 @@ class UnidadController extends Controller
         return view('unidades.show-ventana', compact('unidad'));
     }
 
-    /**
-     * Formulario de edición de unidad.
-     */
     public function edit(Unidad $unidad): View
     {
         $this->autorizarAccesoUnidad($unidad);
+        $this->validarEmpresaActivaUnidad($unidad);
 
         $user = Auth::user();
         $esUsuarioDieselCop = is_null($user->empresa_id);
 
-        $empresas = Empresa::query()
-            ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
-                $query->where('id', $user->empresa_id);
-            })
-            ->where('estado', 'activa')
-            ->orderBy('nombre_comercial')
-            ->orderBy('nombre_legal')
-            ->get();
+        $unidad->loadMissing('empresa');
 
         return view('unidades.edit', [
             'unidad' => $unidad,
-            'empresas' => $empresas,
+            'empresas' => collect([$unidad->empresa])->filter(),
             'esUsuarioDieselCop' => $esUsuarioDieselCop,
             'modelosMedicion' => $this->modelosMedicion(),
             'estadosUnidad' => $this->estadosUnidad(),
         ]);
     }
 
-    /**
-     * Formulario de edición de unidad en ventana independiente.
-     */
     public function editVentana(Unidad $unidad): View
     {
         $this->autorizarAccesoUnidad($unidad);
+        $this->validarEmpresaActivaUnidad($unidad);
 
         $user = Auth::user();
         $esUsuarioDieselCop = is_null($user->empresa_id);
 
-        $empresas = Empresa::query()
-            ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
-                $query->where('id', $user->empresa_id);
-            })
-            ->where('estado', 'activa')
-            ->orderBy('nombre_comercial')
-            ->orderBy('nombre_legal')
-            ->get();
+        $unidad->loadMissing('empresa');
 
         return view('unidades.edit-ventana', [
             'unidad' => $unidad,
-            'empresas' => $empresas,
+            'empresas' => collect([$unidad->empresa])->filter(),
             'esUsuarioDieselCop' => $esUsuarioDieselCop,
             'modelosMedicion' => $this->modelosMedicion(),
             'estadosUnidad' => $this->estadosUnidad(),
         ]);
     }
 
-    /**
-     * Actualiza una unidad existente.
-     */
     public function update(Request $request, Unidad $unidad): RedirectResponse
     {
         $this->autorizarAccesoUnidad($unidad);
+        $this->validarEmpresaActivaUnidad($unidad);
 
         $user = Auth::user();
         $esUsuarioDieselCop = is_null($user->empresa_id);
 
         $validated = $request->validate($this->reglasValidacionUnidad($request, $unidad, $esUsuarioDieselCop));
 
-        if (! $esUsuarioDieselCop) {
-            $validated['empresa_id'] = $user->empresa_id;
-        }
-
         $validated['placa'] = mb_strtoupper(trim($validated['placa']));
         $validated['actualizado_por'] = $user->id;
 
-        /*
-         * El estado no se actualiza desde el formulario general de edición.
-         * Los cambios de estado pasan por inactivar/reactivar o por finalizar
-         * asignación inicial de marchamos.
-         */
         unset($validated['estado']);
+        unset($validated['empresa_id']);
 
         $unidad->update($validated);
 
@@ -381,12 +318,10 @@ class UnidadController extends Controller
             ->with('success', 'Unidad actualizada correctamente.');
     }
 
-    /**
-     * Inactiva una unidad sin eliminarla físicamente.
-     */
     public function inactivar(Request $request, Unidad $unidad): RedirectResponse
     {
         $this->autorizarAccesoUnidad($unidad);
+        $this->validarEmpresaActivaUnidad($unidad);
 
         $validated = $request->validate([
             'motivo_inactivacion' => [
@@ -416,15 +351,10 @@ class UnidadController extends Controller
             ->with('success', 'Unidad inactivada correctamente.');
     }
 
-    /**
-     * Reactiva una unidad previamente inactiva.
-     *
-     * La unidad vuelve a registrada, no directamente a activa,
-     * porque puede requerir validación de licencia, puntos y marchamos.
-     */
     public function reactivar(Request $request, Unidad $unidad): RedirectResponse
     {
         $this->autorizarAccesoUnidad($unidad);
+        $this->validarEmpresaActivaUnidad($unidad);
 
         $unidad->update([
             'estado' => 'registrada',
@@ -445,14 +375,11 @@ class UnidadController extends Controller
             ->with('success', 'Unidad reactivada correctamente. Queda en estado registrada para validación operativa.');
     }
 
-    /**
-     * Reglas de validación compartidas por creación y edición.
-     */
     private function reglasValidacionUnidad(Request $request, ?Unidad $unidad, bool $esUsuarioDieselCop): array
     {
         return [
             'empresa_id' => [
-                $esUsuarioDieselCop ? 'required' : 'nullable',
+                is_null($unidad) && $esUsuarioDieselCop ? 'required' : 'nullable',
                 'integer',
                 Rule::exists('empresas', 'id')->where('estado', 'activa'),
             ],
@@ -501,9 +428,6 @@ class UnidadController extends Controller
         ];
     }
 
-    /**
-     * Catálogo fijo de modelos de medición.
-     */
     private function modelosMedicion(): array
     {
         return [
@@ -513,9 +437,6 @@ class UnidadController extends Controller
         ];
     }
 
-    /**
-     * Catálogo fijo de estados de unidad.
-     */
     private function estadosUnidad(): array
     {
         return [
@@ -525,9 +446,6 @@ class UnidadController extends Controller
         ];
     }
 
-    /**
-     * Catálogo fijo de motivos de inactivación.
-     */
     private function motivosInactivacion(): array
     {
         return [
@@ -542,15 +460,21 @@ class UnidadController extends Controller
         ];
     }
 
-    /**
-     * Control básico de acceso multiempresa.
-     */
     private function autorizarAccesoUnidad(Unidad $unidad): void
     {
         $user = Auth::user();
 
         if (! is_null($user->empresa_id) && (int) $unidad->empresa_id !== (int) $user->empresa_id) {
             abort(403, 'No tiene autorización para acceder a esta unidad.');
+        }
+    }
+
+    private function validarEmpresaActivaUnidad(Unidad $unidad): void
+    {
+        $unidad->loadMissing('empresa');
+
+        if (! $unidad->empresa || $unidad->empresa->estado !== 'activa') {
+            abort(403, 'No se puede operar sobre esta unidad porque la empresa está inactiva.');
         }
     }
 }
