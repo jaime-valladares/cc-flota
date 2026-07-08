@@ -77,4 +77,9 @@ class Empresa extends Model
         return $this->hasMany(PuntoRuta::class, 'empresa_id');
     }
 
+    public function motoristas(): HasMany
+    {
+        return $this->hasMany(Motorista::class, 'empresa_id');
+    }
+
 }

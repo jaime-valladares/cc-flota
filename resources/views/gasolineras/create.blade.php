@@ -23,7 +23,7 @@
                         </a>
 
                         <a href="{{ route('gasolineras.index') }}" class="cc-btn-secondary">
-                            Volver a Consulta
+                            Ir a Consulta
                         </a>
                     </div>
                 </div>

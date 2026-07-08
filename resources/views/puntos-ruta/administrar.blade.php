@@ -20,10 +20,6 @@
                            class="cc-btn-secondary cc-btn-wide">
                             Abrir en nueva pestaña
                         </a>
-
-                        <a href="{{ route('puntos-ruta.create') }}" class="cc-btn-primary cc-btn-wide">
-                            Nuevo punto
-                        </a>
                     </div>
                 </div>
 

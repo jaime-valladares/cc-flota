@@ -32,11 +32,7 @@
 
                             <div class="flex items-center gap-3">
                                 <a href="{{ route('puntos-ruta.administrar') }}" class="cc-btn-secondary cc-btn-wide">
-                                    Volver al sistema
-                                </a>
-
-                                <a href="{{ route('puntos-ruta.create.ventana') }}" class="cc-btn-primary cc-btn-wide">
-                                    Nuevo punto
+                                    Volver a Administrar
                                 </a>
                             </div>
                         </div>

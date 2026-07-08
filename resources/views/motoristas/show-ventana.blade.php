@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>Ficha administrativa de gasolinera externa | CC-Flota</title>
+        <title>Ficha administrativa de motorista | CC-Flota</title>
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,20 +23,20 @@
                         <div class="cc-card-header cc-card-header-compact">
                             <div>
                                 <h3 class="cc-title cc-title-compact">
-                                    Ficha administrativa de gasolinera externa
+                                    Ficha administrativa de motorista
                                 </h3>
                                 <p class="cc-subtitle cc-subtitle-compact">
-                                    Consulta consolidada de la gasolinera comercial externa registrada para la operación de la empresa.
+                                    Consulta consolidada del motorista disponible para solicitudes de abastecimiento.
                                 </p>
                             </div>
 
                             <div class="flex items-center gap-3">
-                                <a href="{{ route('gasolineras-externas.administrar.ventana') }}" class="cc-btn-secondary cc-btn-wide">
+                                <a href="{{ route('motoristas.administrar.ventana') }}" class="cc-btn-secondary cc-btn-wide">
                                     Volver a administrar
                                 </a>
 
-                                <a href="{{ route('gasolineras-externas.administrar') }}" class="cc-btn-secondary cc-btn-wide">
-                                    Volver al Sistema
+                                <a href="{{ route('motoristas.administrar') }}" class="cc-btn-secondary cc-btn-wide">
+                                    Volver al sistema
                                 </a>
                             </div>
                         </div>
@@ -50,34 +50,32 @@
                         <div class="cc-profile-summary">
                             <div>
                                 <div class="cc-profile-eyebrow">
-                                    Gasolinera externa
+                                    Motorista
                                 </div>
 
                                 <h4 class="cc-profile-title">
-                                    {{ $gasolineraExterna->nombre }}
+                                    {{ $motorista->nombre_completo }}
                                 </h4>
 
                                 <div class="cc-profile-meta">
                                     <span>
-                                        Empresa: {{ $gasolineraExterna->empresa->nombre_comercial ?: $gasolineraExterna->empresa->nombre_legal }}
+                                        Empresa: {{ $motorista->empresa->nombre_comercial ?: $motorista->empresa->nombre_legal }}
                                     </span>
 
-                                    @if ($gasolineraExterna->compania)
-                                        <span>
-                                            Compañía: {{ $gasolineraExterna->compania }}
-                                        </span>
-                                    @endif
+                                    <span>
+                                        Licencia: {{ $motorista->licencia }}
+                                    </span>
                                 </div>
                             </div>
 
                             <div class="cc-profile-status">
-                                @if ($gasolineraExterna->estado === 'activa')
+                                @if ($motorista->estado === 'activo')
                                     <span class="cc-badge cc-badge-active">
-                                        Activa
+                                        Activo
                                     </span>
                                 @else
                                     <span class="cc-badge cc-badge-inactive">
-                                        Inactiva
+                                        Inactivo
                                     </span>
                                 @endif
                             </div>
@@ -88,59 +86,35 @@
                             <section class="cc-detail-section">
                                 <div class="cc-detail-section-header">
                                     <h5>Identificación</h5>
-                                    <p>Datos principales de la gasolinera externa dentro del catálogo de la empresa.</p>
+                                    <p>Datos principales del motorista registrado para la empresa.</p>
                                 </div>
 
                                 <div class="cc-detail-grid">
                                     <div class="cc-detail-item">
                                         <div class="cc-detail-label">Empresa</div>
                                         <div class="cc-detail-value">
-                                            {{ $gasolineraExterna->empresa->nombre_comercial ?: $gasolineraExterna->empresa->nombre_legal }}
+                                            {{ $motorista->empresa->nombre_comercial ?: $motorista->empresa->nombre_legal }}
                                         </div>
                                     </div>
 
                                     <div class="cc-detail-item">
-                                        <div class="cc-detail-label">Nombre</div>
-                                        <div class="cc-detail-value">{{ $gasolineraExterna->nombre }}</div>
-                                    </div>
-
-                                    <div class="cc-detail-item cc-detail-item-wide">
-                                        <div class="cc-detail-label">Dirección</div>
-                                        <div class="cc-detail-value">{{ $gasolineraExterna->direccion }}</div>
-                                    </div>
-                                </div>
-                            </section>
-
-                            <section class="cc-detail-section">
-                                <div class="cc-detail-section-header">
-                                    <h5>Datos complementarios</h5>
-                                    <p>Información opcional preparada para consulta, reportes y uso operativo futuro.</p>
-                                </div>
-
-                                <div class="cc-detail-grid">
-                                    <div class="cc-detail-item">
-                                        <div class="cc-detail-label">Compañía</div>
-                                        <div class="cc-detail-value">{{ $gasolineraExterna->compania ?? '—' }}</div>
+                                        <div class="cc-detail-label">Nombres</div>
+                                        <div class="cc-detail-value">{{ $motorista->nombres }}</div>
                                     </div>
 
                                     <div class="cc-detail-item">
-                                        <div class="cc-detail-label">Ciudad</div>
-                                        <div class="cc-detail-value">{{ $gasolineraExterna->ciudad ?? '—' }}</div>
+                                        <div class="cc-detail-label">Apellidos</div>
+                                        <div class="cc-detail-value">{{ $motorista->apellidos }}</div>
                                     </div>
 
                                     <div class="cc-detail-item">
-                                        <div class="cc-detail-label">Departamento</div>
-                                        <div class="cc-detail-value">{{ $gasolineraExterna->departamento ?? '—' }}</div>
+                                        <div class="cc-detail-label">Licencia</div>
+                                        <div class="cc-detail-value">{{ $motorista->licencia }}</div>
                                     </div>
 
                                     <div class="cc-detail-item">
                                         <div class="cc-detail-label">Teléfono</div>
-                                        <div class="cc-detail-value">{{ $gasolineraExterna->telefono ?? '—' }}</div>
-                                    </div>
-
-                                    <div class="cc-detail-item cc-detail-item-wide">
-                                        <div class="cc-detail-label">Correo</div>
-                                        <div class="cc-detail-value">{{ $gasolineraExterna->correo ?? '—' }}</div>
+                                        <div class="cc-detail-value">{{ $motorista->telefono }}</div>
                                     </div>
                                 </div>
                             </section>
@@ -155,13 +129,13 @@
                                     <div class="cc-detail-item">
                                         <div class="cc-detail-label">Estado actual</div>
                                         <div class="cc-detail-value">
-                                            @if ($gasolineraExterna->estado === 'activa')
+                                            @if ($motorista->estado === 'activo')
                                                 <span class="cc-badge cc-badge-active">
-                                                    Activa
+                                                    Activo
                                                 </span>
                                             @else
                                                 <span class="cc-badge cc-badge-inactive">
-                                                    Inactiva
+                                                    Inactivo
                                                 </span>
                                             @endif
                                         </div>
@@ -169,22 +143,22 @@
 
                                     <div class="cc-detail-item">
                                         <div class="cc-detail-label">Fecha de creación</div>
-                                        <div class="cc-detail-value">{{ $gasolineraExterna->fecha_creacion ?? '—' }}</div>
+                                        <div class="cc-detail-value">{{ $motorista->fecha_creacion ?? '—' }}</div>
                                     </div>
 
                                     <div class="cc-detail-item">
                                         <div class="cc-detail-label">Fecha de actualización</div>
-                                        <div class="cc-detail-value">{{ $gasolineraExterna->fecha_actualizacion ?? '—' }}</div>
+                                        <div class="cc-detail-value">{{ $motorista->fecha_actualizacion ?? '—' }}</div>
                                     </div>
 
                                     <div class="cc-detail-item">
                                         <div class="cc-detail-label">Fecha de inactivación</div>
-                                        <div class="cc-detail-value">{{ $gasolineraExterna->fecha_inactivacion ?? '—' }}</div>
+                                        <div class="cc-detail-value">{{ $motorista->fecha_inactivacion ?? '—' }}</div>
                                     </div>
 
                                     <div class="cc-detail-item cc-detail-item-wide">
                                         <div class="cc-detail-label">Motivo de inactivación</div>
-                                        <div class="cc-detail-value">{{ $gasolineraExterna->motivo_inactivacion ?? '—' }}</div>
+                                        <div class="cc-detail-value">{{ $motorista->motivo_inactivacion ?? '—' }}</div>
                                     </div>
                                 </div>
                             </section>
@@ -193,31 +167,31 @@
 
                         <div class="cc-actions cc-actions-split">
                             <div class="cc-actions-normal">
-                                <a href="{{ route('gasolineras-externas.edit.ventana', $gasolineraExterna) }}" class="cc-btn-primary cc-btn-form-action">
-                                    Editar gasolinera
+                                <a href="{{ route('motoristas.edit.ventana', $motorista) }}" class="cc-btn-primary cc-btn-form-action">
+                                    Editar motorista
                                 </a>
 
-                                <a href="{{ route('gasolineras-externas.administrar.ventana') }}" class="cc-btn-secondary cc-btn-form-action">
+                                <a href="{{ route('motoristas.administrar.ventana') }}" class="cc-btn-secondary cc-btn-form-action">
                                     Volver a administrar
                                 </a>
                             </div>
                         </div>
 
-                        @if ($gasolineraExterna->estado === 'activa')
+                        @if ($motorista->estado === 'activo')
                             <section class="cc-danger-zone">
                                 <div class="cc-danger-zone-header">
                                     <div>
                                         <h5>Zona de riesgo</h5>
                                         <p>
-                                            Inactive la gasolinera externa únicamente cuando ya no deba estar disponible para nuevos registros operativos.
+                                            Inactive el motorista únicamente cuando ya no deba estar disponible para nuevas solicitudes de abastecimiento.
                                         </p>
                                     </div>
                                 </div>
 
                                 <form method="POST"
-                                      action="{{ route('gasolineras-externas.inactivar', $gasolineraExterna) }}"
+                                      action="{{ route('motoristas.inactivar', $motorista) }}"
                                       class="cc-danger-zone-form"
-                                      onsubmit="return confirmarInactivacionGasolineraExterna();">
+                                      onsubmit="return confirmarInactivacionMotorista();">
                                     @csrf
                                     @method('PATCH')
 
@@ -235,9 +209,9 @@
                                             required
                                         >
                                             <option value="">Seleccione un motivo</option>
-                                            <option value="No continúa en uso">No continúa en uso</option>
-                                            <option value="Cambio de proveedor">Cambio de proveedor</option>
-                                            <option value="Cierre de estación">Cierre de estación</option>
+                                            <option value="No continúa en servicio">No continúa en servicio</option>
+                                            <option value="Cambio operativo">Cambio operativo</option>
+                                            <option value="Licencia vencida">Licencia vencida</option>
                                             <option value="Datos incorrectos en registro">Datos incorrectos en registro</option>
                                             <option value="Solicitud del cliente">Solicitud del cliente</option>
                                             <option value="Suspensión administrativa">Suspensión administrativa</option>
@@ -252,22 +226,22 @@
                                     </div>
 
                                     <button type="submit" class="cc-btn-danger cc-btn-form-action">
-                                        Inactivar gasolinera
+                                        Inactivar motorista
                                     </button>
                                 </form>
                             </section>
                         @else
                             <div class="cc-actions">
                                 <form method="POST"
-                                      action="{{ route('gasolineras-externas.reactivar', $gasolineraExterna) }}"
-                                      onsubmit="return confirm('¿Seguro que deseas reactivar esta gasolinera externa?');">
+                                      action="{{ route('motoristas.reactivar', $motorista) }}"
+                                      onsubmit="return confirm('¿Seguro que deseas reactivar este motorista?');">
                                     @csrf
                                     @method('PATCH')
 
                                     <input type="hidden" name="return_to" value="ventana">
 
                                     <button type="submit" class="cc-btn-success cc-btn-form-action">
-                                        Reactivar gasolinera
+                                        Reactivar motorista
                                     </button>
                                 </form>
                             </div>
@@ -279,7 +253,7 @@
         </div>
 
         <script>
-            function confirmarInactivacionGasolineraExterna() {
+            function confirmarInactivacionMotorista() {
                 const motivo = document.getElementById('motivo_inactivacion').value;
 
                 if (!motivo) {
@@ -287,7 +261,7 @@
                     return false;
                 }
 
-                return confirm(`¿Seguro que deseas inactivar esta gasolinera externa por el motivo "${motivo}"?`);
+                return confirm(`¿Seguro que deseas inactivar este motorista por el motivo "${motivo}"?`);
             }
         </script>
     </body>

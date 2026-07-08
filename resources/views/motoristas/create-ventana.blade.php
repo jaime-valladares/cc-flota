@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>Registro de gasolinera externa | CC-Flota</title>
+        <title>Registro de motorista | CC-Flota</title>
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,15 +23,15 @@
                         <div class="cc-card-header cc-card-header-compact">
                             <div>
                                 <h3 class="cc-title cc-title-compact">
-                                    Registro de gasolinera externa
+                                    Registro de motorista
                                 </h3>
                                 <p class="cc-subtitle cc-subtitle-compact">
-                                    Registre una gasolinera comercial autorizada o frecuente para abastecimientos externos.
+                                    Registre un motorista disponible para seleccionar en solicitudes de abastecimiento.
                                 </p>
                             </div>
 
                             <div class="flex items-center gap-3">
-                                <a href="{{ route('gasolineras-externas.create') }}" class="cc-btn-secondary cc-btn-wide">
+                                <a href="{{ route('motoristas.create') }}" class="cc-btn-secondary cc-btn-wide">
                                     Volver a Registro
                                 </a>
                             </div>
@@ -43,14 +43,14 @@
                             </div>
                         @endif
 
-                        <form method="POST" action="{{ route('gasolineras-externas.store') }}" novalidate>
+                        <form method="POST" action="{{ route('motoristas.store') }}" novalidate>
                             @csrf
 
                             <input type="hidden" name="return_to" value="ventana">
 
-                            @include('gasolineras-externas._form', [
-                                'gasolineraExterna' => null,
-                                'submitLabel' => 'Guardar gasolinera',
+                            @include('motoristas._form', [
+                                'motorista' => null,
+                                'submitLabel' => 'Guardar motorista',
                                 'modoVentana' => true,
                             ])
                         </form>

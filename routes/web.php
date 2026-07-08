@@ -9,6 +9,7 @@ use App\Http\Controllers\RecargaTanqueController;
 use App\Http\Controllers\MarchamoAsignacionInicialController;
 use App\Http\Controllers\MarchamoController;
 use App\Http\Controllers\MarchamoReemplazoController;
+use App\Http\Controllers\MotoristaController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TanqueController;
 use App\Http\Controllers\UnidadController;
@@ -352,6 +353,54 @@ Route::middleware('auth')->group(function () {
 
     Route::patch('/puntos-ruta/{puntoRuta}/reactivar', [PuntoRutaController::class, 'reactivar'])
         ->name('puntos-ruta.reactivar');
+
+        /*
+    |--------------------------------------------------------------------------
+    | Motoristas
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/motoristas', [MotoristaController::class, 'index'])
+        ->name('motoristas.index');
+
+    Route::get('/motoristas/consulta/ventana', [MotoristaController::class, 'consultaVentana'])
+        ->name('motoristas.consulta.ventana');
+
+    Route::get('/motoristas/administrar', [MotoristaController::class, 'administrar'])
+        ->name('motoristas.administrar');
+
+    Route::get('/motoristas/administrar/ventana', [MotoristaController::class, 'administrarVentana'])
+        ->name('motoristas.administrar.ventana');
+
+    Route::get('/motoristas/nuevo', [MotoristaController::class, 'create'])
+        ->name('motoristas.create');
+
+    Route::get('/motoristas/nuevo/ventana', [MotoristaController::class, 'createVentana'])
+        ->name('motoristas.create.ventana');
+
+    Route::post('/motoristas', [MotoristaController::class, 'store'])
+        ->name('motoristas.store');
+
+    Route::get('/motoristas/{motorista}/ficha/ventana', [MotoristaController::class, 'showVentana'])
+        ->name('motoristas.show.ventana');
+
+    Route::get('/motoristas/{motorista}/editar/ventana', [MotoristaController::class, 'editVentana'])
+        ->name('motoristas.edit.ventana');
+
+    Route::get('/motoristas/{motorista}', [MotoristaController::class, 'show'])
+        ->name('motoristas.show');
+
+    Route::get('/motoristas/{motorista}/editar', [MotoristaController::class, 'edit'])
+        ->name('motoristas.edit');
+
+    Route::put('/motoristas/{motorista}', [MotoristaController::class, 'update'])
+        ->name('motoristas.update');
+
+    Route::patch('/motoristas/{motorista}/inactivar', [MotoristaController::class, 'inactivar'])
+        ->name('motoristas.inactivar');
+
+    Route::patch('/motoristas/{motorista}/reactivar', [MotoristaController::class, 'reactivar'])
+        ->name('motoristas.reactivar');    
 
     /*
     |--------------------------------------------------------------------------

@@ -6,15 +6,15 @@
                 <div class="cc-card-header cc-card-header-compact">
                     <div>
                         <h3 class="cc-title cc-title-compact">
-                            Administrar gasolineras externas
+                            Consulta de motoristas
                         </h3>
                         <p class="cc-subtitle cc-subtitle-compact">
-                            Gestione las gasolineras comerciales disponibles para registros de abastecimiento externo.
+                            Consulte los motoristas disponibles para solicitudes de abastecimiento.
                         </p>
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <a href="{{ route('gasolineras-externas.administrar.ventana') }}"
+                        <a href="{{ route('motoristas.consulta.ventana') }}"
                            target="_blank"
                            rel="noopener noreferrer"
                            class="cc-btn-secondary cc-btn-wide">
@@ -32,40 +32,40 @@
                 <div class="cc-summary-strip">
                     <div class="cc-summary-strip-item">
                         <span class="cc-summary-strip-label">
-                            Total gasolineras
+                            Total motoristas
                         </span>
                         <span class="cc-summary-strip-value">
-                            {{ $totalGasolinerasExternas }}
+                            {{ $totalMotoristas }}
                         </span>
                     </div>
 
                     <div class="cc-summary-strip-item">
                         <span class="cc-summary-strip-label">
-                            Activas
+                            Activos
                         </span>
                         <span class="cc-summary-strip-value cc-summary-strip-value-success">
-                            {{ $gasolinerasExternasActivas }}
+                            {{ $motoristasActivos }}
                         </span>
                     </div>
 
                     <div class="cc-summary-strip-item">
                         <span class="cc-summary-strip-label">
-                            Inactivas
+                            Inactivos
                         </span>
                         <span class="cc-summary-strip-value cc-summary-strip-value-danger">
-                            {{ $gasolinerasExternasInactivas }}
+                            {{ $motoristasInactivos }}
                         </span>
                     </div>
                 </div>
 
-                <form method="GET" action="{{ route('gasolineras-externas.administrar') }}" class="mb-5">
+                <form method="GET" action="{{ route('motoristas.index') }}" class="mb-5">
                     <input type="hidden" name="consultar" value="1">
 
                     <div class="cc-filter-panel cc-filter-panel-compact cc-filter-panel-inline">
 
                         <div class="cc-form-section cc-form-section-compact" style="margin-top: 0;">
                             <div class="cc-form-section-title">
-                                Filtros de administración
+                                Filtros de consulta
                             </div>
                         </div>
 
@@ -104,20 +104,20 @@
                             </div>
 
                             <div class="cc-field">
-                                <label for="nombre">
-                                    Nombre
+                                <label for="buscar">
+                                    Buscar
                                 </label>
                                 <input
-                                    id="nombre"
-                                    name="nombre"
+                                    id="buscar"
+                                    name="buscar"
                                     type="text"
                                     class="cc-input"
-                                    value="{{ $nombre }}"
+                                    value="{{ $buscar }}"
                                     maxlength="150"
-                                    placeholder="Buscar gasolinera"
+                                    placeholder="Nombre, licencia o teléfono"
                                 >
 
-                                @error('nombre')
+                                @error('buscar')
                                     <div class="cc-error">
                                         {{ $message }}
                                     </div>
@@ -130,11 +130,11 @@
                                 </label>
                                 <select id="estado" name="estado" class="cc-input">
                                     <option value="">Seleccione</option>
-                                    <option value="activa" @selected($estado === 'activa')>
-                                        Activas
+                                    <option value="activo" @selected($estado === 'activo')>
+                                        Activos
                                     </option>
-                                    <option value="inactiva" @selected($estado === 'inactiva')>
-                                        Inactivas
+                                    <option value="inactivo" @selected($estado === 'inactivo')>
+                                        Inactivos
                                     </option>
                                 </select>
 
@@ -150,7 +150,7 @@
                                     Consultar
                                 </button>
 
-                                <a href="{{ route('gasolineras-externas.administrar') }}" class="cc-btn-secondary">
+                                <a href="{{ route('motoristas.index') }}" class="cc-btn-secondary">
                                     Limpiar
                                 </a>
                             </div>
@@ -159,92 +159,96 @@
                     </div>
                 </form>
 
-                @if ($hayFiltros && $gasolinerasExternas->total() > 0)
+                @if ($hayFiltros && $motoristas->total() > 0)
                     <div class="mb-4 flex justify-end text-sm text-[var(--cc-text-muted)]">
                         Mostrando
-                        <span class="mx-1 font-bold text-[var(--cc-text-main)]">{{ $gasolinerasExternas->firstItem() }}</span>
+                        <span class="mx-1 font-bold text-[var(--cc-text-main)]">{{ $motoristas->firstItem() }}</span>
                         -
-                        <span class="mx-1 font-bold text-[var(--cc-text-main)]">{{ $gasolinerasExternas->lastItem() }}</span>
+                        <span class="mx-1 font-bold text-[var(--cc-text-main)]">{{ $motoristas->lastItem() }}</span>
                         de
-                        <span class="ml-1 font-bold text-[var(--cc-text-main)]">{{ $gasolinerasExternas->total() }}</span>
+                        <span class="ml-1 font-bold text-[var(--cc-text-main)]">{{ $motoristas->total() }}</span>
                     </div>
                 @endif
 
                 @if (! $hayFiltros)
                     <div class="cc-empty-panel cc-empty-panel-compact">
                         <h5>
-                            Administración pendiente
+                            Consulta pendiente
                         </h5>
                         <p>
-                            Use los filtros para cargar los registros disponibles.
+                            Los resultados permanecerán vacíos hasta que realice una búsqueda.
                         </p>
                     </div>
-                @elseif ($gasolinerasExternas->isEmpty())
+                @elseif ($motoristas->isEmpty())
                     <div class="cc-empty-panel cc-empty-panel-compact">
                         <h5>
                             Sin resultados
                         </h5>
                         <p>
-                            No hay gasolineras externas que coincidan con los criterios seleccionados.
+                            No hay motoristas que coincidan con los criterios seleccionados.
                         </p>
                     </div>
                 @else
-                    <div class="cc-result-list">
-                        @foreach ($gasolinerasExternas as $gasolineraExterna)
-                            <div class="cc-result-card cc-result-card-compact">
-                                <div class="cc-result-main">
-                                    <div class="cc-result-eyebrow">
-                                        Gasolinera externa
-                                    </div>
+                    <div class="cc-table-wrapper">
+                        <table class="cc-table">
+                            <colgroup>
+                                <col style="width: 26%;">
+                                <col style="width: 24%;">
+                                <col style="width: 18%;">
+                                <col style="width: 16%;">
+                                <col style="width: 16%;">
+                            </colgroup>
 
-                                    <h4 class="cc-result-title">
-                                        {{ $gasolineraExterna->nombre }}
-                                    </h4>
+                            <thead>
+                                <tr>
+                                    <th class="cc-text-left">Motorista</th>
+                                    <th class="cc-text-left">Empresa</th>
+                                    <th class="cc-text-left">Licencia</th>
+                                    <th class="cc-text-left">Teléfono</th>
+                                    <th class="cc-text-left">Estado</th>
+                                </tr>
+                            </thead>
 
-                                    <div class="cc-result-meta">
-                                        <span>
-                                            Empresa: {{ $gasolineraExterna->empresa->nombre_comercial ?: $gasolineraExterna->empresa->nombre_legal }}
-                                        </span>
-
-                                        @if ($gasolineraExterna->compania)
-                                            <span>
-                                                Compañía: {{ $gasolineraExterna->compania }}
+                            <tbody>
+                                @foreach ($motoristas as $motorista)
+                                    <tr>
+                                        <td class="cc-text-left cc-cell-truncate">
+                                            <span class="cc-table-strong">
+                                                {{ $motorista->nombre_completo }}
                                             </span>
-                                        @endif
+                                        </td>
 
-                                        <span>
-                                            Dirección: {{ $gasolineraExterna->direccion }}
-                                        </span>
-                                    </div>
-                                </div>
+                                        <td class="cc-text-left cc-cell-truncate">
+                                            {{ $motorista->empresa->nombre_comercial ?: $motorista->empresa->nombre_legal }}
+                                        </td>
 
-                                <div class="cc-result-side">
-                                    @if ($gasolineraExterna->estado === 'activa')
-                                        <span class="cc-badge cc-badge-active">
-                                            Activa
-                                        </span>
-                                    @else
-                                        <span class="cc-badge cc-badge-inactive">
-                                            Inactiva
-                                        </span>
-                                    @endif
+                                        <td class="cc-text-left cc-cell-truncate">
+                                            {{ $motorista->licencia }}
+                                        </td>
 
-                                    <div class="cc-result-actions">
-                                        <a href="{{ route('gasolineras-externas.show', $gasolineraExterna) }}" class="cc-btn-secondary cc-btn-result">
-                                            Ver ficha
-                                        </a>
+                                        <td class="cc-text-left cc-cell-truncate">
+                                            {{ $motorista->telefono }}
+                                        </td>
 
-                                        <a href="{{ route('gasolineras-externas.edit', $gasolineraExterna) }}" class="cc-btn-primary cc-btn-result">
-                                            Editar
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
+                                        <td class="cc-text-left">
+                                            @if ($motorista->estado === 'activo')
+                                                <span class="cc-badge cc-badge-active">
+                                                    Activo
+                                                </span>
+                                            @else
+                                                <span class="cc-badge cc-badge-inactive">
+                                                    Inactivo
+                                                </span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
 
                     <div class="mt-6">
-                        {{ $gasolinerasExternas->appends(array_merge(request()->query(), ['consultar' => 1]))->links() }}
+                        {{ $motoristas->appends(array_merge(request()->query(), ['consultar' => 1]))->links() }}
                     </div>
                 @endif
 

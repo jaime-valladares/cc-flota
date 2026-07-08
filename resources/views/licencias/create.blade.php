@@ -22,7 +22,7 @@
                         </a>
 
                         <a href="{{ route('licencias.index') }}" class="cc-btn-secondary cc-btn-wide">
-                            Volver a consulta
+                            Ir a Consulta
                         </a>
                     </div>
                 </div>

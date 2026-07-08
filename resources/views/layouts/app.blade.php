@@ -7,9 +7,7 @@
 
         <title>CC-Flota</title>
 
-        <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/cc-flota/favicon.png') }}?v=3">
-        <link rel="shortcut icon" type="image/png" href="{{ asset('images/cc-flota/favicon.png') }}?v=3">
-        <link rel="apple-touch-icon" href="{{ asset('images/cc-flota/favicon.png') }}?v=3">
+        @include('layouts.partials.favicon')
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -57,12 +55,13 @@
             $gasolinerasActivo = request()->routeIs('gasolineras.*');
             $gasolinerasExternasActivo = request()->routeIs('gasolineras-externas.*');
             $puntosRutaActivo = request()->routeIs('puntos-ruta.*');
+            $motoristasActivo = request()->routeIs('motoristas.*');
         @endphp
 
         <div class="cc-admin-shell">
 
             <!-- Sidebar -->
-            <aside class="cc-sidebar">
+            <aside id="ccSidebar" class="cc-sidebar">
                 <div class="cc-sidebar-brand">
                     <div class="cc-sidebar-logo cc-sidebar-logo-image">
                         <img
@@ -300,22 +299,25 @@
 
                     <!-- Motoristas -->
                     <div class="cc-sidebar-group">
-                        <div class="cc-sidebar-parent cc-sidebar-static-parent">
+                        <div class="cc-sidebar-parent cc-sidebar-static-parent {{ $motoristasActivo ? 'cc-sidebar-parent-active' : '' }}">
                             <span>Motoristas</span>
                         </div>
 
                         <div class="cc-sidebar-subnav">
-                            <span class="cc-sidebar-sublink cc-sidebar-link-disabled">
+                            <a href="{{ route('motoristas.index') }}"
+                               class="cc-sidebar-sublink {{ request()->routeIs('motoristas.index') ? 'cc-sidebar-sublink-active' : '' }}">
                                 Consulta motoristas
-                            </span>
+                            </a>
 
-                            <span class="cc-sidebar-sublink cc-sidebar-link-disabled">
+                            <a href="{{ route('motoristas.administrar') }}"
+                               class="cc-sidebar-sublink {{ request()->routeIs('motoristas.administrar') || request()->routeIs('motoristas.show') || request()->routeIs('motoristas.edit') ? 'cc-sidebar-sublink-active' : '' }}">
                                 Administrar motoristas
-                            </span>
+                            </a>
 
-                            <span class="cc-sidebar-sublink cc-sidebar-link-disabled">
+                            <a href="{{ route('motoristas.create') }}"
+                               class="cc-sidebar-sublink {{ request()->routeIs('motoristas.create') ? 'cc-sidebar-sublink-active' : '' }}">
                                 Nuevo motorista
-                            </span>
+                            </a>
                         </div>
                     </div>
 
@@ -400,5 +402,26 @@
                 </main>
             </div>
         </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.getElementById('ccSidebar');
+
+            if (!sidebar) {
+                return;
+            }
+
+            const savedScroll = localStorage.getItem('ccSidebarScrollTop');
+
+            if (savedScroll !== null) {
+                sidebar.scrollTop = parseInt(savedScroll, 10);
+            }
+
+            sidebar.addEventListener('scroll', function () {
+                localStorage.setItem('ccSidebarScrollTop', sidebar.scrollTop);
+            });
+        });
+</script>
+
     </body>
 </html>
