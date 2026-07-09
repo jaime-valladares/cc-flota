@@ -7,9 +7,8 @@
 
         <title>Consulta de gasolineras externas | CC-Flota</title>
 
-        
         @include('layouts.partials.favicon')
-<link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
 
@@ -120,20 +119,21 @@
                                     </div>
 
                                     <div class="cc-field">
-                                        <label for="nombre">
-                                            Nombre
+                                        <label for="compania">
+                                            Compañía
                                         </label>
+
                                         <input
-                                            id="nombre"
-                                            name="nombre"
+                                            id="compania"
+                                            name="compania"
                                             type="text"
                                             class="cc-input"
-                                            value="{{ $nombre }}"
+                                            value="{{ $compania }}"
                                             maxlength="150"
-                                            placeholder="Buscar gasolinera"
+                                            placeholder="Buscar compañía"
                                         >
 
-                                        @error('nombre')
+                                        @error('compania')
                                             <div class="cc-error">
                                                 {{ $message }}
                                             </div>
@@ -144,6 +144,7 @@
                                         <label for="estado">
                                             Estado
                                         </label>
+
                                         <select id="estado" name="estado" class="cc-input">
                                             <option value="">Seleccione</option>
                                             <option value="activa" @selected($estado === 'activa')>
@@ -208,19 +209,17 @@
                             <div class="cc-table-wrapper">
                                 <table class="cc-table">
                                     <colgroup>
-                                        <col style="width: 24%;">
-                                        <col style="width: 18%;">
-                                        <col style="width: 28%;">
-                                        <col style="width: 16%;">
+                                        <col style="width: 26%;">
+                                        <col style="width: 26%;">
+                                        <col style="width: 34%;">
                                         <col style="width: 14%;">
                                     </colgroup>
 
                                     <thead>
                                         <tr>
-                                            <th class="cc-text-left">Gasolinera</th>
+                                            <th class="cc-text-left">Compañía</th>
                                             <th class="cc-text-left">Empresa</th>
                                             <th class="cc-text-left">Dirección</th>
-                                            <th class="cc-text-left">Compañía</th>
                                             <th class="cc-text-left">Estado</th>
                                         </tr>
                                     </thead>
@@ -230,7 +229,7 @@
                                             <tr>
                                                 <td class="cc-text-left cc-cell-truncate">
                                                     <span class="cc-table-strong">
-                                                        {{ $gasolineraExterna->nombre }}
+                                                        {{ $gasolineraExterna->compania }}
                                                     </span>
                                                 </td>
 
@@ -240,10 +239,6 @@
 
                                                 <td class="cc-text-left cc-cell-truncate">
                                                     {{ $gasolineraExterna->direccion }}
-                                                </td>
-
-                                                <td class="cc-text-left cc-cell-truncate">
-                                                    {{ $gasolineraExterna->compania ?: '—' }}
                                                 </td>
 
                                                 <td class="cc-text-left">

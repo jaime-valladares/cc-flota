@@ -7,9 +7,8 @@
 
         <title>Ficha administrativa de gasolinera externa | CC-Flota</title>
 
-        
         @include('layouts.partials.favicon')
-<link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
 
@@ -28,7 +27,7 @@
                                     Ficha administrativa de gasolinera externa
                                 </h3>
                                 <p class="cc-subtitle cc-subtitle-compact">
-                                    Consulta consolidada de la gasolinera comercial externa registrada para la operación de la empresa.
+                                    Consulta consolidada de la gasolinera comercial externa registrada para abastecimientos externos.
                                 </p>
                             </div>
 
@@ -38,7 +37,7 @@
                                 </a>
 
                                 <a href="{{ route('gasolineras-externas.administrar') }}" class="cc-btn-secondary cc-btn-wide">
-                                    Volver al Sistema
+                                    Volver al sistema
                                 </a>
                             </div>
                         </div>
@@ -56,7 +55,7 @@
                                 </div>
 
                                 <h4 class="cc-profile-title">
-                                    {{ $gasolineraExterna->nombre }}
+                                    {{ $gasolineraExterna->compania }}
                                 </h4>
 
                                 <div class="cc-profile-meta">
@@ -64,11 +63,9 @@
                                         Empresa: {{ $gasolineraExterna->empresa->nombre_comercial ?: $gasolineraExterna->empresa->nombre_legal }}
                                     </span>
 
-                                    @if ($gasolineraExterna->compania)
-                                        <span>
-                                            Compañía: {{ $gasolineraExterna->compania }}
-                                        </span>
-                                    @endif
+                                    <span>
+                                        ID: {{ $gasolineraExterna->id }}
+                                    </span>
                                 </div>
                             </div>
 
@@ -95,6 +92,13 @@
 
                                 <div class="cc-detail-grid">
                                     <div class="cc-detail-item">
+                                        <div class="cc-detail-label">ID</div>
+                                        <div class="cc-detail-value">
+                                            {{ $gasolineraExterna->id }}
+                                        </div>
+                                    </div>
+
+                                    <div class="cc-detail-item">
                                         <div class="cc-detail-label">Empresa</div>
                                         <div class="cc-detail-value">
                                             {{ $gasolineraExterna->empresa->nombre_comercial ?: $gasolineraExterna->empresa->nombre_legal }}
@@ -102,47 +106,17 @@
                                     </div>
 
                                     <div class="cc-detail-item">
-                                        <div class="cc-detail-label">Nombre</div>
-                                        <div class="cc-detail-value">{{ $gasolineraExterna->nombre }}</div>
+                                        <div class="cc-detail-label">Compañía</div>
+                                        <div class="cc-detail-value">
+                                            {{ $gasolineraExterna->compania }}
+                                        </div>
                                     </div>
 
                                     <div class="cc-detail-item cc-detail-item-wide">
                                         <div class="cc-detail-label">Dirección</div>
-                                        <div class="cc-detail-value">{{ $gasolineraExterna->direccion }}</div>
-                                    </div>
-                                </div>
-                            </section>
-
-                            <section class="cc-detail-section">
-                                <div class="cc-detail-section-header">
-                                    <h5>Datos complementarios</h5>
-                                    <p>Información opcional preparada para consulta, reportes y uso operativo futuro.</p>
-                                </div>
-
-                                <div class="cc-detail-grid">
-                                    <div class="cc-detail-item">
-                                        <div class="cc-detail-label">Compañía</div>
-                                        <div class="cc-detail-value">{{ $gasolineraExterna->compania ?? '—' }}</div>
-                                    </div>
-
-                                    <div class="cc-detail-item">
-                                        <div class="cc-detail-label">Ciudad</div>
-                                        <div class="cc-detail-value">{{ $gasolineraExterna->ciudad ?? '—' }}</div>
-                                    </div>
-
-                                    <div class="cc-detail-item">
-                                        <div class="cc-detail-label">Departamento</div>
-                                        <div class="cc-detail-value">{{ $gasolineraExterna->departamento ?? '—' }}</div>
-                                    </div>
-
-                                    <div class="cc-detail-item">
-                                        <div class="cc-detail-label">Teléfono</div>
-                                        <div class="cc-detail-value">{{ $gasolineraExterna->telefono ?? '—' }}</div>
-                                    </div>
-
-                                    <div class="cc-detail-item cc-detail-item-wide">
-                                        <div class="cc-detail-label">Correo</div>
-                                        <div class="cc-detail-value">{{ $gasolineraExterna->correo ?? '—' }}</div>
+                                        <div class="cc-detail-value">
+                                            {{ $gasolineraExterna->direccion }}
+                                        </div>
                                     </div>
                                 </div>
                             </section>
@@ -171,22 +145,51 @@
 
                                     <div class="cc-detail-item">
                                         <div class="cc-detail-label">Fecha de creación</div>
-                                        <div class="cc-detail-value">{{ $gasolineraExterna->fecha_creacion ?? '—' }}</div>
+                                        <div class="cc-detail-value">
+                                            {{ optional($gasolineraExterna->fecha_creacion)->format('d/m/Y H:i') ?? '—' }}
+                                        </div>
+                                    </div>
+
+                                    <div class="cc-detail-item">
+                                        <div class="cc-detail-label">Creado por</div>
+                                        <div class="cc-detail-value">
+                                            {{ $gasolineraExterna->creadoPor?->name ?? '—' }}
+                                        </div>
                                     </div>
 
                                     <div class="cc-detail-item">
                                         <div class="cc-detail-label">Fecha de actualización</div>
-                                        <div class="cc-detail-value">{{ $gasolineraExterna->fecha_actualizacion ?? '—' }}</div>
+                                        <div class="cc-detail-value">
+                                            {{ optional($gasolineraExterna->fecha_actualizacion)->format('d/m/Y H:i') ?? '—' }}
+                                        </div>
+                                    </div>
+
+                                    <div class="cc-detail-item">
+                                        <div class="cc-detail-label">Actualizado por</div>
+                                        <div class="cc-detail-value">
+                                            {{ $gasolineraExterna->actualizadoPor?->name ?? '—' }}
+                                        </div>
                                     </div>
 
                                     <div class="cc-detail-item">
                                         <div class="cc-detail-label">Fecha de inactivación</div>
-                                        <div class="cc-detail-value">{{ $gasolineraExterna->fecha_inactivacion ?? '—' }}</div>
+                                        <div class="cc-detail-value">
+                                            {{ optional($gasolineraExterna->fecha_inactivacion)->format('d/m/Y H:i') ?? '—' }}
+                                        </div>
+                                    </div>
+
+                                    <div class="cc-detail-item">
+                                        <div class="cc-detail-label">Inactivado por</div>
+                                        <div class="cc-detail-value">
+                                            {{ $gasolineraExterna->inactivadoPor?->name ?? '—' }}
+                                        </div>
                                     </div>
 
                                     <div class="cc-detail-item cc-detail-item-wide">
                                         <div class="cc-detail-label">Motivo de inactivación</div>
-                                        <div class="cc-detail-value">{{ $gasolineraExterna->motivo_inactivacion ?? '—' }}</div>
+                                        <div class="cc-detail-value">
+                                            {{ $gasolineraExterna->motivo_inactivacion ?? '—' }}
+                                        </div>
                                     </div>
                                 </div>
                             </section>

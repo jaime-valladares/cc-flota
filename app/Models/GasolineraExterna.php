@@ -13,13 +13,8 @@ class GasolineraExterna extends Model
 
     protected $fillable = [
         'empresa_id',
-        'nombre',
         'direccion',
         'compania',
-        'ciudad',
-        'departamento',
-        'telefono',
-        'correo',
         'estado',
         'fecha_creacion',
         'creado_por',

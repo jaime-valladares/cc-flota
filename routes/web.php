@@ -219,14 +219,30 @@ Route::middleware('auth')->group(function () {
     Route::get('/gasolineras/tanques/recargas/ventana', [RecargaTanqueController::class, 'indexVentana'])
         ->name('gasolineras.tanques.recargas.index.ventana');
 
+    Route::get('/gasolineras/{gasolinera}/tanques/recargas/crear', [RecargaTanqueController::class, 'create'])
+        ->name('gasolineras.tanques.recargas.create');
+
+    Route::get('/gasolineras/{gasolinera}/tanques/recargas/crear/ventana', [RecargaTanqueController::class, 'createVentana'])
+        ->name('gasolineras.tanques.recargas.create.ventana');
+
+    Route::post('/gasolineras/{gasolinera}/tanques/recargas', [RecargaTanqueController::class, 'store'])
+        ->name('gasolineras.tanques.recargas.store');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Recarga individual heredada
+    |--------------------------------------------------------------------------
+    |
+    | Estas rutas se conservan temporalmente para evitar romper enlaces existentes.
+    | Más adelante pueden eliminarse cuando el flujo multi-tanque esté validado.
+    |
+    */
+
     Route::get('/gasolineras/{gasolinera}/tanques/{tanque}/recargar', [RecargaTanqueController::class, 'show'])
         ->name('gasolineras.tanques.recargas.show');
 
     Route::get('/gasolineras/{gasolinera}/tanques/{tanque}/recargar/ventana', [RecargaTanqueController::class, 'showVentana'])
         ->name('gasolineras.tanques.recargas.show.ventana');
-
-    Route::post('/gasolineras/{gasolinera}/tanques/{tanque}/recargar', [RecargaTanqueController::class, 'store'])
-        ->name('gasolineras.tanques.recargas.store');
 
     /*
     |--------------------------------------------------------------------------

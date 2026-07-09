@@ -5,11 +5,10 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>Recargar tanque | CC-Flota</title>
+        <title>Registrar recarga | CC-Flota</title>
 
-        
         @include('layouts.partials.favicon')
-<link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/cc-flota/favicon.png') }}?v=3">
+        <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/cc-flota/favicon.png') }}?v=3">
         <link rel="shortcut icon" type="image/png" href="{{ asset('images/cc-flota/favicon.png') }}?v=3">
         <link rel="apple-touch-icon" href="{{ asset('images/cc-flota/favicon.png') }}?v=3">
 
@@ -23,6 +22,14 @@
     <body class="antialiased">
         @php
             $empresaNombre = $gasolinera->empresa?->nombre_comercial ?: $gasolinera->empresa?->nombre_legal;
+
+            $totalCapacidad = $resumenTanques->sum('capacidad_total');
+            $totalActual = $resumenTanques->sum('volumen_actual');
+            $totalDisponible = $resumenTanques->sum('capacidad_disponible');
+
+            $tanquesBajoAlerta = $resumenTanques
+                ->filter(fn ($item) => $item['bajo_alerta'])
+                ->count();
         @endphp
 
         <div class="cc-window-wrapper" style="padding-top: 2.1rem;">
@@ -32,12 +39,9 @@
                     <div class="cc-card-header cc-card-header-compact">
                         <div>
                             <h3 class="cc-title cc-title-compact">
-                                Recargar tanque
+                                Registrar recarga
                             </h3>
 
-                            <p class="cc-subtitle cc-subtitle-compact">
-                                Registre una entrada de combustible controlada para el tanque seleccionado.
-                            </p>
                         </div>
 
                         <div class="flex items-center gap-3">
@@ -45,7 +49,7 @@
                                 Volver a recargas
                             </a>
 
-                            <a href="{{ route('gasolineras.tanques.recargas.show', [$gasolinera, $tanque]) }}" class="cc-btn-secondary cc-btn-wide">
+                            <a href="{{ route('gasolineras.tanques.recargas.create', $gasolinera) }}" class="cc-btn-secondary cc-btn-wide">
                                 Volver al sistema
                             </a>
                         </div>
@@ -70,32 +74,32 @@
                     <div class="cc-profile-summary" style="margin-bottom: 1.1rem;">
                         <div style="min-width: 0;">
                             <div class="cc-profile-eyebrow">
-                                Tanque recargable
+                                Gasolinera interna
                             </div>
 
                             <div class="cc-profile-title">
-                                {{ $tanque->nombre }}
+                                {{ $gasolinera->nombre }}
                             </div>
 
                             <div class="cc-profile-meta">
                                 <span>
-                                    {{ $gasolinera->nombre }}
+                                    {{ $empresaNombre }}
                                 </span>
 
                                 <span>
-                                    {{ $empresaNombre }}
+                                    {{ $gasolinera->direccion ?: 'Sin dirección registrada' }}
                                 </span>
                             </div>
                         </div>
 
-                        <div class="cc-profile-status" style="display: flex; gap: 0.5rem; align-items: center;">
+                        <div class="cc-profile-status" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
                             <span class="cc-badge cc-badge-active">
                                 Recargable
                             </span>
 
-                            @if ($bajoAlerta)
+                            @if ($tanquesBajoAlerta > 0)
                                 <span class="cc-badge cc-badge-warning">
-                                    Bajo mínimo
+                                    {{ $tanquesBajoAlerta }} bajo mínimo
                                 </span>
                             @endif
                         </div>
@@ -103,25 +107,23 @@
 
                     <div class="cc-summary-strip">
                         <div class="cc-summary-strip-item">
-                            <span class="cc-summary-strip-label">Capacidad</span>
-                            <span class="cc-summary-strip-value">{{ number_format($capacidadTotal, 2) }} gal</span>
+                            <span class="cc-summary-strip-label">Tanques activos</span>
+                            <span class="cc-summary-strip-value">{{ $resumenTanques->count() }}</span>
                         </div>
 
                         <div class="cc-summary-strip-item">
-                            <span class="cc-summary-strip-label">Volumen actual</span>
-                            <span class="cc-summary-strip-value">{{ number_format($volumenActual, 2) }} gal</span>
+                            <span class="cc-summary-strip-label">Capacidad total</span>
+                            <span class="cc-summary-strip-value">{{ number_format($totalCapacidad, 2) }} gal</span>
                         </div>
 
                         <div class="cc-summary-strip-item">
-                            <span class="cc-summary-strip-label">Disponible para recarga</span>
-                            <span class="cc-summary-strip-value">{{ number_format($capacidadDisponible, 2) }} gal</span>
+                            <span class="cc-summary-strip-label">Inventario actual</span>
+                            <span class="cc-summary-strip-value">{{ number_format($totalActual, 2) }} gal</span>
                         </div>
 
                         <div class="cc-summary-strip-item">
-                            <span class="cc-summary-strip-label">Ocupación</span>
-                            <span class="cc-summary-strip-value {{ $bajoAlerta ? 'cc-summary-strip-value-danger' : 'cc-summary-strip-value-success' }}">
-                                {{ number_format($porcentajeDisponible, 2) }}%
-                            </span>
+                            <span class="cc-summary-strip-label">Disponible</span>
+                            <span class="cc-summary-strip-value">{{ number_format($totalDisponible, 2) }} gal</span>
                         </div>
                     </div>
 
@@ -129,12 +131,12 @@
 
                         <section class="cc-detail-section">
                             <div class="cc-detail-section-header">
-                                <h5>Registrar recarga</h5>
-                                <p>Ingrese el volumen recibido. El sistema validará que no exceda la capacidad total del tanque.</p>
+                                <h5>Datos de la compra</h5>
+                                <p>El precio por galón se aplicará a todos los tanques incluidos en esta recarga.</p>
                             </div>
 
                             <div style="padding: 1rem 1.2rem;">
-                                <form method="POST" action="{{ route('gasolineras.tanques.recargas.store', [$gasolinera, $tanque]) }}" novalidate>
+                                <form method="POST" action="{{ route('gasolineras.tanques.recargas.store', $gasolinera) }}" novalidate>
                                     @csrf
 
                                     <input type="hidden" name="return_to" value="ventana">
@@ -176,72 +178,180 @@
                                         </div>
 
                                         <div class="cc-field">
-                                            <label for="tanque_visible">
-                                                Tanque
+                                            <label for="precio_galon">
+                                                Precio por galón <span class="cc-required">*</span>
                                             </label>
 
                                             <input
-                                                id="tanque_visible"
-                                                type="text"
+                                                id="precio_galon"
+                                                type="number"
+                                                name="precio_galon"
+                                                value="{{ old('precio_galon') }}"
                                                 class="cc-input"
-                                                value="{{ $tanque->nombre }}"
-                                                disabled
+                                                min="0.0001"
+                                                step="0.0001"
+                                                required
+                                                placeholder="Ej. 4.2500"
                                             >
+
+                                            @error('precio_galon')
+                                                <div class="cc-error">{{ $message }}</div>
+                                            @enderror
                                         </div>
 
                                         <div class="cc-field">
-                                            <label for="capacidad_disponible_visible">
-                                                Disponible para recarga
+                                            <label for="total_compra_estimado">
+                                                Total estimado
                                             </label>
 
                                             <input
-                                                id="capacidad_disponible_visible"
+                                                id="total_compra_estimado"
                                                 type="text"
                                                 class="cc-input"
-                                                value="{{ number_format($capacidadDisponible, 2) }} gal"
+                                                value="$0.00"
                                                 disabled
                                             >
                                         </div>
 
                                         <div class="cc-form-section-slim">
                                             <div class="cc-form-section-title">
-                                                Movimiento de entrada
+                                                Distribución por tanque
+                                            </div>
+                                        </div>
+
+                                        <div style="grid-column: 1 / -1;">
+                                            @error('volumenes')
+                                                <div class="cc-error" style="margin-bottom: 0.75rem;">{{ $message }}</div>
+                                            @enderror
+
+                                            @if ($resumenTanques->isEmpty())
+                                                <div class="cc-empty-panel cc-empty-panel-compact">
+                                                    <h5>Sin tanques disponibles</h5>
+                                                    <p>Esta gasolinera no tiene tanques activos disponibles para recarga.</p>
+                                                </div>
+                                            @else
+                                                <div class="space-y-3">
+                                                    @foreach ($resumenTanques as $item)
+                                                        @php
+                                                            $tanqueItem = $item['tanque'];
+                                                            $oldVolumen = old('volumenes.' . $tanqueItem->id);
+                                                            $estaPreseleccionado = (int) $tanquePreseleccionadoId === (int) $tanqueItem->id;
+                                                        @endphp
+
+                                                        <article
+                                                            class="cc-result-card cc-result-card-compact"
+                                                            data-tanque-row
+                                                            data-actual="{{ $item['volumen_actual'] }}"
+                                                            data-disponible="{{ $item['capacidad_disponible'] }}"
+                                                        >
+                                                            <div class="grid grid-cols-1 xl:grid-cols-6 gap-4 items-center">
+
+                                                                <div class="xl:col-span-2">
+                                                                    <div class="cc-result-label">
+                                                                        Tanque
+                                                                    </div>
+
+                                                                    <div class="cc-result-value cc-cell-truncate">
+                                                                        {{ $tanqueItem->nombre }}
+                                                                    </div>
+
+                                                                    <div class="cc-result-value-muted">
+                                                                        @if ($estaPreseleccionado)
+                                                                            Seleccionado desde búsqueda
+                                                                        @else
+                                                                            Disponible para esta operación
+                                                                        @endif
+                                                                    </div>
+                                                                </div>
+
+                                                                <div>
+                                                                    <div class="cc-result-label">
+                                                                        Actual
+                                                                    </div>
+
+                                                                    <div class="cc-result-value">
+                                                                        {{ number_format($item['volumen_actual'], 2) }} gal
+                                                                    </div>
+
+                                                                    <div class="cc-result-value-muted">
+                                                                        {{ number_format($item['porcentaje_disponible'], 2) }}% ocupado
+                                                                    </div>
+                                                                </div>
+
+                                                                <div>
+                                                                    <div class="cc-result-label">
+                                                                        Disponible
+                                                                    </div>
+
+                                                                    <div class="cc-result-value">
+                                                                        {{ number_format($item['capacidad_disponible'], 2) }} gal
+                                                                    </div>
+
+                                                                    <div class="cc-result-value-muted">
+                                                                        Capacidad: {{ number_format($item['capacidad_total'], 2) }} gal
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="cc-field" style="margin-bottom: 0;">
+                                                                    <label for="volumen_{{ $tanqueItem->id }}">
+                                                                        Galones a recargar
+                                                                    </label>
+
+                                                                    <input
+                                                                        id="volumen_{{ $tanqueItem->id }}"
+                                                                        type="number"
+                                                                        name="volumenes[{{ $tanqueItem->id }}]"
+                                                                        value="{{ $oldVolumen }}"
+                                                                        class="cc-input"
+                                                                        min="0"
+                                                                        max="{{ $item['capacidad_disponible'] }}"
+                                                                        step="0.01"
+                                                                        placeholder="0.00"
+                                                                        data-volumen-input
+                                                                    >
+
+                                                                    @error('volumenes.' . $tanqueItem->id)
+                                                                        <div class="cc-error">{{ $message }}</div>
+                                                                    @enderror
+                                                                </div>
+
+                                                                <div>
+                                                                    <div class="cc-result-label">
+                                                                        Subtotal
+                                                                    </div>
+
+                                                                    <div class="cc-result-value" data-subtotal-display>
+                                                                        $0.00
+                                                                    </div>
+
+                                                                    <div class="cc-result-value-muted" data-resultante-display>
+                                                                        Resultante: {{ number_format($item['volumen_actual'], 2) }} gal
+                                                                    </div>
+                                                                </div>
+
+                                                            </div>
+                                                        </article>
+                                                    @endforeach
+                                                </div>
+                                            @endif
+                                        </div>
+
+                                        <div class="cc-form-section-slim">
+                                            <div class="cc-form-section-title">
+                                                Resumen de la recarga
                                             </div>
                                         </div>
 
                                         <div class="cc-field">
-                                            <label for="volumen_movimiento">
-                                                Volumen a recargar (galones) <span class="cc-required">*</span>
+                                            <label for="total_galones_estimado">
+                                                Total galones
                                             </label>
 
                                             <input
-                                                id="volumen_movimiento"
-                                                type="number"
-                                                name="volumen_movimiento"
-                                                value="{{ old('volumen_movimiento') }}"
-                                                class="cc-input"
-                                                min="0.01"
-                                                max="{{ $capacidadDisponible }}"
-                                                step="0.01"
-                                                required
-                                                placeholder="Ej. 500.00"
-                                            >
-
-                                            @error('volumen_movimiento')
-                                                <div class="cc-error">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-
-                                        <div class="cc-field">
-                                            <label for="volumen_resultante_estimado">
-                                                Volumen resultante estimado
-                                            </label>
-
-                                            <input
-                                                id="volumen_resultante_estimado"
+                                                id="total_galones_estimado"
                                                 type="text"
                                                 class="cc-input"
-                                                value="Se calculará al guardar"
+                                                value="0.00 gal"
                                                 disabled
                                             >
                                         </div>
@@ -259,58 +369,72 @@
 
                         <section class="cc-detail-section">
                             <div class="cc-detail-section-header">
-                                <h5>Movimientos recientes</h5>
-                                <p>Últimos movimientos de inventario registrados para este tanque.</p>
+                                <h5>Recargas recientes</h5>
+                                <p>Últimas compras de combustible registradas para esta gasolinera.</p>
                             </div>
 
                             <div style="padding: 1rem 1.2rem;">
-                                @if ($movimientosRecientes->isEmpty())
+                                @if ($recargasRecientes->isEmpty())
                                     <div class="cc-empty-panel cc-empty-panel-compact">
-                                        <h5>Sin movimientos</h5>
-                                        <p>Este tanque todavía no tiene movimientos de inventario registrados.</p>
+                                        <h5>Sin recargas</h5>
+                                        <p>Esta gasolinera todavía no tiene recargas registradas.</p>
                                     </div>
                                 @else
                                     <div class="cc-results-list">
-                                        @foreach ($movimientosRecientes as $movimiento)
+                                        @foreach ($recargasRecientes as $recarga)
                                             <article class="cc-result-card cc-result-card-compact">
-                                                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
-                                                    <div>
-                                                        <div class="cc-result-label">
-                                                            Tipo
-                                                        </div>
-
-                                                        <div class="cc-result-value">
-                                                            {{ str_replace('_', ' ', ucfirst($movimiento->tipo_movimiento)) }}
-                                                        </div>
-                                                    </div>
-
-                                                    <div>
-                                                        <div class="cc-result-label">
-                                                            Movimiento
-                                                        </div>
-
-                                                        <div class="cc-result-value">
-                                                            {{ ucfirst($movimiento->sentido_movimiento) }} {{ number_format((float) $movimiento->volumen_movimiento, 2) }} gal
-                                                        </div>
-                                                    </div>
-
-                                                    <div>
-                                                        <div class="cc-result-label">
-                                                            Resultante
-                                                        </div>
-
-                                                        <div class="cc-result-value">
-                                                            {{ number_format((float) $movimiento->volumen_resultante, 2) }} gal
-                                                        </div>
-                                                    </div>
-
+                                                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
                                                     <div>
                                                         <div class="cc-result-label">
                                                             Fecha
                                                         </div>
 
                                                         <div class="cc-result-value">
-                                                            {{ optional($movimiento->fecha_hora_movimiento)->format('d/m/Y H:i') }}
+                                                            {{ optional($recarga->fecha_hora_recarga)->format('d/m/Y H:i') }}
+                                                        </div>
+                                                    </div>
+
+                                                    <div>
+                                                        <div class="cc-result-label">
+                                                            Galones
+                                                        </div>
+
+                                                        <div class="cc-result-value">
+                                                            {{ number_format((float) $recarga->total_galones, 2) }} gal
+                                                        </div>
+                                                    </div>
+
+                                                    <div>
+                                                        <div class="cc-result-label">
+                                                            Precio
+                                                        </div>
+
+                                                        <div class="cc-result-value">
+                                                            ${{ number_format((float) $recarga->precio_galon, 4) }}
+                                                        </div>
+                                                    </div>
+
+                                                    <div>
+                                                        <div class="cc-result-label">
+                                                            Total
+                                                        </div>
+
+                                                        <div class="cc-result-value">
+                                                            ${{ number_format((float) $recarga->total_compra, 2) }}
+                                                        </div>
+                                                    </div>
+
+                                                    <div>
+                                                        <div class="cc-result-label">
+                                                            Registrado por
+                                                        </div>
+
+                                                        <div class="cc-result-value cc-cell-truncate">
+                                                            {{ $recarga->usuarioRegistra?->name ?: 'No registrado' }}
+                                                        </div>
+
+                                                        <div class="cc-result-value-muted">
+                                                            {{ $recarga->movimientosInventario->count() }} tanque(s)
                                                         </div>
                                                     </div>
                                                 </div>
@@ -326,5 +450,68 @@
                 </div>
             </div>
         </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const precioInput = document.getElementById('precio_galon');
+                const totalCompraInput = document.getElementById('total_compra_estimado');
+                const totalGalonesInput = document.getElementById('total_galones_estimado');
+                const rows = document.querySelectorAll('[data-tanque-row]');
+
+                function formatNumber(value, decimals = 2) {
+                    return Number(value || 0).toLocaleString('en-US', {
+                        minimumFractionDigits: decimals,
+                        maximumFractionDigits: decimals
+                    });
+                }
+
+                function recalcularTotales() {
+                    const precio = parseFloat(precioInput.value || 0);
+                    let totalGalones = 0;
+                    let totalCompra = 0;
+
+                    rows.forEach(function (row) {
+                        const actual = parseFloat(row.dataset.actual || 0);
+                        const disponible = parseFloat(row.dataset.disponible || 0);
+                        const volumenInput = row.querySelector('[data-volumen-input]');
+                        const subtotalDisplay = row.querySelector('[data-subtotal-display]');
+                        const resultanteDisplay = row.querySelector('[data-resultante-display]');
+
+                        let volumen = parseFloat(volumenInput.value || 0);
+
+                        if (volumen < 0) {
+                            volumen = 0;
+                            volumenInput.value = '0';
+                        }
+
+                        if (volumen > disponible) {
+                            volumen = disponible;
+                            volumenInput.value = disponible.toFixed(2);
+                        }
+
+                        const subtotal = volumen * precio;
+                        const resultante = actual + volumen;
+
+                        totalGalones += volumen;
+                        totalCompra += subtotal;
+
+                        subtotalDisplay.textContent = '$' + formatNumber(subtotal, 2);
+                        resultanteDisplay.textContent = 'Resultante: ' + formatNumber(resultante, 2) + ' gal';
+                    });
+
+                    totalGalonesInput.value = formatNumber(totalGalones, 2) + ' gal';
+                    totalCompraInput.value = '$' + formatNumber(totalCompra, 2);
+                }
+
+                precioInput.addEventListener('input', recalcularTotales);
+
+                rows.forEach(function (row) {
+                    const input = row.querySelector('[data-volumen-input]');
+                    input.addEventListener('input', recalcularTotales);
+                });
+
+                recalcularTotales();
+            });
+        </script>
     </body>
 </html>

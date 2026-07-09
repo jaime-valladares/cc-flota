@@ -4,25 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class MovimientoInventarioCombustible extends Model
+class RecargaCombustible extends Model
 {
-    protected $table = 'movimientos_inventario_combustible';
+    protected $table = 'recargas_combustible';
 
     public $timestamps = false;
 
     protected $fillable = [
         'empresa_id',
-        'tanque_id',
-        'abastecimiento_id',
-        'recarga_combustible_id',
-        'tipo_movimiento',
-        'volumen_anterior',
-        'sentido_movimiento',
-        'volumen_movimiento',
-        'volumen_resultante',
-        'subtotal_compra',
-        'fecha_hora_movimiento',
+        'gasolinera_id',
+        'precio_galon',
+        'total_galones',
+        'total_compra',
+        'fecha_hora_recarga',
         'observaciones',
         'usuario_registra_id',
         'estado',
@@ -35,11 +31,10 @@ class MovimientoInventarioCombustible extends Model
     ];
 
     protected $casts = [
-        'volumen_anterior' => 'decimal:2',
-        'volumen_movimiento' => 'decimal:2',
-        'volumen_resultante' => 'decimal:2',
-        'subtotal_compra' => 'decimal:2',
-        'fecha_hora_movimiento' => 'datetime',
+        'precio_galon' => 'decimal:4',
+        'total_galones' => 'decimal:2',
+        'total_compra' => 'decimal:2',
+        'fecha_hora_recarga' => 'datetime',
         'fecha_creacion' => 'datetime',
         'fecha_actualizacion' => 'datetime',
         'fecha_anulacion' => 'datetime',
@@ -50,14 +45,14 @@ class MovimientoInventarioCombustible extends Model
         return $this->belongsTo(Empresa::class, 'empresa_id');
     }
 
-    public function tanque(): BelongsTo
+    public function gasolinera(): BelongsTo
     {
-        return $this->belongsTo(Tanque::class, 'tanque_id');
+        return $this->belongsTo(Gasolinera::class, 'gasolinera_id');
     }
 
-    public function recargaCombustible(): BelongsTo
+    public function movimientosInventario(): HasMany
     {
-        return $this->belongsTo(RecargaCombustible::class, 'recarga_combustible_id');
+        return $this->hasMany(MovimientoInventarioCombustible::class, 'recarga_combustible_id');
     }
 
     public function usuarioRegistra(): BelongsTo

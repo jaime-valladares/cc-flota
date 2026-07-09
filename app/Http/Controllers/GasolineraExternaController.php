@@ -64,7 +64,7 @@ class GasolineraExternaController extends Controller
 
         $validated = $request->validate([
             'empresa_id' => ['nullable', 'integer', 'exists:empresas,id'],
-            'nombre' => ['nullable', 'string', 'max:150'],
+            'compania' => ['nullable', 'string', 'max:150'],
             'estado' => ['nullable', 'in:activa,inactiva'],
         ], [
             'empresa_id.exists' => 'La empresa seleccionada no es válida.',
@@ -72,7 +72,7 @@ class GasolineraExternaController extends Controller
         ]);
 
         $empresaId = $validated['empresa_id'] ?? null;
-        $nombre = trim((string) ($validated['nombre'] ?? ''));
+        $compania = trim((string) ($validated['compania'] ?? ''));
         $estado = $validated['estado'] ?? null;
 
         if (! $esUsuarioDieselCop) {
@@ -80,7 +80,7 @@ class GasolineraExternaController extends Controller
         }
 
         $hayFiltros = ! $esUsuarioDieselCop
-            || $request->hasAny(['empresa_id', 'nombre', 'estado', 'consultar']);
+            || $request->hasAny(['empresa_id', 'compania', 'estado', 'consultar']);
 
         $query = GasolineraExterna::query()
             ->with('empresa')
@@ -95,8 +95,8 @@ class GasolineraExternaController extends Controller
                 $query->where('empresa_id', $empresaId);
             }
 
-            if ($nombre !== '') {
-                $query->where('nombre', 'like', '%' . $nombre . '%');
+            if ($compania !== '') {
+                $query->where('compania', 'like', '%' . $compania . '%');
             }
 
             if (in_array($estado, ['activa', 'inactiva'], true)) {
@@ -107,7 +107,8 @@ class GasolineraExternaController extends Controller
         }
 
         $gasolinerasExternas = $query
-            ->orderBy('nombre')
+            ->orderBy('compania')
+            ->orderBy('direccion')
             ->paginate(10)
             ->withQueryString();
 
@@ -154,7 +155,7 @@ class GasolineraExternaController extends Controller
             'gasolinerasExternas' => $gasolinerasExternas,
             'empresasSelector' => $empresasSelector,
             'empresaId' => $empresaId,
-            'nombre' => $nombre,
+            'compania' => $compania,
             'estado' => $estado,
             'hayFiltros' => $hayFiltros,
             'totalGasolinerasExternas' => $totalGasolinerasExternas,
@@ -224,18 +225,8 @@ class GasolineraExternaController extends Controller
         $esUsuarioDieselCop = is_null($user->empresa_id);
 
         $baseRules = [
-            'nombre' => ['required', 'string', 'max:150'],
+            'compania' => ['required', 'string', 'max:150'],
             'direccion' => ['required', 'string', 'max:255'],
-            'compania' => ['nullable', 'string', 'max:150'],
-            'ciudad' => ['nullable', 'string', 'max:100'],
-            'departamento' => ['nullable', 'string', 'max:100'],
-            'telefono' => [
-                'nullable',
-                'string',
-                'max:9',
-                'regex:/^\d{4}-\d{4}$/',
-            ],
-            'correo' => ['nullable', 'email', 'max:150'],
         ];
 
         if ($esUsuarioDieselCop) {
@@ -251,10 +242,8 @@ class GasolineraExternaController extends Controller
         $validated = $request->validate($baseRules, [
             'empresa_id.required' => 'Debe seleccionar una empresa.',
             'empresa_id.exists' => 'La empresa seleccionada no es válida o no está activa.',
-            'nombre.required' => 'Debe ingresar el nombre de la gasolinera externa.',
+            'compania.required' => 'Debe ingresar la compañía de la gasolinera externa.',
             'direccion.required' => 'Debe ingresar la dirección de la gasolinera externa.',
-            'telefono.regex' => 'El teléfono debe tener el formato 0000-0000.',
-            'correo.email' => 'Debe ingresar un correo válido.',
         ]);
 
         $empresaId = $esUsuarioDieselCop
@@ -264,23 +253,19 @@ class GasolineraExternaController extends Controller
         $this->validarEmpresaActivaPorId($empresaId);
 
         $request->validate([
-            'nombre' => [
-                Rule::unique('gasolineras_externas', 'nombre')
-                    ->where('empresa_id', $empresaId),
+            'direccion' => [
+                Rule::unique('gasolineras_externas', 'direccion')
+                    ->where('empresa_id', $empresaId)
+                    ->where('compania', $validated['compania']),
             ],
         ], [
-            'nombre.unique' => 'Ya existe una gasolinera externa con ese nombre para la empresa seleccionada.',
+            'direccion.unique' => 'Ya existe una gasolinera externa con esa compañía y dirección para la empresa seleccionada.',
         ]);
 
         GasolineraExterna::create([
             'empresa_id' => $empresaId,
-            'nombre' => $validated['nombre'],
             'direccion' => $validated['direccion'],
-            'compania' => $validated['compania'] ?? null,
-            'ciudad' => $validated['ciudad'] ?? null,
-            'departamento' => $validated['departamento'] ?? null,
-            'telefono' => $validated['telefono'] ?? null,
-            'correo' => $validated['correo'] ?? null,
+            'compania' => $validated['compania'],
             'estado' => 'activa',
             'fecha_creacion' => now(),
             'creado_por' => Auth::id(),
@@ -370,45 +355,29 @@ class GasolineraExternaController extends Controller
         $this->validarEmpresaActivaGasolineraExterna($gasolineraExterna);
 
         $validated = $request->validate([
-            'nombre' => ['required', 'string', 'max:150'],
+            'compania' => ['required', 'string', 'max:150'],
             'direccion' => ['required', 'string', 'max:255'],
-            'compania' => ['nullable', 'string', 'max:150'],
-            'ciudad' => ['nullable', 'string', 'max:100'],
-            'departamento' => ['nullable', 'string', 'max:100'],
-            'telefono' => [
-                'nullable',
-                'string',
-                'max:9',
-                'regex:/^\d{4}-\d{4}$/',
-            ],
-            'correo' => ['nullable', 'email', 'max:150'],
         ], [
-            'nombre.required' => 'Debe ingresar el nombre de la gasolinera externa.',
+            'compania.required' => 'Debe ingresar la compañía de la gasolinera externa.',
             'direccion.required' => 'Debe ingresar la dirección de la gasolinera externa.',
-            'telefono.regex' => 'El teléfono debe tener el formato 0000-0000.',
-            'correo.email' => 'Debe ingresar un correo válido.',
         ]);
 
         $empresaId = (int) $gasolineraExterna->empresa_id;
 
         $request->validate([
-            'nombre' => [
-                Rule::unique('gasolineras_externas', 'nombre')
+            'direccion' => [
+                Rule::unique('gasolineras_externas', 'direccion')
                     ->where('empresa_id', $empresaId)
+                    ->where('compania', $validated['compania'])
                     ->ignore($gasolineraExterna->id),
             ],
         ], [
-            'nombre.unique' => 'Ya existe una gasolinera externa con ese nombre para la empresa actual.',
+            'direccion.unique' => 'Ya existe una gasolinera externa con esa compañía y dirección para la empresa actual.',
         ]);
 
         $gasolineraExterna->update([
-            'nombre' => $validated['nombre'],
             'direccion' => $validated['direccion'],
-            'compania' => $validated['compania'] ?? null,
-            'ciudad' => $validated['ciudad'] ?? null,
-            'departamento' => $validated['departamento'] ?? null,
-            'telefono' => $validated['telefono'] ?? null,
-            'correo' => $validated['correo'] ?? null,
+            'compania' => $validated['compania'],
             'fecha_actualizacion' => now(),
             'actualizado_por' => Auth::id(),
         ]);

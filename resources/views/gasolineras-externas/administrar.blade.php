@@ -104,20 +104,21 @@
                             </div>
 
                             <div class="cc-field">
-                                <label for="nombre">
-                                    Nombre
+                                <label for="compania">
+                                    Compañía
                                 </label>
+
                                 <input
-                                    id="nombre"
-                                    name="nombre"
+                                    id="compania"
+                                    name="compania"
                                     type="text"
                                     class="cc-input"
-                                    value="{{ $nombre }}"
+                                    value="{{ $compania }}"
                                     maxlength="150"
-                                    placeholder="Buscar gasolinera"
+                                    placeholder="Buscar compañía"
                                 >
 
-                                @error('nombre')
+                                @error('compania')
                                     <div class="cc-error">
                                         {{ $message }}
                                     </div>
@@ -128,6 +129,7 @@
                                 <label for="estado">
                                     Estado
                                 </label>
+
                                 <select id="estado" name="estado" class="cc-input">
                                     <option value="">Seleccione</option>
                                     <option value="activa" @selected($estado === 'activa')>
@@ -189,47 +191,48 @@
                         </p>
                     </div>
                 @else
-                    <div class="cc-result-list">
+                    <div class="space-y-3">
                         @foreach ($gasolinerasExternas as $gasolineraExterna)
-                            <div class="cc-result-card cc-result-card-compact">
-                                <div class="cc-result-main">
-                                    <div class="cc-result-eyebrow">
-                                        Gasolinera externa
+                            <article class="cc-result-card cc-result-card-compact">
+                                <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
+
+                                    <div class="flex-1 min-w-0">
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+
+                                            <div>
+                                                <div class="cc-result-label">
+                                                    Compañía
+                                                </div>
+
+                                                <h5 class="cc-result-title cc-cell-truncate">
+                                                    {{ $gasolineraExterna->compania }}
+                                                </h5>
+                                            </div>
+
+                                            <div>
+                                                <div class="cc-result-label">
+                                                    Empresa
+                                                </div>
+
+                                                <div class="cc-result-value cc-cell-truncate">
+                                                    {{ $gasolineraExterna->empresa->nombre_comercial ?: $gasolineraExterna->empresa->nombre_legal }}
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <div class="cc-result-label">
+                                                    Dirección
+                                                </div>
+
+                                                <div class="cc-result-value" style="white-space: normal; line-height: 1.45;">
+                                                    {{ $gasolineraExterna->direccion }}
+                                                </div>
+                                            </div>
+
+                                        </div>
                                     </div>
 
-                                    <h4 class="cc-result-title">
-                                        {{ $gasolineraExterna->nombre }}
-                                    </h4>
-
-                                    <div class="cc-result-meta">
-                                        <span>
-                                            Empresa: {{ $gasolineraExterna->empresa->nombre_comercial ?: $gasolineraExterna->empresa->nombre_legal }}
-                                        </span>
-
-                                        @if ($gasolineraExterna->compania)
-                                            <span>
-                                                Compañía: {{ $gasolineraExterna->compania }}
-                                            </span>
-                                        @endif
-
-                                        <span>
-                                            Dirección: {{ $gasolineraExterna->direccion }}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div class="cc-result-side">
-                                    @if ($gasolineraExterna->estado === 'activa')
-                                        <span class="cc-badge cc-badge-active">
-                                            Activa
-                                        </span>
-                                    @else
-                                        <span class="cc-badge cc-badge-inactive">
-                                            Inactiva
-                                        </span>
-                                    @endif
-
-                                    <div class="cc-result-actions">
+                                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 xl:justify-end xl:min-w-[13rem]">
                                         <a href="{{ route('gasolineras-externas.show', $gasolineraExterna) }}" class="cc-btn-secondary cc-btn-result">
                                             Ver ficha
                                         </a>
@@ -238,8 +241,9 @@
                                             Editar
                                         </a>
                                     </div>
+
                                 </div>
-                            </div>
+                            </article>
                         @endforeach
                     </div>
 

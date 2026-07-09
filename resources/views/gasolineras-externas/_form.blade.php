@@ -38,19 +38,22 @@
     </div>
 
     <div class="cc-field">
-        <label for="nombre">
-            Nombre <span class="cc-required">*</span>
+        <label for="compania">
+            Compañía <span class="cc-required">*</span>
         </label>
+
         <input
-            id="nombre"
-            name="nombre"
+            id="compania"
+            name="compania"
             type="text"
             class="cc-input"
-            value="{{ old('nombre', $gasolineraExterna->nombre ?? '') }}"
+            value="{{ old('compania', $gasolineraExterna->compania ?? '') }}"
             maxlength="150"
             required
+            placeholder="UNO, Puma, Texaco, Shell..."
         >
-        @error('nombre')
+
+        @error('compania')
             <div class="cc-error">{{ $message }}</div>
         @enderror
     </div>
@@ -59,6 +62,7 @@
         <label for="direccion">
             Dirección <span class="cc-required">*</span>
         </label>
+
         <input
             id="direccion"
             name="direccion"
@@ -67,101 +71,10 @@
             value="{{ old('direccion', $gasolineraExterna->direccion ?? '') }}"
             maxlength="255"
             required
+            placeholder="Ubicación o referencia de la gasolinera externa"
         >
+
         @error('direccion')
-            <div class="cc-error">{{ $message }}</div>
-        @enderror
-    </div>
-
-    <div class="cc-form-section-slim">
-        <div class="cc-form-section-title">
-            Datos complementarios
-        </div>
-    </div>
-
-    <div class="cc-field">
-        <label for="compania">
-            Compañía
-        </label>
-        <input
-            id="compania"
-            name="compania"
-            type="text"
-            class="cc-input"
-            value="{{ old('compania', $gasolineraExterna->compania ?? '') }}"
-            maxlength="150"
-            placeholder="UNO, Puma, Texaco, Shell..."
-        >
-        @error('compania')
-            <div class="cc-error">{{ $message }}</div>
-        @enderror
-    </div>
-
-    <div class="cc-field">
-        <label for="ciudad">
-            Ciudad
-        </label>
-        <input
-            id="ciudad"
-            name="ciudad"
-            type="text"
-            class="cc-input"
-            value="{{ old('ciudad', $gasolineraExterna->ciudad ?? '') }}"
-            maxlength="100"
-        >
-        @error('ciudad')
-            <div class="cc-error">{{ $message }}</div>
-        @enderror
-    </div>
-
-    <div class="cc-field">
-        <label for="departamento">
-            Departamento
-        </label>
-        <input
-            id="departamento"
-            name="departamento"
-            type="text"
-            class="cc-input"
-            value="{{ old('departamento', $gasolineraExterna->departamento ?? '') }}"
-            maxlength="100"
-        >
-        @error('departamento')
-            <div class="cc-error">{{ $message }}</div>
-        @enderror
-    </div>
-
-    <div class="cc-field">
-        <label for="telefono">
-            Teléfono
-        </label>
-        <input
-            id="telefono"
-            name="telefono"
-            type="text"
-            class="cc-input"
-            value="{{ old('telefono', $gasolineraExterna->telefono ?? '') }}"
-            maxlength="9"
-            placeholder="0000-0000"
-        >
-        @error('telefono')
-            <div class="cc-error">{{ $message }}</div>
-        @enderror
-    </div>
-
-    <div class="cc-field cc-col-span-2">
-        <label for="correo">
-            Correo
-        </label>
-        <input
-            id="correo"
-            name="correo"
-            type="email"
-            class="cc-input"
-            value="{{ old('correo', $gasolineraExterna->correo ?? '') }}"
-            maxlength="150"
-        >
-        @error('correo')
             <div class="cc-error">{{ $message }}</div>
         @enderror
     </div>
@@ -185,23 +98,3 @@
         </a>
     @endif
 </div>
-
-<script>
-    function formatPhone(value) {
-        const digits = value.replace(/\D/g, '').slice(0, 8);
-
-        if (digits.length <= 4) {
-            return digits;
-        }
-
-        return `${digits.slice(0, 4)}-${digits.slice(4)}`;
-    }
-
-    const telefonoInput = document.getElementById('telefono');
-
-    if (telefonoInput) {
-        telefonoInput.addEventListener('input', function () {
-            this.value = formatPhone(this.value);
-        });
-    }
-</script>
