@@ -56,6 +56,7 @@
             $gasolinerasExternasActivo = request()->routeIs('gasolineras-externas.*');
             $puntosRutaActivo = request()->routeIs('puntos-ruta.*');
             $motoristasActivo = request()->routeIs('motoristas.*');
+            $analisisActivo = request()->routeIs('analisis.*');
         @endphp
 
         <div class="cc-admin-shell">
@@ -341,9 +342,18 @@
                         Auditoría
                     </span>
 
-                    <span class="cc-sidebar-link cc-sidebar-link-disabled">
-                        Análisis
-                    </span>
+                    <div class="cc-sidebar-group">
+                        <div class="cc-sidebar-parent cc-sidebar-static-parent {{ $analisisActivo ? 'cc-sidebar-parent-active' : '' }}">
+                            <span>Análisis</span>
+                        </div>
+
+                        <div class="cc-sidebar-subnav">
+                            <a href="{{ route('analisis.panel-operativo') }}"
+                            class="cc-sidebar-sublink {{ request()->routeIs('analisis.panel-operativo') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Inteligencia operativa
+                            </a>
+                        </div>
+                    </div>
                 </nav>
             </aside>
 

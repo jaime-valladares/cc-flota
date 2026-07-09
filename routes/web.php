@@ -6,6 +6,7 @@ use App\Http\Controllers\GasolineraExternaController;
 use App\Http\Controllers\PuntoRutaController;
 use App\Http\Controllers\LicenciaController;
 use App\Http\Controllers\RecargaTanqueController;
+use App\Http\Controllers\AnalisisOperativoController;
 use App\Http\Controllers\MarchamoAsignacionInicialController;
 use App\Http\Controllers\MarchamoController;
 use App\Http\Controllers\MarchamoReemplazoController;
@@ -532,6 +533,15 @@ Route::middleware('auth')->group(function () {
         ->name('empresas.edit.ventana');
 
     Route::resource('empresas', EmpresaController::class)->except(['destroy']);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Análisis operativo
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/analisis/panel-operativo', [AnalisisOperativoController::class, 'panelOperativo'])
+        ->name('analisis.panel-operativo');
 });
 
 require __DIR__.'/auth.php';
