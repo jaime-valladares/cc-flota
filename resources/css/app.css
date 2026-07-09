@@ -1780,7 +1780,22 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     .cc-sidebar {
         position: relative;
         min-height: auto;
-        max-height: none;
+        height: auto;
+        max-height: 18rem;
+        overflow-y: auto;
+        padding: 1.15rem 0.9rem;
+        border-right: 0;
+        border-bottom: 1px solid rgba(244, 247, 249, 0.12);
+        box-shadow: 0 12px 28px rgba(6, 27, 42, 0.18);
+    }
+
+    .cc-sidebar-brand {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        background:
+            linear-gradient(180deg, #061B2A 0%, #082235 100%);
+        padding-top: 0.2rem;
     }
 
     .cc-main-area {
@@ -1800,7 +1815,16 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     }
 
     .cc-page-wrapper {
-        padding: 1.25rem 1rem 1.75rem;
+        padding: 1.1rem 0.85rem 1.75rem;
+    }
+
+    .cc-card {
+        border-radius: 1rem;
+        padding: 1.15rem;
+    }
+
+    .cc-card-header {
+        gap: 0.9rem;
     }
 
     .cc-title {
@@ -3900,5 +3924,643 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
 
     .cc-bi-multiselect-menu {
         width: 100%;
+    }
+}
+
+/* =========================================================
+   CC-Flota — Estándar de consultas administrativas
+   Filtros reutilizables + tablas adaptables
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   Panel de filtros
+   --------------------------------------------------------- */
+
+.cc-card:has(.cc-filter-multiselect) {
+    overflow: visible;
+}
+
+.cc-filter-panel,
+.cc-filter-panel-inline {
+    overflow: visible;
+}
+
+.cc-standard-filter-grid {
+    position: relative;
+    z-index: 80;
+    display: grid;
+    grid-template-columns:
+        minmax(15rem, 1fr)
+        minmax(11rem, 0.58fr)
+        minmax(11rem, 0.58fr)
+        auto;
+    gap: 0.85rem;
+    align-items: end;
+    overflow: visible;
+}
+
+.cc-standard-filter-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.65rem;
+    padding-bottom: 0.02rem;
+}
+
+.cc-standard-filter-actions .cc-btn-primary,
+.cc-standard-filter-actions .cc-btn-secondary {
+    min-width: 6.8rem;
+    min-height: 2.45rem;
+    padding: 0.55rem 0.95rem;
+    font-size: 0.66rem;
+}
+
+/* Tablet / ventana mediana:
+   dos columnas limpias para mantener equilibrio visual. */
+@media (max-width: 1180px) {
+    .cc-standard-filter-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .cc-standard-filter-actions {
+        justify-content: flex-start;
+    }
+
+    .cc-standard-filter-actions .cc-btn-primary,
+    .cc-standard-filter-actions .cc-btn-secondary {
+        min-width: 7.2rem;
+    }
+}
+
+/* Teléfono / ventana estrecha:
+   una columna y botones cómodos para interacción táctil. */
+@media (max-width: 640px) {
+    .cc-standard-filter-grid {
+        grid-template-columns: 1fr;
+        gap: 0.78rem;
+    }
+
+    .cc-standard-filter-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.6rem;
+        width: 100%;
+    }
+
+    .cc-standard-filter-actions .cc-btn-primary,
+    .cc-standard-filter-actions .cc-btn-secondary {
+        width: 100%;
+        min-width: 0;
+    }
+}
+
+/* ---------------------------------------------------------
+   Multiselect estándar
+   --------------------------------------------------------- */
+
+.cc-filter-multiselect {
+    position: relative;
+    min-width: 0;
+    z-index: 500;
+}
+
+.cc-filter-multiselect-toggle {
+    width: 100%;
+    min-height: 2.72rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+    border: 1px solid var(--cc-card-border-strong);
+    border-radius: var(--cc-radius-sm);
+    background: linear-gradient(180deg, #FFFFFF, #F8FBFC);
+    padding: 0.65rem 0.82rem;
+    color: var(--cc-text-main);
+    box-shadow: 0 1px 2px rgba(6, 27, 42, 0.04);
+    cursor: pointer;
+    transition:
+        border-color 0.18s ease,
+        box-shadow 0.18s ease,
+        background-color 0.18s ease;
+}
+
+.cc-filter-multiselect-toggle span:first-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.92rem;
+    font-weight: 500;
+    text-align: left;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.cc-filter-multiselect-toggle:hover,
+.cc-filter-multiselect-toggle.is-open {
+    border-color: rgba(59, 122, 140, 0.58);
+    box-shadow:
+        0 8px 20px rgba(6, 27, 42, 0.07),
+        0 0 0 4px rgba(59, 122, 140, 0.10);
+}
+
+.cc-filter-multiselect-arrow {
+    flex-shrink: 0;
+    color: var(--cc-primary);
+    font-size: 0.72rem;
+    line-height: 1;
+    transition: transform 0.16s ease;
+}
+
+.cc-filter-multiselect-toggle.is-open .cc-filter-multiselect-arrow {
+    transform: rotate(180deg);
+}
+
+.cc-filter-multiselect-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 0.42rem);
+    left: 0;
+    width: min(26rem, 90vw);
+    max-height: 21rem;
+    border: 1px solid var(--cc-card-border-strong);
+    border-radius: 0.85rem;
+    background: #FFFFFF;
+    box-shadow: 0 24px 56px rgba(6, 27, 42, 0.18);
+    padding: 0.58rem;
+    overflow: hidden;
+    z-index: 5000;
+}
+
+.cc-filter-multiselect-menu.is-open {
+    display: block;
+}
+
+@media (max-width: 640px) {
+    .cc-filter-multiselect-menu {
+        width: 100%;
+        max-height: 18rem;
+    }
+}
+
+.cc-filter-multiselect-search {
+    margin-bottom: 0.5rem;
+}
+
+.cc-filter-multiselect-list {
+    max-height: 14.5rem;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+    -webkit-overflow-scrolling: touch;
+}
+
+.cc-filter-multiselect-list::-webkit-scrollbar {
+    width: 0.45rem;
+}
+
+.cc-filter-multiselect-list::-webkit-scrollbar-track {
+    background: #F1F5F7;
+    border-radius: 999px;
+}
+
+.cc-filter-multiselect-list::-webkit-scrollbar-thumb {
+    background: rgba(6, 59, 74, 0.42);
+    border-radius: 999px;
+}
+
+.cc-filter-multiselect-option {
+    display: grid !important;
+    grid-template-columns: 1rem minmax(0, 1fr);
+    gap: 0.55rem;
+    align-items: center;
+    width: 100%;
+    margin: 0;
+    padding: 0.46rem 0.55rem;
+    border-radius: 0.62rem;
+    cursor: pointer;
+    transition:
+        background-color 0.16s ease,
+        color 0.16s ease;
+}
+
+.cc-filter-multiselect-option:hover {
+    background: var(--cc-primary-soft);
+}
+
+.cc-filter-multiselect-option-master {
+    margin-bottom: 0.38rem;
+    border: 1px solid var(--cc-card-border);
+    background: linear-gradient(180deg, #FFFFFF, #F8FBFC);
+    box-shadow: 0 6px 14px rgba(6, 27, 42, 0.04);
+}
+
+.cc-filter-multiselect-option input {
+    appearance: none;
+    width: 0.95rem;
+    height: 0.95rem;
+    border: 1.5px solid rgba(6, 59, 74, 0.42);
+    border-radius: 0.26rem;
+    background: #FFFFFF;
+    display: inline-grid;
+    place-content: center;
+    cursor: pointer;
+}
+
+.cc-filter-multiselect-option input::before {
+    content: "";
+    width: 0.47rem;
+    height: 0.47rem;
+    border-radius: 0.14rem;
+    background: var(--cc-primary);
+    transform: scale(0);
+    transition: transform 0.12s ease;
+}
+
+.cc-filter-multiselect-option input:checked {
+    border-color: var(--cc-primary);
+    background: var(--cc-primary-soft);
+}
+
+.cc-filter-multiselect-option input:checked::before {
+    transform: scale(1);
+}
+
+.cc-filter-multiselect-option input:indeterminate {
+    border-color: var(--cc-primary);
+    background: var(--cc-primary-soft);
+}
+
+.cc-filter-multiselect-option input:indeterminate::before {
+    transform: scale(1);
+    width: 0.5rem;
+    height: 0.15rem;
+}
+
+.cc-filter-multiselect-option span {
+    min-width: 0;
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--cc-text-main);
+    line-height: 1.25;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.cc-filter-multiselect-option-master span {
+    font-weight: 700;
+    color: var(--cc-text-heading);
+}
+
+.cc-filter-multiselect-option [data-cc-filter-option-label] {
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+/* ---------------------------------------------------------
+   Tabla adaptable estándar
+   --------------------------------------------------------- */
+
+.cc-table-adaptive-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--cc-card-border);
+    border-radius: var(--cc-radius-lg);
+    background: #ffffff;
+    box-shadow: 0 12px 28px rgba(6, 27, 42, 0.05);
+    -webkit-overflow-scrolling: touch;
+}
+
+.cc-table-adaptive-wrapper::-webkit-scrollbar {
+    height: 0.65rem;
+}
+
+.cc-table-adaptive-wrapper::-webkit-scrollbar-track {
+    background: #F1F5F7;
+    border-radius: 999px;
+}
+
+.cc-table-adaptive-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(6, 59, 74, 0.42);
+    border-radius: 999px;
+}
+
+.cc-table-adaptive-wrapper::-webkit-scrollbar-thumb:hover {
+    background: rgba(6, 59, 74, 0.58);
+}
+
+.cc-table-adaptive {
+    width: 100%;
+    min-width: 58rem;
+    border-collapse: collapse;
+    table-layout: auto;
+}
+
+.cc-table-adaptive thead th {
+    padding: 0.92rem 1rem;
+    text-align: left;
+    font-family: var(--cc-font-heading);
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--cc-text-heading);
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--cc-card-border-strong);
+    background:
+        linear-gradient(180deg, #F8FBFC, #EFF6F8);
+    white-space: nowrap;
+}
+
+.cc-table-adaptive tbody td {
+    padding: 0.88rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--cc-text-main);
+    border-bottom: 1px solid #EDF3F5;
+    vertical-align: middle;
+}
+
+.cc-table-adaptive tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.cc-table-adaptive tbody tr:hover {
+    background-color: #F8FBFC;
+}
+
+.cc-table-adaptive-strong {
+    font-weight: 800;
+    color: var(--cc-text-heading);
+}
+
+.cc-table-adaptive-muted {
+    margin-top: 0.15rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--cc-text-muted);
+    line-height: 1.35;
+}
+
+.cc-table-adaptive-nowrap {
+    white-space: nowrap;
+}
+
+.cc-table-adaptive-break {
+    overflow-wrap: anywhere;
+    word-break: normal;
+}
+
+@media (max-width: 640px) {
+    .cc-table-adaptive {
+        min-width: 52rem;
+    }
+
+    .cc-table-adaptive thead th,
+    .cc-table-adaptive tbody td {
+        padding: 0.78rem 0.85rem;
+    }
+}
+
+/* =========================================================
+   CC-Flota — Mobile shell override
+   Ajuste temporal seguro para pruebas en teléfono/tablet
+   ========================================================= */
+
+@media (max-width: 820px) {
+    .cc-admin-shell {
+        display: block;
+        min-height: auto;
+        background: var(--cc-bg-main);
+    }
+
+    .cc-sidebar {
+        position: relative;
+        top: auto;
+        min-height: auto;
+        height: auto;
+        max-height: 16rem;
+        overflow-y: auto;
+        padding: 1.15rem 0.9rem;
+        border-right: 0;
+        border-bottom: 1px solid rgba(244, 247, 249, 0.12);
+        box-shadow: 0 12px 28px rgba(6, 27, 42, 0.18);
+    }
+
+    .cc-main-area {
+        min-height: auto;
+    }
+
+    .cc-topbar {
+        position: relative;
+        top: auto;
+        padding: 0.85rem 1.15rem;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .cc-topbar-user {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .cc-page-wrapper {
+        padding: 1.1rem 0.85rem 1.75rem;
+    }
+
+    .cc-card {
+        border-radius: 1rem;
+        padding: 1.15rem;
+    }
+
+    .cc-card-header {
+        gap: 0.9rem;
+    }
+
+    .cc-title {
+        font-size: 1.55rem;
+    }
+}
+
+/* =========================================================
+   CC-Flota — Tarjetas administrativas adaptables
+   Estándar para pantallas de administración / gestión
+   ========================================================= */
+
+.cc-admin-result-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.cc-admin-result-card {
+    border: 1px solid var(--cc-card-border);
+    border-radius: var(--cc-radius-lg);
+    background:
+        linear-gradient(180deg, #FFFFFF, #FBFDFE);
+    padding: 1rem 1.1rem;
+    box-shadow: 0 12px 28px rgba(6, 27, 42, 0.055);
+    transition:
+        border-color 0.18s ease,
+        box-shadow 0.18s ease,
+        transform 0.12s ease;
+}
+
+.cc-admin-result-card:hover {
+    border-color: rgba(59, 122, 140, 0.36);
+    box-shadow: 0 18px 36px rgba(6, 27, 42, 0.09);
+    transform: translateY(-1px);
+}
+
+.cc-admin-result-grid {
+    display: grid;
+    grid-template-columns:
+        minmax(16rem, 1.3fr)
+        minmax(13rem, 0.95fr)
+        minmax(10rem, 0.75fr)
+        auto;
+    gap: 1rem;
+    align-items: center;
+}
+
+.cc-admin-result-main,
+.cc-admin-result-meta {
+    min-width: 0;
+}
+
+.cc-admin-result-title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+.cc-admin-result-title {
+    font-family: var(--cc-font-heading);
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--cc-text-heading);
+    letter-spacing: -0.025em;
+    line-height: 1.28;
+    overflow-wrap: anywhere;
+}
+
+.cc-admin-result-subtitle {
+    margin-top: 0.28rem;
+    font-size: 0.82rem;
+    font-weight: 550;
+    color: var(--cc-text-muted);
+    line-height: 1.38;
+    overflow-wrap: anywhere;
+}
+
+.cc-admin-result-label {
+    font-family: var(--cc-font-heading);
+    font-size: 0.66rem;
+    font-weight: 800;
+    color: var(--cc-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.095em;
+    line-height: 1.2;
+}
+
+.cc-admin-result-value {
+    margin-top: 0.22rem;
+    font-size: 0.9rem;
+    font-weight: 750;
+    color: var(--cc-text-main);
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.cc-admin-result-value-muted {
+    margin-top: 0.12rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--cc-text-muted);
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.cc-admin-result-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.7rem;
+    flex-wrap: nowrap;
+}
+
+.cc-admin-result-actions .cc-btn-primary,
+.cc-admin-result-actions .cc-btn-secondary,
+.cc-admin-result-actions .cc-btn-result {
+    min-width: 6.9rem;
+    min-height: 2.35rem;
+    padding: 0.52rem 0.95rem;
+    font-size: 0.66rem;
+}
+
+/* Ventana mediana:
+   la información conserva tres columnas y las acciones bajan a una fila propia. */
+@media (max-width: 1320px) {
+    .cc-admin-result-grid {
+        grid-template-columns:
+            minmax(0, 1.2fr)
+            minmax(0, 0.95fr)
+            minmax(0, 0.75fr);
+        align-items: start;
+    }
+
+    .cc-admin-result-actions {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+        padding-top: 0.25rem;
+    }
+}
+
+/* Tablet horizontal / ventana reducida:
+   la tarjeta pasa a dos columnas para evitar compresión de texto. */
+@media (max-width: 980px) {
+    .cc-admin-result-grid {
+        grid-template-columns:
+            minmax(0, 1fr)
+            minmax(0, 1fr);
+        align-items: start;
+    }
+
+    .cc-admin-result-actions {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+    }
+}
+
+/* Tablet vertical / ventana reducida */
+@media (max-width: 760px) {
+    .cc-admin-result-grid {
+        grid-template-columns: 1fr;
+        gap: 0.85rem;
+    }
+
+    .cc-admin-result-card {
+        padding: 0.95rem;
+    }
+
+    .cc-admin-result-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+        gap: 0.65rem;
+    }
+
+    .cc-admin-result-actions .cc-btn-primary,
+    .cc-admin-result-actions .cc-btn-secondary,
+    .cc-admin-result-actions .cc-btn-result {
+        width: 100%;
+        min-width: 0;
+    }
+}
+
+/* Teléfono estrecho */
+@media (max-width: 460px) {
+    .cc-admin-result-actions {
+        grid-template-columns: 1fr;
     }
 }

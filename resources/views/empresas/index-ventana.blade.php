@@ -8,8 +8,8 @@
         <title>Consulta de empresas | CC-Flota</title>
 
         @include('layouts.partials.favicon')
+
         <link rel="preconnect" href="https://fonts.bunny.net">
-        
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900&display=swap" rel="stylesheet" />
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -17,7 +17,7 @@
 
     <body class="font-sans antialiased">
         <div class="min-h-screen" style="background: var(--cc-bg-main);">
-            <div class="cc-window-wrapper" style="padding-top: 2.1rem;">
+            <div class="cc-window-wrapper" style="padding: 2.1rem 1.25rem;">
                 <div class="cc-window-container" style="max-width: 80rem;">
                     <div class="cc-card">
 
@@ -26,9 +26,6 @@
                                 <h3 class="cc-title cc-title-compact">
                                     Consulta de empresas
                                 </h3>
-                                <p class="cc-subtitle cc-subtitle-compact">
-                                    Consulte información general de las empresas cliente registradas en CC-Flota.
-                                </p>
                             </div>
 
                             <div class="flex items-center gap-3">
@@ -75,57 +72,32 @@
 
                         <form method="GET" action="{{ route('empresas.consulta.ventana') }}" class="mb-5">
                             <input type="hidden" name="consultar" value="1">
-                            <div class="cc-filter-panel cc-filter-panel-compact cc-filter-panel-inline">
 
+                            <div class="cc-filter-panel cc-filter-panel-compact cc-filter-panel-inline">
                                 <div class="cc-form-section cc-form-section-compact" style="margin-top: 0;">
                                     <div class="cc-form-section-title">
                                         Filtros de consulta
                                     </div>
                                 </div>
 
-                                <div class="cc-filter-inline-grid">
+                                <div class="cc-standard-filter-grid">
 
                                     <div class="cc-field">
-                                        <label for="empresa_id">
-                                            Empresa
+                                        <label for="busqueda">
+                                            Búsqueda de Empresa por Nombre
                                         </label>
 
-                                        @if ($esUsuarioDieselCop)
-                                            <select id="empresa_id" name="empresa_id" class="cc-input">
-                                                <option value="">Todas</option>
-
-                                                @foreach ($empresasSelector as $empresaOpcion)
-                                                    <option value="{{ $empresaOpcion->id }}" @selected((string) $empresaId === (string) $empresaOpcion->id)>
-                                                        {{ $empresaOpcion->nombre_comercial ?: $empresaOpcion->nombre_legal }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        @else
-                                            <select id="empresa_id" name="empresa_id" class="cc-input" disabled>
-                                                @foreach ($empresasSelector as $empresaOpcion)
-                                                    <option value="{{ $empresaOpcion->id }}" selected>
-                                                        {{ $empresaOpcion->nombre_comercial ?: $empresaOpcion->nombre_legal }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        @endif
-                                    </div>
-
-                                    <div class="cc-field">
-                                        <label for="nit">
-                                            NIT
-                                        </label>
                                         <input
-                                            id="nit"
-                                            name="nit"
+                                            id="busqueda"
+                                            name="busqueda"
                                             type="text"
                                             class="cc-input"
-                                            value="{{ $nit }}"
-                                            maxlength="17"
-                                            placeholder="0000-000000-000-0"
+                                            value="{{ $busqueda ?? '' }}"
+                                            maxlength="150"
+                                            placeholder="Nombre legal de la empresa"
                                         >
 
-                                        @error('nit')
+                                        @error('busqueda')
                                             <div class="cc-error">
                                                 {{ $message }}
                                             </div>
@@ -133,11 +105,130 @@
                                     </div>
 
                                     <div class="cc-field">
+                                        <label for="empresa_multiselect_button">
+                                            Empresa
+                                        </label>
+
+                                        @if ($esUsuarioDieselCop)
+                                            @php
+                                                $empresaIdsSeleccionadas = collect($empresaIds ?? [])
+                                                    ->map(fn ($id) => (string) $id)
+                                                    ->all();
+
+                                                $totalEmpresasSelector = $empresasSelector->count();
+                                                $totalEmpresasSeleccionadas = count($empresaIdsSeleccionadas);
+
+                                                if ($totalEmpresasSeleccionadas === 0 || $totalEmpresasSeleccionadas === $totalEmpresasSelector) {
+                                                    $textoEmpresasSeleccionadas = 'Todas';
+                                                } elseif ($totalEmpresasSeleccionadas === 1) {
+                                                    $empresaSeleccionada = $empresasSelector->firstWhere('id', (int) $empresaIdsSeleccionadas[0]);
+
+                                                    $textoEmpresasSeleccionadas = $empresaSeleccionada
+                                                        ? $empresaSeleccionada->nombre_legal
+                                                        : '1 seleccionada';
+                                                } else {
+                                                    $textoEmpresasSeleccionadas = $totalEmpresasSeleccionadas . ' seleccionadas';
+                                                }
+                                            @endphp
+
+                                            <div
+                                                class="cc-filter-multiselect"
+                                                data-cc-filter-multiselect
+                                                data-all-text="Todas"
+                                                data-singular-text="seleccionada"
+                                                data-plural-text="seleccionadas"
+                                            >
+                                                <button
+                                                    id="empresa_multiselect_button"
+                                                    type="button"
+                                                    class="cc-filter-multiselect-toggle"
+                                                    data-cc-filter-toggle
+                                                >
+                                                    <span data-cc-filter-label>
+                                                        {{ $textoEmpresasSeleccionadas }}
+                                                    </span>
+
+                                                    <span class="cc-filter-multiselect-arrow">
+                                                        ⌄
+                                                    </span>
+                                                </button>
+
+                                                <div class="cc-filter-multiselect-menu" data-cc-filter-menu>
+                                                    <label class="cc-filter-multiselect-option cc-filter-multiselect-option-master">
+                                                        <input
+                                                            type="checkbox"
+                                                            data-cc-filter-check-all
+                                                            @checked($totalEmpresasSeleccionadas === 0 || $totalEmpresasSeleccionadas === $totalEmpresasSelector)
+                                                        >
+
+                                                        <span>
+                                                            Seleccionar todo
+                                                        </span>
+                                                    </label>
+
+                                                    <div class="cc-filter-multiselect-list" data-cc-filter-options>
+                                                        @foreach ($empresasSelector as $empresaOpcion)
+                                                            @php
+                                                                $empresaOpcionId = (string) $empresaOpcion->id;
+                                                                $empresaOpcionTexto = $empresaOpcion->nombre_legal;
+
+                                                                $empresaOpcionSeleccionada = $totalEmpresasSeleccionadas === 0
+                                                                    || in_array($empresaOpcionId, $empresaIdsSeleccionadas, true);
+
+                                                                $empresaTextoBusqueda = \Illuminate\Support\Str::lower($empresaOpcionTexto);
+                                                            @endphp
+
+                                                            <label
+                                                                class="cc-filter-multiselect-option"
+                                                                data-cc-filter-option
+                                                                data-cc-filter-text="{{ $empresaTextoBusqueda }}"
+                                                            >
+                                                                <input
+                                                                    type="checkbox"
+                                                                    name="empresa_ids[]"
+                                                                    value="{{ $empresaOpcion->id }}"
+                                                                    data-cc-filter-checkbox
+                                                                    @checked($empresaOpcionSeleccionada)
+                                                                >
+
+                                                                <span data-cc-filter-option-label>
+                                                                    {{ $empresaOpcionTexto }}
+                                                                </span>
+                                                            </label>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            @error('empresa_ids')
+                                                <div class="cc-error">
+                                                    {{ $message }}
+                                                </div>
+                                            @enderror
+
+                                            @error('empresa_ids.*')
+                                                <div class="cc-error">
+                                                    {{ $message }}
+                                                </div>
+                                            @enderror
+                                        @else
+                                            <select id="empresa_id" name="empresa_id" class="cc-input" disabled>
+                                                @foreach ($empresasSelector as $empresaOpcion)
+                                                    <option value="{{ $empresaOpcion->id }}" selected>
+                                                        {{ $empresaOpcion->nombre_legal }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        @endif
+                                    </div>
+
+                                    <div class="cc-field">
                                         <label for="estado">
                                             Estado
                                         </label>
+
                                         <select id="estado" name="estado" class="cc-input">
-                                            <option value="">Seleccione</option>
+                                            <option value="">Todos</option>
                                             <option value="activa" @selected($estado === 'activa')>
                                                 Activas
                                             </option>
@@ -153,7 +244,7 @@
                                         @enderror
                                     </div>
 
-                                    <div class="cc-filter-inline-actions">
+                                    <div class="cc-standard-filter-actions">
                                         <button type="submit" class="cc-btn-primary">
                                             Consultar
                                         </button>
@@ -197,25 +288,15 @@
                                 </p>
                             </div>
                         @else
-                            <div class="cc-table-wrapper">
-                                <table class="cc-table">
-                                    <colgroup>
-                                        <col style="width: 24%;">
-                                        <col style="width: 13%;">
-                                        <col style="width: 19%;">
-                                        <col style="width: 13%;">
-                                        <col style="width: 21%;">
-                                        <col style="width: 10%;">
-                                    </colgroup>
-
+                            <div class="cc-table-adaptive-wrapper">
+                                <table class="cc-table-adaptive">
                                     <thead>
                                         <tr>
-                                            <th class="cc-text-left">Nombre legal</th>
-                                            <th class="cc-text-left">Estado</th>
-                                            <th class="cc-text-left">Contacto</th>
-                                            <th class="cc-text-left">Teléfono</th>
-                                            <th class="cc-text-left">Correo empresa</th>
-                                            <th class="cc-text-left">Unidades</th>
+                                            <th style="width: 26%;">Nombre legal</th>
+                                            <th style="width: 20%;">Nombre comercial</th>
+                                            <th style="width: 20%;">Contacto</th>
+                                            <th style="width: 16%;">Teléfono</th>
+                                            <th style="width: 18%;">Unidades</th>
                                         </tr>
                                     </thead>
 
@@ -249,48 +330,38 @@
                                             @endphp
 
                                             <tr>
-                                                <td class="cc-text-left cc-cell-truncate">
-                                                    <span class="cc-table-strong">
+                                                <td class="cc-table-adaptive-break">
+                                                    <div class="cc-table-adaptive-strong">
                                                         {{ $empresa->nombre_legal }}
-                                                    </span>
+                                                    </div>
+                                                </td>
 
-                                                    @if ($empresa->nombre_comercial && $empresa->nombre_comercial !== $empresa->nombre_legal)
-                                                        <div class="text-xs text-[var(--cc-text-muted)]">
-                                                            {{ $empresa->nombre_comercial }}
+                                                <td class="cc-table-adaptive-break">
+                                                    {{ $empresa->nombre_comercial ?: '—' }}
+                                                </td>
+
+                                                <td class="cc-table-adaptive-break">
+                                                    <div class="cc-table-adaptive-strong">
+                                                        {{ $empresa->poc_nombre ?: '—' }}
+                                                    </div>
+
+                                                    @if ($empresa->correo_empresa)
+                                                        <div class="cc-table-adaptive-muted">
+                                                            {{ $empresa->correo_empresa }}
                                                         </div>
                                                     @endif
                                                 </td>
 
-                                                <td class="cc-text-left">
-                                                    @if ($empresa->estado === 'activa')
-                                                        <span class="cc-badge cc-badge-active">
-                                                            Activa
-                                                        </span>
-                                                    @else
-                                                        <span class="cc-badge cc-badge-inactive">
-                                                            Inactiva
-                                                        </span>
-                                                    @endif
+                                                <td class="cc-table-adaptive-nowrap">
+                                                    {{ $empresa->poc_telefono ?: $empresa->telefono_empresa ?: '—' }}
                                                 </td>
 
-                                                <td class="cc-text-left cc-cell-truncate">
-                                                    {{ $empresa->poc_nombre ?: '—' }}
-                                                </td>
-
-                                                <td class="cc-text-left">
-                                                    {{ $empresa->poc_telefono ?? '—' }}
-                                                </td>
-
-                                                <td class="cc-text-left cc-cell-truncate">
-                                                    {{ $empresa->correo_empresa ?: '—' }}
-                                                </td>
-
-                                                <td class="cc-text-left">
-                                                    <div class="font-bold text-[var(--cc-text-main)]">
+                                                <td class="cc-table-adaptive-nowrap">
+                                                    <div class="cc-table-adaptive-strong">
                                                         {{ $unidadesActivas }} activas
                                                     </div>
 
-                                                    <div class="text-xs text-[var(--cc-text-muted)]">
+                                                    <div class="cc-table-adaptive-muted">
                                                         {{ $unidadesRegistradas }} registradas
                                                     </div>
                                                 </td>
@@ -309,33 +380,5 @@
                 </div>
             </div>
         </div>
-
-        <script>
-            function formatNit(value) {
-                const digits = value.replace(/\D/g, '').slice(0, 14);
-
-                if (digits.length <= 4) {
-                    return digits;
-                }
-
-                if (digits.length <= 10) {
-                    return `${digits.slice(0, 4)}-${digits.slice(4)}`;
-                }
-
-                if (digits.length <= 13) {
-                    return `${digits.slice(0, 4)}-${digits.slice(4, 10)}-${digits.slice(10)}`;
-                }
-
-                return `${digits.slice(0, 4)}-${digits.slice(4, 10)}-${digits.slice(10, 13)}-${digits.slice(13)}`;
-            }
-
-            const nitInput = document.getElementById('nit');
-
-            if (nitInput) {
-                nitInput.addEventListener('input', function () {
-                    this.value = formatNit(this.value);
-                });
-            }
-        </script>
     </body>
 </html>

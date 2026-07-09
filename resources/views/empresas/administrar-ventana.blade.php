@@ -7,9 +7,9 @@
 
         <title>Administrar empresa | CC-Flota</title>
 
-        
         @include('layouts.partials.favicon')
-<link rel="preconnect" href="https://fonts.bunny.net">
+
+        <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900&display=swap" rel="stylesheet" />
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -26,9 +26,6 @@
                                 <h3 class="cc-title cc-title-compact">
                                     Administrar empresa
                                 </h3>
-                                <p class="cc-subtitle cc-subtitle-compact">
-                                    Localice una empresa cliente para consultar su ficha, editar sus datos o gestionar su estado administrativo.
-                                </p>
                             </div>
 
                             <div class="flex items-center gap-3">
@@ -46,15 +43,38 @@
 
                         <form method="GET" action="{{ route('empresas.administrar.ventana') }}" class="mb-5">
                             <input type="hidden" name="consultar" value="1">
+
                             <div class="cc-filter-panel cc-filter-panel-compact cc-filter-panel-inline">
 
                                 <div class="cc-form-section cc-form-section-compact" style="margin-top: 0;">
                                     <div class="cc-form-section-title">
-                                        Búsqueda administrativa
+                                        Filtros de Consulta
                                     </div>
                                 </div>
 
-                                <div class="cc-filter-inline-grid">
+                                <div class="cc-standard-filter-grid">
+
+                                    <div class="cc-field">
+                                        <label for="busqueda">
+                                            Búsqueda de Empresa por Nombre
+                                        </label>
+
+                                        <input
+                                            id="busqueda"
+                                            name="busqueda"
+                                            type="text"
+                                            class="cc-input"
+                                            value="{{ $busqueda ?? '' }}"
+                                            maxlength="150"
+                                            placeholder="Nombre legal de la empresa"
+                                        >
+
+                                        @error('busqueda')
+                                            <div class="cc-error">
+                                                {{ $message }}
+                                            </div>
+                                        @enderror
+                                    </div>
 
                                     <div class="cc-field">
                                         <label for="empresa_id">
@@ -67,7 +87,7 @@
 
                                                 @foreach ($empresasSelector as $empresaOpcion)
                                                     <option value="{{ $empresaOpcion->id }}" @selected((string) $empresaId === (string) $empresaOpcion->id)>
-                                                        {{ $empresaOpcion->nombre_legal }}
+                                                        {{ $empresaOpcion->nombre_comercial ?: $empresaOpcion->nombre_legal }}
                                                     </option>
                                                 @endforeach
                                             </select>
@@ -75,7 +95,7 @@
                                             <select id="empresa_id" name="empresa_id" class="cc-input" disabled>
                                                 @foreach ($empresasSelector as $empresaOpcion)
                                                     <option value="{{ $empresaOpcion->id }}" selected>
-                                                        {{ $empresaOpcion->nombre_legal }}
+                                                        {{ $empresaOpcion->nombre_comercial ?: $empresaOpcion->nombre_legal }}
                                                     </option>
                                                 @endforeach
                                             </select>
@@ -92,8 +112,9 @@
                                         <label for="estado">
                                             Estado
                                         </label>
+
                                         <select id="estado" name="estado" class="cc-input">
-                                            <option value="">Seleccione</option>
+                                            <option value="">Todos</option>
                                             <option value="activa" @selected($estado === 'activa')>
                                                 Activas
                                             </option>
@@ -109,7 +130,7 @@
                                         @enderror
                                     </div>
 
-                                    <div class="cc-filter-inline-actions">
+                                    <div class="cc-standard-filter-actions">
                                         <button type="submit" class="cc-btn-primary">
                                             Consultar
                                         </button>
@@ -137,10 +158,10 @@
                         @if (! $hayFiltros)
                             <div class="cc-empty-panel cc-empty-panel-compact">
                                 <h5>
-                                    Búsqueda pendiente
+                                    Consulta pendiente
                                 </h5>
                                 <p>
-                                    Los resultados permanecerán vacíos hasta que localice una empresa por nombre o estado.
+                                    Los resultados permanecerán vacíos hasta que realice una búsqueda.
                                 </p>
                             </div>
                         @elseif ($empresas->isEmpty())
@@ -153,7 +174,7 @@
                                 </p>
                             </div>
                         @else
-                            <div class="space-y-3">
+                            <div class="cc-admin-result-list">
                                 @foreach ($empresas as $empresa)
                                     @php
                                         $unidadesActivas = $empresa->unidades_activas_count
@@ -177,62 +198,62 @@
                                         }
                                     @endphp
 
-                                    <article class="cc-result-card cc-result-card-compact">
-                                        <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
+                                    <article class="cc-admin-result-card">
+                                        <div class="cc-admin-result-grid">
 
-                                            <div class="flex-1 min-w-0">
-                                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+                                            <div class="cc-admin-result-main">
+                                                <div class="cc-admin-result-title-row">
+                                                    <h5 class="cc-admin-result-title">
+                                                        {{ $empresa->nombre_legal }}
+                                                    </h5>
 
-                                                    <div>
-                                                        <div class="flex flex-wrap items-center gap-2">
-                                                            <h5 class="cc-result-title cc-cell-truncate">
-                                                                {{ $empresa->nombre_legal }}
-                                                            </h5>
+                                                    @if ($empresa->estado === 'activa')
+                                                        <span class="cc-badge cc-badge-active">
+                                                            Activa
+                                                        </span>
+                                                    @else
+                                                        <span class="cc-badge cc-badge-inactive">
+                                                            Inactiva
+                                                        </span>
+                                                    @endif
+                                                </div>
 
-                                                            @if ($empresa->estado === 'activa')
-                                                                <span class="cc-badge cc-badge-active">
-                                                                    Activa
-                                                                </span>
-                                                            @else
-                                                                <span class="cc-badge cc-badge-inactive">
-                                                                    Inactiva
-                                                                </span>
-                                                            @endif
-                                                        </div>
+                                                @if ($empresa->nombre_comercial && $empresa->nombre_comercial !== $empresa->nombre_legal)
+                                                    <div class="cc-admin-result-subtitle">
+                                                        {{ $empresa->nombre_comercial }}
                                                     </div>
+                                                @endif
+                                            </div>
 
-                                                    <div>
-                                                        <div class="cc-result-label">
-                                                            Contacto
-                                                        </div>
+                                            <div class="cc-admin-result-meta">
+                                                <div class="cc-admin-result-label">
+                                                    Contacto
+                                                </div>
 
-                                                        <div class="cc-result-value cc-cell-truncate">
-                                                            {{ $empresa->poc_nombre ?: 'Sin contacto' }}
-                                                        </div>
+                                                <div class="cc-admin-result-value">
+                                                    {{ $empresa->poc_nombre ?: 'Sin contacto' }}
+                                                </div>
 
-                                                        <div class="cc-result-value-muted">
-                                                            {{ $empresa->poc_telefono ?: 'Sin teléfono' }}
-                                                        </div>
-                                                    </div>
-
-                                                    <div>
-                                                        <div class="cc-result-label">
-                                                            Unidades
-                                                        </div>
-
-                                                        <div class="cc-result-value">
-                                                            {{ $unidadesActivas }} activas
-                                                        </div>
-
-                                                        <div class="cc-result-value-muted">
-                                                            {{ $unidadesRegistradas }} registradas
-                                                        </div>
-                                                    </div>
-
+                                                <div class="cc-admin-result-value-muted">
+                                                    {{ $empresa->poc_telefono ?: 'Sin teléfono' }}
                                                 </div>
                                             </div>
 
-                                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 xl:justify-end xl:min-w-[15rem]">
+                                            <div class="cc-admin-result-meta">
+                                                <div class="cc-admin-result-label">
+                                                    Unidades
+                                                </div>
+
+                                                <div class="cc-admin-result-value">
+                                                    {{ $unidadesActivas }} activas
+                                                </div>
+
+                                                <div class="cc-admin-result-value-muted">
+                                                    {{ $unidadesRegistradas }} registradas
+                                                </div>
+                                            </div>
+
+                                            <div class="cc-admin-result-actions">
                                                 <a href="{{ route('empresas.show.ventana', $empresa) }}" class="cc-btn-primary cc-btn-result">
                                                     Ver ficha
                                                 </a>

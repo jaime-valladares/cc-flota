@@ -20,7 +20,7 @@
     <body class="antialiased">
         <div class="min-h-screen" style="background: var(--cc-bg-main);">
             <div class="cc-page-wrapper">
-                <div class="cc-window-container" style="max-width: 79rem;">
+                <div class="cc-window-container" style="max-width: 80rem;">
                     <div class="cc-card">
 
                         <div class="cc-card-header cc-card-header-compact">
@@ -28,9 +28,6 @@
                                 <h3 class="cc-title cc-title-compact">
                                     Registro de empresa cliente
                                 </h3>
-                                <p class="cc-subtitle cc-subtitle-compact">
-                                    Complete los datos legales, fiscales y de contacto de la empresa cliente.
-                                </p>
                             </div>
 
                             <div class="flex items-center gap-3">

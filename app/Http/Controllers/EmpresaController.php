@@ -62,21 +62,55 @@ class EmpresaController extends Controller
 
         $validated = $request->validate([
             'consultar' => ['nullable', 'boolean'],
+
+            /*
+             * Filtro de texto libre estándar para consultas.
+             * En Empresas V1 busca únicamente por nombre legal.
+             */
+            'busqueda' => ['nullable', 'string', 'max:150'],
+
+            /*
+             * empresa_id se conserva para no romper pantallas administrativas
+             * que todavía trabajan con una sola empresa.
+             */
             'empresa_id' => ['nullable', 'integer', 'exists:empresas,id'],
+
+            /*
+             * empresa_ids será el nuevo estándar para consultas con selección múltiple.
+             */
+            'empresa_ids' => ['nullable', 'array'],
+            'empresa_ids.*' => ['integer', 'exists:empresas,id'],
+
+            /*
+             * NIT se conserva temporalmente en backend por compatibilidad,
+             * aunque ya no se usará como filtro visible en Consulta Empresas.
+             */
             'nit' => [
                 'nullable',
                 'string',
                 'max:17',
                 'regex:/^\d{4}-\d{6}-\d{3}-\d{1}$/',
             ],
+
             'estado' => ['nullable', 'in:activa,inactiva'],
         ], [
             'empresa_id.exists' => 'La empresa seleccionada no es válida.',
+            'empresa_ids.array' => 'La selección de empresas no es válida.',
+            'empresa_ids.*.exists' => 'Una de las empresas seleccionadas no es válida.',
             'nit.regex' => 'El NIT debe tener el formato 0000-000000-000-0.',
             'estado.in' => 'El estado seleccionado no es válido.',
         ]);
 
+        $busqueda = trim((string) ($validated['busqueda'] ?? ''));
+
         $empresaId = $validated['empresa_id'] ?? null;
+        $empresaIds = collect($validated['empresa_ids'] ?? [])
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+
         $nit = trim((string) ($validated['nit'] ?? ''));
         $estado = $validated['estado'] ?? null;
 
@@ -85,7 +119,7 @@ class EmpresaController extends Controller
         | Alcance multiempresa
         |--------------------------------------------------------------------------
         |
-        | Diesel Cop puede consultar todas o una empresa específica.
+        | Diesel Cop puede consultar todas, una o varias empresas.
         | Un usuario de empresa siempre queda limitado a su propia empresa,
         | sin importar lo que llegue en la URL.
         |
@@ -93,17 +127,24 @@ class EmpresaController extends Controller
 
         if (! $esUsuarioDieselCop) {
             $empresaId = $user->empresa_id;
+            $empresaIds = [(int) $user->empresa_id];
         }
 
         $hayFiltros = ! $esUsuarioDieselCop
             || $request->boolean('consultar')
-            || $request->hasAny(['empresa_id', 'nit', 'estado']);
+            || $request->hasAny(['busqueda', 'empresa_id', 'empresa_ids', 'nit', 'estado']);
 
         $query = Empresa::query();
 
         if ($hayFiltros) {
-            if ($empresaId) {
+            if (! empty($empresaIds)) {
+                $query->whereIn('id', $empresaIds);
+            } elseif ($empresaId) {
                 $query->where('id', $empresaId);
+            }
+
+            if ($busqueda !== '') {
+                $query->where('nombre_legal', 'like', '%' . $busqueda . '%');
             }
 
             if ($nit !== '') {
@@ -135,15 +176,15 @@ class EmpresaController extends Controller
             : Empresa::where('id', $user->empresa_id)->where('estado', 'inactiva')->count();
 
         $empresasSelector = $esUsuarioDieselCop
-            ? Empresa::orderBy('nombre_comercial')
-                ->orderBy('nombre_legal')
-                ->get()
+            ? Empresa::orderBy('nombre_legal')->get()
             : collect([$empresaUsuario])->filter();
 
         return [
             'empresas' => $empresas,
             'empresasSelector' => $empresasSelector,
+            'busqueda' => $busqueda,
             'empresaId' => $empresaId,
+            'empresaIds' => $empresaIds,
             'nit' => $nit,
             'estado' => $estado,
             'hayFiltros' => $hayFiltros,
