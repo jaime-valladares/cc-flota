@@ -8,9 +8,6 @@
                         <h3 class="cc-title cc-title-compact">
                             Ficha administrativa de empresa
                         </h3>
-                        <p class="cc-subtitle cc-subtitle-compact">
-                            Consulta consolidada de la empresa cliente y sus datos administrativos principales.
-                        </p>
                     </div>
 
                     <div class="flex items-center gap-3">
