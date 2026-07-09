@@ -7,9 +7,8 @@
 
         <title>Registro de punto de ruta | CC-Flota</title>
 
-        
         @include('layouts.partials.favicon')
-<link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
 
@@ -19,7 +18,7 @@
     <body class="antialiased">
         <div class="min-h-screen" style="background: var(--cc-bg-main);">
             <div class="cc-page-wrapper">
-                <div class="cc-window-container" style="max-width: 80rem;">
+                <div class="cc-window-container" style="max-width: 79rem;">
                     <div class="cc-card">
 
                         <div class="cc-card-header cc-card-header-compact">
@@ -28,7 +27,7 @@
                                     Registro de punto de ruta
                                 </h3>
                                 <p class="cc-subtitle cc-subtitle-compact">
-                                    Registre un punto operativo que podrá utilizarse como origen o destino en abastecimientos.
+                                    Complete la identificación y dirección del punto operativo utilizado como origen o destino en abastecimientos.
                                 </p>
                             </div>
 

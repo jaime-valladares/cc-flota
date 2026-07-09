@@ -1,6 +1,6 @@
 <x-app-layout>
     <div class="cc-page-wrapper">
-        <div class="cc-content-container" style="max-width: 79rem;">
+        <div class="cc-content-container" style="max-width: 80rem;">
             <div class="cc-card">
 
                 <div class="cc-card-header cc-card-header-compact">
@@ -40,6 +40,10 @@
                             <span>
                                 Empresa: {{ $puntoRuta->empresa->nombre_comercial ?: $puntoRuta->empresa->nombre_legal }}
                             </span>
+
+                            <span>
+                                Dirección: {{ $puntoRuta->direccion }}
+                            </span>
                         </div>
                     </div>
 
@@ -74,7 +78,16 @@
 
                             <div class="cc-detail-item">
                                 <div class="cc-detail-label">Nombre del punto</div>
-                                <div class="cc-detail-value">{{ $puntoRuta->nombre }}</div>
+                                <div class="cc-detail-value">
+                                    {{ $puntoRuta->nombre }}
+                                </div>
+                            </div>
+
+                            <div class="cc-detail-item cc-detail-item-wide">
+                                <div class="cc-detail-label">Dirección</div>
+                                <div class="cc-detail-value">
+                                    {{ $puntoRuta->direccion }}
+                                </div>
                             </div>
                         </div>
                     </section>
@@ -103,22 +116,51 @@
 
                             <div class="cc-detail-item">
                                 <div class="cc-detail-label">Fecha de creación</div>
-                                <div class="cc-detail-value">{{ $puntoRuta->fecha_creacion ?? '—' }}</div>
+                                <div class="cc-detail-value">
+                                    {{ optional($puntoRuta->fecha_creacion)->format('d/m/Y H:i') ?? '—' }}
+                                </div>
+                            </div>
+
+                            <div class="cc-detail-item">
+                                <div class="cc-detail-label">Creado por</div>
+                                <div class="cc-detail-value">
+                                    {{ $puntoRuta->creadoPor?->name ?? '—' }}
+                                </div>
                             </div>
 
                             <div class="cc-detail-item">
                                 <div class="cc-detail-label">Fecha de actualización</div>
-                                <div class="cc-detail-value">{{ $puntoRuta->fecha_actualizacion ?? '—' }}</div>
+                                <div class="cc-detail-value">
+                                    {{ optional($puntoRuta->fecha_actualizacion)->format('d/m/Y H:i') ?? '—' }}
+                                </div>
+                            </div>
+
+                            <div class="cc-detail-item">
+                                <div class="cc-detail-label">Actualizado por</div>
+                                <div class="cc-detail-value">
+                                    {{ $puntoRuta->actualizadoPor?->name ?? '—' }}
+                                </div>
                             </div>
 
                             <div class="cc-detail-item">
                                 <div class="cc-detail-label">Fecha de inactivación</div>
-                                <div class="cc-detail-value">{{ $puntoRuta->fecha_inactivacion ?? '—' }}</div>
+                                <div class="cc-detail-value">
+                                    {{ optional($puntoRuta->fecha_inactivacion)->format('d/m/Y H:i') ?? '—' }}
+                                </div>
+                            </div>
+
+                            <div class="cc-detail-item">
+                                <div class="cc-detail-label">Inactivado por</div>
+                                <div class="cc-detail-value">
+                                    {{ $puntoRuta->inactivadoPor?->name ?? '—' }}
+                                </div>
                             </div>
 
                             <div class="cc-detail-item cc-detail-item-wide">
                                 <div class="cc-detail-label">Motivo de inactivación</div>
-                                <div class="cc-detail-value">{{ $puntoRuta->motivo_inactivacion ?? '—' }}</div>
+                                <div class="cc-detail-value">
+                                    {{ $puntoRuta->motivo_inactivacion ?? '—' }}
+                                </div>
                             </div>
                         </div>
                     </section>

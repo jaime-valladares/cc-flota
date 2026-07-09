@@ -29,35 +29,6 @@
                     </div>
                 @endif
 
-                <div class="cc-summary-strip">
-                    <div class="cc-summary-strip-item">
-                        <span class="cc-summary-strip-label">
-                            Total gasolineras
-                        </span>
-                        <span class="cc-summary-strip-value">
-                            {{ $totalGasolinerasExternas }}
-                        </span>
-                    </div>
-
-                    <div class="cc-summary-strip-item">
-                        <span class="cc-summary-strip-label">
-                            Activas
-                        </span>
-                        <span class="cc-summary-strip-value cc-summary-strip-value-success">
-                            {{ $gasolinerasExternasActivas }}
-                        </span>
-                    </div>
-
-                    <div class="cc-summary-strip-item">
-                        <span class="cc-summary-strip-label">
-                            Inactivas
-                        </span>
-                        <span class="cc-summary-strip-value cc-summary-strip-value-danger">
-                            {{ $gasolinerasExternasInactivas }}
-                        </span>
-                    </div>
-                </div>
-
                 <form method="GET" action="{{ route('gasolineras-externas.administrar') }}" class="mb-5">
                     <input type="hidden" name="consultar" value="1">
 
@@ -65,7 +36,7 @@
 
                         <div class="cc-form-section cc-form-section-compact" style="margin-top: 0;">
                             <div class="cc-form-section-title">
-                                Filtros de administración
+                                Búsqueda Administrativa
                             </div>
                         </div>
 
@@ -175,7 +146,7 @@
                 @if (! $hayFiltros)
                     <div class="cc-empty-panel cc-empty-panel-compact">
                         <h5>
-                            Administración pendiente
+                            Búsqueda Pendiente
                         </h5>
                         <p>
                             Use los filtros para cargar los registros disponibles.
@@ -201,22 +172,22 @@
 
                                             <div>
                                                 <div class="cc-result-label">
-                                                    Compañía
-                                                </div>
-
-                                                <h5 class="cc-result-title cc-cell-truncate">
-                                                    {{ $gasolineraExterna->compania }}
-                                                </h5>
-                                            </div>
-
-                                            <div>
-                                                <div class="cc-result-label">
                                                     Empresa
                                                 </div>
 
                                                 <div class="cc-result-value cc-cell-truncate">
                                                     {{ $gasolineraExterna->empresa->nombre_comercial ?: $gasolineraExterna->empresa->nombre_legal }}
                                                 </div>
+                                            </div>
+
+                                            <div>
+                                                <div class="cc-result-label">
+                                                    Compañía
+                                                </div>
+
+                                                <h5 class="cc-result-title cc-cell-truncate">
+                                                    {{ $gasolineraExterna->compania }}
+                                                </h5>
                                             </div>
 
                                             <div>

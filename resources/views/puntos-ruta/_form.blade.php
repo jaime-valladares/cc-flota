@@ -58,6 +58,27 @@
         @enderror
     </div>
 
+    <div class="cc-field cc-col-span-2">
+        <label for="direccion">
+            Dirección <span class="cc-required">*</span>
+        </label>
+
+        <input
+            id="direccion"
+            name="direccion"
+            type="text"
+            class="cc-input"
+            value="{{ old('direccion', $puntoRuta->direccion ?? '') }}"
+            maxlength="255"
+            placeholder="Ingrese la dirección o referencia física del punto de ruta"
+            required
+        >
+
+        @error('direccion')
+            <div class="cc-error">{{ $message }}</div>
+        @enderror
+    </div>
+
 </div>
 
 <div class="cc-actions cc-actions-compact">

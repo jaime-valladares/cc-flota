@@ -14,6 +14,7 @@ class PuntoRuta extends Model
     protected $fillable = [
         'empresa_id',
         'nombre',
+        'direccion',
         'estado',
         'fecha_creacion',
         'creado_por',

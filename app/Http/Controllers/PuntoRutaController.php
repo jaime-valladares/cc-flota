@@ -49,15 +49,16 @@ class PuntoRutaController extends Controller
 
         $validated = $request->validate([
             'empresa_id' => ['nullable', 'integer', 'exists:empresas,id'],
-            'nombre' => ['nullable', 'string', 'max:150'],
+            'punto_ruta_id' => ['nullable', 'integer', 'exists:puntos_ruta,id'],
             'estado' => ['nullable', 'in:activo,inactivo'],
         ], [
             'empresa_id.exists' => 'La empresa seleccionada no es válida.',
+            'punto_ruta_id.exists' => 'El punto de ruta seleccionado no es válido.',
             'estado.in' => 'El estado seleccionado no es válido.',
         ]);
 
         $empresaId = $validated['empresa_id'] ?? null;
-        $nombre = trim((string) ($validated['nombre'] ?? ''));
+        $puntoRutaId = $validated['punto_ruta_id'] ?? null;
         $estado = $validated['estado'] ?? null;
 
         if (! $esUsuarioDieselCop) {
@@ -65,7 +66,7 @@ class PuntoRutaController extends Controller
         }
 
         $hayFiltros = ! $esUsuarioDieselCop
-            || $request->hasAny(['empresa_id', 'nombre', 'estado', 'consultar']);
+            || $request->hasAny(['empresa_id', 'punto_ruta_id', 'estado', 'consultar']);
 
         $query = PuntoRuta::query()
             ->with('empresa')
@@ -80,8 +81,8 @@ class PuntoRutaController extends Controller
                 $query->where('empresa_id', $empresaId);
             }
 
-            if ($nombre !== '') {
-                $query->where('nombre', 'like', '%' . $nombre . '%');
+            if ($puntoRutaId) {
+                $query->where('id', $puntoRutaId);
             }
 
             if (in_array($estado, ['activo', 'inactivo'], true)) {
@@ -92,6 +93,7 @@ class PuntoRutaController extends Controller
         }
 
         $puntosRuta = $query
+            ->orderBy('empresa_id')
             ->orderBy('nombre')
             ->paginate(10)
             ->withQueryString();
@@ -135,11 +137,29 @@ class PuntoRutaController extends Controller
                 ->values();
         }
 
+        $puntosRutaSelector = PuntoRuta::query()
+            ->with('empresa')
+            ->when($soloEmpresasActivas, function ($query) {
+                $query->whereHas('empresa', function ($empresaQuery) {
+                    $empresaQuery->where('estado', 'activa');
+                });
+            })
+            ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
+                $query->where('empresa_id', $user->empresa_id);
+            })
+            ->when($empresaId, function ($query) use ($empresaId) {
+                $query->where('empresa_id', $empresaId);
+            })
+            ->orderBy('empresa_id')
+            ->orderBy('nombre')
+            ->get();
+
         return [
             'puntosRuta' => $puntosRuta,
+            'puntosRutaSelector' => $puntosRutaSelector,
             'empresasSelector' => $empresasSelector,
             'empresaId' => $empresaId,
-            'nombre' => $nombre,
+            'puntoRutaId' => $puntoRutaId,
             'estado' => $estado,
             'hayFiltros' => $hayFiltros,
             'totalPuntosRuta' => $totalPuntosRuta,
@@ -198,6 +218,7 @@ class PuntoRutaController extends Controller
 
         $baseRules = [
             'nombre' => ['required', 'string', 'max:150'],
+            'direccion' => ['required', 'string', 'max:255'],
         ];
 
         if ($esUsuarioDieselCop) {
@@ -215,6 +236,8 @@ class PuntoRutaController extends Controller
             'empresa_id.exists' => 'La empresa seleccionada no es válida o no está activa.',
             'nombre.required' => 'Debe ingresar el nombre del punto de ruta.',
             'nombre.max' => 'El nombre del punto de ruta no debe exceder 150 caracteres.',
+            'direccion.required' => 'Debe ingresar la dirección del punto de ruta.',
+            'direccion.max' => 'La dirección del punto de ruta no debe exceder 255 caracteres.',
         ]);
 
         $empresaId = $esUsuarioDieselCop
@@ -235,6 +258,7 @@ class PuntoRutaController extends Controller
         PuntoRuta::create([
             'empresa_id' => $empresaId,
             'nombre' => $validated['nombre'],
+            'direccion' => $validated['direccion'],
             'estado' => 'activo',
             'fecha_creacion' => now(),
             'creado_por' => Auth::id(),
@@ -310,9 +334,12 @@ class PuntoRutaController extends Controller
 
         $validated = $request->validate([
             'nombre' => ['required', 'string', 'max:150'],
+            'direccion' => ['required', 'string', 'max:255'],
         ], [
             'nombre.required' => 'Debe ingresar el nombre del punto de ruta.',
             'nombre.max' => 'El nombre del punto de ruta no debe exceder 150 caracteres.',
+            'direccion.required' => 'Debe ingresar la dirección del punto de ruta.',
+            'direccion.max' => 'La dirección del punto de ruta no debe exceder 255 caracteres.',
         ]);
 
         $empresaId = (int) $puntoRuta->empresa_id;
@@ -329,6 +356,7 @@ class PuntoRutaController extends Controller
 
         $puntoRuta->update([
             'nombre' => $validated['nombre'],
+            'direccion' => $validated['direccion'],
             'fecha_actualizacion' => now(),
             'actualizado_por' => Auth::id(),
         ]);

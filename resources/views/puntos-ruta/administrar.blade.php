@@ -29,35 +29,6 @@
                     </div>
                 @endif
 
-                <div class="cc-summary-strip">
-                    <div class="cc-summary-strip-item">
-                        <span class="cc-summary-strip-label">
-                            Total puntos
-                        </span>
-                        <span class="cc-summary-strip-value">
-                            {{ $totalPuntosRuta }}
-                        </span>
-                    </div>
-
-                    <div class="cc-summary-strip-item">
-                        <span class="cc-summary-strip-label">
-                            Activos
-                        </span>
-                        <span class="cc-summary-strip-value cc-summary-strip-value-success">
-                            {{ $puntosRutaActivos }}
-                        </span>
-                    </div>
-
-                    <div class="cc-summary-strip-item">
-                        <span class="cc-summary-strip-label">
-                            Inactivos
-                        </span>
-                        <span class="cc-summary-strip-value cc-summary-strip-value-danger">
-                            {{ $puntosRutaInactivos }}
-                        </span>
-                    </div>
-                </div>
-
                 <form method="GET" action="{{ route('puntos-ruta.administrar') }}" class="mb-5">
                     <input type="hidden" name="consultar" value="1">
 
@@ -65,11 +36,11 @@
 
                         <div class="cc-form-section cc-form-section-compact" style="margin-top: 0;">
                             <div class="cc-form-section-title">
-                                Filtros de administración
+                                Búsqueda Administrativa
                             </div>
                         </div>
 
-                        <div class="cc-filter-inline-grid">
+                        <div class="grid grid-cols-1 lg:grid-cols-[1.2fr_1.2fr_auto] gap-4 items-end">
 
                             <div class="cc-field">
                                 <label for="empresa_id">
@@ -104,48 +75,32 @@
                             </div>
 
                             <div class="cc-field">
-                                <label for="nombre">
-                                    Nombre del punto
+                                <label for="punto_ruta_id">
+                                    Punto de Ruta
                                 </label>
-                                <input
-                                    id="nombre"
-                                    name="nombre"
-                                    type="text"
-                                    class="cc-input"
-                                    value="{{ $nombre }}"
-                                    maxlength="150"
-                                    placeholder="Buscar punto"
-                                >
 
-                                @error('nombre')
-                                    <div class="cc-error">
-                                        {{ $message }}
-                                    </div>
-                                @enderror
-                            </div>
+                                <select id="punto_ruta_id" name="punto_ruta_id" class="cc-input">
+                                    <option value="">Todos</option>
 
-                            <div class="cc-field">
-                                <label for="estado">
-                                    Estado
-                                </label>
-                                <select id="estado" name="estado" class="cc-input">
-                                    <option value="">Seleccione</option>
-                                    <option value="activo" @selected($estado === 'activo')>
-                                        Activos
-                                    </option>
-                                    <option value="inactivo" @selected($estado === 'inactivo')>
-                                        Inactivos
-                                    </option>
+                                    @foreach ($puntosRutaSelector as $puntoRutaOpcion)
+                                        <option
+                                            value="{{ $puntoRutaOpcion->id }}"
+                                            data-empresa-id="{{ $puntoRutaOpcion->empresa_id }}"
+                                            @selected((string) $puntoRutaId === (string) $puntoRutaOpcion->id)
+                                        >
+                                            {{ $puntoRutaOpcion->nombre }}
+                                        </option>
+                                    @endforeach
                                 </select>
 
-                                @error('estado')
+                                @error('punto_ruta_id')
                                     <div class="cc-error">
                                         {{ $message }}
                                     </div>
                                 @enderror
                             </div>
 
-                            <div class="cc-filter-inline-actions">
+                            <div class="flex items-end gap-3">
                                 <button type="submit" class="cc-btn-primary">
                                     Consultar
                                 </button>
@@ -189,37 +144,48 @@
                         </p>
                     </div>
                 @else
-                    <div class="cc-result-list">
+                    <div class="space-y-3">
                         @foreach ($puntosRuta as $puntoRuta)
-                            <div class="cc-result-card cc-result-card-compact">
-                                <div class="cc-result-main">
-                                    <div class="cc-result-eyebrow">
-                                        Punto de ruta
+                            <article class="cc-result-card cc-result-card-compact">
+                                <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
+
+                                    <div class="flex-1 min-w-0">
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+
+                                            <div>
+                                                <div class="cc-result-label">
+                                                    Empresa
+                                                </div>
+
+                                                <div class="cc-result-value cc-cell-truncate">
+                                                    {{ $puntoRuta->empresa->nombre_comercial ?: $puntoRuta->empresa->nombre_legal }}
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <div class="cc-result-label">
+                                                    Punto de Ruta
+                                                </div>
+
+                                                <h5 class="cc-result-title cc-cell-truncate">
+                                                    {{ $puntoRuta->nombre }}
+                                                </h5>
+                                            </div>
+
+                                            <div>
+                                                <div class="cc-result-label">
+                                                    Dirección
+                                                </div>
+
+                                                <div class="cc-result-value" style="white-space: normal; line-height: 1.45;">
+                                                    {{ $puntoRuta->direccion }}
+                                                </div>
+                                            </div>
+
+                                        </div>
                                     </div>
 
-                                    <h4 class="cc-result-title">
-                                        {{ $puntoRuta->nombre }}
-                                    </h4>
-
-                                    <div class="cc-result-meta">
-                                        <span>
-                                            Empresa: {{ $puntoRuta->empresa->nombre_comercial ?: $puntoRuta->empresa->nombre_legal }}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div class="cc-result-side">
-                                    @if ($puntoRuta->estado === 'activo')
-                                        <span class="cc-badge cc-badge-active">
-                                            Activo
-                                        </span>
-                                    @else
-                                        <span class="cc-badge cc-badge-inactive">
-                                            Inactivo
-                                        </span>
-                                    @endif
-
-                                    <div class="cc-result-actions">
+                                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 xl:justify-end xl:min-w-[13rem]">
                                         <a href="{{ route('puntos-ruta.show', $puntoRuta) }}" class="cc-btn-secondary cc-btn-result">
                                             Ver ficha
                                         </a>
@@ -228,8 +194,9 @@
                                             Editar
                                         </a>
                                     </div>
+
                                 </div>
-                            </div>
+                            </article>
                         @endforeach
                     </div>
 
@@ -241,4 +208,41 @@
             </div>
         </div>
     </div>
+
+    <script>
+        const empresaSelect = document.getElementById('empresa_id');
+        const puntoRutaSelect = document.getElementById('punto_ruta_id');
+
+        function filtrarPuntosRutaPorEmpresa() {
+            if (!empresaSelect || !puntoRutaSelect) {
+                return;
+            }
+
+            const empresaId = empresaSelect.value;
+            const selectedOption = puntoRutaSelect.options[puntoRutaSelect.selectedIndex];
+
+            Array.from(puntoRutaSelect.options).forEach(function (option) {
+                if (!option.value) {
+                    option.hidden = false;
+                    return;
+                }
+
+                option.hidden = empresaId !== '' && option.dataset.empresaId !== empresaId;
+            });
+
+            if (
+                selectedOption &&
+                selectedOption.value &&
+                empresaId !== '' &&
+                selectedOption.dataset.empresaId !== empresaId
+            ) {
+                puntoRutaSelect.value = '';
+            }
+        }
+
+        if (empresaSelect && puntoRutaSelect) {
+            empresaSelect.addEventListener('change', filtrarPuntosRutaPorEmpresa);
+            filtrarPuntosRutaPorEmpresa();
+        }
+    </script>
 </x-app-layout>
