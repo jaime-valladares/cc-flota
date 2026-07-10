@@ -28,9 +28,6 @@
                                 <h3 class="cc-title cc-title-compact">
                                     Registro de licencia
                                 </h3>
-                                <p class="cc-subtitle cc-subtitle-compact">
-                                    Asigne cobertura Diesel Cop a una unidad registrada.
-                                </p>
                             </div>
 
                             <div class="flex items-center gap-3">

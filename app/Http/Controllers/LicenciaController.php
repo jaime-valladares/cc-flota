@@ -65,20 +65,63 @@ class LicenciaController extends Controller
         $user = Auth::user();
         $esUsuarioDieselCop = is_null($user->empresa_id);
 
-        $empresaId = $request->input('empresa_id');
+        $busqueda = trim((string) $request->input('busqueda', ''));
+
+        /*
+         * Compatibilidad:
+         * - Consulta nueva usa empresa_ids[], placas[], periodos_vigencia[].
+         * - Administración puede seguir usando empresa_id, placa, periodo_vigencia_meses.
+         */
+        $empresaIds = collect($request->input('empresa_ids', []))
+            ->when(filled($request->input('empresa_id')), function ($collection) use ($request) {
+                return $collection->push($request->input('empresa_id'));
+            })
+            ->filter(fn ($id) => filled($id))
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+
+        $placas = collect($request->input('placas', []))
+            ->when(filled($request->input('placa')), function ($collection) use ($request) {
+                return $collection->push($request->input('placa'));
+            })
+            ->filter(fn ($placa) => filled($placa))
+            ->map(fn ($placa) => trim((string) $placa))
+            ->unique()
+            ->values()
+            ->all();
+
+        $periodosVigenciaSeleccionados = collect($request->input('periodos_vigencia', []))
+            ->when(filled($request->input('periodo_vigencia_meses')), function ($collection) use ($request) {
+                return $collection->push($request->input('periodo_vigencia_meses'));
+            })
+            ->filter(fn ($periodo) => filled($periodo))
+            ->map(fn ($periodo) => (int) $periodo)
+            ->filter(fn ($periodo) => array_key_exists($periodo, $this->periodosVigencia()))
+            ->unique()
+            ->values()
+            ->all();
+
         $estado = $request->input('estado');
-        $periodoVigencia = $request->input('periodo_vigencia_meses');
-        $placa = $request->input('placa');
 
         if (! $esUsuarioDieselCop) {
-            $empresaId = $user->empresa_id;
+            $empresaIds = [(int) $user->empresa_id];
         }
 
+        /*
+         * Variables simples para vistas administrativas o compatibilidad temporal.
+         */
+        $empresaId = $empresaIds[0] ?? null;
+        $placa = $placas[0] ?? null;
+        $periodoVigencia = $periodosVigenciaSeleccionados[0] ?? null;
+
         $hayFiltros = $request->boolean('consultar')
-            || filled($empresaId)
-            || filled($estado)
-            || filled($periodoVigencia)
-            || filled($placa);
+            || filled($busqueda)
+            || count($empresaIds) > 0
+            || count($placas) > 0
+            || count($periodosVigenciaSeleccionados) > 0
+            || filled($estado);
 
         $empresas = Empresa::query()
             ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
@@ -92,6 +135,7 @@ class LicenciaController extends Controller
             ->get();
 
         $baseQuery = Licencia::query()
+            ->with(['empresa', 'unidad'])
             ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
                 $query->where('empresa_id', $user->empresa_id);
             })
@@ -101,6 +145,14 @@ class LicenciaController extends Controller
                 });
             });
 
+        $placasSelector = (clone $baseQuery)
+            ->join('unidades', 'licencias.unidad_id', '=', 'unidades.id')
+            ->orderBy('unidades.placa')
+            ->pluck('unidades.placa')
+            ->filter()
+            ->unique()
+            ->values();
+
         $totalLicencias = (clone $baseQuery)->count();
         $totalActivas = (clone $baseQuery)->where('estado', 'activa')->count();
         $totalInactivas = (clone $baseQuery)->where('estado', 'inactiva')->count();
@@ -108,26 +160,33 @@ class LicenciaController extends Controller
         $licenciasQuery = Licencia::query()
             ->with(['empresa', 'unidad'])
             ->join('unidades', 'licencias.unidad_id', '=', 'unidades.id')
+            ->join('empresas', 'licencias.empresa_id', '=', 'empresas.id')
             ->select('licencias.*')
             ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
                 $query->where('licencias.empresa_id', $user->empresa_id);
             })
             ->when($soloEmpresasActivas, function ($query) {
-                $query->whereHas('empresa', function ($empresaQuery) {
-                    $empresaQuery->where('estado', 'activa');
+                $query->where('empresas.estado', 'activa');
+            })
+            ->when($hayFiltros && filled($busqueda), function ($query) use ($busqueda) {
+                $query->where(function ($subQuery) use ($busqueda) {
+                    $subQuery
+                        ->where('unidades.placa', 'like', '%' . $busqueda . '%')
+                        ->orWhere('empresas.nombre_legal', 'like', '%' . $busqueda . '%')
+                        ->orWhere('empresas.nombre_comercial', 'like', '%' . $busqueda . '%');
                 });
             })
-            ->when($hayFiltros && filled($empresaId), function ($query) use ($empresaId) {
-                $query->where('licencias.empresa_id', $empresaId);
+            ->when($hayFiltros && count($empresaIds) > 0, function ($query) use ($empresaIds) {
+                $query->whereIn('licencias.empresa_id', $empresaIds);
+            })
+            ->when($hayFiltros && count($placas) > 0, function ($query) use ($placas) {
+                $query->whereIn('unidades.placa', $placas);
+            })
+            ->when($hayFiltros && count($periodosVigenciaSeleccionados) > 0, function ($query) use ($periodosVigenciaSeleccionados) {
+                $query->whereIn('licencias.periodo_vigencia_meses', $periodosVigenciaSeleccionados);
             })
             ->when($hayFiltros && filled($estado), function ($query) use ($estado) {
                 $query->where('licencias.estado', $estado);
-            })
-            ->when($hayFiltros && filled($periodoVigencia), function ($query) use ($periodoVigencia) {
-                $query->where('licencias.periodo_vigencia_meses', $periodoVigencia);
-            })
-            ->when($hayFiltros && filled($placa), function ($query) use ($placa) {
-                $query->where('unidades.placa', 'like', '%' . $placa . '%');
             })
             ->when(! $hayFiltros, function ($query) {
                 $query->whereRaw('1 = 0');
@@ -155,10 +214,24 @@ class LicenciaController extends Controller
         return [
             'licencias' => $licencias,
             'empresas' => $empresas,
+
+            /*
+             * Variables múltiples para consulta.
+             */
+            'empresaIds' => $empresaIds,
+            'placas' => $placas,
+            'periodosVigenciaSeleccionados' => $periodosVigenciaSeleccionados,
+
+            /*
+             * Variables simples para administración y compatibilidad temporal.
+             */
             'empresaId' => $empresaId,
-            'estado' => $estado,
-            'periodoVigencia' => $periodoVigencia,
             'placa' => $placa,
+            'periodoVigencia' => $periodoVigencia,
+            'estado' => $estado,
+
+            'placasSelector' => $placasSelector,
+            'busqueda' => $busqueda,
             'hayFiltros' => $hayFiltros,
             'totalLicencias' => $totalLicencias,
             'totalActivas' => $totalActivas,

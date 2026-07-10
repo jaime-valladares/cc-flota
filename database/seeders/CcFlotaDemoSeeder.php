@@ -21,6 +21,8 @@ class CcFlotaDemoSeeder extends Seeder
 
     private int $puntosRutaPorEmpresa = 12;
 
+    private int $rutasPorEmpresa = 20;
+
     private int $motoristasPorEmpresa = 15;
 
     private int $recargasHistoricasPorGasolinera = 2;
@@ -159,6 +161,7 @@ class CcFlotaDemoSeeder extends Seeder
             'movimientos_recarga' => 0,
             'gasolineras_externas' => 0,
             'puntos_ruta' => 0,
+            'rutas' => 0,
             'motoristas' => 0,
         ];
 
@@ -297,8 +300,10 @@ class CcFlotaDemoSeeder extends Seeder
                     $totales['gasolineras_externas']++;
                 }
 
+                $puntosRutaEmpresa = [];
+
                 for ($puntoRutaNumero = 1; $puntoRutaNumero <= $this->puntosRutaPorEmpresa; $puntoRutaNumero++) {
-                    $this->crearPuntoRuta(
+                    $puntoRutaId = $this->crearPuntoRuta(
                         empresaId: $empresaId,
                         empresaNumero: $empresaNumero,
                         puntoRutaNumero: $puntoRutaNumero,
@@ -306,8 +311,18 @@ class CcFlotaDemoSeeder extends Seeder
                         fechaBase: $fechaBase
                     );
 
-                    $totales['puntos_ruta']++;
+                    if ($puntoRutaId) {
+                        $puntosRutaEmpresa[] = $puntoRutaId;
+                        $totales['puntos_ruta']++;
+                    }
                 }
+
+                $totales['rutas'] += $this->crearRutasEmpresa(
+                    empresaId: $empresaId,
+                    puntosRutaEmpresa: $puntosRutaEmpresa,
+                    usuarioResponsableId: $usuarioResponsableId,
+                    fechaBase: $fechaBase
+                );
 
                 for ($motoristaNumero = 1; $motoristaNumero <= $this->motoristasPorEmpresa; $motoristaNumero++) {
                     $indiceGlobalMotorista++;
@@ -339,6 +354,7 @@ class CcFlotaDemoSeeder extends Seeder
         $this->command?->line("Movimientos de recarga creados: {$totales['movimientos_recarga']}");
         $this->command?->line("Gasolineras externas creadas: {$totales['gasolineras_externas']}");
         $this->command?->line("Puntos de ruta creados: {$totales['puntos_ruta']}");
+        $this->command?->line("Rutas creadas: {$totales['rutas']}");
         $this->command?->line("Motoristas creados: {$totales['motoristas']}");
     }
 
@@ -362,6 +378,7 @@ class CcFlotaDemoSeeder extends Seeder
                 'tanques',
                 'gasolineras',
                 'gasolineras_externas',
+                'rutas',
                 'puntos_ruta',
                 'motoristas',
                 'reemplazo_marchamos_detalle',
@@ -828,14 +845,14 @@ class CcFlotaDemoSeeder extends Seeder
         int $puntoRutaNumero,
         int $usuarioResponsableId,
         Carbon $fechaBase
-    ): void {
+    ): ?int {
         if (! Schema::hasTable('puntos_ruta')) {
-            return;
+            return null;
         }
 
         $puntoBase = $this->puntosRutaBase[($puntoRutaNumero - 1) % count($this->puntosRutaBase)];
 
-        DB::table('puntos_ruta')->insert([
+        return (int) DB::table('puntos_ruta')->insertGetId([
             'empresa_id' => $empresaId,
             'nombre' => sprintf('%s %03d-%02d', $puntoBase['nombre'], $empresaNumero, $puntoRutaNumero),
             'direccion' => sprintf('%s, referencia Empresa Demo %03d', $puntoBase['direccion'], $empresaNumero),
@@ -848,6 +865,74 @@ class CcFlotaDemoSeeder extends Seeder
             'inactivado_por' => null,
             'motivo_inactivacion' => null,
         ]);
+    }
+
+    private function crearRutasEmpresa(
+        int $empresaId,
+        array $puntosRutaEmpresa,
+        int $usuarioResponsableId,
+        Carbon $fechaBase
+    ): int {
+        if (! Schema::hasTable('rutas') || count($puntosRutaEmpresa) < 2) {
+            return 0;
+        }
+
+        $puntosRuta = DB::table('puntos_ruta')
+            ->whereIn('id', $puntosRutaEmpresa)
+            ->where('empresa_id', $empresaId)
+            ->where('estado', 'activo')
+            ->orderBy('id')
+            ->get(['id', 'nombre'])
+            ->values();
+
+        if ($puntosRuta->count() < 2) {
+            return 0;
+        }
+
+        $rutasCreadas = 0;
+        $paresUsados = [];
+        $cantidadPuntos = $puntosRuta->count();
+
+        for ($rutaNumero = 1; $rutaNumero <= $this->rutasPorEmpresa; $rutaNumero++) {
+            $origenIndice = ($rutaNumero - 1) % $cantidadPuntos;
+            $saltos = 1 + (($rutaNumero - 1) % ($cantidadPuntos - 1));
+            $destinoIndice = ($origenIndice + $saltos) % $cantidadPuntos;
+
+            $origen = $puntosRuta[$origenIndice];
+            $destino = $puntosRuta[$destinoIndice];
+            $llavePar = $origen->id . '-' . $destino->id;
+
+            if (isset($paresUsados[$llavePar])) {
+                continue;
+            }
+
+            $paresUsados[$llavePar] = true;
+
+            $kilometrosEstimados = $this->kilometrosEstimadosRuta($rutaNumero, $origenIndice, $destinoIndice);
+            $rendimientoEstimado = $this->rendimientoEstimadoRuta($rutaNumero);
+            $galonesEstimados = round($kilometrosEstimados / $rendimientoEstimado, 2);
+
+            DB::table('rutas')->insert([
+                'empresa_id' => $empresaId,
+                'punto_origen_id' => $origen->id,
+                'punto_destino_id' => $destino->id,
+                'ruta' => trim($origen->nombre) . ' - ' . trim($destino->nombre),
+                'kilometros_estimados' => $kilometrosEstimados,
+                'galones_estimados' => max($galonesEstimados, 0.01),
+                'estado' => 'activo',
+                'fecha_creacion' => $fechaBase,
+                'creado_por' => $usuarioResponsableId,
+                'fecha_actualizacion' => null,
+                'actualizado_por' => null,
+                'fecha_inactivacion' => null,
+                'inactivado_por' => null,
+                'motivo_inactivacion' => null,
+            ]);
+
+            $rutasCreadas++;
+        }
+
+        return $rutasCreadas;
     }
 
     private function crearMotorista(
@@ -960,6 +1045,25 @@ class CcFlotaDemoSeeder extends Seeder
     private function precioGalonParaRecarga(int $indiceGlobalGasolinera, int $recargaNumero): float
     {
         return round(3.65 + ((($indiceGlobalGasolinera + $recargaNumero) % 9) * 0.08), 4);
+    }
+
+    private function kilometrosEstimadosRuta(int $rutaNumero, int $origenIndice, int $destinoIndice): float
+    {
+        $distanciaBase = 18 + (($rutaNumero * 7) % 95);
+        $ajustePorPuntos = abs($destinoIndice - $origenIndice) * 6.5;
+
+        return round($distanciaBase + $ajustePorPuntos, 2);
+    }
+
+    private function rendimientoEstimadoRuta(int $rutaNumero): float
+    {
+        return match (($rutaNumero - 1) % 5) {
+            0 => 5.20,
+            1 => 5.80,
+            2 => 6.40,
+            3 => 7.10,
+            default => 4.90,
+        };
     }
 
     private function siguienteCodigoMarchamo(): string
