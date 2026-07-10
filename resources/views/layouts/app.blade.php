@@ -55,6 +55,7 @@
             $gasolinerasActivo = request()->routeIs('gasolineras.*');
             $gasolinerasExternasActivo = request()->routeIs('gasolineras-externas.*');
             $puntosRutaActivo = request()->routeIs('puntos-ruta.*');
+            $rutasActivo = request()->routeIs('rutas.*');
             $motoristasActivo = request()->routeIs('motoristas.*');
             $analisisActivo = request()->routeIs('analisis.*');
         @endphp
@@ -298,6 +299,30 @@
                         </div>
                     </div>
 
+                    <!-- Rutas -->
+                    <div class="cc-sidebar-group">
+                        <div class="cc-sidebar-parent cc-sidebar-static-parent {{ $rutasActivo ? 'cc-sidebar-parent-active' : '' }}">
+                            <span>Rutas</span>
+                        </div>
+
+                        <div class="cc-sidebar-subnav">
+                            <a href="{{ route('rutas.index') }}"
+                               class="cc-sidebar-sublink {{ request()->routeIs('rutas.index') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Consulta rutas
+                            </a>
+
+                            <a href="{{ route('rutas.administrar') }}"
+                               class="cc-sidebar-sublink {{ request()->routeIs('rutas.administrar') || request()->routeIs('rutas.show') || request()->routeIs('rutas.edit') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Administrar rutas
+                            </a>
+
+                            <a href="{{ route('rutas.create') }}"
+                               class="cc-sidebar-sublink {{ request()->routeIs('rutas.create') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Nueva ruta
+                            </a>
+                        </div>
+                    </div>
+
                     <!-- Motoristas -->
                     <div class="cc-sidebar-group">
                         <div class="cc-sidebar-parent cc-sidebar-static-parent {{ $motoristasActivo ? 'cc-sidebar-parent-active' : '' }}">
@@ -349,7 +374,7 @@
 
                         <div class="cc-sidebar-subnav">
                             <a href="{{ route('analisis.panel-operativo') }}"
-                            class="cc-sidebar-sublink {{ request()->routeIs('analisis.panel-operativo') ? 'cc-sidebar-sublink-active' : '' }}">
+                               class="cc-sidebar-sublink {{ request()->routeIs('analisis.panel-operativo') ? 'cc-sidebar-sublink-active' : '' }}">
                                 Inteligencia operativa
                             </a>
                         </div>
@@ -413,25 +438,25 @@
             </div>
         </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const sidebar = document.getElementById('ccSidebar');
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const sidebar = document.getElementById('ccSidebar');
 
-            if (!sidebar) {
-                return;
-            }
+                if (!sidebar) {
+                    return;
+                }
 
-            const savedScroll = localStorage.getItem('ccSidebarScrollTop');
+                const savedScroll = localStorage.getItem('ccSidebarScrollTop');
 
-            if (savedScroll !== null) {
-                sidebar.scrollTop = parseInt(savedScroll, 10);
-            }
+                if (savedScroll !== null) {
+                    sidebar.scrollTop = parseInt(savedScroll, 10);
+                }
 
-            sidebar.addEventListener('scroll', function () {
-                localStorage.setItem('ccSidebarScrollTop', sidebar.scrollTop);
+                sidebar.addEventListener('scroll', function () {
+                    localStorage.setItem('ccSidebarScrollTop', sidebar.scrollTop);
+                });
             });
-        });
-</script>
+        </script>
 
     </body>
 </html>

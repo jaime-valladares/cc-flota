@@ -4,6 +4,7 @@ use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\GasolineraController;
 use App\Http\Controllers\GasolineraExternaController;
 use App\Http\Controllers\PuntoRutaController;
+use App\Http\Controllers\RutaController;
 use App\Http\Controllers\LicenciaController;
 use App\Http\Controllers\RecargaTanqueController;
 use App\Http\Controllers\AnalisisOperativoController;
@@ -370,6 +371,48 @@ Route::middleware('auth')->group(function () {
 
     Route::patch('/puntos-ruta/{puntoRuta}/reactivar', [PuntoRutaController::class, 'reactivar'])
         ->name('puntos-ruta.reactivar');
+
+    Route::get('/rutas', [RutaController::class, 'index'])
+        ->name('rutas.index');
+
+    Route::get('/rutas/consulta-ventana', [RutaController::class, 'consultaVentana'])
+        ->name('rutas.consulta.ventana');
+
+    Route::get('/rutas/administrar', [RutaController::class, 'administrar'])
+        ->name('rutas.administrar');
+
+    Route::get('/rutas/administrar-ventana', [RutaController::class, 'administrarVentana'])
+        ->name('rutas.administrar.ventana');
+
+    Route::get('/rutas/create', [RutaController::class, 'create'])
+        ->name('rutas.create');
+
+    Route::get('/rutas/create-ventana', [RutaController::class, 'createVentana'])
+        ->name('rutas.create.ventana');
+
+    Route::post('/rutas', [RutaController::class, 'store'])
+        ->name('rutas.store');
+
+    Route::get('/rutas/{ruta}', [RutaController::class, 'show'])
+        ->name('rutas.show');
+
+    Route::get('/rutas/{ruta}/ventana', [RutaController::class, 'showVentana'])
+        ->name('rutas.show.ventana');
+
+    Route::get('/rutas/{ruta}/edit', [RutaController::class, 'edit'])
+        ->name('rutas.edit');
+
+    Route::get('/rutas/{ruta}/edit-ventana', [RutaController::class, 'editVentana'])
+        ->name('rutas.edit.ventana');
+
+    Route::put('/rutas/{ruta}', [RutaController::class, 'update'])
+        ->name('rutas.update');
+
+    Route::patch('/rutas/{ruta}/inactivar', [RutaController::class, 'inactivar'])
+        ->name('rutas.inactivar');
+
+    Route::patch('/rutas/{ruta}/reactivar', [RutaController::class, 'reactivar'])
+        ->name('rutas.reactivar');
 
         /*
     |--------------------------------------------------------------------------
