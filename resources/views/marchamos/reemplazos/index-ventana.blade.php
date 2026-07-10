@@ -171,7 +171,7 @@
                         @if (! $hayFiltros)
                             <div class="cc-empty-panel cc-empty-panel-compact">
                                 <h5>
-                                    Búsqueda pendiente
+                                    Consulta pendiente
                                 </h5>
 
                                 <p>

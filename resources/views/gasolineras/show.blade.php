@@ -13,9 +13,6 @@
                             Administrar gasolinera
                         </h3>
 
-                        <p class="cc-subtitle cc-subtitle-compact">
-                            Gestione los datos principales, tanques asociados y estado operativo de la gasolinera.
-                        </p>
                     </div>
 
                     <div class="flex items-center gap-3">

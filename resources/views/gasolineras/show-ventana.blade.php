@@ -31,9 +31,6 @@
                                 Administrar gasolinera
                             </h3>
 
-                            <p class="cc-subtitle cc-subtitle-compact">
-                                Consulte la ficha operativa, tanques asociados e inventario disponible.
-                            </p>
                         </div>
 
                         <div class="flex items-center gap-3">

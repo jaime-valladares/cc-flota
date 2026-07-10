@@ -9,9 +9,6 @@
                             Administrar gasolineras
                         </h3>
 
-                        <p class="cc-subtitle cc-subtitle-compact">
-                            Localice una gasolinera interna para consultar su ficha, actualizar sus datos o gestionar su estado administrativo.
-                        </p>
                     </div>
 
                     <div class="flex items-center gap-3">
@@ -47,17 +44,40 @@
 
                         <div class="cc-form-section cc-form-section-compact" style="margin-top: 0;">
                             <div class="cc-form-section-title">
-                                Búsqueda administrativa
+                                Filtros de Consulta
                             </div>
                         </div>
 
-                        <div class="cc-filter-inline-grid">
-                            @if ($esUsuarioDieselCop)
-                                <div class="cc-field">
-                                    <label for="empresa_id">
-                                        Empresa
-                                    </label>
+                        <div class="cc-standard-filter-grid cc-unidades-consulta-filter-grid">
 
+                            <div class="cc-field">
+                                <label for="busqueda_empresa">
+                                    Buscar empresa
+                                </label>
+
+                                <input
+                                    id="busqueda_empresa"
+                                    name="busqueda_empresa"
+                                    type="text"
+                                    class="cc-input"
+                                    value="{{ $busquedaEmpresa ?? '' }}"
+                                    maxlength="150"
+                                    placeholder="Nombre de empresa"
+                                >
+
+                                @error('busqueda_empresa')
+                                    <div class="cc-error">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
+                            </div>
+
+                            <div class="cc-field">
+                                <label for="empresa_id">
+                                    Empresa
+                                </label>
+
+                                @if ($esUsuarioDieselCop)
                                     <select id="empresa_id" name="empresa_id" class="cc-input">
                                         <option value="">Todas</option>
 
@@ -67,19 +87,7 @@
                                             </option>
                                         @endforeach
                                     </select>
-
-                                    @error('empresa_id')
-                                        <div class="cc-error">
-                                            {{ $message }}
-                                        </div>
-                                    @enderror
-                                </div>
-                            @else
-                                <div class="cc-field">
-                                    <label for="empresa_id_visible">
-                                        Empresa
-                                    </label>
-
+                                @else
                                     <select id="empresa_id_visible" class="cc-input" disabled>
                                         @foreach ($empresasSelector as $empresa)
                                             <option value="{{ $empresa->id }}" selected>
@@ -87,24 +95,31 @@
                                             </option>
                                         @endforeach
                                     </select>
-                                </div>
-                            @endif
+                                @endif
+
+                                @error('empresa_id')
+                                    <div class="cc-error">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
+                            </div>
 
                             <div class="cc-field">
-                                <label for="nombre">
-                                    Nombre de gasolinera
+                                <label for="busqueda_gasolinera">
+                                    Buscar gasolinera
                                 </label>
 
                                 <input
-                                    id="nombre"
+                                    id="busqueda_gasolinera"
+                                    name="busqueda_gasolinera"
                                     type="text"
-                                    name="nombre"
-                                    value="{{ $nombre }}"
                                     class="cc-input"
-                                    placeholder="Ej. Gasolinera central"
+                                    value="{{ $busquedaGasolinera ?? '' }}"
+                                    maxlength="150"
+                                    placeholder="Nombre de gasolinera"
                                 >
 
-                                @error('nombre')
+                                @error('busqueda_gasolinera')
                                     <div class="cc-error">
                                         {{ $message }}
                                     </div>
@@ -112,28 +127,28 @@
                             </div>
 
                             <div class="cc-field">
-                                <label for="estado">
-                                    Estado
+                                <label for="gasolinera_id">
+                                    Gasolinera
                                 </label>
 
-                                <select id="estado" name="estado" class="cc-input">
-                                    <option value="">Seleccione</option>
-                                    <option value="activa" @selected($estado === 'activa')>
-                                        Activas
-                                    </option>
-                                    <option value="inactiva" @selected($estado === 'inactiva')>
-                                        Inactivas
-                                    </option>
+                                <select id="gasolinera_id" name="gasolinera_ids[]" class="cc-input">
+                                    <option value="">Todas</option>
+
+                                    @foreach ($gasolinerasSelector as $gasolineraOpcion)
+                                        <option value="{{ $gasolineraOpcion->id }}" @selected((int) ($gasolineraId ?? 0) === (int) $gasolineraOpcion->id)>
+                                            {{ $gasolineraOpcion->nombre }}
+                                        </option>
+                                    @endforeach
                                 </select>
 
-                                @error('estado')
+                                @error('gasolinera_ids')
                                     <div class="cc-error">
                                         {{ $message }}
                                     </div>
                                 @enderror
                             </div>
 
-                            <div class="cc-filter-inline-actions">
+                            <div class="cc-standard-filter-actions">
                                 <button type="submit" class="cc-btn-primary">
                                     Consultar
                                 </button>
@@ -142,6 +157,7 @@
                                     Limpiar
                                 </a>
                             </div>
+
                         </div>
                     </div>
                 </form>
@@ -149,22 +165,28 @@
                 @if ($hayFiltros && $gasolineras->total() > 0)
                     <div class="mb-4 flex justify-end text-sm text-[var(--cc-text-muted)]">
                         Mostrando
-                        <span class="mx-1 font-bold text-[var(--cc-text-main)]">{{ $gasolineras->firstItem() }}</span>
+                        <span class="mx-1 font-bold text-[var(--cc-text-main)]">
+                            {{ $gasolineras->firstItem() }}
+                        </span>
                         -
-                        <span class="mx-1 font-bold text-[var(--cc-text-main)]">{{ $gasolineras->lastItem() }}</span>
+                        <span class="mx-1 font-bold text-[var(--cc-text-main)]">
+                            {{ $gasolineras->lastItem() }}
+                        </span>
                         de
-                        <span class="ml-1 font-bold text-[var(--cc-text-main)]">{{ $gasolineras->total() }}</span>
+                        <span class="ml-1 font-bold text-[var(--cc-text-main)]">
+                            {{ $gasolineras->total() }}
+                        </span>
                     </div>
                 @endif
 
                 @if (! $hayFiltros)
                     <div class="cc-empty-panel cc-empty-panel-compact">
                         <h5>
-                            Búsqueda pendiente
+                            Consulta pendiente
                         </h5>
 
                         <p>
-                            Los resultados permanecerán vacíos hasta que localice una gasolinera por empresa, nombre o estado.
+                            Los resultados permanecerán vacíos hasta que realice una búsqueda.
                         </p>
                     </div>
                 @elseif ($gasolineras->isEmpty())
@@ -178,7 +200,7 @@
                         </p>
                     </div>
                 @else
-                    <div class="space-y-3">
+                    <div class="cc-admin-result-list">
                         @foreach ($gasolineras as $gasolinera)
                             @php
                                 $tanques = $gasolinera->tanques ?? collect();
@@ -198,85 +220,98 @@
                                     ->count();
                             @endphp
 
-                            <article class="cc-result-card cc-result-card-compact">
-                                <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
+                            <article class="cc-admin-result-card">
+                                <div class="grid gap-5 xl:grid-cols-12 xl:items-start">
 
-                                    <div class="flex-1 min-w-0">
-                                        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
+                                    <div class="min-w-0 xl:col-span-3">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <h5 class="cc-admin-result-title">
+                                                {{ $gasolinera->nombre }}
+                                            </h5>
 
-                                            <div>
-                                                <h5 class="cc-result-title cc-cell-truncate">
-                                                    {{ $gasolinera->nombre }}
-                                                </h5>
+                                            @if ($gasolinera->estado === 'activa')
+                                                <span class="cc-badge cc-badge-active">
+                                                    Activa
+                                                </span>
+                                            @else
+                                                <span class="cc-badge cc-badge-inactive">
+                                                    Inactiva
+                                                </span>
+                                            @endif
+                                        </div>
 
-                                                <div class="cc-result-value-muted cc-cell-truncate">
-                                                    {{ $gasolinera->empresa?->nombre_comercial ?: $gasolinera->empresa?->nombre_legal }}
-                                                </div>
-                                            </div>
-
-                                            <div style="display: flex; align-items: center;">
-                                                @if ($gasolinera->estado === 'activa')
-                                                    <span class="cc-badge cc-badge-active">
-                                                        Activa
-                                                    </span>
-                                                @else
-                                                    <span class="cc-badge cc-badge-inactive">
-                                                        Inactiva
-                                                    </span>
-                                                @endif
-                                            </div>
-
-                                            <div>
-                                                <div class="cc-result-label">
-                                                    Contacto
-                                                </div>
-
-                                                <div class="cc-result-value cc-cell-truncate">
-                                                    {{ $gasolinera->encargado ?: 'Sin encargado' }}
-                                                </div>
-
-                                                <div class="cc-result-value-muted cc-cell-truncate">
-                                                    {{ $gasolinera->telefono ?: 'Sin teléfono' }}
-                                                </div>
-
-                                                <div class="cc-result-value-muted cc-cell-truncate">
-                                                    {{ $gasolinera->correo ?: 'Sin correo' }}
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <div class="cc-result-label">
-                                                    Tanques
-                                                </div>
-
-                                                <div class="cc-result-value">
-                                                    {{ $tanquesActivos }} activos / {{ $tanquesTotal }} total
-                                                </div>
-
-                                                <div class="cc-result-value-muted">
-                                                    {{ $tanquesBajoAlerta }} en alerta
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <div class="cc-result-label">
-                                                    Inventario
-                                                </div>
-
-                                                <div class="cc-result-value">
-                                                    {{ number_format($volumenActual, 2) }} gal
-                                                </div>
-
-                                                <div class="cc-result-value-muted">
-                                                    {{ number_format($porcentajeDisponible, 2) }}% disponible
-                                                </div>
-                                            </div>
-
+                                        <div class="cc-admin-result-subtitle">
+                                            Gasolinera interna
                                         </div>
                                     </div>
 
-                                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 xl:justify-end xl:min-w-[9rem]">
-                                        <a href="{{ route('gasolineras.show', $gasolinera) }}" class="cc-btn-primary cc-btn-result">
+                                    <div class="min-w-0 xl:col-span-3">
+                                        <div class="cc-admin-result-label">
+                                            Empresa
+                                        </div>
+
+                                        @if ($gasolinera->empresa)
+                                            <div class="cc-admin-result-value">
+                                                {{ $gasolinera->empresa->nombre_comercial ?: $gasolinera->empresa->nombre_legal }}
+                                            </div>
+
+                                            <div class="cc-admin-result-value-muted">
+                                                {{ $gasolinera->direccion }}
+                                            </div>
+                                        @else
+                                            <div class="cc-admin-result-value-muted">
+                                                Sin empresa
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    <div class="min-w-0 sm:grid sm:grid-cols-3 sm:gap-5 xl:col-span-4 xl:grid-cols-3">
+                                        <div class="min-w-0">
+                                            <div class="cc-admin-result-label">
+                                                Tanques
+                                            </div>
+
+                                            <div class="cc-admin-result-value">
+                                                {{ $tanquesActivos }} activos / {{ $tanquesTotal }} total
+                                            </div>
+
+                                            <div class="cc-admin-result-value-muted {{ $tanquesBajoAlerta > 0 ? 'text-[var(--cc-danger)]' : '' }}">
+                                                {{ $tanquesBajoAlerta }} en alerta
+                                            </div>
+                                        </div>
+
+                                        <div class="min-w-0">
+                                            <div class="cc-admin-result-label">
+                                                Inventario
+                                            </div>
+
+                                            <div class="cc-admin-result-value">
+                                                {{ number_format($volumenActual, 2) }} gal
+                                            </div>
+
+                                            <div class="cc-admin-result-value-muted">
+                                                Disponible
+                                            </div>
+                                        </div>
+
+                                        <div class="min-w-0">
+                                            <div class="cc-admin-result-label">
+                                                Disponibilidad
+                                            </div>
+
+                                            <div class="cc-admin-result-value">
+                                                {{ number_format($porcentajeDisponible, 2) }}%
+                                            </div>
+
+                                            <div class="cc-admin-result-value-muted">
+                                                {{ number_format($capacidadTotal, 2) }} gal capacidad
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex flex-col sm:flex-row gap-3 xl:col-span-2 xl:justify-end xl:self-center">
+                                        <a href="{{ route('gasolineras.show', $gasolinera) }}"
+                                           class="cc-btn-primary cc-btn-result w-full sm:w-auto">
                                             Administrar
                                         </a>
                                     </div>
