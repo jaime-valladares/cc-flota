@@ -1,6 +1,6 @@
 <x-app-layout>
     <div class="cc-page-wrapper">
-        <div class="cc-content-container" style="max-width: 79rem;">
+        <div class="cc-content-container" style="max-width: 80rem;">
             <div class="cc-card">
 
                 <div class="cc-card-header cc-card-header-compact">
@@ -8,9 +8,6 @@
                         <h3 class="cc-title cc-title-compact">
                             Marchamos de unidad
                         </h3>
-                        <p class="cc-subtitle cc-subtitle-compact">
-                            Consulte la cobertura actual e histórica de marchamos para la unidad seleccionada.
-                        </p>
                     </div>
 
                     <div class="flex items-center gap-3">
@@ -211,73 +208,93 @@
                         </p>
                     </div>
 
-                    <div class="overflow-x-auto">
-                        <table class="cc-table">
+                    <div class="cc-table-adaptive-wrapper">
+                        <table class="cc-table-adaptive" style="min-width: 88rem;">
                             <thead>
                                 <tr>
-                                    <th style="width: 150px;">Marchamo</th>
-                                    <th>Empresa</th>
-                                    <th style="width: 160px;">Unidad</th>
-                                    <th>Punto de seguridad</th>
-                                    <th style="width: 140px;">Estado</th>
-                                    <th style="width: 180px;">Origen</th>
-                                    <th style="width: 160px;">Activación</th>
+                                    <th class="cc-table-adaptive-nowrap" style="width: 10rem;">
+                                        Marchamo
+                                    </th>
+
+                                    <th class="cc-table-adaptive-nowrap" style="width: 16rem;">
+                                        Empresa
+                                    </th>
+
+                                    <th class="cc-table-adaptive-nowrap" style="width: 13rem;">
+                                        Unidad
+                                    </th>
+
+                                    <th class="cc-table-adaptive-nowrap" style="width: 24rem;">
+                                        Punto de seguridad
+                                    </th>
+
+                                    <th class="cc-table-adaptive-nowrap" style="width: 10rem;">
+                                        Estado
+                                    </th>
+
+                                    <th class="cc-table-adaptive-nowrap" style="width: 15rem;">
+                                        Origen
+                                    </th>
+
+                                    <th class="cc-table-adaptive-nowrap" style="width: 11rem;">
+                                        Activación
+                                    </th>
                                 </tr>
                             </thead>
 
                             <tbody>
                                 @forelse ($marchamos as $marchamo)
                                     <tr>
-                                        <td>
-                                            <div class="font-bold text-[var(--cc-text-main)]">
+                                        <td class="cc-table-adaptive-nowrap">
+                                            <div class="cc-table-adaptive-strong">
                                                 {{ $marchamo->codigo_marchamo }}
                                             </div>
 
-                                            <div class="text-xs text-[var(--cc-text-muted)]">
+                                            <div class="cc-table-adaptive-muted">
                                                 ID {{ $marchamo->id }}
                                             </div>
                                         </td>
 
-                                        <td>
+                                        <td class="cc-table-adaptive-nowrap">
                                             @if ($marchamo->empresa)
-                                                <div class="font-bold text-[var(--cc-text-main)] cc-cell-truncate">
+                                                <div class="cc-table-adaptive-strong">
                                                     {{ $marchamo->empresa->nombre_comercial ?: $marchamo->empresa->nombre_legal }}
                                                 </div>
 
-                                                <div class="text-sm text-[var(--cc-text-muted)]">
+                                                <div class="cc-table-adaptive-muted">
                                                     {{ $marchamo->empresa->nit }}
                                                 </div>
                                             @else
-                                                <span class="text-[var(--cc-text-muted)]">
+                                                <span class="cc-table-adaptive-muted">
                                                     Sin empresa
                                                 </span>
                                             @endif
                                         </td>
 
-                                        <td>
+                                        <td class="cc-table-adaptive-nowrap">
                                             @if ($marchamo->unidad)
                                                 <a href="{{ route('unidades.show', $marchamo->unidad) }}"
-                                                   class="font-bold text-[var(--cc-primary)] hover:underline">
+                                                   class="cc-table-adaptive-strong text-[var(--cc-primary)] hover:underline">
                                                     {{ $marchamo->unidad->placa }}
                                                 </a>
 
-                                                <div class="text-sm text-[var(--cc-text-muted)]">
+                                                <div class="cc-table-adaptive-muted">
                                                     {{ $marchamo->unidad->marca ?: 'Sin marca' }}
                                                 </div>
                                             @else
-                                                <span class="text-[var(--cc-text-muted)]">
+                                                <span class="cc-table-adaptive-muted">
                                                     Sin unidad
                                                 </span>
                                             @endif
                                         </td>
 
-                                        <td>
+                                        <td class="cc-table-adaptive-nowrap">
                                             @if ($marchamo->puntoSeguridad)
-                                                <div class="font-bold text-[var(--cc-text-main)] cc-cell-truncate">
+                                                <div class="cc-table-adaptive-strong">
                                                     {{ $marchamo->puntoSeguridad->nombre_punto }}
                                                 </div>
 
-                                                <div class="text-sm text-[var(--cc-text-muted)]">
+                                                <div class="cc-table-adaptive-muted">
                                                     Orden {{ $marchamo->puntoSeguridad->orden }}
 
                                                     @if ($marchamo->puntoSeguridad->codigo_punto)
@@ -285,13 +302,13 @@
                                                     @endif
                                                 </div>
                                             @else
-                                                <span class="text-[var(--cc-text-muted)]">
+                                                <span class="cc-table-adaptive-muted">
                                                     Sin punto
                                                 </span>
                                             @endif
                                         </td>
 
-                                        <td>
+                                        <td class="cc-table-adaptive-nowrap">
                                             @if ($marchamo->estado === 'activo')
                                                 <span class="cc-badge cc-badge-active">
                                                     Activo
@@ -307,23 +324,21 @@
                                             @endif
                                         </td>
 
-                                        <td>
-                                            <span class="text-[var(--cc-text-main)]">
-                                                {{ $marchamo->origen_creacion_texto }}
-                                            </span>
+                                        <td class="cc-table-adaptive-nowrap">
+                                            {{ $marchamo->origen_creacion_texto }}
                                         </td>
 
-                                        <td>
+                                        <td class="cc-table-adaptive-nowrap">
                                             @if ($marchamo->fecha_activacion)
-                                                <div class="font-bold text-[var(--cc-text-main)]">
+                                                <div class="cc-table-adaptive-strong">
                                                     {{ $marchamo->fecha_activacion->format('d/m/Y') }}
                                                 </div>
 
-                                                <div class="text-sm text-[var(--cc-text-muted)]">
+                                                <div class="cc-table-adaptive-muted">
                                                     {{ $marchamo->fecha_activacion->format('H:i') }}
                                                 </div>
                                             @else
-                                                <span class="text-[var(--cc-text-muted)]">
+                                                <span class="cc-table-adaptive-muted">
                                                     Sin fecha
                                                 </span>
                                             @endif

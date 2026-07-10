@@ -1,6 +1,6 @@
 <x-app-layout>
     <div class="cc-page-wrapper">
-        <div class="cc-content-container" style="max-width: 79rem;">
+        <div class="cc-content-container" style="max-width: 80rem;">
             <div class="cc-card">
 
                 @php
@@ -23,9 +23,6 @@
                         <h3 class="cc-title cc-title-compact">
                             Reemplazo de marchamos
                         </h3>
-                        <p class="cc-subtitle cc-subtitle-compact">
-                            Seleccione puntos de seguridad e ingrese los nuevos códigos de marchamo.
-                        </p>
                     </div>
 
                     <div class="flex items-center gap-3">
@@ -174,23 +171,40 @@
                             </p>
                         </div>
 
-                        <div class="overflow-x-auto">
-                            <table class="cc-table">
+                        <div class="cc-table-adaptive-wrapper">
+                            <table class="cc-table-adaptive" style="min-width: 96rem;">
                                 <thead>
                                     <tr>
-                                        <th style="width: 80px;">Sel.</th>
-                                        <th style="width: 90px;">Orden</th>
-                                        <th>Punto de seguridad</th>
-                                        <th style="width: 160px;">Marchamo actual</th>
-                                        <th style="width: 220px;">Nuevo marchamo</th>
-                                        <th style="width: 260px;">Motivo</th>
+                                        <th class="cc-table-adaptive-nowrap" style="width: 5rem;">
+                                            Sel.
+                                        </th>
+
+                                        <th class="cc-table-adaptive-nowrap" style="width: 8rem;">
+                                            Orden
+                                        </th>
+
+                                        <th class="cc-table-adaptive-nowrap" style="width: 32rem;">
+                                            Punto de seguridad
+                                        </th>
+
+                                        <th class="cc-table-adaptive-nowrap" style="width: 14rem;">
+                                            Marchamo actual
+                                        </th>
+
+                                        <th class="cc-table-adaptive-nowrap" style="width: 16rem;">
+                                            Nuevo marchamo
+                                        </th>
+
+                                        <th class="cc-table-adaptive-nowrap" style="width: 21rem;">
+                                            Motivo
+                                        </th>
                                     </tr>
                                 </thead>
 
                                 <tbody>
                                     @forelse ($puntos as $index => $punto)
                                         <tr>
-                                            <td>
+                                            <td class="cc-table-adaptive-nowrap">
                                                 <input
                                                     type="hidden"
                                                     name="reemplazos[{{ $index }}][punto_seguridad_id]"
@@ -204,24 +218,24 @@
                                                     @checked(old("reemplazos.{$index}.seleccionado"))>
                                             </td>
 
-                                            <td>
-                                                <div class="font-bold text-[var(--cc-text-main)]">
+                                            <td class="cc-table-adaptive-nowrap">
+                                                <div class="cc-table-adaptive-strong">
                                                     {{ $punto->orden }}
                                                 </div>
 
                                                 @if ($punto->codigo_punto)
-                                                    <div class="text-xs text-[var(--cc-text-muted)]">
+                                                    <div class="cc-table-adaptive-muted">
                                                         {{ $punto->codigo_punto }}
                                                     </div>
                                                 @endif
                                             </td>
 
                                             <td>
-                                                <div class="font-bold text-[var(--cc-text-main)]">
+                                                <div class="cc-table-adaptive-strong">
                                                     {{ $punto->nombre_punto }}
                                                 </div>
 
-                                                <div class="text-sm text-[var(--cc-text-muted)]">
+                                                <div class="cc-table-adaptive-muted">
                                                     {{ $punto->grupo ?: 'Sin grupo' }}
 
                                                     @if ($punto->subgrupo)
@@ -234,23 +248,23 @@
                                                 </div>
                                             </td>
 
-                                            <td>
+                                            <td class="cc-table-adaptive-nowrap">
                                                 @if ($punto->marchamoActual)
-                                                    <div class="font-bold text-[var(--cc-text-main)]">
+                                                    <div class="cc-table-adaptive-strong">
                                                         {{ $punto->marchamoActual->codigo_marchamo }}
                                                     </div>
 
-                                                    <div class="text-sm text-[var(--cc-success)]">
+                                                    <div class="cc-table-adaptive-muted text-[var(--cc-success)]">
                                                         Activo
                                                     </div>
                                                 @else
-                                                    <span class="text-[var(--cc-text-muted)]">
+                                                    <span class="cc-table-adaptive-muted">
                                                         Sin marchamo
                                                     </span>
                                                 @endif
                                             </td>
 
-                                            <td>
+                                            <td class="cc-table-adaptive-nowrap">
                                                 <input
                                                     type="text"
                                                     name="reemplazos[{{ $index }}][nuevo_codigo_marchamo]"
@@ -262,7 +276,7 @@
                                                     pattern="\d{7}">
                                             </td>
 
-                                            <td>
+                                            <td class="cc-table-adaptive-nowrap">
                                                 <select
                                                     name="reemplazos[{{ $index }}][motivo_reemplazo]"
                                                     class="cc-input">

@@ -311,6 +311,7 @@ class MarchamoAsignacionInicialController extends Controller
         return redirect()
             ->route($ruta, [
                 'empresa_id' => $unidad->empresa_id,
+                'unidad_id' => $unidad->id,
                 'consultar' => 1,
             ])
             ->with('success', 'Asignación inicial finalizada correctamente. La unidad ahora está activa.');
@@ -319,13 +320,28 @@ class MarchamoAsignacionInicialController extends Controller
     private function datosIndex(Request $request): array
     {
         $user = Auth::user();
+        $esUsuarioDieselCop = is_null($user->empresa_id);
 
-        $hayFiltros = $request->has('consultar');
+        $busquedaEmpresa = trim((string) $request->input('busqueda_empresa', ''));
+        $busquedaPlaca = trim((string) $request->input('busqueda_placa', ''));
+
         $empresaId = $request->input('empresa_id');
-        $placa = trim((string) $request->input('placa', ''));
+        $unidadId = $request->input('unidad_id');
+
+        if (! $esUsuarioDieselCop) {
+            $empresaId = $user->empresa_id;
+        }
+
+        $consultaEjecutada = $request->boolean('consultar');
+
+        $hayFiltros = $consultaEjecutada
+            || filled($busquedaEmpresa)
+            || filled($busquedaPlaca)
+            || filled($empresaId)
+            || filled($unidadId);
 
         $empresas = Empresa::query()
-            ->when(! is_null($user->empresa_id), function ($query) use ($user) {
+            ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
                 $query->where('id', $user->empresa_id);
             })
             ->where('estado', 'activa')
@@ -333,29 +349,16 @@ class MarchamoAsignacionInicialController extends Controller
             ->orderBy('nombre_legal')
             ->get();
 
-        if (! $hayFiltros) {
-            $unidades = Unidad::query()
-                ->whereRaw('1 = 0')
-                ->paginate(15);
-
-            return [
-                'unidades' => $unidades,
-                'empresas' => $empresas,
-                'empresaId' => $empresaId,
-                'placa' => $placa,
-                'hayFiltros' => $hayFiltros,
-            ];
-        }
-
-        $unidades = Unidad::query()
+        $baseUnidadesQuery = Unidad::query()
             ->with(['empresa', 'licencia'])
             ->withCount([
-                'puntosSeguridad as total_puntos' => fn ($query) => $query
-                    ->where('estado', 'activo'),
-
-                'puntosSeguridad as puntos_asignados' => fn ($query) => $query
-                    ->where('estado', 'activo')
-                    ->whereNotNull('marchamo_actual_id'),
+                'puntosSeguridad as total_puntos' => function ($query) {
+                    $query->where('estado', 'activo');
+                },
+                'puntosSeguridad as puntos_asignados' => function ($query) {
+                    $query->where('estado', 'activo')
+                        ->whereNotNull('marchamo_actual_id');
+                },
             ])
             ->where('estado', 'registrada')
             ->whereHas('empresa', function ($query) {
@@ -367,14 +370,36 @@ class MarchamoAsignacionInicialController extends Controller
             ->whereHas('puntosSeguridad', function ($query) {
                 $query->where('estado', 'activo');
             })
-            ->when(! is_null($user->empresa_id), function ($query) use ($user) {
+            ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
                 $query->where('empresa_id', $user->empresa_id);
-            })
-            ->when(is_null($user->empresa_id) && filled($empresaId), function ($query) use ($empresaId) {
+            });
+
+        $unidades = (clone $baseUnidadesQuery)
+            ->when($esUsuarioDieselCop && filled($empresaId), function ($query) use ($empresaId) {
                 $query->where('empresa_id', $empresaId);
             })
-            ->when(filled($placa), function ($query) use ($placa) {
-                $query->where('placa', 'like', '%' . $placa . '%');
+            ->orderBy('placa')
+            ->get();
+
+        $unidadesDisponibles = (clone $baseUnidadesQuery)
+            ->when($hayFiltros && filled($busquedaEmpresa), function ($query) use ($busquedaEmpresa) {
+                $query->whereHas('empresa', function ($empresaQuery) use ($busquedaEmpresa) {
+                    $empresaQuery
+                        ->where('nombre_legal', 'like', '%' . $busquedaEmpresa . '%')
+                        ->orWhere('nombre_comercial', 'like', '%' . $busquedaEmpresa . '%');
+                });
+            })
+            ->when($hayFiltros && $esUsuarioDieselCop && filled($empresaId), function ($query) use ($empresaId) {
+                $query->where('empresa_id', $empresaId);
+            })
+            ->when($hayFiltros && filled($busquedaPlaca), function ($query) use ($busquedaPlaca) {
+                $query->where('placa', 'like', '%' . $busquedaPlaca . '%');
+            })
+            ->when($hayFiltros && filled($unidadId), function ($query) use ($unidadId) {
+                $query->where('id', $unidadId);
+            })
+            ->when(! $hayFiltros, function ($query) {
+                $query->whereRaw('1 = 0');
             })
             ->orderBy('placa')
             ->paginate(15)
@@ -382,10 +407,18 @@ class MarchamoAsignacionInicialController extends Controller
 
         return [
             'unidades' => $unidades,
+            'unidadesDisponibles' => $unidadesDisponibles,
             'empresas' => $empresas,
+
+            'busquedaEmpresa' => $busquedaEmpresa,
+            'busquedaPlaca' => $busquedaPlaca,
+
             'empresaId' => $empresaId,
-            'placa' => $placa,
+            'unidadId' => $unidadId,
+
             'hayFiltros' => $hayFiltros,
+            'consultaEjecutada' => $consultaEjecutada,
+            'esUsuarioDieselCop' => $esUsuarioDieselCop,
         ];
     }
 

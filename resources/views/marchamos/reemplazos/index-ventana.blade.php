@@ -7,17 +7,18 @@
 
         <title>Administración de marchamos | CC-Flota</title>
 
-        
         @include('layouts.partials.favicon')
-<link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900&display=swap" rel="stylesheet" />
+
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
 
-    <body class="font-sans antialiased">
+    <body class="antialiased">
         <div class="min-h-screen" style="background: var(--cc-bg-main);">
-            <div class="cc-window-wrapper" style="padding-top: 2.0rem;">
+            <div class="cc-page-wrapper">
                 <div class="cc-window-container" style="max-width: 80rem;">
                     <div class="cc-card">
 
@@ -30,9 +31,6 @@
                                 <h3 class="cc-title cc-title-compact">
                                     Administración de marchamos
                                 </h3>
-                                <p class="cc-subtitle cc-subtitle-compact">
-                                    Localice unidades activas para registrar reemplazos operativos de marchamos.
-                                </p>
                             </div>
 
                             <div class="flex items-center gap-3">
@@ -55,35 +53,77 @@
 
                                 <div class="cc-form-section cc-form-section-compact" style="margin-top: 0;">
                                     <div class="cc-form-section-title">
-                                        Búsqueda administrativa
+                                        Filtros de Consulta
                                     </div>
                                 </div>
 
-                                <div class="cc-filter-inline-grid">
+                                <div class="cc-standard-filter-grid cc-unidades-consulta-filter-grid">
+
+                                    <div class="cc-field">
+                                        <label for="busqueda_empresa">
+                                            Buscar empresa
+                                        </label>
+
+                                        <input
+                                            id="busqueda_empresa"
+                                            name="busqueda_empresa"
+                                            type="text"
+                                            class="cc-input"
+                                            value="{{ $busquedaEmpresa ?? '' }}"
+                                            maxlength="150"
+                                            placeholder="Nombre de empresa"
+                                        >
+                                    </div>
 
                                     <div class="cc-field">
                                         <label for="empresa_id">
                                             Empresa
                                         </label>
 
-                                        <select id="empresa_id" name="empresa_id" class="cc-input">
-                                            <option value="">Todas las empresas</option>
+                                        @if ($esUsuarioDieselCop)
+                                            <select id="empresa_id" name="empresa_id" class="cc-input">
+                                                <option value="">Todas</option>
 
-                                            @foreach ($empresas as $empresa)
-                                                <option value="{{ $empresa->id }}" @selected((string) $empresaId === (string) $empresa->id)>
-                                                    {{ $empresa->nombre_comercial ?: $empresa->nombre_legal }}
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                                @foreach ($empresas as $empresa)
+                                                    <option value="{{ $empresa->id }}" @selected((string) $empresaId === (string) $empresa->id)>
+                                                        {{ $empresa->nombre_comercial ?: $empresa->nombre_legal }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        @else
+                                            <select id="empresa_id" class="cc-input" disabled>
+                                                @foreach ($empresas as $empresa)
+                                                    <option value="{{ $empresa->id }}" selected>
+                                                        {{ $empresa->nombre_comercial ?: $empresa->nombre_legal }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        @endif
+                                    </div>
+
+                                    <div class="cc-field">
+                                        <label for="busqueda_placa">
+                                            Buscar placa
+                                        </label>
+
+                                        <input
+                                            id="busqueda_placa"
+                                            name="busqueda_placa"
+                                            type="text"
+                                            class="cc-input"
+                                            value="{{ $busquedaPlaca ?? '' }}"
+                                            maxlength="30"
+                                            placeholder="Ej. C123ABC"
+                                        >
                                     </div>
 
                                     <div class="cc-field">
                                         <label for="unidad_id">
-                                            Unidad
+                                            Placa
                                         </label>
 
                                         <select id="unidad_id" name="unidad_id" class="cc-input">
-                                            <option value="">Todas las unidades activas</option>
+                                            <option value="">Todas</option>
 
                                             @foreach ($unidades as $unidad)
                                                 <option value="{{ $unidad->id }}" @selected((string) $unidadId === (string) $unidad->id)>
@@ -97,7 +137,7 @@
                                         </select>
                                     </div>
 
-                                    <div class="cc-filter-inline-actions">
+                                    <div class="cc-standard-filter-actions">
                                         <button type="submit" class="cc-btn-primary">
                                             Consultar
                                         </button>
@@ -135,7 +175,7 @@
                                 </h5>
 
                                 <p>
-                                    Los resultados permanecerán vacíos hasta que localice una unidad activa por empresa o placa.
+                                    Los resultados permanecerán vacíos hasta que realice una búsqueda.
                                 </p>
                             </div>
                         @elseif ($unidadesDisponibles->isEmpty())
@@ -149,7 +189,7 @@
                                 </p>
                             </div>
                         @else
-                            <div class="space-y-3">
+                            <div class="cc-admin-result-list">
                                 @foreach ($unidadesDisponibles as $unidad)
                                     @php
                                         $totalPuntos = (int) ($unidad->total_puntos ?? 0);
@@ -157,102 +197,100 @@
                                         $puntosPendientes = max($totalPuntos - $puntosAsignados, 0);
                                     @endphp
 
-                                    <article class="cc-result-card cc-result-card-compact">
-                                        <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
+                                    <article class="cc-admin-result-card">
+                                        <div class="grid gap-5 xl:grid-cols-12 xl:items-start">
 
-                                            <div class="flex-1 min-w-0">
-                                                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-start">
+                                            <div class="min-w-0 xl:col-span-3">
+                                                <div class="flex flex-wrap items-center gap-2">
+                                                    <h5 class="cc-admin-result-title">
+                                                        {{ $unidad->placa }}
+                                                    </h5>
 
-                                                    <div>
-                                                        <div class="flex flex-wrap items-center gap-2">
-                                                            <h5 class="cc-result-title cc-cell-truncate">
-                                                                {{ $unidad->placa }}
-                                                            </h5>
+                                                    <span class="cc-badge cc-badge-active">
+                                                        Activa
+                                                    </span>
+                                                </div>
 
-                                                            <span class="cc-badge cc-badge-active">
-                                                                Activa
-                                                            </span>
-                                                        </div>
-
-                                                        <div class="cc-result-subtitle cc-cell-truncate">
-                                                            {{ $unidad->marca ?: 'Sin marca registrada' }}
-                                                        </div>
-                                                    </div>
-
-                                                    <div>
-                                                        <div class="cc-result-label">
-                                                            Empresa
-                                                        </div>
-
-                                                        <div class="cc-result-value cc-cell-truncate">
-                                                            @if ($unidad->empresa)
-                                                                {{ $unidad->empresa->nombre_comercial ?: $unidad->empresa->nombre_legal }}
-                                                            @else
-                                                                Sin empresa
-                                                            @endif
-                                                        </div>
-
-                                                        @if ($unidad->empresa?->nit)
-                                                            <div class="cc-result-value-muted cc-cell-truncate">
-                                                                {{ $unidad->empresa->nit }}
-                                                            </div>
-                                                        @endif
-                                                    </div>
-
-                                                    <div>
-                                                        <div class="cc-result-label">
-                                                            Licencia
-                                                        </div>
-
-                                                        @if ($unidad->licencia)
-                                                            <div class="cc-result-value">
-                                                                {{ $unidad->licencia->periodo_vigencia_texto }}
-                                                            </div>
-
-                                                            <div class="cc-result-value-muted cc-cell-truncate">
-                                                                {{ $unidad->licencia->plantilla_puntos_seguridad_texto }}
-                                                            </div>
-                                                        @else
-                                                            <div class="cc-result-value-muted">
-                                                                Sin licencia
-                                                            </div>
-                                                        @endif
-                                                    </div>
-
-                                                    <div>
-                                                        <div class="cc-result-label">
-                                                            Puntos
-                                                        </div>
-
-                                                        <div class="cc-result-value">
-                                                            {{ $puntosAsignados }} / {{ $totalPuntos }}
-                                                        </div>
-
-                                                        <div class="cc-result-value-muted">
-                                                            {{ $puntosPendientes }} pendientes
-                                                        </div>
-                                                    </div>
-
-                                                    <div>
-                                                        <div class="cc-result-label">
-                                                            Marchamos
-                                                        </div>
-
-                                                        <div class="cc-result-value">
-                                                            {{ $unidad->marchamos_activos }} activos
-                                                        </div>
-
-                                                        <div class="cc-result-value-muted">
-                                                            {{ $unidad->marchamos_historicos }} históricos
-                                                        </div>
-                                                    </div>
-
+                                                <div class="cc-admin-result-subtitle">
+                                                    {{ $unidad->marca ?: 'Sin marca registrada' }}
                                                 </div>
                                             </div>
 
-                                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 xl:justify-end xl:min-w-[10rem]">
+                                            <div class="min-w-0 xl:col-span-3">
+                                                <div class="cc-admin-result-label">
+                                                    Empresa
+                                                </div>
+
+                                                @if ($unidad->empresa)
+                                                    <div class="cc-admin-result-value">
+                                                        {{ $unidad->empresa->nombre_comercial ?: $unidad->empresa->nombre_legal }}
+                                                    </div>
+
+                                                    @if ($unidad->empresa->nit ?? false)
+                                                        <div class="cc-admin-result-value-muted">
+                                                            NIT: {{ $unidad->empresa->nit }}
+                                                        </div>
+                                                    @endif
+                                                @else
+                                                    <div class="cc-admin-result-value-muted">
+                                                        Sin empresa
+                                                    </div>
+                                                @endif
+                                            </div>
+
+                                            <div class="min-w-0 sm:grid sm:grid-cols-3 sm:gap-5 xl:col-span-4 xl:grid-cols-3">
+                                                <div class="min-w-0">
+                                                    <div class="cc-admin-result-label">
+                                                        Licencia
+                                                    </div>
+
+                                                    @if ($unidad->licencia)
+                                                        <div class="cc-admin-result-value">
+                                                            {{ $unidad->licencia->periodo_vigencia_texto }}
+                                                        </div>
+
+                                                        <div class="cc-admin-result-value-muted">
+                                                            {{ $unidad->licencia->plantilla_puntos_seguridad_texto }}
+                                                        </div>
+                                                    @else
+                                                        <div class="cc-admin-result-value-muted">
+                                                            Sin licencia
+                                                        </div>
+                                                    @endif
+                                                </div>
+
+                                                <div class="min-w-0">
+                                                    <div class="cc-admin-result-label">
+                                                        Puntos
+                                                    </div>
+
+                                                    <div class="cc-admin-result-value">
+                                                        {{ $puntosAsignados }} / {{ $totalPuntos }}
+                                                    </div>
+
+                                                    <div class="cc-admin-result-value-muted">
+                                                        {{ $puntosPendientes }} pendientes
+                                                    </div>
+                                                </div>
+
+                                                <div class="min-w-0">
+                                                    <div class="cc-admin-result-label">
+                                                        Marchamos
+                                                    </div>
+
+                                                    <div class="cc-admin-result-value">
+                                                        {{ $unidad->marchamos_activos }} activos
+                                                    </div>
+
+                                                    <div class="cc-admin-result-value-muted">
+                                                        {{ $unidad->marchamos_historicos }} históricos
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="flex flex-col sm:flex-row gap-3 xl:col-span-2 xl:justify-end xl:self-center">
                                                 <a href="{{ route('marchamos.reemplazos.show.ventana', $unidad) }}"
-                                                    class="cc-btn-primary cc-btn-result">
+                                                   class="cc-btn-primary cc-btn-result w-full sm:w-auto">
                                                     Reemplazar
                                                 </a>
                                             </div>

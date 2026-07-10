@@ -42,17 +42,60 @@ class MarchamoController extends Controller
     private function obtenerDatosConsulta(Request $request): array
     {
         $user = Auth::user();
+        $esUsuarioDieselCop = is_null($user->empresa_id);
 
-        $empresaId = $request->input('empresa_id');
+        $busquedaEmpresa = trim((string) $request->input('busqueda_empresa', ''));
+        $busquedaPlaca = trim((string) $request->input('busqueda_placa', ''));
+
+        /*
+         * Compatibilidad:
+         * - Nueva consulta: empresa_ids[] y placas[].
+         * - Consulta anterior: empresa_id y unidad_id.
+         */
+        $empresaIds = collect($request->input('empresa_ids', []))
+            ->when(filled($request->input('empresa_id')), function ($collection) use ($request) {
+                return $collection->push($request->input('empresa_id'));
+            })
+            ->filter(fn ($id) => filled($id))
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+
+        $placas = collect($request->input('placas', []))
+            ->filter(fn ($placa) => filled($placa))
+            ->map(fn ($placa) => trim((string) $placa))
+            ->unique()
+            ->values()
+            ->all();
+
         $unidadId = $request->input('unidad_id');
+
+        if (! $esUsuarioDieselCop) {
+            $empresaIds = [(int) $user->empresa_id];
+        }
+
+        $empresaId = $empresaIds[0] ?? null;
+        $placa = $placas[0] ?? null;
 
         $consultaEjecutada = $request->boolean('consultar');
 
         $hayFiltros = $consultaEjecutada
-            || filled($empresaId)
+            || filled($busquedaEmpresa)
+            || filled($busquedaPlaca)
+            || count($empresaIds) > 0
+            || count($placas) > 0
             || filled($unidadId);
 
-        $unidadesConCobertura = Unidad::query()
+        $empresas = Empresa::query()
+            ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
+                $query->where('id', $user->empresa_id);
+            })
+            ->orderBy('nombre_comercial')
+            ->orderBy('nombre_legal')
+            ->get();
+
+        $baseUnidadesQuery = Unidad::query()
             ->with(['empresa', 'licencia'])
             ->withCount([
                 'puntosSeguridad as total_puntos' => function ($query) {
@@ -71,35 +114,45 @@ class MarchamoController extends Controller
             ])
             ->whereHas('licencia')
             ->whereHas('puntosSeguridad')
-            ->when(! is_null($user->empresa_id), function ($query) use ($user) {
+            ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
                 $query->where('empresa_id', $user->empresa_id);
-            })
-            ->when(is_null($user->empresa_id) && filled($empresaId), function ($query) use ($empresaId) {
-                $query->where('empresa_id', $empresaId);
-            })
-            ->when(filled($unidadId), function ($query) use ($unidadId) {
-                $query->where('id', $unidadId);
-            })
-            ->orderBy('estado')
+            });
+
+        $placasSelector = (clone $baseUnidadesQuery)
+            ->orderBy('placa')
+            ->pluck('placa')
+            ->filter()
+            ->unique()
+            ->values();
+
+        $unidades = (clone $baseUnidadesQuery)
             ->orderBy('placa')
             ->get();
-
-        $empresas = Empresa::query()
-            ->when(! is_null($user->empresa_id), function ($query) use ($user) {
-                $query->where('id', $user->empresa_id);
+            
+        $unidadesConCobertura = (clone $baseUnidadesQuery)
+            ->when($hayFiltros && filled($busquedaEmpresa), function ($query) use ($busquedaEmpresa) {
+                $query->whereHas('empresa', function ($empresaQuery) use ($busquedaEmpresa) {
+                    $empresaQuery
+                        ->where('nombre_legal', 'like', '%' . $busquedaEmpresa . '%')
+                        ->orWhere('nombre_comercial', 'like', '%' . $busquedaEmpresa . '%');
+                });
             })
-            ->orderBy('nombre_legal')
-            ->get();
-
-        $unidades = Unidad::query()
-            ->when(! is_null($user->empresa_id), function ($query) use ($user) {
-                $query->where('empresa_id', $user->empresa_id);
+            ->when($hayFiltros && count($empresaIds) > 0, function ($query) use ($empresaIds) {
+                $query->whereIn('empresa_id', $empresaIds);
             })
-            ->when(is_null($user->empresa_id) && filled($empresaId), function ($query) use ($empresaId) {
-                $query->where('empresa_id', $empresaId);
+            ->when($hayFiltros && filled($busquedaPlaca), function ($query) use ($busquedaPlaca) {
+                $query->where('placa', 'like', '%' . $busquedaPlaca . '%');
             })
-            ->whereHas('licencia')
-            ->whereHas('puntosSeguridad')
+            ->when($hayFiltros && count($placas) > 0, function ($query) use ($placas) {
+                $query->whereIn('placa', $placas);
+            })
+            ->when($hayFiltros && filled($unidadId), function ($query) use ($unidadId) {
+                $query->where('id', $unidadId);
+            })
+            ->when(! $hayFiltros, function ($query) {
+                $query->whereRaw('1 = 0');
+            })
+            ->orderBy('estado')
             ->orderBy('placa')
             ->get();
 
@@ -107,12 +160,24 @@ class MarchamoController extends Controller
             'unidadesConCobertura' => $unidadesConCobertura,
             'empresas' => $empresas,
             'unidades' => $unidades,
+            'placasSelector' => $placasSelector,
 
+            'busquedaEmpresa' => $busquedaEmpresa,
+            'busquedaPlaca' => $busquedaPlaca,
+
+            'empresaIds' => $empresaIds,
+            'placas' => $placas,
+
+            /*
+             * Variables simples para compatibilidad temporal.
+             */
             'empresaId' => $empresaId,
             'unidadId' => $unidadId,
+            'placa' => $placa,
 
             'hayFiltros' => $hayFiltros,
             'consultaEjecutada' => $consultaEjecutada,
+            'esUsuarioDieselCop' => $esUsuarioDieselCop,
         ];
     }
 

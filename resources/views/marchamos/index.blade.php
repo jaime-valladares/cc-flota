@@ -8,9 +8,6 @@
                         <h3 class="cc-title cc-title-compact">
                             Consulta de marchamos
                         </h3>
-                        <p class="cc-subtitle cc-subtitle-compact">
-                            Consulte la cobertura física de marchamos por empresa y unidad.
-                        </p>
                     </div>
 
                     <div class="flex items-center gap-3">
@@ -36,49 +33,141 @@
 
                         <div class="cc-form-section cc-form-section-compact" style="margin-top: 0;">
                             <div class="cc-form-section-title">
-                                Filtros de cobertura
+                                Filtros de Consulta
                             </div>
                         </div>
 
-                        <div class="cc-filter-inline-grid">
+                        <div class="cc-standard-filter-grid cc-unidades-consulta-filter-grid">
 
                             <div class="cc-field">
-                                <label for="empresa_id">
+                                <label for="busqueda_empresa">
+                                    Buscar empresa
+                                </label>
+
+                                <input
+                                    id="busqueda_empresa"
+                                    name="busqueda_empresa"
+                                    type="text"
+                                    class="cc-input"
+                                    value="{{ $busquedaEmpresa ?? '' }}"
+                                    maxlength="150"
+                                    placeholder="Nombre de Empresa"
+                                >
+                            </div>
+
+                            <div class="cc-field">
+                                <label>
                                     Empresa
                                 </label>
 
-                                <select id="empresa_id" name="empresa_id" class="cc-input">
-                                    <option value="">Todas las empresas</option>
+                                @if ($esUsuarioDieselCop)
+                                    <div class="cc-filter-multiselect" data-cc-filter-multiselect>
+                                        <button type="button" class="cc-filter-multiselect-toggle" data-cc-filter-toggle>
+                                            <span data-cc-filter-label data-default-label="Todas">
+                                                @if (! empty($empresaIds))
+                                                    {{ count($empresaIds) }} seleccionadas
+                                                @else
+                                                    Todas
+                                                @endif
+                                            </span>
+                                            <span class="cc-filter-multiselect-arrow">⌄</span>
+                                        </button>
 
-                                    @foreach ($empresas as $empresa)
-                                        <option value="{{ $empresa->id }}" @selected((string) $empresaId === (string) $empresa->id)>
-                                            {{ $empresa->nombre_comercial ?: $empresa->nombre_legal }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                                        <div class="cc-filter-multiselect-menu" data-cc-filter-menu>
+                                            <div class="cc-filter-multiselect-list">
+                                                <label class="cc-filter-multiselect-option cc-filter-multiselect-option-master">
+                                                    <input type="checkbox" data-cc-filter-master>
+                                                    <span>Seleccionar todo</span>
+                                                </label>
+
+                                                @foreach ($empresas as $empresa)
+                                                    <label class="cc-filter-multiselect-option" data-cc-filter-option>
+                                                        <input
+                                                            type="checkbox"
+                                                            name="empresa_ids[]"
+                                                            value="{{ $empresa->id }}"
+                                                            @checked(in_array((int) $empresa->id, $empresaIds ?? [], true))
+                                                            data-cc-filter-checkbox
+                                                        >
+                                                        <span data-cc-filter-option-label>
+                                                            {{ $empresa->nombre_comercial ?: $empresa->nombre_legal }}
+                                                        </span>
+                                                    </label>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+                                @else
+                                    <select class="cc-input" disabled>
+                                        @foreach ($empresas as $empresa)
+                                            <option value="{{ $empresa->id }}" selected>
+                                                {{ $empresa->nombre_comercial ?: $empresa->nombre_legal }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                @endif
                             </div>
 
                             <div class="cc-field">
-                                <label for="unidad_id">
-                                    Unidad
+                                <label for="busqueda_placa">
+                                    Buscar placa
                                 </label>
 
-                                <select id="unidad_id" name="unidad_id" class="cc-input">
-                                    <option value="">Todas las unidades</option>
-
-                                    @foreach ($unidades as $unidad)
-                                        <option value="{{ $unidad->id }}" @selected((string) $unidadId === (string) $unidad->id)>
-                                            {{ $unidad->placa }}
-
-                                            @if ($unidad->marca)
-                                                · {{ $unidad->marca }}
-                                            @endif
-                                        </option>
-                                    @endforeach
-                                </select>
+                                <input
+                                    id="busqueda_placa"
+                                    name="busqueda_placa"
+                                    type="text"
+                                    class="cc-input"
+                                    value="{{ $busquedaPlaca ?? '' }}"
+                                    maxlength="30"
+                                    placeholder="Ej. C123ABC"
+                                >
                             </div>
 
-                            <div class="cc-filter-inline-actions">
+                            <div class="cc-field">
+                                <label>
+                                    Placa
+                                </label>
+
+                                <div class="cc-filter-multiselect" data-cc-filter-multiselect>
+                                    <button type="button" class="cc-filter-multiselect-toggle" data-cc-filter-toggle>
+                                        <span data-cc-filter-label data-default-label="Todas">
+                                            @if (! empty($placas))
+                                                {{ count($placas) }} seleccionadas
+                                            @else
+                                                Todas
+                                            @endif
+                                        </span>
+                                        <span class="cc-filter-multiselect-arrow">⌄</span>
+                                    </button>
+
+                                    <div class="cc-filter-multiselect-menu" data-cc-filter-menu>
+                                        <div class="cc-filter-multiselect-list">
+                                            <label class="cc-filter-multiselect-option cc-filter-multiselect-option-master">
+                                                <input type="checkbox" data-cc-filter-master>
+                                                <span>Seleccionar todo</span>
+                                            </label>
+
+                                            @foreach ($placasSelector as $placaOpcion)
+                                                <label class="cc-filter-multiselect-option" data-cc-filter-option>
+                                                    <input
+                                                        type="checkbox"
+                                                        name="placas[]"
+                                                        value="{{ $placaOpcion }}"
+                                                        @checked(in_array($placaOpcion, $placas ?? [], true))
+                                                        data-cc-filter-checkbox
+                                                    >
+                                                    <span data-cc-filter-option-label>
+                                                        {{ $placaOpcion }}
+                                                    </span>
+                                                </label>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="cc-standard-filter-actions">
                                 <button type="submit" class="cc-btn-primary">
                                     Consultar
                                 </button>
@@ -99,7 +188,7 @@
                         </h5>
 
                         <p>
-                            Los resultados permanecerán vacíos hasta que consulte la cobertura de marchamos por empresa o unidad.
+                            Los resultados permanecerán vacíos hasta que realice una búsqueda.
                         </p>
                     </div>
                 @elseif ($unidadesConCobertura->isEmpty())
@@ -113,7 +202,7 @@
                         </p>
                     </div>
                 @else
-                    <div class="space-y-3">
+                    <div class="cc-admin-result-list">
                         @foreach ($unidadesConCobertura as $unidad)
                             @php
                                 $totalPuntos = (int) ($unidad->total_puntos ?? 0);
@@ -125,97 +214,101 @@
                                     : 0;
                             @endphp
 
-                            <article class="cc-result-card cc-result-card-compact">
-                                <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
+                            <article class="cc-admin-result-card">
+                                <div class="grid gap-5 xl:grid-cols-12 xl:items-start">
 
-                                    <div class="flex-1 min-w-0">
-                                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
+                                    <div class="min-w-0 xl:col-span-3">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <h5 class="cc-admin-result-title">
+                                                {{ $unidad->placa }}
+                                            </h5>
 
-                                            <div>
-                                                <div class="flex flex-wrap items-center gap-2">
-                                                    <h5 class="cc-result-title cc-cell-truncate">
-                                                        {{ $unidad->placa }}
-                                                    </h5>
+                                            @if ($unidad->estado === 'registrada')
+                                                <span class="cc-badge cc-badge-warning">
+                                                    Registrada
+                                                </span>
+                                            @elseif ($unidad->estado === 'activa')
+                                                <span class="cc-badge cc-badge-active">
+                                                    Activa
+                                                </span>
+                                            @else
+                                                <span class="cc-badge cc-badge-inactive">
+                                                    Inactiva
+                                                </span>
+                                            @endif
+                                        </div>
 
-                                                    @if ($unidad->estado === 'registrada')
-                                                        <span class="cc-badge cc-badge-warning">
-                                                            Registrada
-                                                        </span>
-                                                    @elseif ($unidad->estado === 'activa')
-                                                        <span class="cc-badge cc-badge-active">
-                                                            Activa
-                                                        </span>
-                                                    @else
-                                                        <span class="cc-badge cc-badge-inactive">
-                                                            Inactiva
-                                                        </span>
-                                                    @endif
-                                                </div>
-
-                                                <div class="cc-result-subtitle cc-cell-truncate">
-                                                    {{ $unidad->marca ?: 'Sin marca registrada' }}
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <div class="cc-result-label">
-                                                    Empresa
-                                                </div>
-
-                                                <div class="cc-result-value cc-cell-truncate">
-                                                    @if ($unidad->empresa)
-                                                        {{ $unidad->empresa->nombre_comercial ?: $unidad->empresa->nombre_legal }}
-                                                    @else
-                                                        Sin empresa
-                                                    @endif
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <div class="cc-result-label">
-                                                    Marchamos
-                                                </div>
-
-                                                <div class="cc-result-value">
-                                                    {{ $unidad->marchamos_activos }} activos
-                                                </div>
-
-                                                <div class="cc-result-value-muted">
-                                                    {{ $unidad->marchamos_historicos }} históricos
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <div class="cc-result-label">
-                                                    Avance
-                                                </div>
-
-                                                <div class="cc-result-value">
-                                                    {{ $porcentajeAvance }}%
-                                                </div>
-
-                                                @if ($puntosPendientes === 0 && $totalPuntos > 0)
-                                                    <div class="cc-result-value-muted text-[var(--cc-success)]">
-                                                        Completa
-                                                    </div>
-                                                @elseif ($totalPuntos > 0)
-                                                    <div class="cc-result-value-muted text-[var(--cc-danger)]">
-                                                        {{ $puntosPendientes }} pendientes
-                                                    </div>
-                                                @else
-                                                    <div class="cc-result-value-muted">
-                                                        Sin puntos
-                                                    </div>
-                                                @endif
-                                            </div>
-
+                                        <div class="cc-admin-result-subtitle">
+                                            {{ $unidad->marca ?: 'Sin marca registrada' }}
                                         </div>
                                     </div>
 
-                                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 xl:justify-end xl:min-w-[10rem]">
+                                    <div class="min-w-0 xl:col-span-3">
+                                        <div class="cc-admin-result-label">
+                                            Empresa
+                                        </div>
+
+                                        @if ($unidad->empresa)
+                                            <div class="cc-admin-result-value">
+                                                {{ $unidad->empresa->nombre_comercial ?: $unidad->empresa->nombre_legal }}
+                                            </div>
+
+                                            @if ($unidad->empresa->nit ?? false)
+                                                <div class="cc-admin-result-value-muted">
+                                                    NIT: {{ $unidad->empresa->nit }}
+                                                </div>
+                                            @endif
+                                        @else
+                                            <div class="cc-admin-result-value-muted">
+                                                Sin empresa
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    <div class="min-w-0 sm:grid sm:grid-cols-2 sm:gap-5 xl:col-span-4 xl:grid-cols-2">
+                                        <div class="min-w-0">
+                                            <div class="cc-admin-result-label">
+                                                Marchamos
+                                            </div>
+
+                                            <div class="cc-admin-result-value">
+                                                {{ $unidad->marchamos_activos }} activos
+                                            </div>
+
+                                            <div class="cc-admin-result-value-muted">
+                                                {{ $unidad->marchamos_historicos }} históricos
+                                            </div>
+                                        </div>
+
+                                        <div class="min-w-0">
+                                            <div class="cc-admin-result-label">
+                                                Avance
+                                            </div>
+
+                                            <div class="cc-admin-result-value">
+                                                {{ $porcentajeAvance }}%
+                                            </div>
+
+                                            @if ($puntosPendientes === 0 && $totalPuntos > 0)
+                                                <div class="cc-admin-result-value-muted text-[var(--cc-success)]">
+                                                    Completa
+                                                </div>
+                                            @elseif ($totalPuntos > 0)
+                                                <div class="cc-admin-result-value-muted text-[var(--cc-danger)]">
+                                                    {{ $puntosPendientes }} pendientes
+                                                </div>
+                                            @else
+                                                <div class="cc-admin-result-value-muted">
+                                                    Sin puntos
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    <div class="flex flex-col sm:flex-row gap-3 xl:col-span-2 xl:justify-end xl:self-center">
                                         <a href="{{ route('marchamos.detalle-unidad', $unidad) }}"
-                                           class="cc-btn-secondary cc-btn-result">
-                                            Ver Marchamos
+                                           class="cc-btn-secondary cc-btn-result w-full sm:w-auto">
+                                            Ver marchamos
                                         </a>
                                     </div>
 
@@ -228,4 +321,105 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.querySelectorAll('[data-cc-filter-multiselect]').forEach(function (multiselect) {
+            const toggle = multiselect.querySelector('[data-cc-filter-toggle]');
+            const menu = multiselect.querySelector('[data-cc-filter-menu]');
+            const label = multiselect.querySelector('[data-cc-filter-label]');
+            const master = multiselect.querySelector('[data-cc-filter-master]');
+            const checkboxes = Array.from(multiselect.querySelectorAll('[data-cc-filter-checkbox]'));
+            const defaultLabel = label.dataset.defaultLabel || 'Todos';
+
+            function updateLabel() {
+                const selected = checkboxes.filter(function (checkbox) {
+                    return checkbox.checked;
+                });
+
+                if (selected.length === 0) {
+                    label.textContent = defaultLabel;
+                } else if (selected.length === 1) {
+                    const selectedOption = selected[0].closest('[data-cc-filter-option]');
+                    const selectedLabel = selectedOption.querySelector('[data-cc-filter-option-label]');
+                    label.textContent = selectedLabel ? selectedLabel.textContent.trim() : '1 seleccionado';
+                } else {
+                    label.textContent = selected.length + ' seleccionados';
+                }
+
+                if (master) {
+                    master.checked = selected.length === checkboxes.length && checkboxes.length > 0;
+                    master.indeterminate = selected.length > 0 && selected.length < checkboxes.length;
+                }
+            }
+
+            function closeAllExceptCurrent() {
+                document.querySelectorAll('[data-cc-filter-multiselect]').forEach(function (otherMultiselect) {
+                    if (otherMultiselect === multiselect) {
+                        return;
+                    }
+
+                    const otherToggle = otherMultiselect.querySelector('[data-cc-filter-toggle]');
+                    const otherMenu = otherMultiselect.querySelector('[data-cc-filter-menu]');
+
+                    if (otherToggle && otherMenu) {
+                        otherToggle.classList.remove('is-open');
+                        otherMenu.classList.remove('is-open');
+                    }
+                });
+            }
+
+            if (toggle && menu) {
+                toggle.addEventListener('click', function () {
+                    closeAllExceptCurrent();
+
+                    toggle.classList.toggle('is-open');
+                    menu.classList.toggle('is-open');
+                });
+            }
+
+            if (master) {
+                master.addEventListener('change', function () {
+                    checkboxes.forEach(function (checkbox) {
+                        checkbox.checked = master.checked;
+                    });
+
+                    updateLabel();
+                });
+            }
+
+            checkboxes.forEach(function (checkbox) {
+                checkbox.addEventListener('change', updateLabel);
+            });
+
+            updateLabel();
+        });
+
+        document.addEventListener('click', function (event) {
+            if (event.target.closest('[data-cc-filter-multiselect]')) {
+                return;
+            }
+
+            document.querySelectorAll('[data-cc-filter-toggle]').forEach(function (toggle) {
+                toggle.classList.remove('is-open');
+            });
+
+            document.querySelectorAll('[data-cc-filter-menu]').forEach(function (menu) {
+                menu.classList.remove('is-open');
+            });
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key !== 'Escape') {
+                return;
+            }
+
+            document.querySelectorAll('[data-cc-filter-toggle]').forEach(function (toggle) {
+                toggle.classList.remove('is-open');
+            });
+
+            document.querySelectorAll('[data-cc-filter-menu]').forEach(function (menu) {
+                menu.classList.remove('is-open');
+            });
+        });
+    </script>
 </x-app-layout>

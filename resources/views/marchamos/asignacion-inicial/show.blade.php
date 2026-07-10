@@ -1,6 +1,6 @@
 <x-app-layout>
     <div class="cc-page-wrapper">
-        <div class="cc-content-container" style="max-width: 79rem;">
+        <div class="cc-content-container" style="max-width: 80rem;">
             <div class="cc-card">
 
                 <div class="cc-card-header cc-card-header-compact">
@@ -23,7 +23,7 @@
 
                         <a href="{{ route('marchamos.asignacion-inicial.index', [
                             'empresa_id' => $unidad->empresa_id,
-                            'placa' => $unidad->placa,
+                            'unidad_id' => $unidad->id,
                             'consultar' => 1,
                         ]) }}" class="cc-btn-secondary cc-btn-wide">
                             Volver a asignación
@@ -182,16 +182,33 @@
                     <form method="POST" action="{{ route('marchamos.asignacion-inicial.guardar-avance', $unidad) }}">
                         @csrf
 
-                        <div class="overflow-x-auto">
-                            <table class="cc-table">
+                        <div class="cc-table-adaptive-wrapper">
+                            <table class="cc-table-adaptive" style="min-width: 73rem;">
                                 <thead>
                                     <tr>
-                                        <th style="width: 80px;">Orden</th>
-                                        <th>Punto de seguridad</th>
-                                        <th style="width: 180px;">Código punto</th>
-                                        <th style="width: 180px;">Posición</th>
-                                        <th style="width: 180px;">Estado</th>
-                                        <th style="width: 220px;">Marchamo</th>
+                                        <th class="cc-table-adaptive-nowrap" style="width: 7rem;">
+                                            Orden
+                                        </th>
+
+                                        <th class="cc-table-adaptive-nowrap" style="width: 26rem;">
+                                            Punto de seguridad
+                                        </th>
+
+                                        <th class="cc-table-adaptive-nowrap" style="width: 11rem;">
+                                            Código punto
+                                        </th>
+
+                                        <th class="cc-table-adaptive-nowrap" style="width: 11rem;">
+                                            Posición
+                                        </th>
+
+                                        <th class="cc-table-adaptive-nowrap" style="width: 11rem;">
+                                            Estado
+                                        </th>
+
+                                        <th class="cc-table-adaptive-nowrap" style="width: 12rem;">
+                                            Marchamo
+                                        </th>
                                     </tr>
                                 </thead>
 
@@ -202,19 +219,19 @@
                                         @endphp
 
                                         <tr>
-                                            <td>
-                                                <span class="font-bold">
+                                            <td class="cc-table-adaptive-nowrap">
+                                                <div class="cc-table-adaptive-strong">
                                                     {{ $punto->orden }}
-                                                </span>
+                                                </div>
                                             </td>
 
                                             <td>
-                                                <div class="font-bold text-[var(--cc-text-main)]">
+                                                <div class="cc-table-adaptive-strong">
                                                     {{ $punto->nombre_punto }}
                                                 </div>
 
                                                 @if ($punto->grupo || $punto->subgrupo)
-                                                    <div class="text-sm text-[var(--cc-text-muted)]">
+                                                    <div class="cc-table-adaptive-muted">
                                                         {{ $punto->grupo }}
 
                                                         @if ($punto->subgrupo)
@@ -224,15 +241,15 @@
                                                 @endif
                                             </td>
 
-                                            <td>
+                                            <td class="cc-table-adaptive-nowrap">
                                                 {{ $punto->codigo_punto ?: 'No definido' }}
                                             </td>
 
-                                            <td>
+                                            <td class="cc-table-adaptive-nowrap">
                                                 {{ $punto->posicion_tanque ?: 'No definida' }}
                                             </td>
 
-                                            <td>
+                                            <td class="cc-table-adaptive-nowrap">
                                                 @if ($codigoActual)
                                                     <span class="cc-badge cc-badge-active">
                                                         Asignado
@@ -244,24 +261,24 @@
                                                 @endif
                                             </td>
 
-                                            <td>
+                                            <td class="cc-table-adaptive-nowrap">
                                                 <input
                                                     type="text"
                                                     name="marchamos[{{ $punto->id }}]"
                                                     value="{{ old('marchamos.' . $punto->id, $codigoActual) }}"
                                                     class="cc-input"
-                                                    placeholder="Ej. 0006387"
+                                                    placeholder="0006387"
                                                     maxlength="7"
                                                     inputmode="numeric"
                                                     pattern="\d{7}">
 
                                                 @if ($codigoActual)
-                                                    <div class="text-xs text-[var(--cc-text-muted)] mt-1">
-                                                        Código provisional editable
+                                                    <div class="cc-table-adaptive-muted mt-1">
+                                                        Código editable
                                                     </div>
                                                 @else
-                                                    <div class="text-xs text-[var(--cc-text-muted)] mt-1">
-                                                        Pendiente de asignar
+                                                    <div class="cc-table-adaptive-muted mt-1">
+                                                        Pendiente
                                                     </div>
                                                 @endif
                                             </td>

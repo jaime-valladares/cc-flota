@@ -7,23 +7,24 @@
 
         <title>Asignación inicial de marchamos | CC-Flota</title>
 
-        
         @include('layouts.partials.favicon')
-<link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900&display=swap" rel="stylesheet" />
+
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
 
-    <body class="font-sans antialiased">
+    <body class="antialiased">
         <div class="min-h-screen" style="background: var(--cc-bg-main);">
-            <div class="cc-window-wrapper" style="padding-top: 2.0rem;">
-                <div class="cc-window-container" style="max-width: 79rem;">
+            <div class="cc-page-wrapper">
+                <div class="cc-window-container" style="max-width: 80rem;">
                     <div class="cc-card">
 
                         <div class="cc-card-header cc-card-header-compact">
                             <div>
-                                <h3 class="cc-title cc-title-compact" style="font-size: 1.96rem;">
+                                <h3 class="cc-title cc-title-compact">
                                     Asignación inicial de marchamos
                                 </h3>
                                 <p class="cc-subtitle cc-subtitle-compact">
@@ -34,7 +35,7 @@
                             <div class="flex items-center gap-3">
                                 <a href="{{ route('marchamos.asignacion-inicial.index.ventana', [
                                     'empresa_id' => $unidad->empresa_id,
-                                    'placa' => $unidad->placa,
+                                    'unidad_id' => $unidad->id,
                                     'consultar' => 1,
                                 ]) }}" class="cc-btn-secondary cc-btn-wide">
                                     Volver a asignación
@@ -198,16 +199,33 @@
                                 @csrf
                                 <input type="hidden" name="return_to" value="ventana">
 
-                                <div class="overflow-x-auto">
-                                    <table class="cc-table">
+                                <div class="cc-table-adaptive-wrapper">
+                                    <table class="cc-table-adaptive" style="min-width: 73rem;">
                                         <thead>
                                             <tr>
-                                                <th style="width: 80px;">Orden</th>
-                                                <th>Punto de seguridad</th>
-                                                <th style="width: 180px;">Código punto</th>
-                                                <th style="width: 180px;">Posición</th>
-                                                <th style="width: 180px;">Estado</th>
-                                                <th style="width: 220px;">Marchamo</th>
+                                                <th class="cc-table-adaptive-nowrap" style="width: 7rem;">
+                                                    Orden
+                                                </th>
+
+                                                <th class="cc-table-adaptive-nowrap" style="width: 26rem;">
+                                                    Punto de seguridad
+                                                </th>
+
+                                                <th class="cc-table-adaptive-nowrap" style="width: 11rem;">
+                                                    Código punto
+                                                </th>
+
+                                                <th class="cc-table-adaptive-nowrap" style="width: 11rem;">
+                                                    Posición
+                                                </th>
+
+                                                <th class="cc-table-adaptive-nowrap" style="width: 11rem;">
+                                                    Estado
+                                                </th>
+
+                                                <th class="cc-table-adaptive-nowrap" style="width: 12rem;">
+                                                    Marchamo
+                                                </th>
                                             </tr>
                                         </thead>
 
@@ -218,19 +236,19 @@
                                                 @endphp
 
                                                 <tr>
-                                                    <td>
-                                                        <span class="font-bold">
+                                                    <td class="cc-table-adaptive-nowrap">
+                                                        <div class="cc-table-adaptive-strong">
                                                             {{ $punto->orden }}
-                                                        </span>
+                                                        </div>
                                                     </td>
 
                                                     <td>
-                                                        <div class="font-bold text-[var(--cc-text-main)]">
+                                                        <div class="cc-table-adaptive-strong">
                                                             {{ $punto->nombre_punto }}
                                                         </div>
 
                                                         @if ($punto->grupo || $punto->subgrupo)
-                                                            <div class="text-sm text-[var(--cc-text-muted)]">
+                                                            <div class="cc-table-adaptive-muted">
                                                                 {{ $punto->grupo }}
 
                                                                 @if ($punto->subgrupo)
@@ -240,15 +258,15 @@
                                                         @endif
                                                     </td>
 
-                                                    <td>
+                                                    <td class="cc-table-adaptive-nowrap">
                                                         {{ $punto->codigo_punto ?: 'No definido' }}
                                                     </td>
 
-                                                    <td>
+                                                    <td class="cc-table-adaptive-nowrap">
                                                         {{ $punto->posicion_tanque ?: 'No definida' }}
                                                     </td>
 
-                                                    <td>
+                                                    <td class="cc-table-adaptive-nowrap">
                                                         @if ($codigoActual)
                                                             <span class="cc-badge cc-badge-active">
                                                                 Asignado
@@ -260,24 +278,24 @@
                                                         @endif
                                                     </td>
 
-                                                    <td>
+                                                    <td class="cc-table-adaptive-nowrap">
                                                         <input
                                                             type="text"
                                                             name="marchamos[{{ $punto->id }}]"
                                                             value="{{ old('marchamos.' . $punto->id, $codigoActual) }}"
                                                             class="cc-input"
-                                                            placeholder="Ej. 0006387"
+                                                            placeholder="0006387"
                                                             maxlength="7"
                                                             inputmode="numeric"
                                                             pattern="\d{7}">
 
                                                         @if ($codigoActual)
-                                                            <div class="text-xs text-[var(--cc-text-muted)] mt-1">
-                                                                Código provisional editable
+                                                            <div class="cc-table-adaptive-muted mt-1">
+                                                                Código editable
                                                             </div>
                                                         @else
-                                                            <div class="text-xs text-[var(--cc-text-muted)] mt-1">
-                                                                Pendiente de asignar
+                                                            <div class="cc-table-adaptive-muted mt-1">
+                                                                Pendiente
                                                             </div>
                                                         @endif
                                                     </td>
