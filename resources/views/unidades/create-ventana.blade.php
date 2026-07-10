@@ -28,9 +28,6 @@
                                 <h3 class="cc-title cc-title-compact">
                                     Registro de unidad
                                 </h3>
-                                <p class="cc-subtitle cc-subtitle-compact">
-                                    Complete la información de la unidad, sus tanques, capacidad cubierta y modelo de medición.
-                                </p>
                             </div>
 
                             <div class="flex items-center gap-3">

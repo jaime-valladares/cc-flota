@@ -9,15 +9,16 @@
 
         @include('layouts.partials.favicon')
 
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900&display=swap" rel="stylesheet" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
 
-    <body class="font-sans antialiased">
+    <body class="antialiased">
         <div class="min-h-screen" style="background: var(--cc-bg-main);">
-            <div class="cc-window-wrapper" style="padding: 2.1rem 1.25rem;">
+            <div class="cc-page-wrapper">
                 <div class="cc-window-container" style="max-width: 80rem;">
                     <div class="cc-card">
 
@@ -154,11 +155,12 @@
                                                 </button>
 
                                                 <div class="cc-filter-multiselect-menu" data-cc-filter-menu>
+
                                                     <label class="cc-filter-multiselect-option cc-filter-multiselect-option-master">
                                                         <input
                                                             type="checkbox"
                                                             data-cc-filter-check-all
-                                                            @checked($totalEmpresasSeleccionadas === 0 || $totalEmpresasSeleccionadas === $totalEmpresasSelector)
+                                                            @checked($totalEmpresasSeleccionadas > 0 && $totalEmpresasSeleccionadas === $totalEmpresasSelector)
                                                         >
 
                                                         <span>
@@ -172,8 +174,7 @@
                                                                 $empresaOpcionId = (string) $empresaOpcion->id;
                                                                 $empresaOpcionTexto = $empresaOpcion->nombre_legal;
 
-                                                                $empresaOpcionSeleccionada = $totalEmpresasSeleccionadas === 0
-                                                                    || in_array($empresaOpcionId, $empresaIdsSeleccionadas, true);
+                                                                $empresaOpcionSeleccionada = in_array($empresaOpcionId, $empresaIdsSeleccionadas, true);
 
                                                                 $empresaTextoBusqueda = \Illuminate\Support\Str::lower($empresaOpcionTexto);
                                                             @endphp
@@ -289,7 +290,7 @@
                             </div>
                         @else
                             <div class="cc-table-adaptive-wrapper">
-                                <table class="cc-table-adaptive">
+                                <table class="cc-table-adaptive" style="min-width: 78rem;">
                                     <thead>
                                         <tr>
                                             <th style="width: 26%;">Nombre legal</th>
@@ -330,13 +331,13 @@
                                             @endphp
 
                                             <tr>
-                                                <td class="cc-table-adaptive-break">
+                                                <td class="cc-table-adaptive-nowrap">
                                                     <div class="cc-table-adaptive-strong">
                                                         {{ $empresa->nombre_legal }}
                                                     </div>
                                                 </td>
 
-                                                <td class="cc-table-adaptive-break">
+                                                <td class="cc-table-adaptive-nowrap">
                                                     {{ $empresa->nombre_comercial ?: '—' }}
                                                 </td>
 

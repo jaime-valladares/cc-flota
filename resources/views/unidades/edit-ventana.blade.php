@@ -28,9 +28,6 @@
                                 <h3 class="cc-title cc-title-compact">
                                     Editar unidad
                                 </h3>
-                                <p class="cc-subtitle cc-subtitle-compact">
-                                    Actualice la información de la unidad, su cobertura Diesel Cop y su modelo de medición.
-                                </p>
                             </div>
 
                             <div class="flex items-center gap-3">

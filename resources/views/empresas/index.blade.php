@@ -144,7 +144,7 @@
                                                 <input
                                                     type="checkbox"
                                                     data-cc-filter-check-all
-                                                    @checked($totalEmpresasSeleccionadas === 0 || $totalEmpresasSeleccionadas === $totalEmpresasSelector)
+                                                    @checked($totalEmpresasSeleccionadas > 0 && $totalEmpresasSeleccionadas === $totalEmpresasSelector)
                                                 >
 
                                                 <span>
@@ -158,8 +158,7 @@
                                                         $empresaOpcionId = (string) $empresaOpcion->id;
                                                         $empresaOpcionTexto = $empresaOpcion->nombre_legal;
 
-                                                        $empresaOpcionSeleccionada = $totalEmpresasSeleccionadas === 0
-                                                            || in_array($empresaOpcionId, $empresaIdsSeleccionadas, true);
+                                                        $empresaOpcionSeleccionada = in_array($empresaOpcionId, $empresaIdsSeleccionadas, true);
 
                                                         $empresaTextoBusqueda = \Illuminate\Support\Str::lower($empresaOpcionTexto);
                                                     @endphp
@@ -275,7 +274,7 @@
                     </div>
                 @else
                     <div class="cc-table-adaptive-wrapper">
-                        <table class="cc-table-adaptive">
+                        <table class="cc-table-adaptive" style="min-width: 78rem;">
                             <thead>
                                 <tr>
                                     <th style="width: 26%;">Nombre legal</th>
@@ -316,13 +315,13 @@
                                     @endphp
 
                                     <tr>
-                                        <td class="cc-table-adaptive-break">
+                                        <td class="cc-table-adaptive-nowrap">
                                             <div class="cc-table-adaptive-strong">
                                                 {{ $empresa->nombre_legal }}
                                             </div>
                                         </td>
 
-                                        <td class="cc-table-adaptive-break">
+                                        <td class="cc-table-adaptive-nowrap">
                                             {{ $empresa->nombre_comercial ?: '—' }}
                                         </td>
 

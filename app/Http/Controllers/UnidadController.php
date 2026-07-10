@@ -45,20 +45,46 @@ class UnidadController extends Controller
         $user = Auth::user();
         $esUsuarioDieselCop = is_null($user->empresa_id);
 
+        // Compatibilidad temporal con filtro simple anterior.
         $empresaId = $request->input('empresa_id');
         $estado = $request->input('estado');
+
+        // Nuevos filtros de consulta.
+        $busqueda = trim((string) $request->input('busqueda', ''));
+
+        $empresaIds = collect($request->input('empresa_ids', []))
+            ->filter()
+            ->values()
+            ->all();
+
+        $placas = collect($request->input('placas', []))
+            ->filter()
+            ->values()
+            ->all();
+
+        $modelosMedicionSeleccionados = collect($request->input('modelos_medicion', []))
+            ->filter()
+            ->values()
+            ->all();
+
+        // Compatibilidad temporal con filtros antiguos.
         $modeloMedicion = $request->input('modelo_medicion');
         $placa = $request->input('placa');
 
         if (! $esUsuarioDieselCop) {
             $empresaId = $user->empresa_id;
+            $empresaIds = [$user->empresa_id];
         }
 
         $hayFiltros = $request->boolean('consultar')
             || filled($empresaId)
             || filled($estado)
+            || filled($busqueda)
+            || filled($placa)
             || filled($modeloMedicion)
-            || filled($placa);
+            || count($empresaIds) > 0
+            || count($placas) > 0
+            || count($modelosMedicionSeleccionados) > 0;
 
         $empresas = Empresa::query()
             ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
@@ -82,6 +108,14 @@ class UnidadController extends Controller
                 });
             });
 
+        $placasSelector = (clone $baseQuery)
+            ->select('placa')
+            ->whereNotNull('placa')
+            ->orderBy('placa')
+            ->pluck('placa')
+            ->unique()
+            ->values();
+
         $totalUnidades = (clone $baseQuery)->count();
         $totalRegistradas = (clone $baseQuery)->where('estado', 'registrada')->count();
         $totalActivas = (clone $baseQuery)->where('estado', 'activa')->count();
@@ -97,11 +131,31 @@ class UnidadController extends Controller
                     $empresaQuery->where('estado', 'activa');
                 });
             })
-            ->when($hayFiltros && filled($empresaId), function ($query) use ($empresaId) {
+            ->when($hayFiltros && count($empresaIds) > 0, function ($query) use ($empresaIds) {
+                $query->whereIn('empresa_id', $empresaIds);
+            })
+            ->when($hayFiltros && count($empresaIds) === 0 && filled($empresaId), function ($query) use ($empresaId) {
                 $query->where('empresa_id', $empresaId);
             })
             ->when($hayFiltros && filled($estado), function ($query) use ($estado) {
                 $query->where('estado', $estado);
+            })
+            ->when($hayFiltros && filled($busqueda), function ($query) use ($busqueda) {
+                $query->where(function ($subQuery) use ($busqueda) {
+                    $subQuery
+                        ->where('placa', 'like', '%' . $busqueda . '%')
+                        ->orWhereHas('empresa', function ($empresaQuery) use ($busqueda) {
+                            $empresaQuery
+                                ->where('nombre_legal', 'like', '%' . $busqueda . '%')
+                                ->orWhere('nombre_comercial', 'like', '%' . $busqueda . '%');
+                        });
+                });
+            })
+            ->when($hayFiltros && count($placas) > 0, function ($query) use ($placas) {
+                $query->whereIn('placa', $placas);
+            })
+            ->when($hayFiltros && count($modelosMedicionSeleccionados) > 0, function ($query) use ($modelosMedicionSeleccionados) {
+                $query->whereIn('modelo_medicion', $modelosMedicionSeleccionados);
             })
             ->when($hayFiltros && filled($modeloMedicion), function ($query) use ($modeloMedicion) {
                 $query->where('modelo_medicion', $modeloMedicion);
@@ -129,9 +183,14 @@ class UnidadController extends Controller
             'unidades' => $unidades,
             'empresas' => $empresas,
             'empresaId' => $empresaId,
+            'empresaIds' => $empresaIds,
             'estado' => $estado,
             'modeloMedicion' => $modeloMedicion,
             'placa' => $placa,
+            'busqueda' => $busqueda,
+            'placas' => $placas,
+            'placasSelector' => $placasSelector,
+            'modelosMedicionSeleccionados' => $modelosMedicionSeleccionados,
             'hayFiltros' => $hayFiltros,
             'totalUnidades' => $totalUnidades,
             'totalRegistradas' => $totalRegistradas,

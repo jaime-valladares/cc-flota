@@ -7,9 +7,8 @@
 
         <title>Administrar unidad | CC-Flota</title>
 
-        
         @include('layouts.partials.favicon')
-<!-- Fonts -->
+
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
@@ -28,14 +27,11 @@
                                 <h3 class="cc-title cc-title-compact">
                                     Administrar unidad
                                 </h3>
-                                <p class="cc-subtitle cc-subtitle-compact">
-                                    Localice una unidad para consultar su ficha, editar sus datos o gestionar su estado administrativo.
-                                </p>
                             </div>
 
                             <div class="flex items-center gap-3">
                                 <a href="{{ route('unidades.administrar') }}" class="cc-btn-secondary cc-btn-wide">
-                                    Volver a Administrar
+                                    Volver a administrar
                                 </a>
                             </div>
                         </div>
@@ -49,62 +45,72 @@
                         <form method="GET" action="{{ route('unidades.administrar.ventana') }}" class="mb-5">
                             <input type="hidden" name="consultar" value="1">
 
-                            <div class="cc-filter-panel cc-filter-panel-compact">
+                            <div class="cc-filter-panel cc-filter-panel-compact cc-filter-panel-inline">
 
                                 <div class="cc-form-section cc-form-section-compact" style="margin-top: 0;">
                                     <div class="cc-form-section-title">
-                                        Búsqueda administrativa
+                                        Filtros de Consulta
                                     </div>
                                 </div>
 
-                                <div class="cc-filter-inline-grid-unidades">
+                                <div class="cc-standard-filter-grid cc-unidades-consulta-filter-grid">
+
+                                    <div class="cc-field">
+                                        <label for="busqueda">
+                                            Buscar empresa o placa
+                                        </label>
+
+                                        <input
+                                            id="busqueda"
+                                            name="busqueda"
+                                            type="text"
+                                            class="cc-input"
+                                            value="{{ $busqueda ?? '' }}"
+                                            maxlength="150"
+                                            placeholder="Empresa o placa"
+                                        >
+                                    </div>
 
                                     <div class="cc-field">
                                         <label for="empresa_id">
                                             Empresa
                                         </label>
-                                        <select id="empresa_id" name="empresa_id" class="cc-input">
-                                            <option value="">Todas</option>
 
-                                            @foreach ($empresas as $empresa)
-                                                <option value="{{ $empresa->id }}"
-                                                        @selected((string) $empresaId === (string) $empresa->id)>
-                                                    {{ $empresa->nombre_comercial ?: $empresa->nombre_legal }}
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                        @if ($esUsuarioDieselCop)
+                                            <select id="empresa_id" name="empresa_id" class="cc-input">
+                                                <option value="">Todas</option>
+
+                                                @foreach ($empresas as $empresa)
+                                                    <option value="{{ $empresa->id }}"
+                                                            @selected((string) $empresaId === (string) $empresa->id)>
+                                                        {{ $empresa->nombre_comercial ?: $empresa->nombre_legal }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        @else
+                                            <select id="empresa_id" name="empresa_id" class="cc-input" disabled>
+                                                @foreach ($empresas as $empresa)
+                                                    <option value="{{ $empresa->id }}" selected>
+                                                        {{ $empresa->nombre_comercial ?: $empresa->nombre_legal }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        @endif
                                     </div>
 
                                     <div class="cc-field">
                                         <label for="placa">
                                             Placa
                                         </label>
-                                        <input id="placa"
-                                               type="text"
-                                               name="placa"
-                                               value="{{ $placa }}"
-                                               class="cc-input"
-                                               placeholder="Ej. C123ABC">
-                                    </div>
 
-                                    <div class="cc-field">
-                                        <label for="estado">
-                                            Estado
-                                        </label>
-                                        <select id="estado" name="estado" class="cc-input">
-                                            <option value="">Todos</option>
+                                        <select id="placa" name="placa" class="cc-input">
+                                            <option value="">Todas</option>
 
-                                            <option value="registrada" @selected($estado === 'registrada')>
-                                                Registrada
-                                            </option>
-
-                                            <option value="activa" @selected($estado === 'activa')>
-                                                Activa
-                                            </option>
-
-                                            <option value="inactiva" @selected($estado === 'inactiva')>
-                                                Inactiva
-                                            </option>
+                                            @foreach ($placasSelector as $placaOpcion)
+                                                <option value="{{ $placaOpcion }}" @selected((string) $placa === (string) $placaOpcion)>
+                                                    {{ $placaOpcion }}
+                                                </option>
+                                            @endforeach
                                         </select>
                                     </div>
 
@@ -112,6 +118,7 @@
                                         <label for="modelo_medicion">
                                             Modelo de medición
                                         </label>
+
                                         <select id="modelo_medicion" name="modelo_medicion" class="cc-input">
                                             <option value="">Todos</option>
 
@@ -123,7 +130,7 @@
                                         </select>
                                     </div>
 
-                                    <div class="cc-filter-inline-actions">
+                                    <div class="cc-standard-filter-actions">
                                         <button type="submit" class="cc-btn-primary">
                                             Consultar
                                         </button>
@@ -151,10 +158,10 @@
                         @if (! $hayFiltros)
                             <div class="cc-empty-panel cc-empty-panel-compact">
                                 <h5>
-                                    Búsqueda pendiente
+                                    Consulta pendiente
                                 </h5>
                                 <p>
-                                    Los resultados permanecerán vacíos hasta que localice una unidad por empresa, placa, estado o modelo de medición.
+                                    Los resultados permanecerán vacíos hasta que realice una búsqueda.
                                 </p>
                             </div>
                         @elseif ($unidades->isEmpty())
@@ -167,14 +174,14 @@
                                 </p>
                             </div>
                         @else
-                            <div class="space-y-3">
+                            <div class="cc-admin-result-list">
                                 @foreach ($unidades as $unidad)
-                                    <article class="cc-result-card cc-result-card-compact">
-                                        <div class="cc-result-grid">
+                                    <article class="cc-admin-result-card">
+                                        <div class="cc-admin-result-grid">
 
-                                            <div class="cc-result-main">
-                                                <div class="cc-result-title-row">
-                                                    <h5 class="cc-result-title cc-cell-truncate">
+                                            <div class="cc-admin-result-main">
+                                                <div class="cc-admin-result-title-row">
+                                                    <h5 class="cc-admin-result-title">
                                                         {{ $unidad->placa }}
                                                     </h5>
 
@@ -193,42 +200,48 @@
                                                     @endif
                                                 </div>
 
-                                                <div class="cc-result-subtitle cc-cell-truncate">
+                                                <div class="cc-admin-result-subtitle">
                                                     {{ $unidad->marca ?: 'Sin marca registrada' }}
                                                 </div>
                                             </div>
 
-                                            <div class="cc-result-meta">
-                                                <div class="cc-result-label">
+                                            <div class="cc-admin-result-meta">
+                                                <div class="cc-admin-result-label">
                                                     Empresa
                                                 </div>
 
                                                 @if ($unidad->empresa)
-                                                    <div class="cc-result-value cc-cell-truncate">
+                                                    <div class="cc-admin-result-value">
                                                         {{ $unidad->empresa->nombre_comercial ?: $unidad->empresa->nombre_legal }}
                                                     </div>
+
+                                                    @if ($unidad->empresa->nit ?? false)
+                                                        <div class="cc-admin-result-value-muted">
+                                                            NIT: {{ $unidad->empresa->nit }}
+                                                        </div>
+                                                    @endif
                                                 @else
-                                                    <div class="cc-result-value-muted">
+                                                    <div class="cc-admin-result-value-muted">
                                                         Sin empresa
                                                     </div>
                                                 @endif
                                             </div>
 
-                                            <div class="cc-result-meta">
-                                                <div class="cc-result-label">
+                                            <div class="cc-admin-result-meta">
+                                                <div class="cc-admin-result-label">
                                                     Cobertura
                                                 </div>
 
-                                                <div class="cc-result-value">
+                                                <div class="cc-admin-result-value">
                                                     {{ $unidad->cantidad_tanques_con_licencia }} de {{ $unidad->total_tanques }} tanques
                                                 </div>
 
-                                                <div class="cc-result-value-muted">
+                                                <div class="cc-admin-result-value-muted">
                                                     {{ $unidad->modelo_medicion_texto }}
                                                 </div>
                                             </div>
 
-                                            <div class="cc-result-actions">
+                                            <div class="cc-admin-result-actions">
                                                 <a href="{{ route('unidades.show.ventana', $unidad) }}" class="cc-btn-primary cc-btn-result">
                                                     Ver ficha
                                                 </a>
@@ -244,7 +257,7 @@
                             </div>
 
                             <div class="mt-6">
-                                {{ $unidades->links() }}
+                                {{ $unidades->appends(array_merge(request()->query(), ['consultar' => 1]))->links() }}
                             </div>
                         @endif
 

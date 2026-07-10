@@ -4564,3 +4564,68 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         grid-template-columns: 1fr;
     }
 }
+
+/* =========================================================
+   CC-Flota — Consulta unidades
+   Distribución adaptable de filtros
+   ========================================================= */
+
+.cc-unidades-consulta-filter-grid {
+    grid-template-columns:
+        minmax(15rem, 1.1fr)
+        minmax(12rem, 0.85fr)
+        minmax(11rem, 0.8fr)
+        minmax(13rem, 0.9fr)
+        auto;
+}
+
+/* Ventana mediana:
+   los botones bajan a una segunda línea para evitar scroll horizontal. */
+@media (max-width: 1320px) {
+    .cc-unidades-consulta-filter-grid {
+        grid-template-columns:
+            minmax(0, 1.15fr)
+            minmax(0, 0.95fr)
+            minmax(0, 0.9fr)
+            minmax(0, 0.95fr);
+    }
+
+    .cc-unidades-consulta-filter-grid .cc-standard-filter-actions {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+        padding-top: 0.15rem;
+    }
+}
+
+/* Ventana reducida / tablet:
+   dos columnas limpias. */
+@media (max-width: 980px) {
+    .cc-unidades-consulta-filter-grid {
+        grid-template-columns:
+            minmax(0, 1fr)
+            minmax(0, 1fr);
+    }
+
+    .cc-unidades-consulta-filter-grid .cc-standard-filter-actions {
+        grid-column: 1 / -1;
+    }
+}
+
+/* Teléfono:
+   una columna. */
+@media (max-width: 640px) {
+    .cc-unidades-consulta-filter-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .cc-unidades-consulta-filter-grid .cc-standard-filter-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        width: 100%;
+    }
+
+    .cc-unidades-consulta-filter-grid .cc-standard-filter-actions .cc-btn-primary,
+    .cc-unidades-consulta-filter-grid .cc-standard-filter-actions .cc-btn-secondary {
+        width: 100%;
+    }
+}
