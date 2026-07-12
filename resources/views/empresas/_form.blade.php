@@ -1,3 +1,7 @@
+@php
+    $queryParams = request()->query();
+@endphp
+
 <div class="cc-grid cc-grid-compact">
 
     <div class="cc-form-section-slim">
@@ -10,16 +14,21 @@
         <label for="nombre_legal">
             Nombre legal <span class="cc-required">*</span>
         </label>
+
         <input
             id="nombre_legal"
             name="nombre_legal"
             type="text"
             class="cc-input"
             value="{{ old('nombre_legal', $empresa->nombre_legal ?? '') }}"
+            maxlength="150"
             required
         >
+
         @error('nombre_legal')
-            <div class="cc-error">{{ $message }}</div>
+            <div class="cc-error">
+                {{ $message }}
+            </div>
         @enderror
     </div>
 
@@ -27,15 +36,20 @@
         <label for="nombre_comercial">
             Nombre comercial
         </label>
+
         <input
             id="nombre_comercial"
             name="nombre_comercial"
             type="text"
             class="cc-input"
             value="{{ old('nombre_comercial', $empresa->nombre_comercial ?? '') }}"
+            maxlength="150"
         >
+
         @error('nombre_comercial')
-            <div class="cc-error">{{ $message }}</div>
+            <div class="cc-error">
+                {{ $message }}
+            </div>
         @enderror
     </div>
 
@@ -43,6 +57,7 @@
         <label for="nit">
             NIT <span class="cc-required">*</span>
         </label>
+
         <input
             id="nit"
             name="nit"
@@ -53,8 +68,11 @@
             placeholder="0000-000000-000-0"
             required
         >
+
         @error('nit')
-            <div class="cc-error">{{ $message }}</div>
+            <div class="cc-error">
+                {{ $message }}
+            </div>
         @enderror
     </div>
 
@@ -68,16 +86,21 @@
         <label for="correo_empresa">
             Correo empresa <span class="cc-required">*</span>
         </label>
+
         <input
             id="correo_empresa"
             name="correo_empresa"
             type="email"
             class="cc-input"
             value="{{ old('correo_empresa', $empresa->correo_empresa ?? '') }}"
+            maxlength="150"
             required
         >
+
         @error('correo_empresa')
-            <div class="cc-error">{{ $message }}</div>
+            <div class="cc-error">
+                {{ $message }}
+            </div>
         @enderror
     </div>
 
@@ -85,6 +108,7 @@
         <label for="telefono_empresa">
             Teléfono empresa
         </label>
+
         <input
             id="telefono_empresa"
             name="telefono_empresa"
@@ -94,8 +118,11 @@
             maxlength="9"
             placeholder="0000-0000"
         >
+
         @error('telefono_empresa')
-            <div class="cc-error">{{ $message }}</div>
+            <div class="cc-error">
+                {{ $message }}
+            </div>
         @enderror
     </div>
 
@@ -103,15 +130,20 @@
         <label for="direccion">
             Dirección
         </label>
+
         <input
             id="direccion"
             name="direccion"
             type="text"
             class="cc-input"
             value="{{ old('direccion', $empresa->direccion ?? '') }}"
+            maxlength="255"
         >
+
         @error('direccion')
-            <div class="cc-error">{{ $message }}</div>
+            <div class="cc-error">
+                {{ $message }}
+            </div>
         @enderror
     </div>
 
@@ -125,16 +157,21 @@
         <label for="poc_nombre">
             Nombre del POC <span class="cc-required">*</span>
         </label>
+
         <input
             id="poc_nombre"
             name="poc_nombre"
             type="text"
             class="cc-input"
             value="{{ old('poc_nombre', $empresa->poc_nombre ?? '') }}"
+            maxlength="150"
             required
         >
+
         @error('poc_nombre')
-            <div class="cc-error">{{ $message }}</div>
+            <div class="cc-error">
+                {{ $message }}
+            </div>
         @enderror
     </div>
 
@@ -142,16 +179,21 @@
         <label for="poc_email">
             Correo del POC <span class="cc-required">*</span>
         </label>
+
         <input
             id="poc_email"
             name="poc_email"
             type="email"
             class="cc-input"
             value="{{ old('poc_email', $empresa->poc_email ?? '') }}"
+            maxlength="150"
             required
         >
+
         @error('poc_email')
-            <div class="cc-error">{{ $message }}</div>
+            <div class="cc-error">
+                {{ $message }}
+            </div>
         @enderror
     </div>
 
@@ -159,6 +201,7 @@
         <label for="poc_telefono">
             Teléfono del POC
         </label>
+
         <input
             id="poc_telefono"
             name="poc_telefono"
@@ -168,8 +211,11 @@
             maxlength="9"
             placeholder="0000-0000"
         >
+
         @error('poc_telefono')
-            <div class="cc-error">{{ $message }}</div>
+            <div class="cc-error">
+                {{ $message }}
+            </div>
         @enderror
     </div>
 
@@ -181,13 +227,33 @@
     </button>
 
     @if ($empresa)
-        <a href="{{ ($modoVentana ?? false) ? route('empresas.show.ventana', $empresa) : route('empresas.show', $empresa) }}"
-           class="cc-btn-secondary cc-btn-form-action">
+        <a
+            href="{{ ($modoVentana ?? false)
+                ? route(
+                    'empresas.show.ventana',
+                    array_merge(
+                        $queryParams,
+                        ['empresa' => $empresa]
+                    )
+                )
+                : route(
+                    'empresas.show',
+                    array_merge(
+                        $queryParams,
+                        ['empresa' => $empresa]
+                    )
+                ) }}"
+            class="cc-btn-secondary cc-btn-form-action"
+        >
             Cancelar
         </a>
     @else
-        <a href="{{ ($modoVentana ?? false) ? route('empresas.consulta.ventana') : route('empresas.index') }}"
-           class="cc-btn-secondary cc-btn-form-action">
+        <a
+            href="{{ ($modoVentana ?? false)
+                ? route('empresas.consulta.ventana', $queryParams)
+                : route('empresas.index', $queryParams) }}"
+            class="cc-btn-secondary cc-btn-form-action"
+        >
             Cancelar
         </a>
     @endif

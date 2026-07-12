@@ -1,3 +1,7 @@
+@php
+    $queryParams = request()->query();
+@endphp
+
 <x-app-layout>
     <div class="cc-page-wrapper">
         <div class="cc-content-container" style="max-width: 80rem;">
@@ -11,17 +15,39 @@
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <a href="{{ route('empresas.show', $empresa) }}" class="cc-btn-secondary cc-btn-wide">
+                        <a href="{{ route(
+                            'empresas.show',
+                            array_merge(
+                                $queryParams,
+                                ['empresa' => $empresa]
+                            )
+                        ) }}"
+                           class="cc-btn-secondary cc-btn-wide">
                             Volver a ficha
                         </a>
 
-                        <a href="{{ route('empresas.administrar') }}" class="cc-btn-secondary cc-btn-wide">
+                        <a href="{{ route('empresas.administrar', $queryParams) }}"
+                           class="cc-btn-secondary cc-btn-wide">
                             Volver a administrar
                         </a>
                     </div>
                 </div>
 
-                <form method="POST" action="{{ route('empresas.update', $empresa) }}" novalidate>
+                @if (session('success'))
+                    <div class="cc-alert cc-alert-success">
+                        {{ session('success') }}
+                    </div>
+                @endif
+
+                <form method="POST"
+                      action="{{ route(
+                          'empresas.update',
+                          array_merge(
+                              $queryParams,
+                              ['empresa' => $empresa]
+                          )
+                      ) }}"
+                      novalidate>
                     @csrf
                     @method('PUT')
 

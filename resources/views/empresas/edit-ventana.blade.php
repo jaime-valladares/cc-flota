@@ -1,3 +1,7 @@
+@php
+    $queryParams = request()->query();
+@endphp
+
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
@@ -7,9 +11,8 @@
 
         <title>Editar empresa cliente | CC-Flota</title>
 
-        
         @include('layouts.partials.favicon')
-<!-- Fonts -->
+
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
@@ -31,17 +34,50 @@
                             </div>
 
                             <div class="flex items-center gap-3">
-                                <a href="{{ route('empresas.show.ventana', $empresa) }}" class="cc-btn-secondary cc-btn-wide">
+                                <a href="{{ route(
+                                    'empresas.show.ventana',
+                                    array_merge(
+                                        $queryParams,
+                                        ['empresa' => $empresa]
+                                    )
+                                ) }}"
+                                   class="cc-btn-secondary cc-btn-wide">
                                     Volver a ficha
                                 </a>
 
-                                <a href="{{ route('empresas.administrar') }}" class="cc-btn-secondary cc-btn-wide">
+                                <a href="{{ route(
+                                    'empresas.administrar.ventana',
+                                    $queryParams
+                                ) }}"
+                                   class="cc-btn-secondary cc-btn-wide">
+                                    Volver a administrar
+                                </a>
+
+                                <a href="{{ route(
+                                    'empresas.administrar',
+                                    $queryParams
+                                ) }}"
+                                   class="cc-btn-secondary cc-btn-wide">
                                     Volver al sistema
                                 </a>
                             </div>
                         </div>
 
-                        <form method="POST" action="{{ route('empresas.update', $empresa) }}" novalidate>
+                        @if (session('success'))
+                            <div class="cc-alert cc-alert-success">
+                                {{ session('success') }}
+                            </div>
+                        @endif
+
+                        <form method="POST"
+                              action="{{ route(
+                                  'empresas.update',
+                                  array_merge(
+                                      $queryParams,
+                                      ['empresa' => $empresa]
+                                  )
+                              ) }}"
+                              novalidate>
                             @csrf
                             @method('PUT')
 

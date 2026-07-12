@@ -11,7 +11,7 @@
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <a href="{{ route('empresas.consulta.ventana') }}"
+                        <a href="{{ route('empresas.consulta.ventana', request()->query()) }}"
                            target="_blank"
                            rel="noopener noreferrer"
                            class="cc-btn-secondary cc-btn-wide">
@@ -21,7 +21,7 @@
                 </div>
 
                 @if (session('success'))
-                    <div class="cc-alert-success">
+                    <div class="cc-alert cc-alert-success">
                         {{ session('success') }}
                     </div>
                 @endif
@@ -29,10 +29,11 @@
                 <div class="cc-summary-strip">
                     <div class="cc-summary-strip-item">
                         <span class="cc-summary-strip-label">
-                            Total empresas
+                            {{ $hayFiltros ? 'Resultados' : 'Total empresas' }}
                         </span>
+
                         <span class="cc-summary-strip-value">
-                            {{ $totalEmpresas }}
+                            {{ $hayFiltros ? $empresas->total() : $totalEmpresas }}
                         </span>
                     </div>
 
@@ -40,6 +41,7 @@
                         <span class="cc-summary-strip-label">
                             Activas
                         </span>
+
                         <span class="cc-summary-strip-value cc-summary-strip-value-success">
                             {{ $empresasActivas }}
                         </span>
@@ -49,16 +51,21 @@
                         <span class="cc-summary-strip-label">
                             Inactivas
                         </span>
+
                         <span class="cc-summary-strip-value cc-summary-strip-value-danger">
                             {{ $empresasInactivas }}
                         </span>
                     </div>
                 </div>
 
-                <form method="GET" action="{{ route('empresas.index') }}" class="mb-5">
+                <form method="GET"
+                      action="{{ route('empresas.index') }}"
+                      class="mb-5">
+
                     <input type="hidden" name="consultar" value="1">
 
                     <div class="cc-filter-panel cc-filter-panel-compact cc-filter-panel-inline">
+
                         <div class="cc-form-section cc-form-section-compact" style="margin-top: 0;">
                             <div class="cc-form-section-title">
                                 Filtros de consulta
@@ -68,19 +75,25 @@
                         <div class="cc-standard-filter-grid">
 
                             <div class="cc-field">
-                                <label for="busqueda">
-                                    Búsqueda de Empresa por Nombre
+                                <label for="busqueda_empresa">
+                                    Búsqueda de empresa por nombre
                                 </label>
 
                                 <input
-                                    id="busqueda"
-                                    name="busqueda"
+                                    id="busqueda_empresa"
+                                    name="busqueda_empresa"
                                     type="text"
                                     class="cc-input"
-                                    value="{{ $busqueda ?? '' }}"
+                                    value="{{ $busquedaEmpresa ?? $busqueda ?? '' }}"
                                     maxlength="150"
-                                    placeholder="Nombre legal de la empresa"
+                                    placeholder="Nombre legal o comercial"
                                 >
+
+                                @error('busqueda_empresa')
+                                    <div class="cc-error">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
 
                                 @error('busqueda')
                                     <div class="cc-error">
@@ -90,47 +103,25 @@
                             </div>
 
                             <div class="cc-field">
-                                <label for="empresa_multiselect_button">
+                                <label>
                                     Empresa
                                 </label>
 
                                 @if ($esUsuarioDieselCop)
-                                    @php
-                                        $empresaIdsSeleccionadas = collect($empresaIds ?? [])
-                                            ->map(fn ($id) => (string) $id)
-                                            ->all();
+                                    <div class="cc-filter-multiselect"
+                                         data-cc-filter-multiselect>
 
-                                        $totalEmpresasSelector = $empresasSelector->count();
-                                        $totalEmpresasSeleccionadas = count($empresaIdsSeleccionadas);
+                                        <button type="button"
+                                                class="cc-filter-multiselect-toggle"
+                                                data-cc-filter-toggle>
 
-                                        if ($totalEmpresasSeleccionadas === 0 || $totalEmpresasSeleccionadas === $totalEmpresasSelector) {
-                                            $textoEmpresasSeleccionadas = 'Todas';
-                                        } elseif ($totalEmpresasSeleccionadas === 1) {
-                                            $empresaSeleccionada = $empresasSelector->firstWhere('id', (int) $empresaIdsSeleccionadas[0]);
-
-                                            $textoEmpresasSeleccionadas = $empresaSeleccionada
-                                                ? $empresaSeleccionada->nombre_legal
-                                                : '1 seleccionada';
-                                        } else {
-                                            $textoEmpresasSeleccionadas = $totalEmpresasSeleccionadas . ' seleccionadas';
-                                        }
-                                    @endphp
-
-                                    <div
-                                        class="cc-filter-multiselect"
-                                        data-cc-filter-multiselect
-                                        data-all-text="Todas"
-                                        data-singular-text="seleccionada"
-                                        data-plural-text="seleccionadas"
-                                    >
-                                        <button
-                                            id="empresa_multiselect_button"
-                                            type="button"
-                                            class="cc-filter-multiselect-toggle"
-                                            data-cc-filter-toggle
-                                        >
-                                            <span data-cc-filter-label>
-                                                {{ $textoEmpresasSeleccionadas }}
+                                            <span data-cc-filter-label
+                                                  data-default-label="Todas">
+                                                @if (! empty($empresaIds))
+                                                    {{ count($empresaIds) }} seleccionadas
+                                                @else
+                                                    Todas
+                                                @endif
                                             </span>
 
                                             <span class="cc-filter-multiselect-arrow">
@@ -138,73 +129,74 @@
                                             </span>
                                         </button>
 
-                                        <div class="cc-filter-multiselect-menu" data-cc-filter-menu>
+                                        <div class="cc-filter-multiselect-menu"
+                                             data-cc-filter-menu>
 
-                                            <label class="cc-filter-multiselect-option cc-filter-multiselect-option-master">
-                                                <input
-                                                    type="checkbox"
-                                                    data-cc-filter-check-all
-                                                    @checked($totalEmpresasSeleccionadas > 0 && $totalEmpresasSeleccionadas === $totalEmpresasSelector)
-                                                >
+                                            <div class="cc-filter-multiselect-list">
 
-                                                <span>
-                                                    Seleccionar todo
-                                                </span>
-                                            </label>
+                                                <label class="cc-filter-multiselect-option cc-filter-multiselect-option-master">
+                                                    <input type="checkbox"
+                                                           data-cc-filter-master>
 
-                                            <div class="cc-filter-multiselect-list" data-cc-filter-options>
+                                                    <span>
+                                                        Seleccionar todo
+                                                    </span>
+                                                </label>
+
                                                 @foreach ($empresasSelector as $empresaOpcion)
-                                                    @php
-                                                        $empresaOpcionId = (string) $empresaOpcion->id;
-                                                        $empresaOpcionTexto = $empresaOpcion->nombre_legal;
+                                                    <label class="cc-filter-multiselect-option"
+                                                           data-cc-filter-option>
 
-                                                        $empresaOpcionSeleccionada = in_array($empresaOpcionId, $empresaIdsSeleccionadas, true);
-
-                                                        $empresaTextoBusqueda = \Illuminate\Support\Str::lower($empresaOpcionTexto);
-                                                    @endphp
-
-                                                    <label
-                                                        class="cc-filter-multiselect-option"
-                                                        data-cc-filter-option
-                                                        data-cc-filter-text="{{ $empresaTextoBusqueda }}"
-                                                    >
                                                         <input
                                                             type="checkbox"
                                                             name="empresa_ids[]"
                                                             value="{{ $empresaOpcion->id }}"
+                                                            @checked(
+                                                                in_array(
+                                                                    (string) $empresaOpcion->id,
+                                                                    array_map('strval', $empresaIds ?? []),
+                                                                    true
+                                                                )
+                                                            )
                                                             data-cc-filter-checkbox
-                                                            @checked($empresaOpcionSeleccionada)
                                                         >
 
                                                         <span data-cc-filter-option-label>
-                                                            {{ $empresaOpcionTexto }}
+                                                            {{ $empresaOpcion->nombre_comercial ?: $empresaOpcion->nombre_legal }}
                                                         </span>
                                                     </label>
                                                 @endforeach
+
                                             </div>
                                         </div>
                                     </div>
-
-                                    @error('empresa_ids')
-                                        <div class="cc-error">
-                                            {{ $message }}
-                                        </div>
-                                    @enderror
-
-                                    @error('empresa_ids.*')
-                                        <div class="cc-error">
-                                            {{ $message }}
-                                        </div>
-                                    @enderror
                                 @else
-                                    <select id="empresa_id" name="empresa_id" class="cc-input" disabled>
+                                    <select class="cc-input" disabled>
                                         @foreach ($empresasSelector as $empresaOpcion)
                                             <option value="{{ $empresaOpcion->id }}" selected>
-                                                {{ $empresaOpcion->nombre_legal }}
+                                                {{ $empresaOpcion->nombre_comercial ?: $empresaOpcion->nombre_legal }}
                                             </option>
                                         @endforeach
                                     </select>
+
+                                    @foreach ($empresaIds ?? [] as $empresaSeleccionadaId)
+                                        <input type="hidden"
+                                               name="empresa_ids[]"
+                                               value="{{ $empresaSeleccionadaId }}">
+                                    @endforeach
                                 @endif
+
+                                @error('empresa_ids')
+                                    <div class="cc-error">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
+
+                                @error('empresa_ids.*')
+                                    <div class="cc-error">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
                             </div>
 
                             <div class="cc-field">
@@ -212,12 +204,21 @@
                                     Estado
                                 </label>
 
-                                <select id="estado" name="estado" class="cc-input">
-                                    <option value="">Todos</option>
-                                    <option value="activa" @selected($estado === 'activa')>
+                                <select id="estado"
+                                        name="estado"
+                                        class="cc-input">
+
+                                    <option value="">
+                                        Todos
+                                    </option>
+
+                                    <option value="activa"
+                                            @selected($estado === 'activa')>
                                         Activas
                                     </option>
-                                    <option value="inactiva" @selected($estado === 'inactiva')>
+
+                                    <option value="inactiva"
+                                            @selected($estado === 'inactiva')>
                                         Inactivas
                                     </option>
                                 </select>
@@ -230,11 +231,13 @@
                             </div>
 
                             <div class="cc-standard-filter-actions">
-                                <button type="submit" class="cc-btn-primary">
+                                <button type="submit"
+                                        class="cc-btn-primary">
                                     Consultar
                                 </button>
 
-                                <a href="{{ route('empresas.index') }}" class="cc-btn-secondary">
+                                <a href="{{ route('empresas.index') }}"
+                                   class="cc-btn-secondary">
                                     Limpiar
                                 </a>
                             </div>
@@ -246,11 +249,22 @@
                 @if ($hayFiltros && $empresas->total() > 0)
                     <div class="mb-4 flex justify-end text-sm text-[var(--cc-text-muted)]">
                         Mostrando
-                        <span class="mx-1 font-bold text-[var(--cc-text-main)]">{{ $empresas->firstItem() }}</span>
+
+                        <span class="mx-1 font-bold text-[var(--cc-text-main)]">
+                            {{ $empresas->firstItem() }}
+                        </span>
+
                         -
-                        <span class="mx-1 font-bold text-[var(--cc-text-main)]">{{ $empresas->lastItem() }}</span>
+
+                        <span class="mx-1 font-bold text-[var(--cc-text-main)]">
+                            {{ $empresas->lastItem() }}
+                        </span>
+
                         de
-                        <span class="ml-1 font-bold text-[var(--cc-text-main)]">{{ $empresas->total() }}</span>
+
+                        <span class="ml-1 font-bold text-[var(--cc-text-main)]">
+                            {{ $empresas->total() }}
+                        </span>
                     </div>
                 @endif
 
@@ -259,6 +273,7 @@
                         <h5>
                             Consulta pendiente
                         </h5>
+
                         <p>
                             Los resultados permanecerán vacíos hasta que realice una búsqueda.
                         </p>
@@ -268,20 +283,37 @@
                         <h5>
                             Sin resultados
                         </h5>
+
                         <p>
                             No hay empresas que coincidan con los criterios seleccionados.
                         </p>
                     </div>
                 @else
                     <div class="cc-table-adaptive-wrapper">
-                        <table class="cc-table-adaptive" style="min-width: 78rem;">
+                        <table class="cc-table-adaptive"
+                               style="min-width: 78rem;">
+
                             <thead>
                                 <tr>
-                                    <th style="width: 26%;">Nombre legal</th>
-                                    <th style="width: 20%;">Nombre comercial</th>
-                                    <th style="width: 20%;">Contacto</th>
-                                    <th style="width: 16%;">Teléfono</th>
-                                    <th style="width: 18%;">Unidades</th>
+                                    <th style="width: 26%;">
+                                        Nombre legal
+                                    </th>
+
+                                    <th style="width: 20%;">
+                                        Nombre comercial
+                                    </th>
+
+                                    <th style="width: 20%;">
+                                        Contacto
+                                    </th>
+
+                                    <th style="width: 16%;">
+                                        Teléfono
+                                    </th>
+
+                                    <th style="width: 18%;">
+                                        Unidades
+                                    </th>
                                 </tr>
                             </thead>
 
@@ -297,20 +329,15 @@
                                             ?? null;
 
                                         if (is_null($unidadesActivas) || is_null($unidadesRegistradas)) {
-                                            if (method_exists($empresa, 'unidades')) {
-                                                $unidadesActivas = \App\Models\Unidad::query()
-                                                    ->where('empresa_id', $empresa->id)
-                                                    ->where('estado', 'activa')
-                                                    ->count();
+                                            $unidadesActivas = \App\Models\Unidad::query()
+                                                ->where('empresa_id', $empresa->id)
+                                                ->where('estado', 'activa')
+                                                ->count();
 
-                                                $unidadesRegistradas = \App\Models\Unidad::query()
-                                                    ->where('empresa_id', $empresa->id)
-                                                    ->where('estado', 'registrada')
-                                                    ->count();
-                                            } else {
-                                                $unidadesActivas = 0;
-                                                $unidadesRegistradas = 0;
-                                            }
+                                            $unidadesRegistradas = \App\Models\Unidad::query()
+                                                ->where('empresa_id', $empresa->id)
+                                                ->where('estado', 'registrada')
+                                                ->count();
                                         }
                                     @endphp
 
@@ -357,11 +384,153 @@
                     </div>
 
                     <div class="mt-6">
-                        {{ $empresas->appends(array_merge(request()->query(), ['consultar' => 1]))->links() }}
+                        {{ $empresas
+                            ->appends(
+                                array_merge(
+                                    request()->query(),
+                                    ['consultar' => 1]
+                                )
+                            )
+                            ->links() }}
                     </div>
                 @endif
 
             </div>
         </div>
     </div>
+
+    <script>
+        document.querySelectorAll('[data-cc-filter-multiselect]').forEach(function (multiselect) {
+            const toggle = multiselect.querySelector('[data-cc-filter-toggle]');
+            const menu = multiselect.querySelector('[data-cc-filter-menu]');
+            const label = multiselect.querySelector('[data-cc-filter-label]');
+            const master = multiselect.querySelector('[data-cc-filter-master]');
+
+            const checkboxes = Array.from(
+                multiselect.querySelectorAll('[data-cc-filter-checkbox]')
+            );
+
+            const defaultLabel = label?.dataset.defaultLabel || 'Todas';
+
+            function updateLabel() {
+                const selected = checkboxes.filter(function (checkbox) {
+                    return checkbox.checked;
+                });
+
+                if (selected.length === 0) {
+                    label.textContent = defaultLabel;
+                } else if (selected.length === 1) {
+                    const selectedOption = selected[0].closest(
+                        '[data-cc-filter-option]'
+                    );
+
+                    const selectedLabel = selectedOption
+                        ? selectedOption.querySelector(
+                            '[data-cc-filter-option-label]'
+                        )
+                        : null;
+
+                    label.textContent = selectedLabel
+                        ? selectedLabel.textContent.trim()
+                        : '1 seleccionada';
+                } else {
+                    label.textContent = selected.length + ' seleccionadas';
+                }
+
+                if (master) {
+                    master.checked =
+                        selected.length === checkboxes.length
+                        && checkboxes.length > 0;
+
+                    master.indeterminate =
+                        selected.length > 0
+                        && selected.length < checkboxes.length;
+                }
+            }
+
+            function closeAllExceptCurrent() {
+                document
+                    .querySelectorAll('[data-cc-filter-multiselect]')
+                    .forEach(function (otherMultiselect) {
+                        if (otherMultiselect === multiselect) {
+                            return;
+                        }
+
+                        const otherToggle = otherMultiselect.querySelector(
+                            '[data-cc-filter-toggle]'
+                        );
+
+                        const otherMenu = otherMultiselect.querySelector(
+                            '[data-cc-filter-menu]'
+                        );
+
+                        if (otherToggle && otherMenu) {
+                            otherToggle.classList.remove('is-open');
+                            otherMenu.classList.remove('is-open');
+                        }
+                    });
+            }
+
+            if (toggle && menu) {
+                toggle.addEventListener('click', function () {
+                    closeAllExceptCurrent();
+
+                    toggle.classList.toggle('is-open');
+                    menu.classList.toggle('is-open');
+                });
+            }
+
+            if (master) {
+                master.addEventListener('change', function () {
+                    checkboxes.forEach(function (checkbox) {
+                        checkbox.checked = master.checked;
+                    });
+
+                    updateLabel();
+                });
+            }
+
+            checkboxes.forEach(function (checkbox) {
+                checkbox.addEventListener('change', updateLabel);
+            });
+
+            updateLabel();
+        });
+
+        document.addEventListener('click', function (event) {
+            if (event.target.closest('[data-cc-filter-multiselect]')) {
+                return;
+            }
+
+            document
+                .querySelectorAll('[data-cc-filter-toggle]')
+                .forEach(function (toggle) {
+                    toggle.classList.remove('is-open');
+                });
+
+            document
+                .querySelectorAll('[data-cc-filter-menu]')
+                .forEach(function (menu) {
+                    menu.classList.remove('is-open');
+                });
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key !== 'Escape') {
+                return;
+            }
+
+            document
+                .querySelectorAll('[data-cc-filter-toggle]')
+                .forEach(function (toggle) {
+                    toggle.classList.remove('is-open');
+                });
+
+            document
+                .querySelectorAll('[data-cc-filter-menu]')
+                .forEach(function (menu) {
+                    menu.classList.remove('is-open');
+                });
+        });
+    </script>
 </x-app-layout>

@@ -3,13 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Empresa;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class EmpresaController extends Controller
 {
     /**
-     * Display the informational company consultation panel.
+     * Muestra la consulta informativa de empresas.
      */
     public function index(Request $request)
     {
@@ -19,7 +21,7 @@ class EmpresaController extends Controller
     }
 
     /**
-     * Display the standalone informational company consultation panel.
+     * Muestra la consulta informativa de empresas en ventana independiente.
      */
     public function consultaVentana(Request $request)
     {
@@ -29,7 +31,10 @@ class EmpresaController extends Controller
     }
 
     /**
-     * Display the administrative company search panel.
+     * Muestra la administración de empresas.
+     *
+     * Tanto empresas activas como inactivas pueden aparecer.
+     * Las acciones disponibles dependerán del estado de cada empresa.
      */
     public function administrar(Request $request)
     {
@@ -39,7 +44,7 @@ class EmpresaController extends Controller
     }
 
     /**
-     * Display the standalone administrative company search panel.
+     * Muestra la administración de empresas en ventana independiente.
      */
     public function administrarVentana(Request $request)
     {
@@ -49,13 +54,14 @@ class EmpresaController extends Controller
     }
 
     /**
-     * Prepare company query data for normal and standalone company screens.
+     * Prepara los datos de consulta y administración de empresas.
      */
     private function prepararConsultaEmpresas(Request $request): array
     {
         $user = Auth::user();
 
         $esUsuarioDieselCop = is_null($user->empresa_id);
+
         $empresaUsuario = $esUsuarioDieselCop
             ? null
             : Empresa::find($user->empresa_id);
@@ -64,26 +70,32 @@ class EmpresaController extends Controller
             'consultar' => ['nullable', 'boolean'],
 
             /*
-             * Filtro de texto libre estándar para consultas.
-             * En Empresas V1 busca únicamente por nombre legal.
+             * busqueda_empresa será el nombre estándar.
+             * busqueda se conserva temporalmente para no romper enlaces anteriores.
              */
+            'busqueda_empresa' => ['nullable', 'string', 'max:150'],
             'busqueda' => ['nullable', 'string', 'max:150'],
 
             /*
-             * empresa_id se conserva para no romper pantallas administrativas
-             * que todavía trabajan con una sola empresa.
-             */
-            'empresa_id' => ['nullable', 'integer', 'exists:empresas,id'],
-
-            /*
-             * empresa_ids será el nuevo estándar para consultas con selección múltiple.
+             * empresa_ids es el filtro estándar de selección múltiple.
+             * empresa_id se conserva temporalmente por compatibilidad.
              */
             'empresa_ids' => ['nullable', 'array'],
-            'empresa_ids.*' => ['integer', 'exists:empresas,id'],
+            'empresa_ids.*' => [
+                'nullable',
+                'integer',
+                'exists:empresas,id',
+            ],
+
+            'empresa_id' => [
+                'nullable',
+                'integer',
+                'exists:empresas,id',
+            ],
 
             /*
-             * NIT se conserva temporalmente en backend por compatibilidad,
-             * aunque ya no se usará como filtro visible en Consulta Empresas.
+             * Se conserva en backend por compatibilidad con enlaces o pantallas
+             * anteriores, aunque no necesariamente permanezca visible.
              */
             'nit' => [
                 'nullable',
@@ -94,19 +106,35 @@ class EmpresaController extends Controller
 
             'estado' => ['nullable', 'in:activa,inactiva'],
         ], [
-            'empresa_id.exists' => 'La empresa seleccionada no es válida.',
+            'busqueda_empresa.max' => 'La búsqueda de empresa no debe exceder 150 caracteres.',
+            'busqueda.max' => 'La búsqueda de empresa no debe exceder 150 caracteres.',
+
             'empresa_ids.array' => 'La selección de empresas no es válida.',
             'empresa_ids.*.exists' => 'Una de las empresas seleccionadas no es válida.',
+            'empresa_id.exists' => 'La empresa seleccionada no es válida.',
+
             'nit.regex' => 'El NIT debe tener el formato 0000-000000-000-0.',
             'estado.in' => 'El estado seleccionado no es válido.',
         ]);
 
-        $busqueda = trim((string) ($validated['busqueda'] ?? ''));
+        $busquedaEmpresa = trim((string) (
+            $validated['busqueda_empresa']
+            ?? $validated['busqueda']
+            ?? ''
+        ));
 
-        $empresaId = $validated['empresa_id'] ?? null;
         $empresaIds = collect($validated['empresa_ids'] ?? [])
             ->filter()
-            ->map(fn ($id) => (int) $id)
+            ->map(fn ($id) => (int) $id);
+
+        /*
+         * Compatibilidad temporal con el filtro individual anterior.
+         */
+        if (! empty($validated['empresa_id'])) {
+            $empresaIds->push((int) $validated['empresa_id']);
+        }
+
+        $empresaIds = $empresaIds
             ->unique()
             ->values()
             ->all();
@@ -119,91 +147,166 @@ class EmpresaController extends Controller
         | Alcance multiempresa
         |--------------------------------------------------------------------------
         |
-        | Diesel Cop puede consultar todas, una o varias empresas.
-        | Un usuario de empresa siempre queda limitado a su propia empresa,
-        | sin importar lo que llegue en la URL.
+        | Un usuario de empresa queda limitado a su propia empresa,
+        | aunque intente enviar otros identificadores por URL.
         |
         */
 
         if (! $esUsuarioDieselCop) {
-            $empresaId = $user->empresa_id;
             $empresaIds = [(int) $user->empresa_id];
         }
 
+        $empresaId = $empresaIds[0] ?? null;
+
         $hayFiltros = ! $esUsuarioDieselCop
             || $request->boolean('consultar')
-            || $request->hasAny(['busqueda', 'empresa_id', 'empresa_ids', 'nit', 'estado']);
+            || $busquedaEmpresa !== ''
+            || count($empresaIds) > 0
+            || $nit !== ''
+            || in_array($estado, ['activa', 'inactiva'], true);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Selector de empresas
+        |--------------------------------------------------------------------------
+        */
+
+        $empresasSelector = $esUsuarioDieselCop
+            ? Empresa::query()
+                ->orderBy('nombre_comercial')
+                ->orderBy('nombre_legal')
+                ->get()
+            : collect([$empresaUsuario])
+                ->filter()
+                ->values();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Resultados
+        |--------------------------------------------------------------------------
+        */
 
         $query = Empresa::query();
 
         if ($hayFiltros) {
-            if (! empty($empresaIds)) {
-                $query->whereIn('id', $empresaIds);
-            } elseif ($empresaId) {
-                $query->where('id', $empresaId);
-            }
-
-            if ($busqueda !== '') {
-                $query->where('nombre_legal', 'like', '%' . $busqueda . '%');
-            }
-
-            if ($nit !== '') {
-                $query->where('nit', $nit);
-            }
-
-            if (in_array($estado, ['activa', 'inactiva'], true)) {
-                $query->where('estado', $estado);
-            }
+            $this->aplicarFiltrosEmpresa(
+                $query,
+                $busquedaEmpresa,
+                $empresaIds,
+                $nit,
+                $estado
+            );
         } else {
             $query->whereRaw('1 = 0');
         }
 
         $empresas = $query
+            ->orderBy('nombre_comercial')
             ->orderBy('nombre_legal')
             ->paginate(10)
             ->withQueryString();
 
-        $totalEmpresas = $esUsuarioDieselCop
-            ? Empresa::count()
-            : Empresa::where('id', $user->empresa_id)->count();
+        /*
+        |--------------------------------------------------------------------------
+        | Resumen
+        |--------------------------------------------------------------------------
+        |
+        | Cuando existe una consulta, el resumen representa el mismo conjunto
+        | filtrado. Sin filtros, representa el alcance total permitido al usuario.
+        |
+        */
 
-        $empresasActivas = $esUsuarioDieselCop
-            ? Empresa::where('estado', 'activa')->count()
-            : Empresa::where('id', $user->empresa_id)->where('estado', 'activa')->count();
+        $baseResumen = Empresa::query();
 
-        $empresasInactivas = $esUsuarioDieselCop
-            ? Empresa::where('estado', 'inactiva')->count()
-            : Empresa::where('id', $user->empresa_id)->where('estado', 'inactiva')->count();
+        if (! $esUsuarioDieselCop) {
+            $baseResumen->where('id', $user->empresa_id);
+        }
 
-        $empresasSelector = $esUsuarioDieselCop
-            ? Empresa::orderBy('nombre_legal')->get()
-            : collect([$empresaUsuario])->filter();
+        if ($hayFiltros) {
+            $this->aplicarFiltrosEmpresa(
+                $baseResumen,
+                $busquedaEmpresa,
+                $empresaIds,
+                $nit,
+                $estado
+            );
+        }
+
+        $totalEmpresas = (clone $baseResumen)->count();
+
+        $empresasActivas = (clone $baseResumen)
+            ->where('estado', 'activa')
+            ->count();
+
+        $empresasInactivas = (clone $baseResumen)
+            ->where('estado', 'inactiva')
+            ->count();
 
         return [
             'empresas' => $empresas,
             'empresasSelector' => $empresasSelector,
-            'busqueda' => $busqueda,
-            'empresaId' => $empresaId,
+
+            /*
+             * Variables nuevas y de compatibilidad.
+             */
+            'busquedaEmpresa' => $busquedaEmpresa,
+            'busqueda' => $busquedaEmpresa,
+
             'empresaIds' => $empresaIds,
+            'empresaId' => $empresaId,
+
             'nit' => $nit,
             'estado' => $estado,
             'hayFiltros' => $hayFiltros,
+
             'totalEmpresas' => $totalEmpresas,
             'empresasActivas' => $empresasActivas,
             'empresasInactivas' => $empresasInactivas,
+
             'esUsuarioDieselCop' => $esUsuarioDieselCop,
             'empresaUsuario' => $empresaUsuario,
 
             /*
-             * Variable conservada temporalmente para evitar errores si alguna vista
-             * antigua todavía la referencia durante la transición.
+             * Variable conservada temporalmente para evitar errores
+             * en vistas anteriores durante la transición.
              */
             'nombreComercial' => '',
         ];
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Aplica los filtros comunes de empresas.
+     */
+    private function aplicarFiltrosEmpresa(
+        Builder $query,
+        string $busquedaEmpresa,
+        array $empresaIds,
+        string $nit,
+        ?string $estado
+    ): void {
+        if (count($empresaIds) > 0) {
+            $query->whereIn('id', $empresaIds);
+        }
+
+        if ($busquedaEmpresa !== '') {
+            $query->where(function (Builder $subquery) use ($busquedaEmpresa) {
+                $subquery
+                    ->where('nombre_legal', 'like', '%' . $busquedaEmpresa . '%')
+                    ->orWhere('nombre_comercial', 'like', '%' . $busquedaEmpresa . '%');
+            });
+        }
+
+        if ($nit !== '') {
+            $query->where('nit', $nit);
+        }
+
+        if (in_array($estado, ['activa', 'inactiva'], true)) {
+            $query->where('estado', $estado);
+        }
+    }
+
+    /**
+     * Muestra el formulario para registrar una empresa.
      */
     public function create()
     {
@@ -211,7 +314,7 @@ class EmpresaController extends Controller
     }
 
     /**
-     * Show the standalone form for creating a new company.
+     * Muestra el formulario de registro en ventana independiente.
      */
     public function createVentana()
     {
@@ -219,13 +322,22 @@ class EmpresaController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Guarda una nueva empresa.
      */
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nombre_legal' => ['required', 'string', 'max:150'],
-            'nombre_comercial' => ['nullable', 'string', 'max:150'],
+            'nombre_legal' => [
+                'required',
+                'string',
+                'max:150',
+            ],
+
+            'nombre_comercial' => [
+                'nullable',
+                'string',
+                'max:150',
+            ],
 
             'nit' => [
                 'required',
@@ -235,7 +347,11 @@ class EmpresaController extends Controller
                 'unique:empresas,nit',
             ],
 
-            'direccion' => ['nullable', 'string', 'max:255'],
+            'direccion' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
 
             'telefono_empresa' => [
                 'nullable',
@@ -244,9 +360,23 @@ class EmpresaController extends Controller
                 'regex:/^\d{4}-\d{4}$/',
             ],
 
-            'correo_empresa' => ['required', 'email', 'max:150'],
-            'poc_nombre' => ['required', 'string', 'max:150'],
-            'poc_email' => ['required', 'email', 'max:150'],
+            'correo_empresa' => [
+                'required',
+                'email',
+                'max:150',
+            ],
+
+            'poc_nombre' => [
+                'required',
+                'string',
+                'max:150',
+            ],
+
+            'poc_email' => [
+                'required',
+                'email',
+                'max:150',
+            ],
 
             'poc_telefono' => [
                 'nullable',
@@ -255,24 +385,58 @@ class EmpresaController extends Controller
                 'regex:/^\d{4}-\d{4}$/',
             ],
         ], [
+            'nombre_legal.required' => 'Debe ingresar el nombre legal de la empresa.',
+            'nombre_legal.max' => 'El nombre legal no debe exceder 150 caracteres.',
+
+            'nombre_comercial.max' => 'El nombre comercial no debe exceder 150 caracteres.',
+
+            'nit.required' => 'Debe ingresar el NIT de la empresa.',
             'nit.regex' => 'El NIT debe tener el formato 0000-000000-000-0.',
+            'nit.unique' => 'Ya existe una empresa registrada con este NIT.',
+
             'telefono_empresa.regex' => 'El teléfono de la empresa debe tener el formato 0000-0000.',
+
+            'correo_empresa.required' => 'Debe ingresar el correo de la empresa.',
+            'correo_empresa.email' => 'El correo de la empresa no tiene un formato válido.',
+
+            'poc_nombre.required' => 'Debe ingresar el nombre del punto de contacto.',
+
+            'poc_email.required' => 'Debe ingresar el correo del punto de contacto.',
+            'poc_email.email' => 'El correo del punto de contacto no tiene un formato válido.',
+
             'poc_telefono.regex' => 'El teléfono del POC debe tener el formato 0000-0000.',
         ]);
 
-        $validated['estado'] = 'activa';
-        $validated['fecha_creacion'] = now();
-        $validated['creado_por'] = Auth::id();
+        $empresa = Empresa::create([
+            ...$validated,
+            'estado' => 'activa',
+            'fecha_creacion' => now(),
+            'creado_por' => Auth::id(),
+        ]);
 
-        Empresa::create($validated);
+        $queryParams = $request->query();
+
+        if ($request->input('return_to') === 'ventana') {
+            return redirect()
+                ->route(
+                    'empresas.show.ventana',
+                    array_merge($queryParams, ['empresa' => $empresa])
+                )
+                ->with('success', 'Empresa creada correctamente.');
+        }
 
         return redirect()
-            ->route('empresas.index')
+            ->route(
+                'empresas.show',
+                array_merge($queryParams, ['empresa' => $empresa])
+            )
             ->with('success', 'Empresa creada correctamente.');
     }
 
     /**
-     * Display the specified resource.
+     * Muestra la ficha administrativa de una empresa.
+     *
+     * La ficha puede consultarse tanto para empresas activas como inactivas.
      */
     public function show(Empresa $empresa)
     {
@@ -282,7 +446,7 @@ class EmpresaController extends Controller
     }
 
     /**
-     * Display the specified resource in standalone window.
+     * Muestra la ficha administrativa en ventana independiente.
      */
     public function showVentana(Empresa $empresa)
     {
@@ -292,45 +456,64 @@ class EmpresaController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Muestra el formulario de edición.
+     *
+     * Una empresa inactiva debe reactivarse desde su ficha
+     * antes de poder modificarse.
      */
     public function edit(Empresa $empresa)
     {
         $this->autorizarAccesoEmpresa($empresa);
+        $this->validarEmpresaActivaParaOperacion($empresa);
 
         return view('empresas.edit', compact('empresa'));
     }
 
     /**
-     * Show the standalone form for editing the specified resource.
+     * Muestra el formulario de edición en ventana independiente.
      */
     public function editVentana(Empresa $empresa)
     {
         $this->autorizarAccesoEmpresa($empresa);
+        $this->validarEmpresaActivaParaOperacion($empresa);
 
         return view('empresas.edit-ventana', compact('empresa'));
     }
 
     /**
-     * Update the specified resource in storage.
+     * Actualiza una empresa activa.
      */
     public function update(Request $request, Empresa $empresa)
     {
         $this->autorizarAccesoEmpresa($empresa);
+        $this->validarEmpresaActivaParaOperacion($empresa);
 
         $validated = $request->validate([
-            'nombre_legal' => ['required', 'string', 'max:150'],
-            'nombre_comercial' => ['nullable', 'string', 'max:150'],
+            'nombre_legal' => [
+                'required',
+                'string',
+                'max:150',
+            ],
+
+            'nombre_comercial' => [
+                'nullable',
+                'string',
+                'max:150',
+            ],
 
             'nit' => [
                 'required',
                 'string',
                 'max:17',
                 'regex:/^\d{4}-\d{6}-\d{3}-\d{1}$/',
-                'unique:empresas,nit,' . $empresa->id,
+                Rule::unique('empresas', 'nit')->ignore($empresa->id),
             ],
 
-            'direccion' => ['nullable', 'string', 'max:255'],
+            'direccion' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
 
             'telefono_empresa' => [
                 'nullable',
@@ -339,9 +522,23 @@ class EmpresaController extends Controller
                 'regex:/^\d{4}-\d{4}$/',
             ],
 
-            'correo_empresa' => ['required', 'email', 'max:150'],
-            'poc_nombre' => ['required', 'string', 'max:150'],
-            'poc_email' => ['required', 'email', 'max:150'],
+            'correo_empresa' => [
+                'required',
+                'email',
+                'max:150',
+            ],
+
+            'poc_nombre' => [
+                'required',
+                'string',
+                'max:150',
+            ],
+
+            'poc_email' => [
+                'required',
+                'email',
+                'max:150',
+            ],
 
             'poc_telefono' => [
                 'nullable',
@@ -350,30 +547,60 @@ class EmpresaController extends Controller
                 'regex:/^\d{4}-\d{4}$/',
             ],
         ], [
+            'nombre_legal.required' => 'Debe ingresar el nombre legal de la empresa.',
+            'nombre_legal.max' => 'El nombre legal no debe exceder 150 caracteres.',
+
+            'nombre_comercial.max' => 'El nombre comercial no debe exceder 150 caracteres.',
+
+            'nit.required' => 'Debe ingresar el NIT de la empresa.',
             'nit.regex' => 'El NIT debe tener el formato 0000-000000-000-0.',
+            'nit.unique' => 'Ya existe otra empresa registrada con este NIT.',
+
             'telefono_empresa.regex' => 'El teléfono de la empresa debe tener el formato 0000-0000.',
+
+            'correo_empresa.required' => 'Debe ingresar el correo de la empresa.',
+            'correo_empresa.email' => 'El correo de la empresa no tiene un formato válido.',
+
+            'poc_nombre.required' => 'Debe ingresar el nombre del punto de contacto.',
+
+            'poc_email.required' => 'Debe ingresar el correo del punto de contacto.',
+            'poc_email.email' => 'El correo del punto de contacto no tiene un formato válido.',
+
             'poc_telefono.regex' => 'El teléfono del POC debe tener el formato 0000-0000.',
         ]);
 
-        $validated['fecha_actualizacion'] = now();
-        $validated['actualizado_por'] = Auth::id();
+        $empresa->update([
+            ...$validated,
+            'fecha_actualizacion' => now(),
+            'actualizado_por' => Auth::id(),
+        ]);
 
-        $empresa->update($validated);
+        $queryParams = $request->query();
 
         if ($request->input('return_to') === 'ventana') {
             return redirect()
-                ->route('empresas.show.ventana', $empresa)
+                ->route(
+                    'empresas.show.ventana',
+                    array_merge($queryParams, ['empresa' => $empresa])
+                )
                 ->with('success', 'Empresa actualizada correctamente.');
         }
 
         return redirect()
-            ->route('empresas.show', $empresa)
+            ->route(
+                'empresas.show',
+                array_merge($queryParams, ['empresa' => $empresa])
+            )
             ->with('success', 'Empresa actualizada correctamente.');
     }
 
+    /**
+     * Inactiva una empresa actualmente activa.
+     */
     public function inactivar(Request $request, Empresa $empresa)
     {
         $this->autorizarAccesoEmpresa($empresa);
+        $this->validarEmpresaActivaParaOperacion($empresa);
 
         $validated = $request->validate([
             'motivo_inactivacion' => [
@@ -397,20 +624,32 @@ class EmpresaController extends Controller
             'actualizado_por' => Auth::id(),
         ]);
 
+        $queryParams = $request->query();
+
         if ($request->input('return_to') === 'ventana') {
             return redirect()
-                ->route('empresas.show.ventana', $empresa)
+                ->route(
+                    'empresas.show.ventana',
+                    array_merge($queryParams, ['empresa' => $empresa])
+                )
                 ->with('success', 'Empresa inactivada correctamente.');
         }
 
         return redirect()
-            ->route('empresas.show', $empresa)
+            ->route(
+                'empresas.show',
+                array_merge($queryParams, ['empresa' => $empresa])
+            )
             ->with('success', 'Empresa inactivada correctamente.');
     }
 
+    /**
+     * Reactiva una empresa actualmente inactiva.
+     */
     public function reactivar(Request $request, Empresa $empresa)
     {
         $this->autorizarAccesoEmpresa($empresa);
+        $this->validarEmpresaInactivaParaReactivacion($empresa);
 
         $empresa->update([
             'estado' => 'activa',
@@ -421,26 +660,63 @@ class EmpresaController extends Controller
             'actualizado_por' => Auth::id(),
         ]);
 
+        $queryParams = $request->query();
+
         if ($request->input('return_to') === 'ventana') {
             return redirect()
-                ->route('empresas.show.ventana', $empresa)
+                ->route(
+                    'empresas.show.ventana',
+                    array_merge($queryParams, ['empresa' => $empresa])
+                )
                 ->with('success', 'Empresa reactivada correctamente.');
         }
 
         return redirect()
-            ->route('empresas.show', $empresa)
+            ->route(
+                'empresas.show',
+                array_merge($queryParams, ['empresa' => $empresa])
+            )
             ->with('success', 'Empresa reactivada correctamente.');
     }
 
     /**
-     * Prevent company users from accessing other companies.
+     * Impide que un usuario de empresa acceda a otra empresa.
      */
     private function autorizarAccesoEmpresa(Empresa $empresa): void
     {
         $user = Auth::user();
 
-        if (! is_null($user->empresa_id) && (int) $user->empresa_id !== (int) $empresa->id) {
+        if (
+            ! is_null($user->empresa_id)
+            && (int) $user->empresa_id !== (int) $empresa->id
+        ) {
             abort(403, 'No tiene autorización para acceder a esta empresa.');
+        }
+    }
+
+    /**
+     * Protege las operaciones que requieren una empresa activa.
+     */
+    private function validarEmpresaActivaParaOperacion(Empresa $empresa): void
+    {
+        if ($empresa->estado !== 'activa') {
+            abort(
+                403,
+                'No se puede modificar esta empresa porque está inactiva. Debe reactivarla desde la ficha antes de realizar cambios.'
+            );
+        }
+    }
+
+    /**
+     * Impide reactivar una empresa que ya se encuentra activa.
+     */
+    private function validarEmpresaInactivaParaReactivacion(Empresa $empresa): void
+    {
+        if ($empresa->estado !== 'inactiva') {
+            abort(
+                403,
+                'No se puede reactivar esta empresa porque ya se encuentra activa.'
+            );
         }
     }
 }

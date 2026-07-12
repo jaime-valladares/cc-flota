@@ -1,3 +1,7 @@
+@php
+    $queryParams = request()->query();
+@endphp
+
 <x-app-layout>
     <div class="cc-page-wrapper">
         <div class="cc-content-container" style="max-width: 80rem;">
@@ -11,20 +15,29 @@
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <a href="{{ route('empresas.create.ventana') }}"
+                        <a href="{{ route('empresas.create.ventana', $queryParams) }}"
                            target="_blank"
                            rel="noopener noreferrer"
                            class="cc-btn-secondary cc-btn-wide">
                             Abrir en nueva pestaña
                         </a>
 
-                        <a href="{{ route('empresas.index') }}" class="cc-btn-secondary cc-btn-wide">
+                        <a href="{{ route('empresas.index', $queryParams) }}"
+                           class="cc-btn-secondary cc-btn-wide">
                             Ir a consulta
                         </a>
                     </div>
                 </div>
 
-                <form method="POST" action="{{ route('empresas.store') }}" novalidate>
+                @if (session('success'))
+                    <div class="cc-alert cc-alert-success">
+                        {{ session('success') }}
+                    </div>
+                @endif
+
+                <form method="POST"
+                      action="{{ route('empresas.store', $queryParams) }}"
+                      novalidate>
                     @csrf
 
                     @include('empresas._form', [
