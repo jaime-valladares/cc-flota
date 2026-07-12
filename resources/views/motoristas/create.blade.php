@@ -1,6 +1,10 @@
+@php
+    $queryParams = request()->query();
+@endphp
+
 <x-app-layout>
     <div class="cc-page-wrapper">
-        <div class="cc-content-container" style="max-width: 79rem;">
+        <div class="cc-content-container" style="max-width: 80rem;">
             <div class="cc-card">
 
                 <div class="cc-card-header cc-card-header-compact">
@@ -8,27 +12,29 @@
                         <h3 class="cc-title cc-title-compact">
                             Registro de motorista
                         </h3>
+
                         <p class="cc-subtitle cc-subtitle-compact">
-                            Registre un motorista disponible para seleccionar en solicitudes de abastecimiento.
+                            Registre un motorista disponible para solicitudes de abastecimiento.
                         </p>
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <a href="{{ route('motoristas.create.ventana') }}"
+                        <a href="{{ route('motoristas.create.ventana', $queryParams) }}"
                            target="_blank"
                            rel="noopener noreferrer"
                            class="cc-btn-secondary cc-btn-wide">
                             Abrir en nueva pestaña
                         </a>
 
-                        <a href="{{ route('motoristas.index') }}" class="cc-btn-secondary cc-btn-wide">
-                            Ir a consulta
+                        <a href="{{ route('motoristas.index', $queryParams) }}"
+                           class="cc-btn-secondary cc-btn-wide">
+                            Volver a Consulta
                         </a>
                     </div>
                 </div>
 
                 @if (session('success'))
-                    <div class="cc-alert-success">
+                    <div class="cc-alert cc-alert-success">
                         {{ session('success') }}
                     </div>
                 @endif

@@ -1,6 +1,6 @@
 <x-app-layout>
     <div class="cc-page-wrapper">
-        <div class="cc-content-container" style="max-width: 79rem;">
+        <div class="cc-content-container" style="max-width: 80rem;">
             <div class="cc-card">
 
                 <div class="cc-card-header cc-card-header-compact">
@@ -9,9 +9,6 @@
                             Nueva gasolinera
                         </h3>
 
-                        <p class="cc-subtitle cc-subtitle-compact">
-                            Registre una gasolinera interna con sus tanques iniciales y capacidad operativa.
-                        </p>
                     </div>
 
                     <div class="flex items-center gap-3">
@@ -22,8 +19,8 @@
                             Abrir en nueva pestaña
                         </a>
 
-                        <a href="{{ route('gasolineras.index') }}" class="cc-btn-secondary">
-                            Ir a Consulta
+                        <a href="{{ route('gasolineras.index') }}" class="cc-btn-secondary cc-btn-wide">
+                            Volver a Consulta
                         </a>
                     </div>
                 </div>

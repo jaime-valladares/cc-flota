@@ -8,9 +8,6 @@
                         <h3 class="cc-title cc-title-compact">
                             Ficha administrativa de gasolinera externa
                         </h3>
-                        <p class="cc-subtitle cc-subtitle-compact">
-                            Consulta consolidada de la gasolinera comercial externa registrada para abastecimientos externos.
-                        </p>
                     </div>
 
                     <div class="flex items-center gap-3">

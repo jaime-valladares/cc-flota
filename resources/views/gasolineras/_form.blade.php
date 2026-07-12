@@ -69,7 +69,9 @@
         @endif
 
         @error('empresa_id')
-            <div class="cc-error">{{ $message }}</div>
+            <div class="cc-error">
+                {{ $message }}
+            </div>
         @enderror
     </div>
 
@@ -90,7 +92,9 @@
         >
 
         @error('nombre')
-            <div class="cc-error">{{ $message }}</div>
+            <div class="cc-error">
+                {{ $message }}
+            </div>
         @enderror
     </div>
 
@@ -111,7 +115,9 @@
         >
 
         @error('direccion')
-            <div class="cc-error">{{ $message }}</div>
+            <div class="cc-error">
+                {{ $message }}
+            </div>
         @enderror
     </div>
 
@@ -137,7 +143,9 @@
         >
 
         @error('encargado')
-            <div class="cc-error">{{ $message }}</div>
+            <div class="cc-error">
+                {{ $message }}
+            </div>
         @enderror
     </div>
 
@@ -157,7 +165,9 @@
         >
 
         @error('telefono')
-            <div class="cc-error">{{ $message }}</div>
+            <div class="cc-error">
+                {{ $message }}
+            </div>
         @enderror
     </div>
 
@@ -177,7 +187,9 @@
         >
 
         @error('correo')
-            <div class="cc-error">{{ $message }}</div>
+            <div class="cc-error">
+                {{ $message }}
+            </div>
         @enderror
     </div>
 
@@ -189,16 +201,15 @@
         </div>
 
         <div class="cc-field cc-col-span-2">
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
-                <div style="font-size: 0.9rem; color: var(--cc-text-muted); line-height: 1.45;">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p class="text-sm leading-relaxed text-[var(--cc-text-muted)]">
                     Registre al menos un tanque para que la gasolinera pueda operar. El volumen actual generará una carga inicial de inventario.
-                </div>
+                </p>
 
                 <button
                     type="button"
                     id="agregarTanqueBtn"
-                    class="cc-btn-secondary cc-btn-form-action"
-                    style="min-width: 12.5rem;"
+                    class="cc-btn-secondary cc-btn-form-action w-full sm:w-auto"
                 >
                     Agregar tanque
                 </button>
@@ -208,106 +219,116 @@
         <div id="tanquesContainer" class="cc-col-span-2">
             @foreach ($tanquesOld as $index => $tanqueOld)
                 <div class="tanque-item" data-index="{{ $index }}">
-                    <div class="cc-grid cc-grid-compact">
+                    <div class="cc-admin-result-card" style="margin-bottom: 1rem;">
+                        <div class="cc-grid cc-grid-compact">
 
-                        <div class="cc-form-section-slim">
-                            <div class="cc-form-section-title">
-                                Tanque <span class="tanque-numero">{{ $index + 1 }}</span>
+                            <div class="cc-form-section-slim">
+                                <div class="cc-form-section-title">
+                                    Tanque <span class="tanque-numero">{{ $index + 1 }}</span>
+                                </div>
                             </div>
+
+                            <div class="cc-field">
+                                <label>
+                                    Nombre del tanque <span class="cc-required">*</span>
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="tanques[{{ $index }}][nombre]"
+                                    value="{{ $tanqueOld['nombre'] ?? '' }}"
+                                    class="cc-input"
+                                    maxlength="100"
+                                    required
+                                    placeholder="Ej. Tanque {{ $index + 1 }}"
+                                >
+
+                                @error("tanques.$index.nombre")
+                                    <div class="cc-error">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
+                            </div>
+
+                            <div class="cc-field">
+                                <label>
+                                    Capacidad total (galones) <span class="cc-required">*</span>
+                                </label>
+
+                                <input
+                                    type="number"
+                                    name="tanques[{{ $index }}][capacidad_total]"
+                                    value="{{ $tanqueOld['capacidad_total'] ?? '' }}"
+                                    class="cc-input"
+                                    min="0.01"
+                                    step="0.01"
+                                    required
+                                    placeholder="Ej. 10000.00"
+                                >
+
+                                @error("tanques.$index.capacidad_total")
+                                    <div class="cc-error">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
+                            </div>
+
+                            <div class="cc-field">
+                                <label>
+                                    Volumen actual (galones) <span class="cc-required">*</span>
+                                </label>
+
+                                <input
+                                    type="number"
+                                    name="tanques[{{ $index }}][volumen_actual]"
+                                    value="{{ $tanqueOld['volumen_actual'] ?? '' }}"
+                                    class="cc-input"
+                                    min="0"
+                                    step="0.01"
+                                    required
+                                    placeholder="Ej. 8000.00"
+                                >
+
+                                @error("tanques.$index.volumen_actual")
+                                    <div class="cc-error">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
+                            </div>
+
+                            <div class="cc-field">
+                                <label>
+                                    Volumen mínimo de alerta (galones) <span class="cc-required">*</span>
+                                </label>
+
+                                <input
+                                    type="number"
+                                    name="tanques[{{ $index }}][volumen_minimo_alerta]"
+                                    value="{{ $tanqueOld['volumen_minimo_alerta'] ?? '' }}"
+                                    class="cc-input"
+                                    min="0"
+                                    step="0.01"
+                                    required
+                                    placeholder="Ej. 1000.00"
+                                >
+
+                                @error("tanques.$index.volumen_minimo_alerta")
+                                    <div class="cc-error">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
+                            </div>
+
+                            <div class="cc-field cc-col-span-2">
+                                <button
+                                    type="button"
+                                    class="cc-btn-secondary cc-btn-form-action eliminar-tanque-btn"
+                                >
+                                    Eliminar tanque
+                                </button>
+                            </div>
+
                         </div>
-
-                        <div class="cc-field">
-                            <label>
-                                Nombre del tanque <span class="cc-required">*</span>
-                            </label>
-
-                            <input
-                                type="text"
-                                name="tanques[{{ $index }}][nombre]"
-                                value="{{ $tanqueOld['nombre'] ?? '' }}"
-                                class="cc-input"
-                                maxlength="100"
-                                required
-                                placeholder="Ej. Tanque 1"
-                            >
-
-                            @error("tanques.$index.nombre")
-                                <div class="cc-error">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="cc-field">
-                            <label>
-                                Capacidad total (galones) <span class="cc-required">*</span>
-                            </label>
-
-                            <input
-                                type="number"
-                                name="tanques[{{ $index }}][capacidad_total]"
-                                value="{{ $tanqueOld['capacidad_total'] ?? '' }}"
-                                class="cc-input"
-                                min="0.01"
-                                step="0.01"
-                                required
-                                placeholder="Ej. 10000.00"
-                            >
-
-                            @error("tanques.$index.capacidad_total")
-                                <div class="cc-error">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="cc-field">
-                            <label>
-                                Volumen actual (galones) <span class="cc-required">*</span>
-                            </label>
-
-                            <input
-                                type="number"
-                                name="tanques[{{ $index }}][volumen_actual]"
-                                value="{{ $tanqueOld['volumen_actual'] ?? '' }}"
-                                class="cc-input"
-                                min="0"
-                                step="0.01"
-                                required
-                                placeholder="Ej. 8000.00"
-                            >
-
-                            @error("tanques.$index.volumen_actual")
-                                <div class="cc-error">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="cc-field">
-                            <label>
-                                Volumen mínimo de alerta (galones) <span class="cc-required">*</span>
-                            </label>
-
-                            <input
-                                type="number"
-                                name="tanques[{{ $index }}][volumen_minimo_alerta]"
-                                value="{{ $tanqueOld['volumen_minimo_alerta'] ?? '' }}"
-                                class="cc-input"
-                                min="0"
-                                step="0.01"
-                                required
-                                placeholder="Ej. 1000.00"
-                            >
-
-                            @error("tanques.$index.volumen_minimo_alerta")
-                                <div class="cc-error">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="cc-field cc-col-span-2">
-                            <button
-                                type="button"
-                                class="cc-btn-secondary cc-btn-form-action eliminar-tanque-btn"
-                            >
-                                Eliminar tanque
-                            </button>
-                        </div>
-
                     </div>
                 </div>
             @endforeach
@@ -403,87 +424,89 @@
         wrapper.dataset.index = index;
 
         wrapper.innerHTML = `
-            <div class="cc-grid cc-grid-compact">
+            <div class="cc-admin-result-card" style="margin-bottom: 1rem;">
+                <div class="cc-grid cc-grid-compact">
 
-                <div class="cc-form-section-slim">
-                    <div class="cc-form-section-title">
-                        Tanque <span class="tanque-numero">${index + 1}</span>
+                    <div class="cc-form-section-slim">
+                        <div class="cc-form-section-title">
+                            Tanque <span class="tanque-numero">${index + 1}</span>
+                        </div>
                     </div>
+
+                    <div class="cc-field">
+                        <label>
+                            Nombre del tanque <span class="cc-required">*</span>
+                        </label>
+
+                        <input
+                            type="text"
+                            name="tanques[${index}][nombre]"
+                            value="Tanque ${index + 1}"
+                            class="cc-input"
+                            maxlength="100"
+                            required
+                            placeholder="Ej. Tanque ${index + 1}"
+                        >
+                    </div>
+
+                    <div class="cc-field">
+                        <label>
+                            Capacidad total (galones) <span class="cc-required">*</span>
+                        </label>
+
+                        <input
+                            type="number"
+                            name="tanques[${index}][capacidad_total]"
+                            class="cc-input"
+                            min="0.01"
+                            step="0.01"
+                            required
+                            placeholder="Ej. 10000.00"
+                        >
+                    </div>
+
+                    <div class="cc-field">
+                        <label>
+                            Volumen actual (galones) <span class="cc-required">*</span>
+                        </label>
+
+                        <input
+                            type="number"
+                            name="tanques[${index}][volumen_actual]"
+                            class="cc-input"
+                            min="0"
+                            step="0.01"
+                            required
+                            placeholder="Ej. 8000.00"
+                        >
+                    </div>
+
+                    <div class="cc-field">
+                        <label>
+                            Volumen mínimo de alerta (galones) <span class="cc-required">*</span>
+                        </label>
+
+                        <input
+                            type="number"
+                            name="tanques[${index}][volumen_minimo_alerta]"
+                            class="cc-input"
+                            min="0"
+                            step="0.01"
+                            required
+                            placeholder="Ej. 1000.00"
+                        >
+                    </div>
+
+                    <div class="cc-field cc-col-span-2">
+                        <button
+                            type="button"
+                            class="cc-btn-secondary cc-btn-form-action eliminar-tanque-btn"
+                        >
+                            Eliminar tanque
+                        </button>
+                    </div>
+
                 </div>
-
-                <div class="cc-field">
-                    <label>
-                        Nombre del tanque <span class="cc-required">*</span>
-                    </label>
-
-                    <input
-                        type="text"
-                        name="tanques[${index}][nombre]"
-                        value="Tanque ${index + 1}"
-                        class="cc-input"
-                        maxlength="100"
-                        required
-                        placeholder="Ej. Tanque ${index + 1}"
-                    >
-                </div>
-
-                <div class="cc-field">
-                    <label>
-                        Capacidad total (galones) <span class="cc-required">*</span>
-                    </label>
-
-                    <input
-                        type="number"
-                        name="tanques[${index}][capacidad_total]"
-                        class="cc-input"
-                        min="0.01"
-                        step="0.01"
-                        required
-                        placeholder="Ej. 10000.00"
-                    >
-                </div>
-
-                <div class="cc-field">
-                    <label>
-                        Volumen actual (galones) <span class="cc-required">*</span>
-                    </label>
-
-                    <input
-                        type="number"
-                        name="tanques[${index}][volumen_actual]"
-                        class="cc-input"
-                        min="0"
-                        step="0.01"
-                        required
-                        placeholder="Ej. 8000.00"
-                    >
-                </div>
-
-                <div class="cc-field">
-                    <label>
-                        Volumen mínimo de alerta (galones) <span class="cc-required">*</span>
-                    </label>
-
-                    <input
-                        type="number"
-                        name="tanques[${index}][volumen_minimo_alerta]"
-                        class="cc-input"
-                        min="0"
-                        step="0.01"
-                        required
-                        placeholder="Ej. 1000.00"
-                    >
-                </div>
-
-                <div class="cc-field cc-col-span-2">
-                    <button
-                        type="button"
-                        class="cc-btn-secondary cc-btn-form-action eliminar-tanque-btn"
-                    >
-                        Eliminar tanque
-                    </button>
-                </div>
-
             </div>
         `;
 

@@ -7,11 +7,7 @@
 
         <title>Nueva gasolinera | CC-Flota</title>
 
-        
         @include('layouts.partials.favicon')
-<link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/cc-flota/favicon.png') }}?v=3">
-        <link rel="shortcut icon" type="image/png" href="{{ asset('images/cc-flota/favicon.png') }}?v=3">
-        <link rel="apple-touch-icon" href="{{ asset('images/cc-flota/favicon.png') }}?v=3">
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,43 +17,43 @@
     </head>
 
     <body class="antialiased">
-        <div class="cc-window-wrapper" style="padding-top: 2.1rem;">
-            <div class="cc-window-container" style="max-width: 79rem;">
-                <div class="cc-card">
+        <div class="min-h-screen" style="background: var(--cc-bg-main);">
+            <div class="cc-page-wrapper">
+                <div class="cc-window-container" style="max-width: 80rem;">
+                    <div class="cc-card">
 
-                    <div class="cc-card-header cc-card-header-compact">
-                        <div>
-                            <h3 class="cc-title cc-title-compact">
-                                Nueva gasolinera
-                            </h3>
+                        <div class="cc-card-header cc-card-header-compact">
+                            <div>
+                                <h3 class="cc-title cc-title-compact">
+                                    Nueva gasolinera
+                                </h3>
 
-                            <p class="cc-subtitle cc-subtitle-compact">
-                                Registre una gasolinera interna con sus tanques iniciales y capacidad operativa.
-                            </p>
+                            </div>
+
+                            <div class="flex items-center gap-3">
+                                <a href="{{ route('gasolineras.index') }}"
+                                   class="cc-btn-secondary cc-btn-wide">
+                                    Volver a Consulta
+                                </a>
+                            </div>
                         </div>
 
-                        <div class="flex items-center gap-3">
-                            <a href="{{ route('gasolineras.consulta.ventana') }}" class="cc-btn-secondary cc-btn-wide">
-                                Volver a consulta
-                            </a>
-                        </div>
+                        @if (session('success'))
+                            <div class="cc-alert cc-alert-success">
+                                {{ session('success') }}
+                            </div>
+                        @endif
+
+                        <form method="POST" action="{{ route('gasolineras.store') }}" novalidate>
+                            @csrf
+
+                            @include('gasolineras._form', [
+                                'modoVentana' => true,
+                                'submitLabel' => 'Guardar gasolinera',
+                            ])
+                        </form>
+
                     </div>
-
-                    @if (session('success'))
-                        <div class="cc-alert cc-alert-success">
-                            {{ session('success') }}
-                        </div>
-                    @endif
-
-                    <form method="POST" action="{{ route('gasolineras.store') }}" novalidate>
-                        @csrf
-
-                        @include('gasolineras._form', [
-                            'modoVentana' => true,
-                            'submitLabel' => 'Guardar gasolinera',
-                        ])
-                    </form>
-
                 </div>
             </div>
         </div>

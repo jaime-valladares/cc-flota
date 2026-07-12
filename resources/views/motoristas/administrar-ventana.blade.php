@@ -7,9 +7,9 @@
 
         <title>Administrar motoristas | CC-Flota</title>
 
-        
         @include('layouts.partials.favicon')
-<link rel="preconnect" href="https://fonts.googleapis.com">
+
+        <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
 
@@ -27,35 +27,40 @@
                                 <h3 class="cc-title cc-title-compact">
                                     Administrar motoristas
                                 </h3>
+
                                 <p class="cc-subtitle cc-subtitle-compact">
                                     Gestione los motoristas disponibles para solicitudes de abastecimiento.
                                 </p>
                             </div>
 
                             <div class="flex items-center gap-3">
-                                <a href="{{ route('motoristas.administrar') }}" class="cc-btn-secondary cc-btn-wide">
+                                <a href="{{ route('motoristas.administrar', request()->query()) }}"
+                                   class="cc-btn-secondary cc-btn-wide">
                                     Volver a Administrar
                                 </a>
                             </div>
                         </div>
 
                         @if (session('success'))
-                            <div class="cc-alert-success">
+                            <div class="cc-alert cc-alert-success">
                                 {{ session('success') }}
                             </div>
                         @endif
 
-                        <div class="cc-summary-strip">
-                            <div class="cc-summary-strip-item">
+                        <div class="cc-summary-strip"
+                             style="display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem; align-items: stretch;">
+                            <div class="cc-summary-strip-item"
+                                 style="justify-content: flex-start; gap: .65rem;">
                                 <span class="cc-summary-strip-label">
-                                    Total motoristas
+                                    {{ $hayFiltros ? 'Resultados' : 'Total motoristas' }}
                                 </span>
                                 <span class="cc-summary-strip-value">
-                                    {{ $totalMotoristas }}
+                                    {{ $hayFiltros ? $motoristas->total() : $totalMotoristas }}
                                 </span>
                             </div>
 
-                            <div class="cc-summary-strip-item">
+                            <div class="cc-summary-strip-item"
+                                 style="justify-content: flex-start; gap: .65rem;">
                                 <span class="cc-summary-strip-label">
                                     Activos
                                 </span>
@@ -64,7 +69,8 @@
                                 </span>
                             </div>
 
-                            <div class="cc-summary-strip-item">
+                            <div class="cc-summary-strip-item"
+                                 style="justify-content: flex-start; gap: .65rem;">
                                 <span class="cc-summary-strip-label">
                                     Inactivos
                                 </span>
@@ -85,34 +91,93 @@
                                     </div>
                                 </div>
 
-                                <div class="cc-filter-inline-grid">
+                                <div class="cc-standard-filter-grid cc-unidades-consulta-filter-grid">
 
                                     <div class="cc-field">
-                                        <label for="empresa_id">
+                                        <label for="busqueda_empresa">
+                                            Buscar empresa
+                                        </label>
+
+                                        <input
+                                            id="busqueda_empresa"
+                                            name="busqueda_empresa"
+                                            type="text"
+                                            class="cc-input"
+                                            value="{{ $busquedaEmpresa ?? '' }}"
+                                            maxlength="150"
+                                            placeholder="Nombre legal o comercial"
+                                        >
+
+                                        @error('busqueda_empresa')
+                                            <div class="cc-error">
+                                                {{ $message }}
+                                            </div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="cc-field">
+                                        <label>
                                             Empresa
                                         </label>
 
                                         @if ($esUsuarioDieselCop)
-                                            <select id="empresa_id" name="empresa_id" class="cc-input">
-                                                <option value="">Todas</option>
+                                            <div class="cc-filter-multiselect" data-cc-filter-multiselect>
+                                                <button type="button" class="cc-filter-multiselect-toggle" data-cc-filter-toggle>
+                                                    <span data-cc-filter-label data-default-label="Todas">
+                                                        @if (! empty($empresaIds))
+                                                            {{ count($empresaIds) }} seleccionadas
+                                                        @else
+                                                            Todas
+                                                        @endif
+                                                    </span>
+                                                    <span class="cc-filter-multiselect-arrow">⌄</span>
+                                                </button>
 
-                                                @foreach ($empresasSelector as $empresaOpcion)
-                                                    <option value="{{ $empresaOpcion->id }}" @selected((string) $empresaId === (string) $empresaOpcion->id)>
-                                                        {{ $empresaOpcion->nombre_comercial ?: $empresaOpcion->nombre_legal }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
+                                                <div class="cc-filter-multiselect-menu" data-cc-filter-menu>
+                                                    <div class="cc-filter-multiselect-list">
+                                                        <label class="cc-filter-multiselect-option cc-filter-multiselect-option-master">
+                                                            <input type="checkbox" data-cc-filter-master>
+                                                            <span>Seleccionar todo</span>
+                                                        </label>
+
+                                                        @foreach ($empresasSelector as $empresaOpcion)
+                                                            <label class="cc-filter-multiselect-option" data-cc-filter-option>
+                                                                <input
+                                                                    type="checkbox"
+                                                                    name="empresa_ids[]"
+                                                                    value="{{ $empresaOpcion->id }}"
+                                                                    @checked(in_array((string) $empresaOpcion->id, array_map('strval', $empresaIds ?? []), true))
+                                                                    data-cc-filter-checkbox
+                                                                >
+                                                                <span data-cc-filter-option-label>
+                                                                    {{ $empresaOpcion->nombre_comercial ?: $empresaOpcion->nombre_legal }}
+                                                                </span>
+                                                            </label>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+                                            </div>
                                         @else
-                                            <select id="empresa_id" name="empresa_id" class="cc-input" disabled>
+                                            <select class="cc-input" disabled>
                                                 @foreach ($empresasSelector as $empresaOpcion)
                                                     <option value="{{ $empresaOpcion->id }}" selected>
                                                         {{ $empresaOpcion->nombre_comercial ?: $empresaOpcion->nombre_legal }}
                                                     </option>
                                                 @endforeach
                                             </select>
+
+                                            @foreach ($empresaIds ?? [] as $empresaSeleccionadaId)
+                                                <input type="hidden" name="empresa_ids[]" value="{{ $empresaSeleccionadaId }}">
+                                            @endforeach
                                         @endif
 
-                                        @error('empresa_id')
+                                        @error('empresa_ids')
+                                            <div class="cc-error">
+                                                {{ $message }}
+                                            </div>
+                                        @enderror
+
+                                        @error('empresa_ids.*')
                                             <div class="cc-error">
                                                 {{ $message }}
                                             </div>
@@ -120,20 +185,21 @@
                                     </div>
 
                                     <div class="cc-field">
-                                        <label for="buscar">
-                                            Buscar
+                                        <label for="busqueda_motorista">
+                                            Buscar motorista
                                         </label>
+
                                         <input
-                                            id="buscar"
-                                            name="buscar"
+                                            id="busqueda_motorista"
+                                            name="busqueda_motorista"
                                             type="text"
                                             class="cc-input"
-                                            value="{{ $buscar }}"
+                                            value="{{ $busquedaMotorista ?? '' }}"
                                             maxlength="150"
-                                            placeholder="Nombre, licencia o teléfono"
+                                            placeholder="Nombre o apellido"
                                         >
 
-                                        @error('buscar')
+                                        @error('busqueda_motorista')
                                             <div class="cc-error">
                                                 {{ $message }}
                                             </div>
@@ -141,27 +207,61 @@
                                     </div>
 
                                     <div class="cc-field">
-                                        <label for="estado">
-                                            Estado
+                                        <label>
+                                            Motorista
                                         </label>
-                                        <select id="estado" name="estado" class="cc-input">
-                                            <option value="">Seleccione</option>
-                                            <option value="activo" @selected($estado === 'activo')>
-                                                Activos
-                                            </option>
-                                            <option value="inactivo" @selected($estado === 'inactivo')>
-                                                Inactivos
-                                            </option>
-                                        </select>
 
-                                        @error('estado')
+                                        <div class="cc-filter-multiselect" data-cc-filter-multiselect>
+                                            <button type="button" class="cc-filter-multiselect-toggle" data-cc-filter-toggle>
+                                                <span data-cc-filter-label data-default-label="Todos">
+                                                    @if (! empty($motoristaIds))
+                                                        {{ count($motoristaIds) }} seleccionados
+                                                    @else
+                                                        Todos
+                                                    @endif
+                                                </span>
+                                                <span class="cc-filter-multiselect-arrow">⌄</span>
+                                            </button>
+
+                                            <div class="cc-filter-multiselect-menu" data-cc-filter-menu>
+                                                <div class="cc-filter-multiselect-list">
+                                                    <label class="cc-filter-multiselect-option cc-filter-multiselect-option-master">
+                                                        <input type="checkbox" data-cc-filter-master>
+                                                        <span>Seleccionar todo</span>
+                                                    </label>
+
+                                                    @foreach ($motoristasSelector as $motoristaOpcion)
+                                                        <label class="cc-filter-multiselect-option" data-cc-filter-option>
+                                                            <input
+                                                                type="checkbox"
+                                                                name="motorista_ids[]"
+                                                                value="{{ $motoristaOpcion->id }}"
+                                                                @checked(in_array((string) $motoristaOpcion->id, array_map('strval', $motoristaIds ?? []), true))
+                                                                data-cc-filter-checkbox
+                                                            >
+                                                            <span data-cc-filter-option-label>
+                                                                {{ $motoristaOpcion->nombre_completo }}
+                                                            </span>
+                                                        </label>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        @error('motorista_ids')
+                                            <div class="cc-error">
+                                                {{ $message }}
+                                            </div>
+                                        @enderror
+
+                                        @error('motorista_ids.*')
                                             <div class="cc-error">
                                                 {{ $message }}
                                             </div>
                                         @enderror
                                     </div>
 
-                                    <div class="cc-filter-inline-actions">
+                                    <div class="cc-standard-filter-actions">
                                         <button type="submit" class="cc-btn-primary">
                                             Consultar
                                         </button>
@@ -191,6 +291,7 @@
                                 <h5>
                                     Administración pendiente
                                 </h5>
+
                                 <p>
                                     Use los filtros para cargar los motoristas disponibles.
                                 </p>
@@ -200,61 +301,94 @@
                                 <h5>
                                     Sin resultados
                                 </h5>
+
                                 <p>
-                                    No hay motoristas que coincidan con los criterios seleccionados.
+                                    No hay motoristas que coincidan con los filtros seleccionados.
                                 </p>
                             </div>
                         @else
-                            <div class="cc-result-list">
-                                @foreach ($motoristas as $motorista)
-                                    <div class="cc-result-card cc-result-card-compact">
-                                        <div class="cc-result-main">
-                                            <div class="cc-result-eyebrow">
-                                                Motorista
+                            <div class="cc-table-adaptive-wrapper">
+                                <div class="cc-admin-result-list" style="min-width: 92rem;">
+                                    @foreach ($motoristas as $motorista)
+                                        <article class="cc-admin-result-card" style="min-width: 92rem; box-sizing: border-box;">
+                                            <div style="display: grid; grid-template-columns: 18rem 17rem 13rem 10rem 8rem 16rem; gap: 1rem; align-items: center;">
+
+                                                <div style="min-width: 0;">
+                                                    <div class="cc-admin-result-label">
+                                                        Motorista
+                                                    </div>
+
+                                                    <h5 class="cc-admin-result-title" style="margin: 0; white-space: nowrap;">
+                                                        {{ $motorista->nombre_completo }}
+                                                    </h5>
+                                                </div>
+
+                                                <div style="min-width: 0;">
+                                                    <div class="cc-admin-result-label">
+                                                        Empresa
+                                                    </div>
+
+                                                    <div class="cc-admin-result-value" style="white-space: nowrap;">
+                                                        {{ $motorista->empresa->nombre_comercial ?: $motorista->empresa->nombre_legal }}
+                                                    </div>
+                                                </div>
+
+                                                <div style="min-width: 0;">
+                                                    <div class="cc-admin-result-label">
+                                                        Licencia
+                                                    </div>
+
+                                                    <div class="cc-admin-result-value" style="white-space: nowrap;">
+                                                        {{ $motorista->licencia }}
+                                                    </div>
+                                                </div>
+
+                                                <div style="min-width: 0;">
+                                                    <div class="cc-admin-result-label">
+                                                        Teléfono
+                                                    </div>
+
+                                                    <div class="cc-admin-result-value" style="white-space: nowrap;">
+                                                        {{ $motorista->telefono }}
+                                                    </div>
+                                                </div>
+
+                                                <div style="min-width: 0;">
+                                                    <div class="cc-admin-result-label">
+                                                        Estado
+                                                    </div>
+
+                                                    <div style="white-space: nowrap;">
+                                                        @if ($motorista->estado === 'activo')
+                                                            <span class="cc-badge cc-badge-active">
+                                                                Activo
+                                                            </span>
+                                                        @else
+                                                            <span class="cc-badge cc-badge-inactive">
+                                                                Inactivo
+                                                            </span>
+                                                        @endif
+                                                    </div>
+                                                </div>
+
+                                                <div style="display: flex; gap: .75rem; justify-content: flex-end; align-items: center; white-space: nowrap; min-width: 16rem;">
+                                                    <a href="{{ route('motoristas.show.ventana', array_merge(['motorista' => $motorista], request()->query())) }}"
+                                                       class="cc-btn-secondary cc-btn-result">
+                                                        Ver ficha
+                                                    </a>
+
+                                                    @if ($motorista->estado === 'activo')
+                                                        <a href="{{ route('motoristas.edit.ventana', array_merge(['motorista' => $motorista], request()->query())) }}"
+                                                           class="cc-btn-primary cc-btn-result">
+                                                            Editar
+                                                        </a>
+                                                    @endif
+                                                </div>
+
                                             </div>
-
-                                            <h4 class="cc-result-title">
-                                                {{ $motorista->nombre_completo }}
-                                            </h4>
-
-                                            <div class="cc-result-meta">
-                                                <span>
-                                                    Empresa: {{ $motorista->empresa->nombre_comercial ?: $motorista->empresa->nombre_legal }}
-                                                </span>
-
-                                                <span>
-                                                    Licencia: {{ $motorista->licencia }}
-                                                </span>
-
-                                                <span>
-                                                    Teléfono: {{ $motorista->telefono }}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        <div class="cc-result-side">
-                                            @if ($motorista->estado === 'activo')
-                                                <span class="cc-badge cc-badge-active">
-                                                    Activo
-                                                </span>
-                                            @else
-                                                <span class="cc-badge cc-badge-inactive">
-                                                    Inactivo
-                                                </span>
-                                            @endif
-
-                                            <div class="cc-result-actions">
-                                                <a href="{{ route('motoristas.show.ventana', $motorista) }}" class="cc-btn-secondary cc-btn-result">
-                                                    Ver ficha
-                                                </a>
-
-                                                <a href="{{ route('motoristas.edit.ventana', $motorista) }}" class="cc-btn-primary cc-btn-result">
-                                                    Editar
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
+                                        </article>
+                                    @endforeach
+                                </div>
                             </div>
 
                             <div class="mt-6">
@@ -266,5 +400,106 @@
                 </div>
             </div>
         </div>
+
+        <script>
+            document.querySelectorAll('[data-cc-filter-multiselect]').forEach(function (multiselect) {
+                const toggle = multiselect.querySelector('[data-cc-filter-toggle]');
+                const menu = multiselect.querySelector('[data-cc-filter-menu]');
+                const label = multiselect.querySelector('[data-cc-filter-label]');
+                const master = multiselect.querySelector('[data-cc-filter-master]');
+                const checkboxes = Array.from(multiselect.querySelectorAll('[data-cc-filter-checkbox]'));
+                const defaultLabel = label.dataset.defaultLabel || 'Todos';
+
+                function updateLabel() {
+                    const selected = checkboxes.filter(function (checkbox) {
+                        return checkbox.checked;
+                    });
+
+                    if (selected.length === 0) {
+                        label.textContent = defaultLabel;
+                    } else if (selected.length === 1) {
+                        const selectedOption = selected[0].closest('[data-cc-filter-option]');
+                        const selectedLabel = selectedOption.querySelector('[data-cc-filter-option-label]');
+                        label.textContent = selectedLabel ? selectedLabel.textContent.trim() : '1 seleccionado';
+                    } else {
+                        label.textContent = selected.length + ' seleccionados';
+                    }
+
+                    if (master) {
+                        master.checked = selected.length === checkboxes.length && checkboxes.length > 0;
+                        master.indeterminate = selected.length > 0 && selected.length < checkboxes.length;
+                    }
+                }
+
+                function closeAllExceptCurrent() {
+                    document.querySelectorAll('[data-cc-filter-multiselect]').forEach(function (otherMultiselect) {
+                        if (otherMultiselect === multiselect) {
+                            return;
+                        }
+
+                        const otherToggle = otherMultiselect.querySelector('[data-cc-filter-toggle]');
+                        const otherMenu = otherMultiselect.querySelector('[data-cc-filter-menu]');
+
+                        if (otherToggle && otherMenu) {
+                            otherToggle.classList.remove('is-open');
+                            otherMenu.classList.remove('is-open');
+                        }
+                    });
+                }
+
+                if (toggle && menu) {
+                    toggle.addEventListener('click', function () {
+                        closeAllExceptCurrent();
+
+                        toggle.classList.toggle('is-open');
+                        menu.classList.toggle('is-open');
+                    });
+                }
+
+                if (master) {
+                    master.addEventListener('change', function () {
+                        checkboxes.forEach(function (checkbox) {
+                            checkbox.checked = master.checked;
+                        });
+
+                        updateLabel();
+                    });
+                }
+
+                checkboxes.forEach(function (checkbox) {
+                    checkbox.addEventListener('change', updateLabel);
+                });
+
+                updateLabel();
+            });
+
+            document.addEventListener('click', function (event) {
+                if (event.target.closest('[data-cc-filter-multiselect]')) {
+                    return;
+                }
+
+                document.querySelectorAll('[data-cc-filter-toggle]').forEach(function (toggle) {
+                    toggle.classList.remove('is-open');
+                });
+
+                document.querySelectorAll('[data-cc-filter-menu]').forEach(function (menu) {
+                    menu.classList.remove('is-open');
+                });
+            });
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key !== 'Escape') {
+                    return;
+                }
+
+                document.querySelectorAll('[data-cc-filter-toggle]').forEach(function (toggle) {
+                    toggle.classList.remove('is-open');
+                });
+
+                document.querySelectorAll('[data-cc-filter-menu]').forEach(function (menu) {
+                    menu.classList.remove('is-open');
+                });
+            });
+        </script>
     </body>
 </html>

@@ -1,6 +1,10 @@
+@php
+    $queryParams = request()->query();
+@endphp
+
 <x-app-layout>
     <div class="cc-page-wrapper">
-        <div class="cc-content-container" style="max-width: 79rem;">
+        <div class="cc-content-container" style="max-width: 80rem;">
             <div class="cc-card">
 
                 <div class="cc-card-header cc-card-header-compact">
@@ -8,20 +12,22 @@
                         <h3 class="cc-title cc-title-compact">
                             Ficha administrativa de motorista
                         </h3>
+
                         <p class="cc-subtitle cc-subtitle-compact">
                             Consulta consolidada del motorista disponible para solicitudes de abastecimiento.
                         </p>
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <a href="{{ route('motoristas.administrar') }}" class="cc-btn-secondary cc-btn-wide">
+                        <a href="{{ route('motoristas.administrar', $queryParams) }}"
+                           class="cc-btn-secondary cc-btn-wide">
                             Volver a administrar
                         </a>
                     </div>
                 </div>
 
                 @if (session('success'))
-                    <div class="cc-alert-success">
+                    <div class="cc-alert cc-alert-success">
                         {{ session('success') }}
                     </div>
                 @endif
@@ -146,11 +152,15 @@
 
                 <div class="cc-actions cc-actions-split">
                     <div class="cc-actions-normal">
-                        <a href="{{ route('motoristas.edit', $motorista) }}" class="cc-btn-primary cc-btn-form-action">
-                            Editar motorista
-                        </a>
+                        @if ($motorista->estado === 'activo')
+                            <a href="{{ route('motoristas.edit', array_merge(['motorista' => $motorista], $queryParams)) }}"
+                               class="cc-btn-primary cc-btn-form-action">
+                                Editar motorista
+                            </a>
+                        @endif
 
-                        <a href="{{ route('motoristas.administrar') }}" class="cc-btn-secondary cc-btn-form-action">
+                        <a href="{{ route('motoristas.administrar', $queryParams) }}"
+                           class="cc-btn-secondary cc-btn-form-action">
                             Volver a administrar
                         </a>
                     </div>
@@ -168,7 +178,7 @@
                         </div>
 
                         <form method="POST"
-                              action="{{ route('motoristas.inactivar', $motorista) }}"
+                              action="{{ route('motoristas.inactivar', array_merge(['motorista' => $motorista], $queryParams)) }}"
                               class="cc-danger-zone-form"
                               onsubmit="return confirmarInactivacionMotorista();">
                             @csrf
@@ -210,7 +220,7 @@
                 @else
                     <div class="cc-actions">
                         <form method="POST"
-                              action="{{ route('motoristas.reactivar', $motorista) }}"
+                              action="{{ route('motoristas.reactivar', array_merge(['motorista' => $motorista], $queryParams)) }}"
                               onsubmit="return confirm('¿Seguro que deseas reactivar este motorista?');">
                             @csrf
                             @method('PATCH')

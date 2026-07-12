@@ -8,6 +8,7 @@
                         <h3 class="cc-title cc-title-compact">
                             Registro de gasolinera externa
                         </h3>
+
                         <p class="cc-subtitle cc-subtitle-compact">
                             Registre una gasolinera comercial autorizada o frecuente para abastecimientos externos.
                         </p>
@@ -21,14 +22,15 @@
                             Abrir en nueva pestaña
                         </a>
 
-                        <a href="{{ route('gasolineras-externas.index') }}" class="cc-btn-secondary cc-btn-wide">
-                            Ir a consulta
+                        <a href="{{ route('gasolineras-externas.index') }}"
+                           class="cc-btn-secondary cc-btn-wide">
+                            Volver a Consulta
                         </a>
                     </div>
                 </div>
 
                 @if (session('success'))
-                    <div class="cc-alert-success">
+                    <div class="cc-alert cc-alert-success">
                         {{ session('success') }}
                     </div>
                 @endif

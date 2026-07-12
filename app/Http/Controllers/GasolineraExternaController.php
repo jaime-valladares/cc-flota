@@ -63,104 +63,191 @@ class GasolineraExternaController extends Controller
             : Empresa::find($user->empresa_id);
 
         $validated = $request->validate([
-            'empresa_id' => ['nullable', 'integer', 'exists:empresas,id'],
+            'busqueda_empresa' => ['nullable', 'string', 'max:150'],
             'compania' => ['nullable', 'string', 'max:150'],
             'estado' => ['nullable', 'in:activa,inactiva'],
+
+            /*
+             * Nuevo estándar: multiselección.
+             */
+            'empresa_ids' => ['nullable', 'array'],
+            'empresa_ids.*' => ['nullable', 'integer', 'exists:empresas,id'],
+
+            'gasolinera_externa_ids' => ['nullable', 'array'],
+            'gasolinera_externa_ids.*' => ['nullable', 'integer', 'exists:gasolineras_externas,id'],
+
+            /*
+             * Compatibilidad temporal con filtros anteriores.
+             */
+            'empresa_id' => ['nullable', 'integer', 'exists:empresas,id'],
+            'gasolinera_externa_id' => ['nullable', 'integer', 'exists:gasolineras_externas,id'],
         ], [
             'empresa_id.exists' => 'La empresa seleccionada no es válida.',
+            'empresa_ids.*.exists' => 'Una de las empresas seleccionadas no es válida.',
+            'gasolinera_externa_id.exists' => 'La gasolinera externa seleccionada no es válida.',
+            'gasolinera_externa_ids.*.exists' => 'Una de las gasolineras externas seleccionadas no es válida.',
             'estado.in' => 'El estado seleccionado no es válido.',
         ]);
 
-        $empresaId = $validated['empresa_id'] ?? null;
+        $busquedaEmpresa = trim((string) ($validated['busqueda_empresa'] ?? ''));
         $compania = trim((string) ($validated['compania'] ?? ''));
         $estado = $validated['estado'] ?? null;
 
+        /*
+         * Compatibilidad:
+         * - Nuevo estándar: empresa_ids[].
+         * - Filtro anterior: empresa_id.
+         */
+        $empresaIds = collect($validated['empresa_ids'] ?? [])
+            ->when(filled($validated['empresa_id'] ?? null), function ($collection) use ($validated) {
+                return $collection->push($validated['empresa_id']);
+            })
+            ->filter(fn ($id) => filled($id))
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+
+        /*
+         * Compatibilidad:
+         * - Nuevo estándar: gasolinera_externa_ids[].
+         * - Filtro anterior: gasolinera_externa_id.
+         */
+        $gasolineraExternaIds = collect($validated['gasolinera_externa_ids'] ?? [])
+            ->when(filled($validated['gasolinera_externa_id'] ?? null), function ($collection) use ($validated) {
+                return $collection->push($validated['gasolinera_externa_id']);
+            })
+            ->filter(fn ($id) => filled($id))
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+
         if (! $esUsuarioDieselCop) {
-            $empresaId = $user->empresa_id;
+            $empresaIds = [(int) $user->empresa_id];
         }
 
-        $hayFiltros = ! $esUsuarioDieselCop
-            || $request->hasAny(['empresa_id', 'compania', 'estado', 'consultar']);
+        $empresaId = $empresaIds[0] ?? null;
+        $gasolineraExternaId = $gasolineraExternaIds[0] ?? null;
 
-        $query = GasolineraExterna::query()
+        $consultaEjecutada = $request->boolean('consultar');
+
+        $hayFiltros = $consultaEjecutada
+            || filled($busquedaEmpresa)
+            || filled($compania)
+            || count($empresaIds) > 0
+            || count($gasolineraExternaIds) > 0
+            || filled($estado);
+
+        $empresasSelector = Empresa::query()
+            ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
+                $query->where('id', $user->empresa_id);
+            })
+            ->when($soloEmpresasActivas, function ($query) {
+                $query->where('estado', 'activa');
+            })
+            ->orderBy('nombre_comercial')
+            ->orderBy('nombre_legal')
+            ->get();
+
+        $baseGasolinerasExternasQuery = GasolineraExterna::query()
             ->with('empresa')
+            ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
+                $query->where('empresa_id', $user->empresa_id);
+            })
             ->when($soloEmpresasActivas, function ($query) {
                 $query->whereHas('empresa', function ($empresaQuery) {
                     $empresaQuery->where('estado', 'activa');
                 });
             });
 
-        if ($hayFiltros) {
-            if ($empresaId) {
-                $query->where('empresa_id', $empresaId);
-            }
+        /*
+         * Selector de gasolineras externas:
+         * respeta la jerarquía de empresa para que el multiselect de compañía
+         * no muestre opciones fuera de la empresa o empresas consultadas.
+         */
+        $gasolinerasExternasSelector = (clone $baseGasolinerasExternasQuery)
+            ->when(filled($busquedaEmpresa), function ($query) use ($busquedaEmpresa) {
+                $query->whereHas('empresa', function ($empresaQuery) use ($busquedaEmpresa) {
+                    $empresaQuery
+                        ->where('nombre_legal', 'like', '%' . $busquedaEmpresa . '%')
+                        ->orWhere('nombre_comercial', 'like', '%' . $busquedaEmpresa . '%');
+                });
+            })
+            ->when(count($empresaIds) > 0, function ($query) use ($empresaIds) {
+                $query->whereIn('empresa_id', $empresaIds);
+            })
+            ->orderBy('compania')
+            ->orderBy('direccion')
+            ->get();
 
-            if ($compania !== '') {
+        $gasolinerasExternas = (clone $baseGasolinerasExternasQuery)
+            ->when($hayFiltros && filled($busquedaEmpresa), function ($query) use ($busquedaEmpresa) {
+                $query->whereHas('empresa', function ($empresaQuery) use ($busquedaEmpresa) {
+                    $empresaQuery
+                        ->where('nombre_legal', 'like', '%' . $busquedaEmpresa . '%')
+                        ->orWhere('nombre_comercial', 'like', '%' . $busquedaEmpresa . '%');
+                });
+            })
+            ->when($hayFiltros && count($empresaIds) > 0, function ($query) use ($empresaIds) {
+                $query->whereIn('empresa_id', $empresaIds);
+            })
+            ->when($hayFiltros && filled($compania), function ($query) use ($compania) {
                 $query->where('compania', 'like', '%' . $compania . '%');
-            }
-
-            if (in_array($estado, ['activa', 'inactiva'], true)) {
+            })
+            ->when($hayFiltros && count($gasolineraExternaIds) > 0, function ($query) use ($gasolineraExternaIds) {
+                $query->whereIn('id', $gasolineraExternaIds);
+            })
+            ->when($hayFiltros && in_array($estado, ['activa', 'inactiva'], true), function ($query) use ($estado) {
                 $query->where('estado', $estado);
-            }
-        } else {
-            $query->whereRaw('1 = 0');
-        }
-
-        $gasolinerasExternas = $query
+            })
+            ->when(! $hayFiltros, function ($query) {
+                $query->whereRaw('1 = 0');
+            })
             ->orderBy('compania')
             ->orderBy('direccion')
             ->paginate(10)
             ->withQueryString();
 
         $baseResumen = GasolineraExterna::query()
+            ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
+                $query->where('empresa_id', $user->empresa_id);
+            })
             ->when($soloEmpresasActivas, function ($query) {
                 $query->whereHas('empresa', function ($empresaQuery) {
                     $empresaQuery->where('estado', 'activa');
                 });
             });
 
-        if (! $esUsuarioDieselCop) {
-            $baseResumen->where('empresa_id', $user->empresa_id);
-        }
-
         $totalGasolinerasExternas = (clone $baseResumen)->count();
         $gasolinerasExternasActivas = (clone $baseResumen)->where('estado', 'activa')->count();
         $gasolinerasExternasInactivas = (clone $baseResumen)->where('estado', 'inactiva')->count();
 
-        if ($esUsuarioDieselCop) {
-            $empresasSelector = Empresa::query()
-                ->when($soloEmpresasActivas, function ($query) {
-                    $query->where('estado', 'activa');
-                })
-                ->orderBy('nombre_comercial')
-                ->orderBy('nombre_legal')
-                ->get();
-        } else {
-            $empresasSelector = collect([$empresaUsuario])
-                ->filter(function ($empresa) use ($soloEmpresasActivas) {
-                    if (! $empresa) {
-                        return false;
-                    }
-
-                    if ($soloEmpresasActivas && $empresa->estado !== 'activa') {
-                        return false;
-                    }
-
-                    return true;
-                })
-                ->values();
-        }
-
         return [
             'gasolinerasExternas' => $gasolinerasExternas,
+            'gasolinerasExternasSelector' => $gasolinerasExternasSelector,
             'empresasSelector' => $empresasSelector,
-            'empresaId' => $empresaId,
+
+            'busquedaEmpresa' => $busquedaEmpresa,
             'compania' => $compania,
             'estado' => $estado,
+
+            'empresaIds' => $empresaIds,
+            'gasolineraExternaIds' => $gasolineraExternaIds,
+
+            /*
+             * Variables simples para compatibilidad temporal.
+             */
+            'empresaId' => $empresaId,
+            'gasolineraExternaId' => $gasolineraExternaId,
+
             'hayFiltros' => $hayFiltros,
+            'consultaEjecutada' => $consultaEjecutada,
+
             'totalGasolinerasExternas' => $totalGasolinerasExternas,
             'gasolinerasExternasActivas' => $gasolinerasExternasActivas,
             'gasolinerasExternasInactivas' => $gasolinerasExternasInactivas,
+
             'esUsuarioDieselCop' => $esUsuarioDieselCop,
             'empresaUsuario' => $empresaUsuario,
         ];

@@ -47,12 +47,17 @@ class RecargaTanqueController extends Controller
             : Empresa::find($user->empresa_id);
 
         $validated = $request->validate([
+            'busqueda_empresa' => ['nullable', 'string', 'max:150'],
+            'busqueda_gasolinera' => ['nullable', 'string', 'max:150'],
             'empresa_id' => ['nullable', 'integer', 'exists:empresas,id'],
             'gasolinera_id' => ['nullable', 'integer', 'exists:gasolineras,id'],
         ], [
             'empresa_id.exists' => 'La empresa seleccionada no es válida.',
             'gasolinera_id.exists' => 'La gasolinera seleccionada no es válida.',
         ]);
+
+        $busquedaEmpresa = trim((string) ($validated['busqueda_empresa'] ?? ''));
+        $busquedaGasolinera = trim((string) ($validated['busqueda_gasolinera'] ?? ''));
 
         $empresaId = $validated['empresa_id'] ?? null;
         $gasolineraId = $validated['gasolinera_id'] ?? null;
@@ -79,8 +84,43 @@ class RecargaTanqueController extends Controller
             $this->validarEmpresaActivaGasolinera($gasolineraSeleccionada);
         }
 
-        $hayFiltros = ! $esUsuarioDieselCop
-            || $request->hasAny(['empresa_id', 'gasolinera_id', 'consultar']);
+        $consultaEjecutada = $request->boolean('consultar');
+
+        $hayFiltros = $consultaEjecutada
+            || filled($busquedaEmpresa)
+            || filled($busquedaGasolinera)
+            || filled($empresaId)
+            || filled($gasolineraId);
+
+        $empresasSelector = $esUsuarioDieselCop
+            ? Empresa::where('estado', 'activa')
+                ->orderBy('nombre_comercial')
+                ->orderBy('nombre_legal')
+                ->get()
+            : collect([$empresaUsuario])
+                ->filter(fn ($empresa) => $empresa && $empresa->estado === 'activa')
+                ->values();
+
+        $gasolinerasSelector = Gasolinera::query()
+            ->where('estado', 'activa')
+            ->whereHas('empresa', function ($query) {
+                $query->where('estado', 'activa');
+            })
+            ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
+                $query->where('empresa_id', $user->empresa_id);
+            })
+            ->when($esUsuarioDieselCop && filled($busquedaEmpresa), function ($query) use ($busquedaEmpresa) {
+                $query->whereHas('empresa', function ($empresaQuery) use ($busquedaEmpresa) {
+                    $empresaQuery
+                        ->where('nombre_legal', 'like', '%' . $busquedaEmpresa . '%')
+                        ->orWhere('nombre_comercial', 'like', '%' . $busquedaEmpresa . '%');
+                });
+            })
+            ->when($esUsuarioDieselCop && filled($empresaId), function ($query) use ($empresaId) {
+                $query->where('empresa_id', $empresaId);
+            })
+            ->orderBy('nombre')
+            ->get();
 
         $query = Tanque::query()
             ->with([
@@ -92,18 +132,35 @@ class RecargaTanqueController extends Controller
             })
             ->whereHas('gasolinera.empresa', function ($query) {
                 $query->where('estado', 'activa');
+            })
+            ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
+                $query->whereHas('gasolinera', function ($gasolineraQuery) use ($user) {
+                    $gasolineraQuery->where('gasolineras.empresa_id', $user->empresa_id);
+                });
             });
 
         if ($hayFiltros) {
-            if ($empresaId) {
-                $query->whereHas('gasolinera', function ($query) use ($empresaId) {
-                    $query->where('gasolineras.empresa_id', $empresaId);
+            $query
+                ->when(filled($busquedaEmpresa), function ($query) use ($busquedaEmpresa) {
+                    $query->whereHas('gasolinera.empresa', function ($empresaQuery) use ($busquedaEmpresa) {
+                        $empresaQuery
+                            ->where('nombre_legal', 'like', '%' . $busquedaEmpresa . '%')
+                            ->orWhere('nombre_comercial', 'like', '%' . $busquedaEmpresa . '%');
+                    });
+                })
+                ->when(filled($empresaId), function ($query) use ($empresaId) {
+                    $query->whereHas('gasolinera', function ($gasolineraQuery) use ($empresaId) {
+                        $gasolineraQuery->where('gasolineras.empresa_id', $empresaId);
+                    });
+                })
+                ->when(filled($busquedaGasolinera), function ($query) use ($busquedaGasolinera) {
+                    $query->whereHas('gasolinera', function ($gasolineraQuery) use ($busquedaGasolinera) {
+                        $gasolineraQuery->where('gasolineras.nombre', 'like', '%' . $busquedaGasolinera . '%');
+                    });
+                })
+                ->when(filled($gasolineraId), function ($query) use ($gasolineraId) {
+                    $query->where('gasolinera_id', $gasolineraId);
                 });
-            }
-
-            if ($gasolineraId) {
-                $query->where('gasolinera_id', $gasolineraId);
-            }
         } else {
             $query->whereRaw('1 = 0');
         }
@@ -115,30 +172,6 @@ class RecargaTanqueController extends Controller
             ->orderBy('tanques.nombre')
             ->paginate(10)
             ->withQueryString();
-
-        $empresasSelector = $esUsuarioDieselCop
-            ? Empresa::where('estado', 'activa')
-                ->orderBy('nombre_comercial')
-                ->orderBy('nombre_legal')
-                ->get()
-            : collect([$empresaUsuario])
-                ->filter(fn ($empresa) => $empresa && $empresa->estado === 'activa')
-                ->values();
-
-        $gasolinerasSelectorQuery = Gasolinera::query()
-            ->where('estado', 'activa')
-            ->whereHas('empresa', function ($query) {
-                $query->where('estado', 'activa');
-            })
-            ->orderBy('nombre');
-
-        if (! $esUsuarioDieselCop) {
-            $gasolinerasSelectorQuery->where('empresa_id', $user->empresa_id);
-        } elseif ($empresaId) {
-            $gasolinerasSelectorQuery->where('empresa_id', $empresaId);
-        }
-
-        $gasolinerasSelector = $gasolinerasSelectorQuery->get();
 
         $baseResumen = Tanque::query()
             ->where('tanques.estado', 'activo')
@@ -171,12 +204,20 @@ class RecargaTanqueController extends Controller
             'tanques' => $tanques,
             'empresasSelector' => $empresasSelector,
             'gasolinerasSelector' => $gasolinerasSelector,
+
+            'busquedaEmpresa' => $busquedaEmpresa,
+            'busquedaGasolinera' => $busquedaGasolinera,
+
             'empresaId' => $empresaId,
             'gasolineraId' => $gasolineraId,
+
             'hayFiltros' => $hayFiltros,
+            'consultaEjecutada' => $consultaEjecutada,
+
             'tanquesRecargables' => $tanquesRecargables,
             'tanquesBajoAlerta' => $tanquesBajoAlerta,
             'capacidadDisponible' => $capacidadDisponible,
+
             'esUsuarioDieselCop' => $esUsuarioDieselCop,
             'empresaUsuario' => $empresaUsuario,
         ];

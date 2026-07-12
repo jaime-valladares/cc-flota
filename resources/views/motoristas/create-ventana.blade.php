@@ -1,3 +1,7 @@
+@php
+    $queryParams = request()->query();
+@endphp
+
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
@@ -7,9 +11,9 @@
 
         <title>Registro de motorista | CC-Flota</title>
 
-        
         @include('layouts.partials.favicon')
-<link rel="preconnect" href="https://fonts.googleapis.com">
+
+        <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
 
@@ -27,20 +31,27 @@
                                 <h3 class="cc-title cc-title-compact">
                                     Registro de motorista
                                 </h3>
+
                                 <p class="cc-subtitle cc-subtitle-compact">
-                                    Registre un motorista disponible para seleccionar en solicitudes de abastecimiento.
+                                    Registre un motorista disponible para solicitudes de abastecimiento.
                                 </p>
                             </div>
 
                             <div class="flex items-center gap-3">
-                                <a href="{{ route('motoristas.create') }}" class="cc-btn-secondary cc-btn-wide">
+                                <a href="{{ route('motoristas.create', $queryParams) }}"
+                                   class="cc-btn-secondary cc-btn-wide">
                                     Volver a Registro
+                                </a>
+
+                                <a href="{{ route('motoristas.index', $queryParams) }}"
+                                   class="cc-btn-secondary cc-btn-wide">
+                                    Volver al sistema
                                 </a>
                             </div>
                         </div>
 
                         @if (session('success'))
-                            <div class="cc-alert-success">
+                            <div class="cc-alert cc-alert-success">
                                 {{ session('success') }}
                             </div>
                         @endif

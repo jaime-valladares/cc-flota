@@ -1,6 +1,7 @@
 <x-app-layout>
     @php
         $empresaNombre = $gasolinera->empresa?->nombre_comercial ?: $gasolinera->empresa?->nombre_legal;
+        $bajoAlerta = $bajoAlerta ?? $tanque->estaBajoAlerta();
     @endphp
 
     <div class="cc-page-wrapper">
@@ -13,9 +14,6 @@
                             Administrar tanque
                         </h3>
 
-                        <p class="cc-subtitle cc-subtitle-compact">
-                            Actualice los datos controlados del tanque y gestione su estado operativo.
-                        </p>
                     </div>
 
                     <div class="flex items-center gap-3">
@@ -69,7 +67,7 @@
                         </div>
                     </div>
 
-                    <div class="cc-profile-status" style="display: flex; gap: 0.5rem; align-items: center;">
+                    <div class="cc-profile-status">
                         <span class="cc-badge {{ $tanque->estado === 'activo' ? 'cc-badge-active' : 'cc-badge-inactive' }}">
                             {{ ucfirst($tanque->estado) }}
                         </span>
@@ -84,24 +82,38 @@
 
                 <div class="cc-summary-strip">
                     <div class="cc-summary-strip-item">
-                        <span class="cc-summary-strip-label">Capacidad</span>
-                        <span class="cc-summary-strip-value">{{ number_format($capacidadTotal, 2) }} gal</span>
+                        <span class="cc-summary-strip-label">
+                            Capacidad
+                        </span>
+                        <span class="cc-summary-strip-value">
+                            {{ number_format($capacidadTotal, 2) }} gal
+                        </span>
                     </div>
 
                     <div class="cc-summary-strip-item">
-                        <span class="cc-summary-strip-label">Volumen actual</span>
-                        <span class="cc-summary-strip-value">{{ number_format($volumenActual, 2) }} gal</span>
+                        <span class="cc-summary-strip-label">
+                            Disponible
+                        </span>
+                        <span class="cc-summary-strip-value">
+                            {{ number_format($volumenActual, 2) }} gal
+                        </span>
                     </div>
 
                     <div class="cc-summary-strip-item">
-                        <span class="cc-summary-strip-label">Mínimo alerta</span>
-                        <span class="cc-summary-strip-value">{{ number_format($volumenMinimoAlerta, 2) }} gal</span>
-                    </div>
-
-                    <div class="cc-summary-strip-item">
-                        <span class="cc-summary-strip-label">Disponibilidad</span>
-                        <span class="cc-summary-strip-value {{ $bajoAlerta ? 'cc-summary-strip-value-danger' : 'cc-summary-strip-value-success' }}">
+                        <span class="cc-summary-strip-label">
+                            Disponibilidad
+                        </span>
+                        <span class="cc-summary-strip-value">
                             {{ number_format($porcentajeDisponible, 2) }}%
+                        </span>
+                    </div>
+
+                    <div class="cc-summary-strip-item">
+                        <span class="cc-summary-strip-label">
+                            Mínimo alerta
+                        </span>
+                        <span class="cc-summary-strip-value {{ $bajoAlerta ? 'cc-summary-strip-value-danger' : 'cc-summary-strip-value-success' }}">
+                            {{ number_format($volumenMinimoAlerta, 2) }} gal
                         </span>
                     </div>
                 </div>
@@ -110,8 +122,13 @@
 
                     <section class="cc-detail-section">
                         <div class="cc-detail-section-header">
-                            <h5>Datos del tanque</h5>
-                            <p>Modifique únicamente los datos administrativos permitidos. El volumen actual no se edita manualmente.</p>
+                            <h5>
+                                Datos del tanque
+                            </h5>
+
+                            <p>
+                                Actualice únicamente los datos controlados del tanque. El volumen actual se modifica mediante movimientos de inventario.
+                            </p>
                         </div>
 
                         <div style="padding: 1rem 1.2rem;">
@@ -123,7 +140,7 @@
 
                                     <div class="cc-form-section-slim">
                                         <div class="cc-form-section-title">
-                                            Ubicación operativa
+                                            Identificación
                                         </div>
                                     </div>
 
@@ -155,12 +172,6 @@
                                         >
                                     </div>
 
-                                    <div class="cc-form-section-slim">
-                                        <div class="cc-form-section-title">
-                                            Configuración del tanque
-                                        </div>
-                                    </div>
-
                                     <div class="cc-field">
                                         <label for="nombre">
                                             Nombre del tanque <span class="cc-required">*</span>
@@ -178,8 +189,16 @@
                                         >
 
                                         @error('nombre')
-                                            <div class="cc-error">{{ $message }}</div>
+                                            <div class="cc-error">
+                                                {{ $message }}
+                                            </div>
                                         @enderror
+                                    </div>
+
+                                    <div class="cc-form-section-slim">
+                                        <div class="cc-form-section-title">
+                                            Capacidad y alerta
+                                        </div>
                                     </div>
 
                                     <div class="cc-field">
@@ -200,20 +219,22 @@
                                         >
 
                                         @error('capacidad_total')
-                                            <div class="cc-error">{{ $message }}</div>
+                                            <div class="cc-error">
+                                                {{ $message }}
+                                            </div>
                                         @enderror
                                     </div>
 
                                     <div class="cc-field">
                                         <label for="volumen_actual_visible">
-                                            Volumen actual
+                                            Volumen actual (galones)
                                         </label>
 
                                         <input
                                             id="volumen_actual_visible"
                                             type="text"
                                             class="cc-input"
-                                            value="{{ number_format($volumenActual, 2) }} gal"
+                                            value="{{ number_format($volumenActual, 2) }}"
                                             disabled
                                         >
                                     </div>
@@ -236,7 +257,9 @@
                                         >
 
                                         @error('volumen_minimo_alerta')
-                                            <div class="cc-error">{{ $message }}</div>
+                                            <div class="cc-error">
+                                                {{ $message }}
+                                            </div>
                                         @enderror
                                     </div>
 
@@ -246,6 +269,13 @@
                                     <button type="submit" class="cc-btn-primary cc-btn-form-action">
                                         Guardar cambios
                                     </button>
+
+                                    @if ($gasolinera->estado === 'activa' && $tanque->estado === 'activo')
+                                        <a href="{{ route('gasolineras.tanques.recarga', [$gasolinera, $tanque]) }}"
+                                           class="cc-btn-secondary cc-btn-form-action">
+                                            Recargar tanque
+                                        </a>
+                                    @endif
                                 </div>
                             </form>
                         </div>
@@ -253,8 +283,13 @@
 
                     <section class="cc-detail-section">
                         <div class="cc-detail-section-header">
-                            <h5>Estado del tanque</h5>
-                            <p>Administre la disponibilidad operativa del tanque sin eliminar su historial.</p>
+                            <h5>
+                                Estado operativo
+                            </h5>
+
+                            <p>
+                                Administre la disponibilidad del tanque dentro de la gasolinera seleccionada.
+                            </p>
                         </div>
 
                         <div style="padding: 1rem 1.2rem;">
@@ -294,8 +329,13 @@
                                 </form>
                             @else
                                 <div class="cc-empty-panel cc-empty-panel-compact">
-                                    <h5>Gasolinera inactiva</h5>
-                                    <p>No se puede reactivar este tanque mientras la gasolinera esté inactiva.</p>
+                                    <h5>
+                                        Gasolinera inactiva
+                                    </h5>
+
+                                    <p>
+                                        No se puede reactivar el tanque mientras la gasolinera esté inactiva.
+                                    </p>
                                 </div>
                             @endif
                         </div>
@@ -303,63 +343,84 @@
 
                     <section class="cc-detail-section">
                         <div class="cc-detail-section-header">
-                            <h5>Movimientos recientes</h5>
-                            <p>Últimos movimientos de inventario registrados para este tanque.</p>
+                            <h5>
+                                Movimientos recientes
+                            </h5>
+
+                            <p>
+                                Últimos movimientos registrados para el tanque.
+                            </p>
                         </div>
 
                         <div style="padding: 1rem 1.2rem;">
                             @if ($movimientosRecientes->isEmpty())
                                 <div class="cc-empty-panel cc-empty-panel-compact">
-                                    <h5>Sin movimientos</h5>
-                                    <p>Este tanque todavía no tiene movimientos de inventario registrados.</p>
+                                    <h5>
+                                        Sin movimientos
+                                    </h5>
+
+                                    <p>
+                                        Este tanque todavía no tiene movimientos de inventario registrados.
+                                    </p>
                                 </div>
                             @else
-                                <div class="cc-results-list">
-                                    @foreach ($movimientosRecientes as $movimiento)
-                                        <article class="cc-result-card cc-result-card-compact">
-                                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
-                                                <div>
-                                                    <div class="cc-result-label">
-                                                        Tipo
-                                                    </div>
+                                <div class="cc-table-adaptive-wrapper">
+                                    <table class="cc-table-adaptive" style="min-width: 58rem;">
+                                        <thead>
+                                            <tr>
+                                                <th>Fecha</th>
+                                                <th>Tipo</th>
+                                                <th>Movimiento</th>
+                                                <th>Anterior</th>
+                                                <th>Resultante</th>
+                                                <th>Estado</th>
+                                            </tr>
+                                        </thead>
 
-                                                    <div class="cc-result-value">
-                                                        {{ str_replace('_', ' ', ucfirst($movimiento->tipo_movimiento)) }}
-                                                    </div>
-                                                </div>
-
-                                                <div>
-                                                    <div class="cc-result-label">
-                                                        Movimiento
-                                                    </div>
-
-                                                    <div class="cc-result-value">
-                                                        {{ ucfirst($movimiento->sentido_movimiento) }} {{ number_format((float) $movimiento->volumen_movimiento, 2) }} gal
-                                                    </div>
-                                                </div>
-
-                                                <div>
-                                                    <div class="cc-result-label">
-                                                        Resultante
-                                                    </div>
-
-                                                    <div class="cc-result-value">
-                                                        {{ number_format((float) $movimiento->volumen_resultante, 2) }} gal
-                                                    </div>
-                                                </div>
-
-                                                <div>
-                                                    <div class="cc-result-label">
-                                                        Fecha
-                                                    </div>
-
-                                                    <div class="cc-result-value">
+                                        <tbody>
+                                            @foreach ($movimientosRecientes as $movimiento)
+                                                <tr>
+                                                    <td class="cc-table-adaptive-nowrap">
                                                         {{ optional($movimiento->fecha_hora_movimiento)->format('d/m/Y H:i') }}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </article>
-                                    @endforeach
+                                                    </td>
+
+                                                    <td>
+                                                        {{ str_replace('_', ' ', ucfirst($movimiento->tipo_movimiento)) }}
+                                                    </td>
+
+                                                    <td>
+                                                        <span class="{{ $movimiento->sentido_movimiento === 'entrada' ? 'text-[var(--cc-success)]' : 'text-[var(--cc-danger)]' }}">
+                                                            {{ ucfirst($movimiento->sentido_movimiento) }}
+                                                        </span>
+
+                                                        <div class="cc-table-adaptive-muted">
+                                                            {{ number_format((float) $movimiento->volumen_movimiento, 2) }} gal
+                                                        </div>
+                                                    </td>
+
+                                                    <td>
+                                                        {{ number_format((float) $movimiento->volumen_anterior, 2) }} gal
+                                                    </td>
+
+                                                    <td>
+                                                        {{ number_format((float) $movimiento->volumen_resultante, 2) }} gal
+                                                    </td>
+
+                                                    <td>
+                                                        @if ($movimiento->estado === 'registrado')
+                                                            <span class="cc-badge cc-badge-active">
+                                                                Registrado
+                                                            </span>
+                                                        @else
+                                                            <span class="cc-badge cc-badge-inactive">
+                                                                {{ ucfirst($movimiento->estado) }}
+                                                            </span>
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
                                 </div>
                             @endif
                         </div>

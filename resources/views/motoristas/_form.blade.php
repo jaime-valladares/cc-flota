@@ -1,3 +1,7 @@
+@php
+    $queryParams = request()->query();
+@endphp
+
 <div class="cc-grid cc-grid-compact">
 
     <div class="cc-form-section-slim">
@@ -128,12 +132,16 @@
     </button>
 
     @if ($motorista)
-        <a href="{{ ($modoVentana ?? false) ? route('motoristas.show.ventana', $motorista) : route('motoristas.show', $motorista) }}"
+        <a href="{{ ($modoVentana ?? false)
+            ? route('motoristas.show.ventana', array_merge($queryParams, ['motorista' => $motorista]))
+            : route('motoristas.show', array_merge($queryParams, ['motorista' => $motorista])) }}"
            class="cc-btn-secondary cc-btn-form-action">
             Cancelar
         </a>
     @else
-        <a href="{{ ($modoVentana ?? false) ? route('motoristas.consulta.ventana') : route('motoristas.index') }}"
+        <a href="{{ ($modoVentana ?? false)
+            ? route('motoristas.consulta.ventana', $queryParams)
+            : route('motoristas.index', $queryParams) }}"
            class="cc-btn-secondary cc-btn-form-action">
             Cancelar
         </a>

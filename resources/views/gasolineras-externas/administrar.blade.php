@@ -8,13 +8,11 @@
                         <h3 class="cc-title cc-title-compact">
                             Administrar gasolineras externas
                         </h3>
-                        <p class="cc-subtitle cc-subtitle-compact">
-                            Gestione las gasolineras comerciales disponibles para registros de abastecimiento externo.
-                        </p>
+
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <a href="{{ route('gasolineras-externas.administrar.ventana') }}"
+                        <a href="{{ route('gasolineras-externas.administrar.ventana', request()->query()) }}"
                            target="_blank"
                            rel="noopener noreferrer"
                            class="cc-btn-secondary cc-btn-wide">
@@ -24,7 +22,7 @@
                 </div>
 
                 @if (session('success'))
-                    <div class="cc-alert-success">
+                    <div class="cc-alert cc-alert-success">
                         {{ session('success') }}
                     </div>
                 @endif
@@ -36,11 +34,33 @@
 
                         <div class="cc-form-section cc-form-section-compact" style="margin-top: 0;">
                             <div class="cc-form-section-title">
-                                Búsqueda Administrativa
+                                Filtros de consulta
                             </div>
                         </div>
 
-                        <div class="cc-filter-inline-grid">
+                        <div class="cc-standard-filter-grid cc-unidades-consulta-filter-grid">
+
+                            <div class="cc-field">
+                                <label for="busqueda_empresa">
+                                    Buscar empresa
+                                </label>
+
+                                <input
+                                    id="busqueda_empresa"
+                                    name="busqueda_empresa"
+                                    type="text"
+                                    class="cc-input"
+                                    value="{{ $busquedaEmpresa ?? '' }}"
+                                    maxlength="150"
+                                    placeholder="Nombre legal o comercial"
+                                >
+
+                                @error('busqueda_empresa')
+                                    <div class="cc-error">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
+                            </div>
 
                             <div class="cc-field">
                                 <label for="empresa_id">
@@ -52,19 +72,22 @@
                                         <option value="">Todas</option>
 
                                         @foreach ($empresasSelector as $empresaOpcion)
-                                            <option value="{{ $empresaOpcion->id }}" @selected((string) $empresaId === (string) $empresaOpcion->id)>
+                                            <option value="{{ $empresaOpcion->id }}"
+                                                    @selected((string) ($empresaId ?? '') === (string) $empresaOpcion->id)>
                                                 {{ $empresaOpcion->nombre_comercial ?: $empresaOpcion->nombre_legal }}
                                             </option>
                                         @endforeach
                                     </select>
                                 @else
-                                    <select id="empresa_id" name="empresa_id" class="cc-input" disabled>
+                                    <select id="empresa_id_visible" class="cc-input" disabled>
                                         @foreach ($empresasSelector as $empresaOpcion)
                                             <option value="{{ $empresaOpcion->id }}" selected>
                                                 {{ $empresaOpcion->nombre_comercial ?: $empresaOpcion->nombre_legal }}
                                             </option>
                                         @endforeach
                                     </select>
+
+                                    <input type="hidden" name="empresa_id" value="{{ $empresaId }}">
                                 @endif
 
                                 @error('empresa_id')
@@ -76,7 +99,7 @@
 
                             <div class="cc-field">
                                 <label for="compania">
-                                    Compañía
+                                    Buscar gasolinera
                                 </label>
 
                                 <input
@@ -84,9 +107,9 @@
                                     name="compania"
                                     type="text"
                                     class="cc-input"
-                                    value="{{ $compania }}"
+                                    value="{{ $compania ?? '' }}"
                                     maxlength="150"
-                                    placeholder="Buscar compañía"
+                                    placeholder="Compañía"
                                 >
 
                                 @error('compania')
@@ -97,28 +120,29 @@
                             </div>
 
                             <div class="cc-field">
-                                <label for="estado">
-                                    Estado
+                                <label for="gasolinera_externa_id">
+                                    Gasolinera
                                 </label>
 
-                                <select id="estado" name="estado" class="cc-input">
-                                    <option value="">Seleccione</option>
-                                    <option value="activa" @selected($estado === 'activa')>
-                                        Activas
-                                    </option>
-                                    <option value="inactiva" @selected($estado === 'inactiva')>
-                                        Inactivas
-                                    </option>
+                                <select id="gasolinera_externa_id" name="gasolinera_externa_id" class="cc-input">
+                                    <option value="">Todas</option>
+
+                                    @foreach ($gasolinerasExternasSelector as $gasolineraOpcion)
+                                        <option value="{{ $gasolineraOpcion->id }}"
+                                                @selected((string) ($gasolineraExternaId ?? '') === (string) $gasolineraOpcion->id)>
+                                            {{ $gasolineraOpcion->compania }} — {{ $gasolineraOpcion->direccion }}
+                                        </option>
+                                    @endforeach
                                 </select>
 
-                                @error('estado')
+                                @error('gasolinera_externa_id')
                                     <div class="cc-error">
                                         {{ $message }}
                                     </div>
                                 @enderror
                             </div>
 
-                            <div class="cc-filter-inline-actions">
+                            <div class="cc-standard-filter-actions">
                                 <button type="submit" class="cc-btn-primary">
                                     Consultar
                                 </button>
@@ -146,10 +170,11 @@
                 @if (! $hayFiltros)
                     <div class="cc-empty-panel cc-empty-panel-compact">
                         <h5>
-                            Búsqueda Pendiente
+                            Consulta pendiente
                         </h5>
+
                         <p>
-                            Use los filtros para cargar los registros disponibles.
+                            Los resultados permanecerán vacíos hasta que realice una búsqueda.
                         </p>
                     </div>
                 @elseif ($gasolinerasExternas->isEmpty())
@@ -157,65 +182,76 @@
                         <h5>
                             Sin resultados
                         </h5>
+
                         <p>
                             No hay gasolineras externas que coincidan con los criterios seleccionados.
                         </p>
                     </div>
                 @else
-                    <div class="space-y-3">
-                        @foreach ($gasolinerasExternas as $gasolineraExterna)
-                            <article class="cc-result-card cc-result-card-compact">
-                                <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
+                    <div class="cc-table-adaptive-wrapper">
+                        <div class="cc-admin-result-list" style="min-width: 82rem;">
+                            @foreach ($gasolinerasExternas as $gasolineraExterna)
+                                <article class="cc-admin-result-card" style="min-width: 82rem; box-sizing: border-box;">
+                                    <div style="display: grid; grid-template-columns: 14rem 13rem minmax(34rem, 1fr) 14rem; gap: 1rem; align-items: center;">
 
-                                    <div class="flex-1 min-w-0">
-                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-
-                                            <div>
-                                                <div class="cc-result-label">
-                                                    Empresa
-                                                </div>
-
-                                                <div class="cc-result-value cc-cell-truncate">
-                                                    {{ $gasolineraExterna->empresa->nombre_comercial ?: $gasolineraExterna->empresa->nombre_legal }}
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <div class="cc-result-label">
-                                                    Compañía
-                                                </div>
-
-                                                <h5 class="cc-result-title cc-cell-truncate">
+                                        <div style="min-width: 0;">
+                                            <div class="flex items-center gap-2" style="white-space: nowrap;">
+                                                <h5 class="cc-admin-result-title" style="margin: 0;">
                                                     {{ $gasolineraExterna->compania }}
                                                 </h5>
+
+                                                @if ($gasolineraExterna->estado === 'activa')
+                                                    <span class="cc-badge cc-badge-active">
+                                                        Activa
+                                                    </span>
+                                                @else
+                                                    <span class="cc-badge cc-badge-inactive">
+                                                        Inactiva
+                                                    </span>
+                                                @endif
                                             </div>
 
-                                            <div>
-                                                <div class="cc-result-label">
-                                                    Dirección
-                                                </div>
-
-                                                <div class="cc-result-value" style="white-space: normal; line-height: 1.45;">
-                                                    {{ $gasolineraExterna->direccion }}
-                                                </div>
+                                            <div class="cc-admin-result-subtitle" style="white-space: nowrap;">
+                                                Gasolinera externa
                                             </div>
-
                                         </div>
+
+                                        <div style="min-width: 0;">
+                                            <div class="cc-admin-result-label">
+                                                Empresa
+                                            </div>
+
+                                            <div class="cc-admin-result-value" style="white-space: nowrap;">
+                                                {{ $gasolineraExterna->empresa->nombre_comercial ?: $gasolineraExterna->empresa->nombre_legal }}
+                                            </div>
+                                        </div>
+
+                                        <div style="min-width: 0;">
+                                            <div class="cc-admin-result-label">
+                                                Dirección
+                                            </div>
+
+                                            <div class="cc-admin-result-value" style="white-space: nowrap;">
+                                                {{ $gasolineraExterna->direccion }}
+                                            </div>
+                                        </div>
+
+                                        <div style="display: flex; gap: .75rem; justify-content: flex-end; align-items: center; white-space: nowrap; min-width: 0;">
+                                            <a href="{{ route('gasolineras-externas.show', $gasolineraExterna) }}"
+                                               class="cc-btn-secondary cc-btn-result">
+                                                Ver ficha
+                                            </a>
+
+                                            <a href="{{ route('gasolineras-externas.edit', $gasolineraExterna) }}"
+                                               class="cc-btn-primary cc-btn-result">
+                                                Editar
+                                            </a>
+                                        </div>
+
                                     </div>
-
-                                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 xl:justify-end xl:min-w-[13rem]">
-                                        <a href="{{ route('gasolineras-externas.show', $gasolineraExterna) }}" class="cc-btn-secondary cc-btn-result">
-                                            Ver ficha
-                                        </a>
-
-                                        <a href="{{ route('gasolineras-externas.edit', $gasolineraExterna) }}" class="cc-btn-primary cc-btn-result">
-                                            Editar
-                                        </a>
-                                    </div>
-
-                                </div>
-                            </article>
-                        @endforeach
+                                </article>
+                            @endforeach
+                        </div>
                     </div>
 
                     <div class="mt-6">

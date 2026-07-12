@@ -1,3 +1,25 @@
+@php
+    $gasolineraExterna = $gasolineraExterna ?? null;
+    $modoVentana = $modoVentana ?? false;
+    $submitLabel = $submitLabel ?? 'Guardar gasolinera';
+
+    $empresaActual = old('empresa_id', $gasolineraExterna->empresa_id ?? ($empresaUsuario->id ?? ''));
+@endphp
+
+@if ($modoVentana)
+    <input type="hidden" name="return_to" value="ventana">
+@endif
+
+@if ($errors->any())
+    <div class="cc-alert cc-alert-danger">
+        <ul class="cc-alert-list">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
 <div class="cc-grid cc-grid-compact">
 
     <div class="cc-form-section-slim">
@@ -17,23 +39,27 @@
 
                 @foreach ($empresasSelector as $empresaOpcion)
                     <option value="{{ $empresaOpcion->id }}"
-                        @selected((string) old('empresa_id', $gasolineraExterna->empresa_id ?? '') === (string) $empresaOpcion->id)>
+                            @selected((string) $empresaActual === (string) $empresaOpcion->id)>
                         {{ $empresaOpcion->nombre_comercial ?: $empresaOpcion->nombre_legal }}
                     </option>
                 @endforeach
             </select>
         @else
-            <select id="empresa_id" name="empresa_id" class="cc-input" disabled>
+            <select id="empresa_id_visible" class="cc-input" disabled>
                 @foreach ($empresasSelector as $empresaOpcion)
                     <option value="{{ $empresaOpcion->id }}" selected>
                         {{ $empresaOpcion->nombre_comercial ?: $empresaOpcion->nombre_legal }}
                     </option>
                 @endforeach
             </select>
+
+            <input type="hidden" name="empresa_id" value="{{ $empresaActual }}">
         @endif
 
         @error('empresa_id')
-            <div class="cc-error">{{ $message }}</div>
+            <div class="cc-error">
+                {{ $message }}
+            </div>
         @enderror
     </div>
 
@@ -54,7 +80,9 @@
         >
 
         @error('compania')
-            <div class="cc-error">{{ $message }}</div>
+            <div class="cc-error">
+                {{ $message }}
+            </div>
         @enderror
     </div>
 
@@ -75,7 +103,9 @@
         >
 
         @error('direccion')
-            <div class="cc-error">{{ $message }}</div>
+            <div class="cc-error">
+                {{ $message }}
+            </div>
         @enderror
     </div>
 
@@ -87,12 +117,12 @@
     </button>
 
     @if ($gasolineraExterna)
-        <a href="{{ ($modoVentana ?? false) ? route('gasolineras-externas.show.ventana', $gasolineraExterna) : route('gasolineras-externas.show', $gasolineraExterna) }}"
+        <a href="{{ $modoVentana ? route('gasolineras-externas.show.ventana', $gasolineraExterna) : route('gasolineras-externas.show', $gasolineraExterna) }}"
            class="cc-btn-secondary cc-btn-form-action">
             Cancelar
         </a>
     @else
-        <a href="{{ ($modoVentana ?? false) ? route('gasolineras-externas.consulta.ventana') : route('gasolineras-externas.index') }}"
+        <a href="{{ $modoVentana ? route('gasolineras-externas.consulta.ventana') : route('gasolineras-externas.index') }}"
            class="cc-btn-secondary cc-btn-form-action">
             Cancelar
         </a>

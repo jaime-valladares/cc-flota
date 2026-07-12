@@ -48,27 +48,110 @@ class MotoristaController extends Controller
             : Empresa::find($user->empresa_id);
 
         $validated = $request->validate([
+            'busqueda_empresa' => ['nullable', 'string', 'max:150'],
+            'busqueda_motorista' => ['nullable', 'string', 'max:150'],
+
+            'empresa_ids' => ['nullable', 'array'],
+            'empresa_ids.*' => ['nullable', 'integer', 'exists:empresas,id'],
+
+            'motorista_ids' => ['nullable', 'array'],
+            'motorista_ids.*' => ['nullable', 'integer', 'exists:motoristas,id'],
+
             'empresa_id' => ['nullable', 'integer', 'exists:empresas,id'],
+            'motorista_id' => ['nullable', 'integer', 'exists:motoristas,id'],
+
             'buscar' => ['nullable', 'string', 'max:150'],
             'estado' => ['nullable', 'in:activo,inactivo'],
         ], [
+            'busqueda_empresa.max' => 'La búsqueda de empresa no debe exceder 150 caracteres.',
+            'busqueda_motorista.max' => 'La búsqueda de motorista no debe exceder 150 caracteres.',
+            'empresa_ids.*.exists' => 'Una de las empresas seleccionadas no es válida.',
+            'motorista_ids.*.exists' => 'Uno de los motoristas seleccionados no es válido.',
             'empresa_id.exists' => 'La empresa seleccionada no es válida.',
+            'motorista_id.exists' => 'El motorista seleccionado no es válido.',
             'estado.in' => 'El estado seleccionado no es válido.',
         ]);
 
-        $empresaId = $validated['empresa_id'] ?? null;
-        $buscar = trim((string) ($validated['buscar'] ?? ''));
+        $busquedaEmpresa = trim((string) ($validated['busqueda_empresa'] ?? ''));
+        $busquedaMotorista = trim((string) ($validated['busqueda_motorista'] ?? ($validated['buscar'] ?? '')));
         $estado = $validated['estado'] ?? null;
 
-        if (! $esUsuarioDieselCop) {
-            $empresaId = $user->empresa_id;
+        $empresaIds = collect($validated['empresa_ids'] ?? [])
+            ->filter()
+            ->map(fn ($id) => (int) $id);
+
+        if (! empty($validated['empresa_id'])) {
+            $empresaIds->push((int) $validated['empresa_id']);
         }
 
-        $hayFiltros = ! $esUsuarioDieselCop
-            || $request->hasAny(['empresa_id', 'buscar', 'estado', 'consultar']);
+        $empresaIds = $empresaIds
+            ->unique()
+            ->values()
+            ->all();
+
+        $motoristaIds = collect($validated['motorista_ids'] ?? [])
+            ->filter()
+            ->map(fn ($id) => (int) $id);
+
+        if (! empty($validated['motorista_id'])) {
+            $motoristaIds->push((int) $validated['motorista_id']);
+        }
+
+        $motoristaIds = $motoristaIds
+            ->unique()
+            ->values()
+            ->all();
+
+        if (! $esUsuarioDieselCop) {
+            $empresaIds = [(int) $user->empresa_id];
+        }
+
+        $empresaId = $empresaIds[0] ?? null;
+        $motoristaId = $motoristaIds[0] ?? null;
+
+        $hayFiltros = $request->boolean('consultar')
+            || $busquedaEmpresa !== ''
+            || $busquedaMotorista !== ''
+            || count($empresaIds) > 0
+            || count($motoristaIds) > 0
+            || in_array($estado, ['activo', 'inactivo'], true);
+
+        $empresasSelector = $this->obtenerEmpresasSelector(
+            $esUsuarioDieselCop,
+            $empresaUsuario,
+            $soloEmpresasActivas
+        );
+
+        $baseMotoristasSelectorQuery = Motorista::query()
+            ->with('empresa')
+            ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
+                $query->where('empresa_id', $user->empresa_id);
+            })
+            ->when($soloEmpresasActivas, function ($query) {
+                $query->whereHas('empresa', function ($empresaQuery) {
+                    $empresaQuery->where('estado', 'activa');
+                });
+            })
+            ->when($busquedaEmpresa !== '', function ($query) use ($busquedaEmpresa) {
+                $query->whereHas('empresa', function ($empresaQuery) use ($busquedaEmpresa) {
+                    $empresaQuery->where('nombre_legal', 'like', '%' . $busquedaEmpresa . '%')
+                        ->orWhere('nombre_comercial', 'like', '%' . $busquedaEmpresa . '%');
+                });
+            })
+            ->when(count($empresaIds) > 0, function ($query) use ($empresaIds) {
+                $query->whereIn('empresa_id', $empresaIds);
+            });
+
+        $motoristasSelector = (clone $baseMotoristasSelectorQuery)
+            ->orderBy('apellidos')
+            ->orderBy('nombres')
+            ->get();
 
         $query = Motorista::query()
             ->with('empresa')
+            ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
+                $query->where('empresa_id', $user->empresa_id);
+            })
             ->when($soloEmpresasActivas, function ($query) {
                 $query->whereHas('empresa', function ($empresaQuery) {
                     $empresaQuery->where('estado', 'activa');
@@ -76,17 +159,28 @@ class MotoristaController extends Controller
             });
 
         if ($hayFiltros) {
-            if ($empresaId) {
-                $query->where('empresa_id', $empresaId);
+            if ($busquedaEmpresa !== '') {
+                $query->whereHas('empresa', function ($empresaQuery) use ($busquedaEmpresa) {
+                    $empresaQuery->where('nombre_legal', 'like', '%' . $busquedaEmpresa . '%')
+                        ->orWhere('nombre_comercial', 'like', '%' . $busquedaEmpresa . '%');
+                });
             }
 
-            if ($buscar !== '') {
-                $query->where(function ($subquery) use ($buscar) {
-                    $subquery->where('nombres', 'like', '%' . $buscar . '%')
-                        ->orWhere('apellidos', 'like', '%' . $buscar . '%')
-                        ->orWhere('licencia', 'like', '%' . $buscar . '%')
-                        ->orWhere('telefono', 'like', '%' . $buscar . '%');
+            if (count($empresaIds) > 0) {
+                $query->whereIn('empresa_id', $empresaIds);
+            }
+
+            if ($busquedaMotorista !== '') {
+                $query->where(function ($subquery) use ($busquedaMotorista) {
+                    $subquery->where('nombres', 'like', '%' . $busquedaMotorista . '%')
+                        ->orWhere('apellidos', 'like', '%' . $busquedaMotorista . '%')
+                        ->orWhereRaw("CONCAT(nombres, ' ', apellidos) LIKE ?", ['%' . $busquedaMotorista . '%'])
+                        ->orWhereRaw("CONCAT(apellidos, ' ', nombres) LIKE ?", ['%' . $busquedaMotorista . '%']);
                 });
+            }
+
+            if (count($motoristaIds) > 0) {
+                $query->whereIn('id', $motoristaIds);
             }
 
             if (in_array($estado, ['activo', 'inactivo'], true)) {
@@ -103,57 +197,101 @@ class MotoristaController extends Controller
             ->withQueryString();
 
         $baseResumen = Motorista::query()
+            ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
+                $query->where('empresa_id', $user->empresa_id);
+            })
             ->when($soloEmpresasActivas, function ($query) {
                 $query->whereHas('empresa', function ($empresaQuery) {
                     $empresaQuery->where('estado', 'activa');
                 });
             });
 
-        if (! $esUsuarioDieselCop) {
-            $baseResumen->where('empresa_id', $user->empresa_id);
+        if ($hayFiltros) {
+            if ($busquedaEmpresa !== '') {
+                $baseResumen->whereHas('empresa', function ($empresaQuery) use ($busquedaEmpresa) {
+                    $empresaQuery->where('nombre_legal', 'like', '%' . $busquedaEmpresa . '%')
+                        ->orWhere('nombre_comercial', 'like', '%' . $busquedaEmpresa . '%');
+                });
+            }
+
+            if (count($empresaIds) > 0) {
+                $baseResumen->whereIn('empresa_id', $empresaIds);
+            }
+
+            if ($busquedaMotorista !== '') {
+                $baseResumen->where(function ($subquery) use ($busquedaMotorista) {
+                    $subquery->where('nombres', 'like', '%' . $busquedaMotorista . '%')
+                        ->orWhere('apellidos', 'like', '%' . $busquedaMotorista . '%')
+                        ->orWhereRaw("CONCAT(nombres, ' ', apellidos) LIKE ?", ['%' . $busquedaMotorista . '%'])
+                        ->orWhereRaw("CONCAT(apellidos, ' ', nombres) LIKE ?", ['%' . $busquedaMotorista . '%']);
+                });
+            }
+
+            if (count($motoristaIds) > 0) {
+                $baseResumen->whereIn('id', $motoristaIds);
+            }
+
+            if (in_array($estado, ['activo', 'inactivo'], true)) {
+                $baseResumen->where('estado', $estado);
+            }
         }
 
         $totalMotoristas = (clone $baseResumen)->count();
         $motoristasActivos = (clone $baseResumen)->where('estado', 'activo')->count();
         $motoristasInactivos = (clone $baseResumen)->where('estado', 'inactivo')->count();
 
+        return [
+            'motoristas' => $motoristas,
+            'empresasSelector' => $empresasSelector,
+            'motoristasSelector' => $motoristasSelector,
+
+            'busquedaEmpresa' => $busquedaEmpresa,
+            'busquedaMotorista' => $busquedaMotorista,
+            'buscar' => $busquedaMotorista,
+
+            'empresaIds' => $empresaIds,
+            'motoristaIds' => $motoristaIds,
+
+            'empresaId' => $empresaId,
+            'motoristaId' => $motoristaId,
+
+            'estado' => $estado,
+            'hayFiltros' => $hayFiltros,
+
+            'totalMotoristas' => $totalMotoristas,
+            'motoristasActivos' => $motoristasActivos,
+            'motoristasInactivos' => $motoristasInactivos,
+
+            'esUsuarioDieselCop' => $esUsuarioDieselCop,
+            'empresaUsuario' => $empresaUsuario,
+        ];
+    }
+
+    private function obtenerEmpresasSelector(bool $esUsuarioDieselCop, ?Empresa $empresaUsuario, bool $soloEmpresasActivas)
+    {
         if ($esUsuarioDieselCop) {
-            $empresasSelector = Empresa::query()
+            return Empresa::query()
                 ->when($soloEmpresasActivas, function ($query) {
                     $query->where('estado', 'activa');
                 })
                 ->orderBy('nombre_comercial')
                 ->orderBy('nombre_legal')
                 ->get();
-        } else {
-            $empresasSelector = collect([$empresaUsuario])
-                ->filter(function ($empresa) use ($soloEmpresasActivas) {
-                    if (! $empresa) {
-                        return false;
-                    }
-
-                    if ($soloEmpresasActivas && $empresa->estado !== 'activa') {
-                        return false;
-                    }
-
-                    return true;
-                })
-                ->values();
         }
 
-        return [
-            'motoristas' => $motoristas,
-            'empresasSelector' => $empresasSelector,
-            'empresaId' => $empresaId,
-            'buscar' => $buscar,
-            'estado' => $estado,
-            'hayFiltros' => $hayFiltros,
-            'totalMotoristas' => $totalMotoristas,
-            'motoristasActivos' => $motoristasActivos,
-            'motoristasInactivos' => $motoristasInactivos,
-            'esUsuarioDieselCop' => $esUsuarioDieselCop,
-            'empresaUsuario' => $empresaUsuario,
-        ];
+        return collect([$empresaUsuario])
+            ->filter(function ($empresa) use ($soloEmpresasActivas) {
+                if (! $empresa) {
+                    return false;
+                }
+
+                if ($soloEmpresasActivas && $empresa->estado !== 'activa') {
+                    return false;
+                }
+
+                return true;
+            })
+            ->values();
     }
 
     public function create()
@@ -188,7 +326,7 @@ class MotoristaController extends Controller
                 ->orderBy('nombre_comercial')
                 ->orderBy('nombre_legal')
                 ->get()
-            : collect([$empresaUsuario])->filter();
+            : collect([$empresaUsuario])->filter()->values();
 
         return [
             'empresasSelector' => $empresasSelector,
@@ -304,6 +442,7 @@ class MotoristaController extends Controller
     {
         $this->autorizarAccesoMotorista($motorista);
         $this->validarEmpresaActivaMotorista($motorista);
+        $this->validarMotoristaActivoParaOperacion($motorista);
 
         $data = $this->prepararFormularioMotorista();
         $data['motorista'] = $motorista;
@@ -315,6 +454,7 @@ class MotoristaController extends Controller
     {
         $this->autorizarAccesoMotorista($motorista);
         $this->validarEmpresaActivaMotorista($motorista);
+        $this->validarMotoristaActivoParaOperacion($motorista);
 
         $data = $this->prepararFormularioMotorista();
         $data['motorista'] = $motorista;
@@ -326,6 +466,7 @@ class MotoristaController extends Controller
     {
         $this->autorizarAccesoMotorista($motorista);
         $this->validarEmpresaActivaMotorista($motorista);
+        $this->validarMotoristaActivoParaOperacion($motorista);
 
         $validated = $request->validate([
             'nombres' => ['required', 'string', 'max:100'],
@@ -365,14 +506,16 @@ class MotoristaController extends Controller
             'actualizado_por' => Auth::id(),
         ]);
 
+        $queryParams = $request->query();
+
         if ($request->input('return_to') === 'ventana') {
             return redirect()
-                ->route('motoristas.show.ventana', $motorista)
+                ->route('motoristas.show.ventana', array_merge($queryParams, ['motorista' => $motorista]))
                 ->with('success', 'Motorista actualizado correctamente.');
         }
 
         return redirect()
-            ->route('motoristas.show', $motorista)
+            ->route('motoristas.show', array_merge($queryParams, ['motorista' => $motorista]))
             ->with('success', 'Motorista actualizado correctamente.');
     }
 
@@ -380,6 +523,7 @@ class MotoristaController extends Controller
     {
         $this->autorizarAccesoMotorista($motorista);
         $this->validarEmpresaActivaMotorista($motorista);
+        $this->validarMotoristaActivoParaOperacion($motorista);
 
         $validated = $request->validate([
             'motivo_inactivacion' => [
@@ -403,14 +547,16 @@ class MotoristaController extends Controller
             'actualizado_por' => Auth::id(),
         ]);
 
+        $queryParams = $request->query();
+
         if ($request->input('return_to') === 'ventana') {
             return redirect()
-                ->route('motoristas.show.ventana', $motorista)
+                ->route('motoristas.show.ventana', array_merge($queryParams, ['motorista' => $motorista]))
                 ->with('success', 'Motorista inactivado correctamente.');
         }
 
         return redirect()
-            ->route('motoristas.show', $motorista)
+            ->route('motoristas.show', array_merge($queryParams, ['motorista' => $motorista]))
             ->with('success', 'Motorista inactivado correctamente.');
     }
 
@@ -428,14 +574,16 @@ class MotoristaController extends Controller
             'actualizado_por' => Auth::id(),
         ]);
 
+        $queryParams = $request->query();
+
         if ($request->input('return_to') === 'ventana') {
             return redirect()
-                ->route('motoristas.show.ventana', $motorista)
+                ->route('motoristas.show.ventana', array_merge($queryParams, ['motorista' => $motorista]))
                 ->with('success', 'Motorista reactivado correctamente.');
         }
 
         return redirect()
-            ->route('motoristas.show', $motorista)
+            ->route('motoristas.show', array_merge($queryParams, ['motorista' => $motorista]))
             ->with('success', 'Motorista reactivado correctamente.');
     }
 
@@ -454,6 +602,13 @@ class MotoristaController extends Controller
 
         if (! $motorista->empresa || $motorista->empresa->estado !== 'activa') {
             abort(403, 'No se puede operar sobre este motorista porque la empresa está inactiva.');
+        }
+    }
+
+    private function validarMotoristaActivoParaOperacion(Motorista $motorista): void
+    {
+        if ($motorista->estado !== 'activo') {
+            abort(403, 'No se puede modificar este motorista porque está inactivo. Debe reactivarlo desde la ficha antes de realizar cambios.');
         }
     }
 
