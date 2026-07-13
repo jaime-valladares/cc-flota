@@ -2,24 +2,49 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="csrf-token" content="{{ csrf_token() }}">
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1"
+        >
+        <meta
+            name="csrf-token"
+            content="{{ csrf_token() }}"
+        >
 
         <title>Administrar unidad | CC-Flota</title>
 
         @include('layouts.partials.favicon')
 
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+        <link
+            rel="preconnect"
+            href="https://fonts.googleapis.com"
+        >
+        <link
+            rel="preconnect"
+            href="https://fonts.gstatic.com"
+            crossorigin
+        >
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap"
+            rel="stylesheet"
+        >
 
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @vite([
+            'resources/css/app.css',
+            'resources/js/app.js',
+        ])
     </head>
 
     <body class="antialiased">
-        <div class="min-h-screen" style="background: var(--cc-bg-main);">
+        <div
+            class="min-h-screen"
+            style="background: var(--cc-bg-main);"
+        >
             <div class="cc-page-wrapper">
-                <div class="cc-window-container" style="max-width: 80rem;">
+                <div
+                    class="cc-window-container"
+                    style="max-width: 80rem;"
+                >
                     <div class="cc-card">
 
                         <div class="cc-card-header cc-card-header-compact">
@@ -48,12 +73,32 @@
                             </div>
                         @endif
 
+                        @if ($errors->any())
+                            <div class="cc-alert cc-alert-danger">
+                                <div class="font-bold">
+                                    Revise la información ingresada.
+                                </div>
+
+                                <ul class="mt-2 list-disc list-inside">
+                                    @foreach ($errors->all() as $error)
+                                        <li>
+                                            {{ $error }}
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
                         <form
                             method="GET"
                             action="{{ route('unidades.administrar.ventana') }}"
                             class="mb-5"
                         >
-                            <input type="hidden" name="consultar" value="1">
+                            <input
+                                type="hidden"
+                                name="consultar"
+                                value="1"
+                            >
 
                             <div class="cc-filter-panel cc-filter-panel-compact cc-filter-panel-inline">
 
@@ -110,7 +155,8 @@
                                                         data-default-label="Todas"
                                                     >
                                                         @if (! empty($empresaIds))
-                                                            {{ count($empresaIds) }} seleccionadas
+                                                            {{ count($empresaIds) }}
+                                                            seleccionadas
                                                         @else
                                                             Todas
                                                         @endif
@@ -170,7 +216,10 @@
                                                 </div>
                                             </div>
                                         @else
-                                            <select class="cc-input" disabled>
+                                            <select
+                                                class="cc-input"
+                                                disabled
+                                            >
                                                 @foreach ($empresas as $empresa)
                                                     <option
                                                         value="{{ $empresa->id }}"
@@ -222,7 +271,8 @@
                                                     data-default-label="Todas"
                                                 >
                                                     @if (! empty($placas))
-                                                        {{ count($placas) }} seleccionadas
+                                                        {{ count($placas) }}
+                                                        seleccionadas
                                                     @else
                                                         Todas
                                                     @endif
@@ -311,7 +361,8 @@
                                                     data-default-label="Todos"
                                                 >
                                                     @if (! empty($modelosMedicionSeleccionados))
-                                                        {{ count($modelosMedicionSeleccionados) }} seleccionados
+                                                        {{ count($modelosMedicionSeleccionados) }}
+                                                        seleccionados
                                                     @else
                                                         Todos
                                                     @endif
@@ -383,7 +434,7 @@
 
                                     <div class="cc-field">
                                         <label for="estado">
-                                            Estado
+                                            Estado administrativo
                                         </label>
 
                                         <select
@@ -462,7 +513,8 @@
                                 </h5>
 
                                 <p>
-                                    Los resultados permanecerán vacíos hasta que realice una búsqueda.
+                                    Los resultados permanecerán vacíos hasta
+                                    que realice una búsqueda.
                                 </p>
                             </div>
                         @elseif ($unidades->isEmpty())
@@ -472,14 +524,43 @@
                                 </h5>
 
                                 <p>
-                                    No hay unidades que coincidan con los criterios seleccionados.
+                                    No hay unidades que coincidan con los
+                                    criterios seleccionados.
                                 </p>
                             </div>
                         @else
                             <div class="cc-admin-result-list">
                                 @foreach ($unidades as $unidad)
+                                    @php
+                                        $licencia = $unidad->licencia;
+
+                                        $unidadRegistradaSinLicencia =
+                                            $unidad->estado === 'registrada'
+                                            && ! $licencia;
+
+                                        $licenciaVigente =
+                                            $licencia
+                                            && $licencia->esta_vigente;
+
+                                        $puedeEditar =
+                                            $unidad->estado !== 'inactiva'
+                                            && (
+                                                $unidadRegistradaSinLicencia
+                                                || $licenciaVigente
+                                            );
+
+                                        $disponibilidadPendiente = in_array(
+                                            $unidad->disponibilidad_operativa,
+                                            [
+                                                'asignacion_inicial_pendiente',
+                                                'pendiente_activacion_operativa',
+                                            ],
+                                            true
+                                        );
+                                    @endphp
+
                                     <article class="cc-admin-result-card">
-                                        <div class="cc-admin-result-grid">
+                                        <div class="cc-admin-result-grid cc-admin-result-grid-unidades">
 
                                             <div class="cc-admin-result-main">
                                                 <div class="cc-admin-result-title-row">
@@ -489,21 +570,37 @@
 
                                                     @if ($unidad->estado === 'registrada')
                                                         <span class="cc-badge cc-badge-pending">
-                                                            Registrada
+                                                            {{ $unidad->estado_texto }}
                                                         </span>
                                                     @elseif ($unidad->estado === 'activa')
                                                         <span class="cc-badge cc-badge-active">
-                                                            Activa
+                                                            {{ $unidad->estado_texto }}
                                                         </span>
                                                     @else
                                                         <span class="cc-badge cc-badge-inactive">
-                                                            Inactiva
+                                                            {{ $unidad->estado_texto }}
                                                         </span>
                                                     @endif
                                                 </div>
 
                                                 <div class="cc-admin-result-subtitle">
                                                     {{ $unidad->marca ?: 'Sin marca registrada' }}
+                                                </div>
+
+                                                <div class="mt-3 flex flex-wrap items-center gap-2">
+                                                    @if ($unidad->disponibilidad_operativa === 'operable')
+                                                        <span class="cc-badge cc-badge-active">
+                                                            {{ $unidad->disponibilidad_operativa_texto }}
+                                                        </span>
+                                                    @elseif ($disponibilidadPendiente)
+                                                        <span class="cc-badge cc-badge-pending">
+                                                            {{ $unidad->disponibilidad_operativa_texto }}
+                                                        </span>
+                                                    @else
+                                                        <span class="cc-badge cc-badge-inactive">
+                                                            {{ $unidad->disponibilidad_operativa_texto }}
+                                                        </span>
+                                                    @endif
                                                 </div>
                                             </div>
 
@@ -519,7 +616,8 @@
 
                                                     @if ($unidad->empresa->nit ?? false)
                                                         <div class="cc-admin-result-value-muted">
-                                                            NIT: {{ $unidad->empresa->nit }}
+                                                            NIT:
+                                                            {{ $unidad->empresa->nit }}
                                                         </div>
                                                     @endif
                                                 @else
@@ -527,6 +625,78 @@
                                                         Sin empresa
                                                     </div>
                                                 @endif
+                                            </div>
+
+                                            <div class="cc-admin-result-meta">
+                                                <div class="cc-admin-result-label">
+                                                    Licencia
+                                                </div>
+
+                                                @if (! $licencia)
+                                                    <div class="cc-admin-result-value">
+                                                        Sin licencia
+                                                    </div>
+
+                                                    <div class="cc-admin-result-value-muted">
+                                                        Pendiente de registro
+                                                    </div>
+                                                @elseif ($licencia->esta_vigente)
+                                                    <div class="cc-admin-result-value">
+                                                        {{ $licencia->condicion_vigencia_texto }}
+                                                    </div>
+
+                                                    <div class="cc-admin-result-value-muted">
+                                                        {{ $licencia->vencimiento_relativo_texto }}
+                                                    </div>
+                                                @elseif ($licencia->esta_pendiente_activacion)
+                                                    <div class="cc-admin-result-value">
+                                                        {{ $licencia->condicion_vigencia_texto }}
+                                                    </div>
+
+                                                    <div class="cc-admin-result-value-muted">
+                                                        Inicia:
+                                                        {{ $licencia->fecha_activacion?->format('d/m/Y') ?? 'No registrada' }}
+                                                    </div>
+                                                @elseif ($licencia->esta_vencida)
+                                                    <div class="cc-admin-result-value">
+                                                        Vencida
+                                                    </div>
+
+                                                    <div class="cc-admin-result-value-muted">
+                                                        {{ $licencia->vencimiento_relativo_texto }}
+                                                    </div>
+                                                @else
+                                                    <div class="cc-admin-result-value">
+                                                        {{ $licencia->condicion_vigencia_texto }}
+                                                    </div>
+
+                                                    <div class="cc-admin-result-value-muted">
+                                                        No habilita operación
+                                                    </div>
+                                                @endif
+                                            </div>
+
+                                            <div class="cc-admin-result-meta">
+                                                <div class="cc-admin-result-label">
+                                                    Marchamos
+                                                </div>
+
+                                                <div class="cc-admin-result-value">
+                                                    {{ $unidad->total_puntos_con_marchamo_asignado }}
+                                                    de
+                                                    {{ $unidad->total_puntos_que_requieren_marchamo }}
+                                                </div>
+
+                                                <div class="cc-admin-result-value-muted">
+                                                    @if ($unidad->asignacion_inicial_marchamos_completa)
+                                                        Asignación completa
+                                                    @elseif ($unidad->total_puntos_que_requieren_marchamo === 0)
+                                                        Puntos no generados
+                                                    @else
+                                                        {{ $unidad->total_puntos_pendientes_marchamo }}
+                                                        pendientes
+                                                    @endif
+                                                </div>
                                             </div>
 
                                             <div class="cc-admin-result-meta">
@@ -560,7 +730,7 @@
                                                     Ver ficha
                                                 </a>
 
-                                                @if ($unidad->estado !== 'inactiva')
+                                                @if ($puedeEditar)
                                                     <a
                                                         href="{{ route(
                                                             'unidades.edit.ventana',
@@ -577,6 +747,14 @@
                                             </div>
 
                                         </div>
+
+                                        @if (! $puedeEditar)
+                                            <div class="mt-4 border-t border-[var(--cc-border)] pt-4">
+                                                <p class="text-sm text-[var(--cc-text-muted)] leading-relaxed">
+                                                    {{ $unidad->disponibilidad_operativa_descripcion }}
+                                                </p>
+                                            </div>
+                                        @endif
                                     </article>
                                 @endforeach
                             </div>
@@ -624,19 +802,23 @@
                         )
                     );
 
-                    const defaultLabel = label?.dataset.defaultLabel || 'Todos';
+                    const defaultLabel =
+                        label?.dataset.defaultLabel || 'Todos';
 
                     function updateLabel() {
-                        const selected = checkboxes.filter(function (checkbox) {
-                            return checkbox.checked;
-                        });
+                        const selected = checkboxes.filter(
+                            function (checkbox) {
+                                return checkbox.checked;
+                            }
+                        );
 
                         if (selected.length === 0) {
                             label.textContent = defaultLabel;
                         } else if (selected.length === 1) {
-                            const selectedOption = selected[0].closest(
-                                '[data-cc-filter-option]'
-                            );
+                            const selectedOption =
+                                selected[0].closest(
+                                    '[data-cc-filter-option]'
+                                );
 
                             const selectedLabel = selectedOption
                                 ? selectedOption.querySelector(
@@ -649,7 +831,8 @@
                                 : '1 seleccionado';
                         } else {
                             label.textContent =
-                                selected.length + ' seleccionados';
+                                selected.length
+                                + ' seleccionados';
                         }
 
                         if (master) {
@@ -665,97 +848,134 @@
 
                     function closeAllExceptCurrent() {
                         document
-                            .querySelectorAll('[data-cc-filter-multiselect]')
-                            .forEach(function (otherMultiselect) {
-                                if (otherMultiselect === multiselect) {
-                                    return;
+                            .querySelectorAll(
+                                '[data-cc-filter-multiselect]'
+                            )
+                            .forEach(
+                                function (otherMultiselect) {
+                                    if (
+                                        otherMultiselect
+                                        === multiselect
+                                    ) {
+                                        return;
+                                    }
+
+                                    const otherToggle =
+                                        otherMultiselect.querySelector(
+                                            '[data-cc-filter-toggle]'
+                                        );
+
+                                    const otherMenu =
+                                        otherMultiselect.querySelector(
+                                            '[data-cc-filter-menu]'
+                                        );
+
+                                    if (otherToggle && otherMenu) {
+                                        otherToggle.classList.remove(
+                                            'is-open'
+                                        );
+
+                                        otherMenu.classList.remove(
+                                            'is-open'
+                                        );
+                                    }
                                 }
-
-                                const otherToggle =
-                                    otherMultiselect.querySelector(
-                                        '[data-cc-filter-toggle]'
-                                    );
-
-                                const otherMenu =
-                                    otherMultiselect.querySelector(
-                                        '[data-cc-filter-menu]'
-                                    );
-
-                                if (otherToggle && otherMenu) {
-                                    otherToggle.classList.remove('is-open');
-                                    otherMenu.classList.remove('is-open');
-                                }
-                            });
+                            );
                     }
 
                     if (toggle && menu) {
-                        toggle.addEventListener('click', function () {
-                            closeAllExceptCurrent();
+                        toggle.addEventListener(
+                            'click',
+                            function () {
+                                closeAllExceptCurrent();
 
-                            toggle.classList.toggle('is-open');
-                            menu.classList.toggle('is-open');
-                        });
+                                toggle.classList.toggle('is-open');
+                                menu.classList.toggle('is-open');
+                            }
+                        );
                     }
 
                     if (master) {
-                        master.addEventListener('change', function () {
-                            checkboxes.forEach(function (checkbox) {
-                                checkbox.checked = master.checked;
-                            });
+                        master.addEventListener(
+                            'change',
+                            function () {
+                                checkboxes.forEach(
+                                    function (checkbox) {
+                                        checkbox.checked =
+                                            master.checked;
+                                    }
+                                );
 
-                            updateLabel();
-                        });
+                                updateLabel();
+                            }
+                        );
                     }
 
-                    checkboxes.forEach(function (checkbox) {
-                        checkbox.addEventListener(
-                            'change',
-                            updateLabel
-                        );
-                    });
+                    checkboxes.forEach(
+                        function (checkbox) {
+                            checkbox.addEventListener(
+                                'change',
+                                updateLabel
+                            );
+                        }
+                    );
 
                     updateLabel();
                 });
 
-            document.addEventListener('click', function (event) {
-                if (
-                    event.target.closest(
-                        '[data-cc-filter-multiselect]'
-                    )
-                ) {
-                    return;
+            document.addEventListener(
+                'click',
+                function (event) {
+                    if (
+                        event.target.closest(
+                            '[data-cc-filter-multiselect]'
+                        )
+                    ) {
+                        return;
+                    }
+
+                    document
+                        .querySelectorAll(
+                            '[data-cc-filter-toggle]'
+                        )
+                        .forEach(function (toggle) {
+                            toggle.classList.remove('is-open');
+                        });
+
+                    document
+                        .querySelectorAll(
+                            '[data-cc-filter-menu]'
+                        )
+                        .forEach(function (menu) {
+                            menu.classList.remove('is-open');
+                        });
                 }
+            );
 
-                document
-                    .querySelectorAll('[data-cc-filter-toggle]')
-                    .forEach(function (toggle) {
-                        toggle.classList.remove('is-open');
-                    });
+            document.addEventListener(
+                'keydown',
+                function (event) {
+                    if (event.key !== 'Escape') {
+                        return;
+                    }
 
-                document
-                    .querySelectorAll('[data-cc-filter-menu]')
-                    .forEach(function (menu) {
-                        menu.classList.remove('is-open');
-                    });
-            });
+                    document
+                        .querySelectorAll(
+                            '[data-cc-filter-toggle]'
+                        )
+                        .forEach(function (toggle) {
+                            toggle.classList.remove('is-open');
+                        });
 
-            document.addEventListener('keydown', function (event) {
-                if (event.key !== 'Escape') {
-                    return;
+                    document
+                        .querySelectorAll(
+                            '[data-cc-filter-menu]'
+                        )
+                        .forEach(function (menu) {
+                            menu.classList.remove('is-open');
+                        });
                 }
-
-                document
-                    .querySelectorAll('[data-cc-filter-toggle]')
-                    .forEach(function (toggle) {
-                        toggle.classList.remove('is-open');
-                    });
-
-                document
-                    .querySelectorAll('[data-cc-filter-menu]')
-                    .forEach(function (menu) {
-                        menu.classList.remove('is-open');
-                    });
-            });
+            );
         </script>
     </body>
 </html>

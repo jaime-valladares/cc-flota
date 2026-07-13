@@ -1,10 +1,61 @@
 @php
     $queryParams = request()->query();
+
+    $licencia = $unidad->licencia;
+
+    $unidadRegistradaSinLicencia =
+        $unidad->estado === 'registrada'
+        && ! $licencia;
+
+    $licenciaVigente =
+        $licencia
+        && $licencia->esta_vigente;
+
+    /*
+     * Estas condiciones reflejan las mismas reglas protegidas
+     * actualmente por UnidadController.
+     */
+    $puedeEditar =
+        $unidad->estado !== 'inactiva'
+        && (
+            $unidadRegistradaSinLicencia
+            || $licenciaVigente
+        );
+
+    $puedeInactivar =
+        $unidad->estado !== 'inactiva'
+        && (
+            $unidadRegistradaSinLicencia
+            || $licenciaVigente
+        );
+
+    $disponibilidadBloqueadaPorLicencia = in_array(
+        $unidad->disponibilidad_operativa,
+        [
+            'sin_licencia',
+            'licencia_inactiva',
+            'licencia_pendiente_activacion',
+            'licencia_vencida',
+        ],
+        true
+    );
+
+    $disponibilidadPendiente = in_array(
+        $unidad->disponibilidad_operativa,
+        [
+            'asignacion_inicial_pendiente',
+            'pendiente_activacion_operativa',
+        ],
+        true
+    );
 @endphp
 
 <x-app-layout>
     <div class="cc-page-wrapper">
-        <div class="cc-content-container" style="max-width: 80rem;">
+        <div
+            class="cc-content-container"
+            style="max-width: 80rem;"
+        >
             <div class="cc-card">
 
                 <div class="cc-card-header cc-card-header-compact">
@@ -76,7 +127,8 @@
                             @endif
 
                             <span>
-                                Modelo: {{ $unidad->modelo_medicion_texto }}
+                                Modelo:
+                                {{ $unidad->modelo_medicion_texto }}
                             </span>
                         </div>
                     </div>
@@ -84,19 +136,98 @@
                     <div class="cc-profile-status">
                         @if ($unidad->estado === 'registrada')
                             <span class="cc-badge cc-badge-pending">
-                                Registrada
+                                {{ $unidad->estado_texto }}
                             </span>
                         @elseif ($unidad->estado === 'activa')
                             <span class="cc-badge cc-badge-active">
-                                Activa
+                                {{ $unidad->estado_texto }}
                             </span>
                         @else
                             <span class="cc-badge cc-badge-inactive">
-                                Inactiva
+                                {{ $unidad->estado_texto }}
+                            </span>
+                        @endif
+
+                        @if ($unidad->disponibilidad_operativa === 'operable')
+                            <span class="cc-badge cc-badge-active">
+                                Operable
+                            </span>
+                        @elseif ($disponibilidadPendiente)
+                            <span class="cc-badge cc-badge-pending">
+                                {{ $unidad->disponibilidad_operativa_texto }}
+                            </span>
+                        @else
+                            <span class="cc-badge cc-badge-inactive">
+                                {{ $unidad->disponibilidad_operativa_texto }}
                             </span>
                         @endif
                     </div>
                 </div>
+
+                @if ($unidad->disponibilidad_operativa === 'operable')
+                    <div class="cc-alert cc-alert-success">
+                        <div class="font-bold">
+                            Unidad operable
+                        </div>
+
+                        <div class="mt-1">
+                            {{ $unidad->disponibilidad_operativa_descripcion }}
+                        </div>
+                    </div>
+                @elseif ($disponibilidadBloqueadaPorLicencia)
+                    <div class="cc-alert cc-alert-danger">
+                        <div class="font-bold">
+                            {{ $unidad->disponibilidad_operativa_texto }}
+                        </div>
+
+                        <div class="mt-1">
+                            {{ $unidad->disponibilidad_operativa_descripcion }}
+                        </div>
+
+                        @if (
+                            $licencia
+                            && $licencia->esta_vencida
+                        )
+                            <div class="mt-2">
+                                Para restablecer esta capa operativa,
+                                la licencia debe renovarse desde el módulo
+                                de Licencias.
+                            </div>
+                        @elseif (
+                            $licencia
+                            && $licencia->esta_inactiva
+                        )
+                            <div class="mt-2">
+                                La licencia debe reactivarse desde su ficha
+                                antes de continuar operando con esta unidad.
+                            </div>
+                        @elseif (
+                            $licencia
+                            && $licencia->esta_pendiente_activacion
+                        )
+                            <div class="mt-2">
+                                La unidad se habilitará contractualmente
+                                cuando llegue la fecha de activación de la
+                                licencia.
+                            </div>
+                        @endif
+                    </div>
+                @else
+                    <section class="cc-info-panel">
+                        <div
+                            class="cc-form-section cc-form-section-compact"
+                            style="margin-top: 0; margin-bottom: 0;"
+                        >
+                            <div class="cc-form-section-title">
+                                {{ $unidad->disponibilidad_operativa_texto }}
+                            </div>
+
+                            <div class="cc-form-section-note">
+                                {{ $unidad->disponibilidad_operativa_descripcion }}
+                            </div>
+                        </div>
+                    </section>
+                @endif
 
                 <div class="cc-detail-layout">
 
@@ -107,7 +238,8 @@
                             </h5>
 
                             <p>
-                                Datos principales de identificación de la unidad y empresa propietaria.
+                                Datos principales de identificación de la
+                                unidad y empresa propietaria.
                             </p>
                         </div>
 
@@ -161,11 +293,313 @@
                     <section class="cc-detail-section">
                         <div class="cc-detail-section-header">
                             <h5>
+                                Estado y disponibilidad
+                            </h5>
+
+                            <p>
+                                Diferencia entre el estado administrativo de
+                                la unidad y su disponibilidad real para operar.
+                            </p>
+                        </div>
+
+                        <div class="cc-detail-grid">
+                            <div class="cc-detail-item">
+                                <div class="cc-detail-label">
+                                    Estado administrativo
+                                </div>
+
+                                <div class="cc-detail-value">
+                                    @if ($unidad->estado === 'registrada')
+                                        <span class="cc-badge cc-badge-pending">
+                                            {{ $unidad->estado_texto }}
+                                        </span>
+                                    @elseif ($unidad->estado === 'activa')
+                                        <span class="cc-badge cc-badge-active">
+                                            {{ $unidad->estado_texto }}
+                                        </span>
+                                    @else
+                                        <span class="cc-badge cc-badge-inactive">
+                                            {{ $unidad->estado_texto }}
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <div class="cc-detail-item">
+                                <div class="cc-detail-label">
+                                    Disponibilidad operativa
+                                </div>
+
+                                <div class="cc-detail-value">
+                                    @if ($unidad->disponibilidad_operativa === 'operable')
+                                        <span class="cc-badge cc-badge-active">
+                                            {{ $unidad->disponibilidad_operativa_texto }}
+                                        </span>
+                                    @elseif ($disponibilidadPendiente)
+                                        <span class="cc-badge cc-badge-pending">
+                                            {{ $unidad->disponibilidad_operativa_texto }}
+                                        </span>
+                                    @else
+                                        <span class="cc-badge cc-badge-inactive">
+                                            {{ $unidad->disponibilidad_operativa_texto }}
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <div class="cc-detail-item cc-detail-item-wide">
+                                <div class="cc-detail-label">
+                                    Explicación
+                                </div>
+
+                                <div class="cc-detail-value">
+                                    {{ $unidad->disponibilidad_operativa_descripcion }}
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="cc-detail-section">
+                        <div class="cc-detail-section-header">
+                            <h5>
+                                Licencia
+                            </h5>
+
+                            <p>
+                                Vigencia contractual que habilita la
+                                configuración y operación de la unidad.
+                            </p>
+                        </div>
+
+                        @if ($licencia)
+                            <div class="cc-detail-grid">
+                                <div class="cc-detail-item">
+                                    <div class="cc-detail-label">
+                                        Estado administrativo
+                                    </div>
+
+                                    <div class="cc-detail-value">
+                                        @if ($licencia->estado === 'activa')
+                                            <span class="cc-badge cc-badge-active">
+                                                {{ $licencia->estado_texto }}
+                                            </span>
+                                        @else
+                                            <span class="cc-badge cc-badge-inactive">
+                                                {{ $licencia->estado_texto }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <div class="cc-detail-item">
+                                    <div class="cc-detail-label">
+                                        Condición de vigencia
+                                    </div>
+
+                                    <div class="cc-detail-value">
+                                        @if ($licencia->esta_vigente)
+                                            <span class="cc-badge cc-badge-active">
+                                                {{ $licencia->condicion_vigencia_texto }}
+                                            </span>
+                                        @elseif (
+                                            $licencia->esta_pendiente_activacion
+                                            || $licencia->esta_proxima_vencer
+                                        )
+                                            <span class="cc-badge cc-badge-pending">
+                                                {{ $licencia->condicion_vigencia_texto }}
+                                            </span>
+                                        @else
+                                            <span class="cc-badge cc-badge-inactive">
+                                                {{ $licencia->condicion_vigencia_texto }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <div class="cc-detail-item">
+                                    <div class="cc-detail-label">
+                                        Período
+                                    </div>
+
+                                    <div class="cc-detail-value">
+                                        {{ $licencia->periodo_vigencia_texto }}
+                                    </div>
+                                </div>
+
+                                <div class="cc-detail-item">
+                                    <div class="cc-detail-label">
+                                        Fecha de activación
+                                    </div>
+
+                                    <div class="cc-detail-value">
+                                        {{ $licencia->fecha_activacion?->format('d/m/Y') ?? 'No registrada' }}
+                                    </div>
+                                </div>
+
+                                <div class="cc-detail-item">
+                                    <div class="cc-detail-label">
+                                        Fecha de vencimiento
+                                    </div>
+
+                                    <div class="cc-detail-value">
+                                        {{ $licencia->fecha_vencimiento?->format('d/m/Y') ?? 'No registrada' }}
+                                    </div>
+                                </div>
+
+                                <div class="cc-detail-item">
+                                    <div class="cc-detail-label">
+                                        Vencimiento
+                                    </div>
+
+                                    <div class="cc-detail-value">
+                                        {{ $licencia->vencimiento_relativo_texto }}
+                                    </div>
+                                </div>
+
+                                <div class="cc-detail-item">
+                                    <div class="cc-detail-label">
+                                        Plantilla de seguridad
+                                    </div>
+
+                                    <div class="cc-detail-value">
+                                        {{ $licencia->plantilla_puntos_seguridad_texto }}
+                                    </div>
+                                </div>
+
+                                <div class="cc-detail-item">
+                                    <div class="cc-detail-label">
+                                        Puntos esperados
+                                    </div>
+
+                                    <div class="cc-detail-value">
+                                        {{ $licencia->cantidad_puntos_seguridad_esperados ?? 'No definido' }}
+                                    </div>
+                                </div>
+
+                                @if ($licencia->estado === 'inactiva')
+                                    <div class="cc-detail-item">
+                                        <div class="cc-detail-label">
+                                            Fecha de inactivación
+                                        </div>
+
+                                        <div class="cc-detail-value">
+                                            {{ $licencia->fecha_inactivacion?->format('d/m/Y H:i') ?? 'No registrada' }}
+                                        </div>
+                                    </div>
+
+                                    <div class="cc-detail-item cc-detail-item-wide">
+                                        <div class="cc-detail-label">
+                                            Motivo de inactivación
+                                        </div>
+
+                                        <div class="cc-detail-value">
+                                            {{ $licencia->motivo_inactivacion ?: 'No registrado' }}
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                        @else
+                            <div class="cc-info-panel">
+                                <div
+                                    class="cc-form-section cc-form-section-compact"
+                                    style="margin-top: 0; margin-bottom: 0;"
+                                >
+                                    <div class="cc-form-section-title">
+                                        Sin licencia registrada
+                                    </div>
+
+                                    <div class="cc-form-section-note">
+                                        Diesel Cop debe registrar la licencia
+                                        antes de iniciar la configuración de
+                                        puntos de seguridad y marchamos.
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+                    </section>
+
+                    <section class="cc-detail-section">
+                        <div class="cc-detail-section-header">
+                            <h5>
+                                Asignación inicial de marchamos
+                            </h5>
+
+                            <p>
+                                Progreso de instalación de marchamos en los
+                                puntos de seguridad que protegen la unidad.
+                            </p>
+                        </div>
+
+                        <div class="cc-detail-grid">
+                            <div class="cc-detail-item">
+                                <div class="cc-detail-label">
+                                    Estado de asignación
+                                </div>
+
+                                <div class="cc-detail-value">
+                                    @if ($unidad->asignacion_inicial_marchamos_completa)
+                                        <span class="cc-badge cc-badge-active">
+                                            Completa
+                                        </span>
+                                    @else
+                                        <span class="cc-badge cc-badge-pending">
+                                            Pendiente
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <div class="cc-detail-item">
+                                <div class="cc-detail-label">
+                                    Puntos que requieren marchamo
+                                </div>
+
+                                <div class="cc-detail-value">
+                                    {{ $unidad->total_puntos_que_requieren_marchamo }}
+                                </div>
+                            </div>
+
+                            <div class="cc-detail-item">
+                                <div class="cc-detail-label">
+                                    Puntos con marchamo asignado
+                                </div>
+
+                                <div class="cc-detail-value">
+                                    {{ $unidad->total_puntos_con_marchamo_asignado }}
+                                </div>
+                            </div>
+
+                            <div class="cc-detail-item">
+                                <div class="cc-detail-label">
+                                    Puntos pendientes
+                                </div>
+
+                                <div class="cc-detail-value">
+                                    {{ $unidad->total_puntos_pendientes_marchamo }}
+                                </div>
+                            </div>
+
+                            <div class="cc-detail-item cc-detail-item-wide">
+                                <div class="cc-detail-label">
+                                    Resumen
+                                </div>
+
+                                <div class="cc-detail-value">
+                                    {{ $unidad->asignacion_inicial_texto }}
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="cc-detail-section">
+                        <div class="cc-detail-section-header">
+                            <h5>
                                 Tanques y cobertura Diesel Cop
                             </h5>
 
                             <p>
-                                Relación entre capacidad física de la unidad y cobertura protegida por el servicio.
+                                Relación entre capacidad física de la unidad
+                                y cobertura protegida por el servicio.
                             </p>
                         </div>
 
@@ -221,7 +655,8 @@
                             </h5>
 
                             <p>
-                                Modelo utilizado para medir el consumo operativo de la unidad.
+                                Modelo utilizado para medir el consumo
+                                operativo de la unidad.
                             </p>
                         </div>
 
@@ -235,28 +670,6 @@
                                     {{ $unidad->modelo_medicion_texto }}
                                 </div>
                             </div>
-
-                            <div class="cc-detail-item">
-                                <div class="cc-detail-label">
-                                    Estado
-                                </div>
-
-                                <div class="cc-detail-value">
-                                    @if ($unidad->estado === 'registrada')
-                                        <span class="cc-badge cc-badge-pending">
-                                            {{ $unidad->estado_texto }}
-                                        </span>
-                                    @elseif ($unidad->estado === 'activa')
-                                        <span class="cc-badge cc-badge-active">
-                                            {{ $unidad->estado_texto }}
-                                        </span>
-                                    @else
-                                        <span class="cc-badge cc-badge-inactive">
-                                            {{ $unidad->estado_texto }}
-                                        </span>
-                                    @endif
-                                </div>
-                            </div>
                         </div>
                     </section>
 
@@ -267,7 +680,8 @@
                             </h5>
 
                             <p>
-                                Información de creación, actualización e inactivación administrativa del registro.
+                                Información de creación, actualización e
+                                inactivación administrativa del registro.
                             </p>
                         </div>
 
@@ -351,7 +765,7 @@
                 <div class="cc-actions cc-actions-split">
                     <div class="cc-actions-normal">
 
-                        @if ($unidad->estado !== 'inactiva')
+                        @if ($puedeEditar)
                             <a
                                 href="{{ route(
                                     'unidades.edit',
@@ -378,25 +792,22 @@
                     </div>
                 </div>
 
-                @if ($unidad->estado === 'registrada')
+                @if (
+                    $unidad->estado !== 'inactiva'
+                    && ! $puedeEditar
+                )
                     <section class="cc-info-panel mt-7">
                         <div
                             class="cc-form-section cc-form-section-compact"
                             style="margin-top: 0; margin-bottom: 0;"
                         >
                             <div class="cc-form-section-title">
-                                Pendiente de configuración operativa
+                                Edición no disponible
                             </div>
 
                             <div class="cc-form-section-note">
-                                Esta unidad ya fue registrada, pero aún necesita licencia, puntos de seguridad y asignación inicial de marchamos para pasar a estado activa.
+                                {{ $unidad->disponibilidad_operativa_descripcion }}
                             </div>
-                        </div>
-
-                        <div class="mt-5">
-                            <p class="text-sm text-[var(--cc-text-muted)] leading-relaxed">
-                                La configuración de licencia debe realizarse desde el módulo correspondiente, según los permisos asignados al usuario.
-                            </p>
                         </div>
                     </section>
                 @endif
@@ -409,12 +820,53 @@
                             </h5>
 
                             <p>
-                                Modifique el estado de la unidad únicamente cuando exista una razón administrativa válida.
+                                Modifique el estado administrativo de la
+                                unidad únicamente cuando exista una razón
+                                válida.
                             </p>
                         </div>
                     </div>
 
-                    @if ($unidad->estado !== 'inactiva')
+                    @if ($unidad->estado === 'inactiva')
+                        <form
+                            method="POST"
+                            action="{{ route(
+                                'unidades.reactivar',
+                                array_merge(
+                                    $queryParams,
+                                    ['unidad' => $unidad]
+                                )
+                            ) }}"
+                            class="cc-danger-zone-form"
+                            onsubmit="return confirm('¿Está seguro de reactivar esta unidad?');"
+                        >
+                            @csrf
+                            @method('PATCH')
+
+                            <div>
+                                <p class="text-sm text-[var(--cc-text-muted)] leading-relaxed">
+                                    Esta unidad se encuentra inactiva.
+                                    Al reactivarla regresará al estado
+                                    registrada.
+                                </p>
+
+                                <p class="mt-3 text-sm text-[var(--cc-text-muted)] leading-relaxed">
+                                    La reactivación de la unidad no modifica,
+                                    reactiva ni renueva su licencia. Su
+                                    disponibilidad operativa será calculada
+                                    nuevamente según la licencia y los
+                                    marchamos existentes.
+                                </p>
+                            </div>
+
+                            <button
+                                type="submit"
+                                class="cc-btn-success cc-btn-form-action"
+                            >
+                                Reactivar unidad
+                            </button>
+                        </form>
+                    @elseif ($puedeInactivar)
                         <form
                             method="POST"
                             action="{{ route(
@@ -448,56 +900,80 @@
 
                                     <option
                                         value="Falta de uso"
-                                        @selected(old('motivo_inactivacion') === 'Falta de uso')
+                                        @selected(
+                                            old('motivo_inactivacion')
+                                            === 'Falta de uso'
+                                        )
                                     >
                                         Falta de uso
                                     </option>
 
                                     <option
                                         value="Unidad vendida"
-                                        @selected(old('motivo_inactivacion') === 'Unidad vendida')
+                                        @selected(
+                                            old('motivo_inactivacion')
+                                            === 'Unidad vendida'
+                                        )
                                     >
                                         Unidad vendida
                                     </option>
 
                                     <option
                                         value="Unidad fuera de operación"
-                                        @selected(old('motivo_inactivacion') === 'Unidad fuera de operación')
+                                        @selected(
+                                            old('motivo_inactivacion')
+                                            === 'Unidad fuera de operación'
+                                        )
                                     >
                                         Unidad fuera de operación
                                     </option>
 
                                     <option
                                         value="Unidad reemplazada"
-                                        @selected(old('motivo_inactivacion') === 'Unidad reemplazada')
+                                        @selected(
+                                            old('motivo_inactivacion')
+                                            === 'Unidad reemplazada'
+                                        )
                                     >
                                         Unidad reemplazada
                                     </option>
 
                                     <option
                                         value="Datos incorrectos en registro"
-                                        @selected(old('motivo_inactivacion') === 'Datos incorrectos en registro')
+                                        @selected(
+                                            old('motivo_inactivacion')
+                                            === 'Datos incorrectos en registro'
+                                        )
                                     >
                                         Datos incorrectos en registro
                                     </option>
 
                                     <option
                                         value="Solicitud administrativa"
-                                        @selected(old('motivo_inactivacion') === 'Solicitud administrativa')
+                                        @selected(
+                                            old('motivo_inactivacion')
+                                            === 'Solicitud administrativa'
+                                        )
                                     >
                                         Solicitud administrativa
                                     </option>
 
                                     <option
                                         value="Suspensión temporal"
-                                        @selected(old('motivo_inactivacion') === 'Suspensión temporal')
+                                        @selected(
+                                            old('motivo_inactivacion')
+                                            === 'Suspensión temporal'
+                                        )
                                     >
                                         Suspensión temporal
                                     </option>
 
                                     <option
                                         value="Otro"
-                                        @selected(old('motivo_inactivacion') === 'Otro')
+                                        @selected(
+                                            old('motivo_inactivacion')
+                                            === 'Otro'
+                                        )
                                     >
                                         Otro
                                     </option>
@@ -518,32 +994,19 @@
                             </button>
                         </form>
                     @else
-                        <form
-                            method="POST"
-                            action="{{ route(
-                                'unidades.reactivar',
-                                array_merge(
-                                    $queryParams,
-                                    ['unidad' => $unidad]
-                                )
-                            ) }}"
-                            class="cc-danger-zone-form"
-                            onsubmit="return confirm('¿Está seguro de reactivar esta unidad?');"
-                        >
-                            @csrf
-                            @method('PATCH')
+                        <div class="cc-danger-zone-form">
+                            <div>
+                                <p class="text-sm text-[var(--cc-text-muted)] leading-relaxed">
+                                    La inactivación administrativa no está
+                                    disponible mientras la unidad se encuentre
+                                    bloqueada por su licencia.
+                                </p>
 
-                            <p class="text-sm text-[var(--cc-text-muted)] leading-relaxed">
-                                Esta unidad se encuentra inactiva. Al reactivarla, regresará al estado registrada y deberá completar nuevamente las validaciones operativas correspondientes.
-                            </p>
-
-                            <button
-                                type="submit"
-                                class="cc-btn-success cc-btn-form-action"
-                            >
-                                Reactivar unidad
-                            </button>
-                        </form>
+                                <p class="mt-3 text-sm text-[var(--cc-text-muted)] leading-relaxed">
+                                    {{ $unidad->disponibilidad_operativa_descripcion }}
+                                </p>
+                            </div>
+                        </div>
                     @endif
                 </section>
 

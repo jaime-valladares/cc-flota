@@ -2,24 +2,49 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="csrf-token" content="{{ csrf_token() }}">
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1"
+        >
+        <meta
+            name="csrf-token"
+            content="{{ csrf_token() }}"
+        >
 
         <title>Consulta unidades | CC-Flota</title>
 
         @include('layouts.partials.favicon')
 
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+        <link
+            rel="preconnect"
+            href="https://fonts.googleapis.com"
+        >
+        <link
+            rel="preconnect"
+            href="https://fonts.gstatic.com"
+            crossorigin
+        >
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap"
+            rel="stylesheet"
+        >
 
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @vite([
+            'resources/css/app.css',
+            'resources/js/app.js',
+        ])
     </head>
 
     <body class="antialiased">
-        <div class="min-h-screen" style="background: var(--cc-bg-main);">
+        <div
+            class="min-h-screen"
+            style="background: var(--cc-bg-main);"
+        >
             <div class="cc-page-wrapper">
-                <div class="cc-window-container" style="max-width: 80rem;">
+                <div
+                    class="cc-window-container"
+                    style="max-width: 80rem;"
+                >
                     <div class="cc-card">
 
                         <div class="cc-card-header cc-card-header-compact">
@@ -95,7 +120,11 @@
                             action="{{ route('unidades.consulta.ventana') }}"
                             class="mb-5"
                         >
-                            <input type="hidden" name="consultar" value="1">
+                            <input
+                                type="hidden"
+                                name="consultar"
+                                value="1"
+                            >
 
                             <div class="cc-filter-panel cc-filter-panel-compact cc-filter-panel-inline">
 
@@ -212,7 +241,10 @@
                                                 </div>
                                             </div>
                                         @else
-                                            <select class="cc-input" disabled>
+                                            <select
+                                                class="cc-input"
+                                                disabled
+                                            >
                                                 @foreach ($empresas as $empresa)
                                                     <option
                                                         value="{{ $empresa->id }}"
@@ -425,7 +457,7 @@
 
                                     <div class="cc-field">
                                         <label for="estado">
-                                            Estado
+                                            Estado administrativo
                                         </label>
 
                                         <select
@@ -521,45 +553,70 @@
                             <div class="cc-table-adaptive-wrapper">
                                 <table
                                     class="cc-table-adaptive"
-                                    style="min-width: 66rem;"
+                                    style="min-width: 78rem;"
                                 >
                                     <thead>
                                         <tr>
-                                            <th style="width: 11rem;">
+                                            <th style="width: 9rem;">
                                                 Placa
                                             </th>
 
-                                            <th style="width: 15rem;">
+                                            <th style="width: 14rem;">
                                                 Empresa
                                             </th>
 
-                                            <th style="width: 12rem;">
+                                            <th style="width: 9rem;">
                                                 Marca
                                             </th>
 
-                                            <th style="width: 7rem;">
+                                            <th style="width: 6rem;">
                                                 Tanques
                                             </th>
 
-                                            <th style="width: 9rem;">
+                                            <th style="width: 7rem;">
                                                 Cobertura
                                             </th>
 
-                                            <th style="width: 15rem;">
-                                                Modelo de medición
+                                            <th style="width: 11rem;">
+                                                Modelo
+                                            </th>
+
+                                            <th style="width: 7rem;">
+                                                Estado
                                             </th>
 
                                             <th style="width: 9rem;">
-                                                Estado
+                                                Licencia
+                                            </th>
+
+                                            <th style="width: 8rem;">
+                                                Marchamos
+                                            </th>
+
+                                            <th style="width: 12rem;">
+                                                Disponibilidad
                                             </th>
                                         </tr>
                                     </thead>
 
                                     <tbody>
                                         @foreach ($unidades as $unidad)
+                                            @php
+                                                $licencia = $unidad->licencia;
+
+                                                $disponibilidadPendiente = in_array(
+                                                    $unidad->disponibilidad_operativa,
+                                                    [
+                                                        'asignacion_inicial_pendiente',
+                                                        'pendiente_activacion_operativa',
+                                                    ],
+                                                    true
+                                                );
+                                            @endphp
+
                                             <tr>
                                                 <td>
-                                                    <span class="cc-table-strong">
+                                                    <span class="cc-table-strong whitespace-nowrap">
                                                         {{ $unidad->placa }}
                                                     </span>
                                                 </td>
@@ -578,11 +635,11 @@
                                                     {{ $unidad->marca ?: 'Sin marca' }}
                                                 </td>
 
-                                                <td>
+                                                <td class="whitespace-nowrap">
                                                     {{ $unidad->total_tanques }}
                                                 </td>
 
-                                                <td>
+                                                <td class="whitespace-nowrap">
                                                     {{ $unidad->cantidad_tanques_con_licencia }}
                                                     de
                                                     {{ $unidad->total_tanques }}
@@ -593,18 +650,116 @@
                                                 </td>
 
                                                 <td>
-                                                    @if ($unidad->estado === 'registrada')
-                                                        <span class="cc-badge cc-badge-pending">
-                                                            Registrada
-                                                        </span>
-                                                    @elseif ($unidad->estado === 'activa')
-                                                        <span class="cc-badge cc-badge-active">
-                                                            Activa
-                                                        </span>
+                                                    <span
+                                                        class="font-semibold whitespace-nowrap"
+                                                        @style([
+                                                            'color: var(--cc-success);'
+                                                                => $unidad->estado === 'activa',
+
+                                                            'color: var(--cc-warning);'
+                                                                => $unidad->estado === 'registrada',
+
+                                                            'color: var(--cc-text-muted);'
+                                                                => $unidad->estado === 'inactiva',
+                                                        ])
+                                                    >
+                                                        {{ $unidad->estado_texto }}
+                                                    </span>
+                                                </td>
+
+                                                <td>
+                                                    @if (! $licencia)
+                                                        <div class="font-semibold text-[var(--cc-text-muted)] whitespace-nowrap">
+                                                            Sin licencia
+                                                        </div>
                                                     @else
-                                                        <span class="cc-badge cc-badge-inactive">
-                                                            Inactiva
-                                                        </span>
+                                                        <div
+                                                            class="font-semibold whitespace-nowrap"
+                                                            @style([
+                                                                'color: var(--cc-success);'
+                                                                    => $licencia->esta_vigente,
+
+                                                                'color: var(--cc-warning);'
+                                                                    => $licencia->esta_pendiente_activacion,
+
+                                                                'color: var(--cc-danger);'
+                                                                    => $licencia->esta_vencida
+                                                                        || $licencia->estado === 'inactiva',
+                                                            ])
+                                                        >
+                                                            {{ $licencia->condicion_vigencia_texto }}
+                                                        </div>
+
+                                                        <div class="mt-1 text-xs text-[var(--cc-text-muted)] whitespace-nowrap">
+                                                            @if ($licencia->esta_pendiente_activacion)
+                                                                Inicia:
+                                                                {{ $licencia->fecha_activacion?->format('d/m/Y') ?? 'No registrada' }}
+                                                            @elseif ($licencia->esta_vencida || $licencia->esta_vigente)
+                                                                {{ $licencia->vencimiento_relativo_texto }}
+                                                            @elseif ($licencia->estado === 'inactiva')
+                                                                Inactivada administrativamente
+                                                            @endif
+                                                        </div>
+                                                    @endif
+                                                </td>
+
+                                                <td>
+                                                    <div
+                                                        class="font-semibold whitespace-nowrap"
+                                                        @style([
+                                                            'color: var(--cc-success);'
+                                                                => $unidad->asignacion_inicial_marchamos_completa,
+
+                                                            'color: var(--cc-warning);'
+                                                                => ! $unidad->asignacion_inicial_marchamos_completa,
+                                                        ])
+                                                    >
+                                                        {{ $unidad->asignacion_inicial_marchamos_completa
+                                                            ? 'Completa'
+                                                            : 'Pendiente' }}
+                                                    </div>
+
+                                                    <div class="mt-1 text-xs text-[var(--cc-text-muted)] whitespace-nowrap">
+                                                        {{ $unidad->total_puntos_con_marchamo_asignado }}
+                                                        de
+                                                        {{ $unidad->total_puntos_que_requieren_marchamo }}
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    <div
+                                                        class="font-semibold whitespace-nowrap"
+                                                        @style([
+                                                            'color: var(--cc-success);'
+                                                                => $unidad->disponibilidad_operativa === 'operable',
+
+                                                            'color: var(--cc-warning);'
+                                                                => $disponibilidadPendiente,
+
+                                                            'color: var(--cc-danger);'
+                                                                => ! $disponibilidadPendiente
+                                                                    && $unidad->disponibilidad_operativa !== 'operable',
+                                                        ])
+                                                    >
+                                                        {{ $unidad->disponibilidad_operativa_texto }}
+                                                    </div>
+
+                                                    @if ($unidad->disponibilidad_operativa === 'licencia_vencida')
+                                                        <div class="mt-1 text-xs text-[var(--cc-text-muted)] whitespace-nowrap">
+                                                            Requiere renovación
+                                                        </div>
+                                                    @elseif ($unidad->disponibilidad_operativa === 'licencia_inactiva')
+                                                        <div class="mt-1 text-xs text-[var(--cc-text-muted)] whitespace-nowrap">
+                                                            Requiere reactivación
+                                                        </div>
+                                                    @elseif ($unidad->disponibilidad_operativa === 'asignacion_inicial_pendiente')
+                                                        <div class="mt-1 text-xs text-[var(--cc-text-muted)] whitespace-nowrap">
+                                                            Configuración Diesel Cop
+                                                        </div>
+                                                    @elseif ($unidad->disponibilidad_operativa === 'sin_licencia')
+                                                        <div class="mt-1 text-xs text-[var(--cc-text-muted)] whitespace-nowrap">
+                                                            Licencia no registrada
+                                                        </div>
                                                     @endif
                                                 </td>
                                             </tr>
@@ -656,19 +811,23 @@
                         )
                     );
 
-                    const defaultLabel = label?.dataset.defaultLabel || 'Todos';
+                    const defaultLabel =
+                        label?.dataset.defaultLabel || 'Todos';
 
                     function updateLabel() {
-                        const selected = checkboxes.filter(function (checkbox) {
-                            return checkbox.checked;
-                        });
+                        const selected = checkboxes.filter(
+                            function (checkbox) {
+                                return checkbox.checked;
+                            }
+                        );
 
                         if (selected.length === 0) {
                             label.textContent = defaultLabel;
                         } else if (selected.length === 1) {
-                            const selectedOption = selected[0].closest(
-                                '[data-cc-filter-option]'
-                            );
+                            const selectedOption =
+                                selected[0].closest(
+                                    '[data-cc-filter-option]'
+                                );
 
                             const selectedLabel = selectedOption
                                 ? selectedOption.querySelector(
@@ -697,7 +856,9 @@
 
                     function closeAllExceptCurrent() {
                         document
-                            .querySelectorAll('[data-cc-filter-multiselect]')
+                            .querySelectorAll(
+                                '[data-cc-filter-multiselect]'
+                            )
                             .forEach(function (otherMultiselect) {
                                 if (otherMultiselect === multiselect) {
                                     return;
@@ -721,22 +882,30 @@
                     }
 
                     if (toggle && menu) {
-                        toggle.addEventListener('click', function () {
-                            closeAllExceptCurrent();
+                        toggle.addEventListener(
+                            'click',
+                            function () {
+                                closeAllExceptCurrent();
 
-                            toggle.classList.toggle('is-open');
-                            menu.classList.toggle('is-open');
-                        });
+                                toggle.classList.toggle('is-open');
+                                menu.classList.toggle('is-open');
+                            }
+                        );
                     }
 
                     if (master) {
-                        master.addEventListener('change', function () {
-                            checkboxes.forEach(function (checkbox) {
-                                checkbox.checked = master.checked;
-                            });
+                        master.addEventListener(
+                            'change',
+                            function () {
+                                checkboxes.forEach(
+                                    function (checkbox) {
+                                        checkbox.checked = master.checked;
+                                    }
+                                );
 
-                            updateLabel();
-                        });
+                                updateLabel();
+                            }
+                        );
                     }
 
                     checkboxes.forEach(function (checkbox) {
@@ -749,45 +918,59 @@
                     updateLabel();
                 });
 
-            document.addEventListener('click', function (event) {
-                if (
-                    event.target.closest(
-                        '[data-cc-filter-multiselect]'
-                    )
-                ) {
-                    return;
+            document.addEventListener(
+                'click',
+                function (event) {
+                    if (
+                        event.target.closest(
+                            '[data-cc-filter-multiselect]'
+                        )
+                    ) {
+                        return;
+                    }
+
+                    document
+                        .querySelectorAll(
+                            '[data-cc-filter-toggle]'
+                        )
+                        .forEach(function (toggle) {
+                            toggle.classList.remove('is-open');
+                        });
+
+                    document
+                        .querySelectorAll(
+                            '[data-cc-filter-menu]'
+                        )
+                        .forEach(function (menu) {
+                            menu.classList.remove('is-open');
+                        });
                 }
+            );
 
-                document
-                    .querySelectorAll('[data-cc-filter-toggle]')
-                    .forEach(function (toggle) {
-                        toggle.classList.remove('is-open');
-                    });
+            document.addEventListener(
+                'keydown',
+                function (event) {
+                    if (event.key !== 'Escape') {
+                        return;
+                    }
 
-                document
-                    .querySelectorAll('[data-cc-filter-menu]')
-                    .forEach(function (menu) {
-                        menu.classList.remove('is-open');
-                    });
-            });
+                    document
+                        .querySelectorAll(
+                            '[data-cc-filter-toggle]'
+                        )
+                        .forEach(function (toggle) {
+                            toggle.classList.remove('is-open');
+                        });
 
-            document.addEventListener('keydown', function (event) {
-                if (event.key !== 'Escape') {
-                    return;
+                    document
+                        .querySelectorAll(
+                            '[data-cc-filter-menu]'
+                        )
+                        .forEach(function (menu) {
+                            menu.classList.remove('is-open');
+                        });
                 }
-
-                document
-                    .querySelectorAll('[data-cc-filter-toggle]')
-                    .forEach(function (toggle) {
-                        toggle.classList.remove('is-open');
-                    });
-
-                document
-                    .querySelectorAll('[data-cc-filter-menu]')
-                    .forEach(function (menu) {
-                        menu.classList.remove('is-open');
-                    });
-            });
+            );
         </script>
     </body>
 </html>

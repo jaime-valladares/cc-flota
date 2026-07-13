@@ -19,98 +19,212 @@ class LicenciaController extends Controller
 {
     /**
      * Consulta informativa de licencias dentro del sistema.
+     *
+     * Disponible para Diesel Cop y usuarios empresariales.
      */
     public function index(Request $request): View
     {
-        $data = $this->prepararConsultaLicencias($request, false);
+        $data = $this->prepararConsultaLicencias(
+            request: $request,
+            soloEmpresasActivas: false
+        );
 
         return view('licencias.index', $data);
     }
 
     /**
      * Consulta informativa de licencias en ventana independiente.
+     *
+     * Disponible para Diesel Cop y usuarios empresariales.
      */
     public function consultaVentana(Request $request): View
     {
-        $data = $this->prepararConsultaLicencias($request, false);
+        $data = $this->prepararConsultaLicencias(
+            request: $request,
+            soloEmpresasActivas: false
+        );
 
         return view('licencias.index-ventana', $data);
     }
 
     /**
      * Búsqueda administrativa de licencias.
+     *
+     * Disponible únicamente para Diesel Cop.
      */
     public function administrar(Request $request): View
     {
-        $data = $this->prepararConsultaLicencias($request, true);
+        $this->autorizarAdministracionLicencias();
+
+        $data = $this->prepararConsultaLicencias(
+            request: $request,
+            soloEmpresasActivas: true
+        );
 
         return view('licencias.administrar', $data);
     }
 
     /**
      * Búsqueda administrativa de licencias en ventana independiente.
+     *
+     * Disponible únicamente para Diesel Cop.
      */
     public function administrarVentana(Request $request): View
     {
-        $data = $this->prepararConsultaLicencias($request, true);
+        $this->autorizarAdministracionLicencias();
+
+        $data = $this->prepararConsultaLicencias(
+            request: $request,
+            soloEmpresasActivas: true
+        );
 
         return view('licencias.administrar-ventana', $data);
     }
 
     /**
-     * Prepara filtros, catálogos y resultados para consulta/administración.
+     * Prepara filtros, catálogos, resúmenes y resultados.
      */
-    private function prepararConsultaLicencias(Request $request, bool $soloEmpresasActivas): array
-    {
-        $user = Auth::user();
-        $esUsuarioDieselCop = is_null($user->empresa_id);
+    private function prepararConsultaLicencias(
+        Request $request,
+        bool $soloEmpresasActivas
+    ): array {
+        $validated = $request->validate([
+            'consultar' => [
+                'nullable',
+                'boolean',
+            ],
+            'busqueda' => [
+                'nullable',
+                'string',
+                'max:150',
+            ],
+            'empresa_ids' => [
+                'nullable',
+                'array',
+            ],
+            'empresa_ids.*' => [
+                'integer',
+                Rule::exists('empresas', 'id'),
+            ],
+            'empresa_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('empresas', 'id'),
+            ],
+            'placas' => [
+                'nullable',
+                'array',
+            ],
+            'placas.*' => [
+                'string',
+                'max:20',
+            ],
+            'placa' => [
+                'nullable',
+                'string',
+                'max:20',
+            ],
+            'periodos_vigencia' => [
+                'nullable',
+                'array',
+            ],
+            'periodos_vigencia.*' => [
+                'integer',
+                Rule::in(array_keys($this->periodosVigencia())),
+            ],
+            'periodo_vigencia_meses' => [
+                'nullable',
+                'integer',
+                Rule::in(array_keys($this->periodosVigencia())),
+            ],
+            'estado' => [
+                'nullable',
+                'string',
+                Rule::in([
+                    'activa',
+                    'inactiva',
+                ]),
+            ],
+        ]);
 
-        $busqueda = trim((string) $request->input('busqueda', ''));
+        $user = Auth::user();
+        $esUsuarioDieselCop = $this->esUsuarioDieselCop();
+
+        $busqueda = trim(
+            (string) ($validated['busqueda'] ?? '')
+        );
 
         /*
-         * Compatibilidad:
-         * - Consulta nueva usa empresa_ids[], placas[], periodos_vigencia[].
-         * - Administración puede seguir usando empresa_id, placa, periodo_vigencia_meses.
+         * Compatibilidad entre filtros múltiples y filtros simples.
          */
-        $empresaIds = collect($request->input('empresa_ids', []))
-            ->when(filled($request->input('empresa_id')), function ($collection) use ($request) {
-                return $collection->push($request->input('empresa_id'));
-            })
+        $empresaIds = collect($validated['empresa_ids'] ?? [])
+            ->when(
+                filled($validated['empresa_id'] ?? null),
+                function ($collection) use ($validated) {
+                    return $collection->push(
+                        $validated['empresa_id']
+                    );
+                }
+            )
             ->filter(fn ($id) => filled($id))
             ->map(fn ($id) => (int) $id)
             ->unique()
             ->values()
             ->all();
 
-        $placas = collect($request->input('placas', []))
-            ->when(filled($request->input('placa')), function ($collection) use ($request) {
-                return $collection->push($request->input('placa'));
-            })
+        $placas = collect($validated['placas'] ?? [])
+            ->when(
+                filled($validated['placa'] ?? null),
+                function ($collection) use ($validated) {
+                    return $collection->push(
+                        $validated['placa']
+                    );
+                }
+            )
             ->filter(fn ($placa) => filled($placa))
             ->map(fn ($placa) => trim((string) $placa))
             ->unique()
             ->values()
             ->all();
 
-        $periodosVigenciaSeleccionados = collect($request->input('periodos_vigencia', []))
-            ->when(filled($request->input('periodo_vigencia_meses')), function ($collection) use ($request) {
-                return $collection->push($request->input('periodo_vigencia_meses'));
-            })
+        $periodosVigenciaSeleccionados = collect(
+            $validated['periodos_vigencia'] ?? []
+        )
+            ->when(
+                filled($validated['periodo_vigencia_meses'] ?? null),
+                function ($collection) use ($validated) {
+                    return $collection->push(
+                        $validated['periodo_vigencia_meses']
+                    );
+                }
+            )
             ->filter(fn ($periodo) => filled($periodo))
             ->map(fn ($periodo) => (int) $periodo)
-            ->filter(fn ($periodo) => array_key_exists($periodo, $this->periodosVigencia()))
+            ->filter(
+                fn ($periodo) => array_key_exists(
+                    $periodo,
+                    $this->periodosVigencia()
+                )
+            )
             ->unique()
             ->values()
             ->all();
 
-        $estado = $request->input('estado');
+        $estado = $validated['estado'] ?? null;
 
+        /*
+         * El usuario empresarial solo puede consultar registros
+         * pertenecientes a su propia empresa.
+         */
         if (! $esUsuarioDieselCop) {
-            $empresaIds = [(int) $user->empresa_id];
+            $empresaIds = [
+                (int) $user->empresa_id,
+            ];
         }
 
         /*
-         * Variables simples para vistas administrativas o compatibilidad temporal.
+         * Variables simples conservadas para las vistas administrativas
+         * y para compatibilidad con los formularios actuales.
          */
         $empresaId = $empresaIds[0] ?? null;
         $placa = $placas[0] ?? null;
@@ -124,86 +238,291 @@ class LicenciaController extends Controller
             || filled($estado);
 
         $empresas = Empresa::query()
-            ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
-                $query->where('id', $user->empresa_id);
-            })
-            ->when($soloEmpresasActivas, function ($query) {
-                $query->where('estado', 'activa');
-            })
+            ->when(
+                ! $esUsuarioDieselCop,
+                function ($query) use ($user) {
+                    $query->where(
+                        'id',
+                        $user->empresa_id
+                    );
+                }
+            )
+            ->when(
+                $soloEmpresasActivas,
+                function ($query) {
+                    $query->where(
+                        'estado',
+                        'activa'
+                    );
+                }
+            )
             ->orderBy('nombre_comercial')
             ->orderBy('nombre_legal')
             ->get();
 
         $baseQuery = Licencia::query()
-            ->with(['empresa', 'unidad'])
-            ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
-                $query->where('empresa_id', $user->empresa_id);
-            })
-            ->when($soloEmpresasActivas, function ($query) {
-                $query->whereHas('empresa', function ($empresaQuery) {
-                    $empresaQuery->where('estado', 'activa');
-                });
-            });
+            ->with([
+                'empresa',
+                'unidad',
+            ])
+            ->when(
+                ! $esUsuarioDieselCop,
+                function ($query) use ($user) {
+                    $query->where(
+                        'empresa_id',
+                        $user->empresa_id
+                    );
+                }
+            )
+            ->when(
+                $soloEmpresasActivas,
+                function ($query) {
+                    $query->whereHas(
+                        'empresa',
+                        function ($empresaQuery) {
+                            $empresaQuery->where(
+                                'estado',
+                                'activa'
+                            );
+                        }
+                    );
+                }
+            );
 
         $placasSelector = (clone $baseQuery)
-            ->join('unidades', 'licencias.unidad_id', '=', 'unidades.id')
+            ->join(
+                'unidades',
+                'licencias.unidad_id',
+                '=',
+                'unidades.id'
+            )
             ->orderBy('unidades.placa')
             ->pluck('unidades.placa')
             ->filter()
             ->unique()
             ->values();
 
+        $hoy = now()->toDateString();
+
         $totalLicencias = (clone $baseQuery)->count();
-        $totalActivas = (clone $baseQuery)->where('estado', 'activa')->count();
-        $totalInactivas = (clone $baseQuery)->where('estado', 'inactiva')->count();
+
+        $totalActivas = (clone $baseQuery)
+            ->where('estado', 'activa')
+            ->count();
+
+        $totalInactivas = (clone $baseQuery)
+            ->where('estado', 'inactiva')
+            ->count();
+
+        $totalVigentes = (clone $baseQuery)
+            ->where('estado', 'activa')
+            ->whereDate(
+                'fecha_activacion',
+                '<=',
+                $hoy
+            )
+            ->whereDate(
+                'fecha_vencimiento',
+                '>=',
+                $hoy
+            )
+            ->count();
+
+        $totalPendientesActivacion = (clone $baseQuery)
+            ->where('estado', 'activa')
+            ->whereDate(
+                'fecha_activacion',
+                '>',
+                $hoy
+            )
+            ->count();
+
+        $totalVencidas = (clone $baseQuery)
+            ->where('estado', 'activa')
+            ->whereDate(
+                'fecha_vencimiento',
+                '<',
+                $hoy
+            )
+            ->count();
 
         $licenciasQuery = Licencia::query()
-            ->with(['empresa', 'unidad'])
-            ->join('unidades', 'licencias.unidad_id', '=', 'unidades.id')
-            ->join('empresas', 'licencias.empresa_id', '=', 'empresas.id')
+            ->with([
+                'empresa',
+                'unidad',
+            ])
+            ->join(
+                'unidades',
+                'licencias.unidad_id',
+                '=',
+                'unidades.id'
+            )
+            ->join(
+                'empresas',
+                'licencias.empresa_id',
+                '=',
+                'empresas.id'
+            )
             ->select('licencias.*')
-            ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
-                $query->where('licencias.empresa_id', $user->empresa_id);
-            })
-            ->when($soloEmpresasActivas, function ($query) {
-                $query->where('empresas.estado', 'activa');
-            })
-            ->when($hayFiltros && filled($busqueda), function ($query) use ($busqueda) {
-                $query->where(function ($subQuery) use ($busqueda) {
-                    $subQuery
-                        ->where('unidades.placa', 'like', '%' . $busqueda . '%')
-                        ->orWhere('empresas.nombre_legal', 'like', '%' . $busqueda . '%')
-                        ->orWhere('empresas.nombre_comercial', 'like', '%' . $busqueda . '%');
-                });
-            })
-            ->when($hayFiltros && count($empresaIds) > 0, function ($query) use ($empresaIds) {
-                $query->whereIn('licencias.empresa_id', $empresaIds);
-            })
-            ->when($hayFiltros && count($placas) > 0, function ($query) use ($placas) {
-                $query->whereIn('unidades.placa', $placas);
-            })
-            ->when($hayFiltros && count($periodosVigenciaSeleccionados) > 0, function ($query) use ($periodosVigenciaSeleccionados) {
-                $query->whereIn('licencias.periodo_vigencia_meses', $periodosVigenciaSeleccionados);
-            })
-            ->when($hayFiltros && filled($estado), function ($query) use ($estado) {
-                $query->where('licencias.estado', $estado);
-            })
-            ->when(! $hayFiltros, function ($query) {
-                $query->whereRaw('1 = 0');
-            });
+            ->when(
+                ! $esUsuarioDieselCop,
+                function ($query) use ($user) {
+                    $query->where(
+                        'licencias.empresa_id',
+                        $user->empresa_id
+                    );
+                }
+            )
+            ->when(
+                $soloEmpresasActivas,
+                function ($query) {
+                    $query->where(
+                        'empresas.estado',
+                        'activa'
+                    );
+                }
+            )
+            ->when(
+                $hayFiltros && filled($busqueda),
+                function ($query) use ($busqueda) {
+                    $query->where(
+                        function ($subQuery) use ($busqueda) {
+                            $subQuery
+                                ->where(
+                                    'unidades.placa',
+                                    'like',
+                                    '%' . $busqueda . '%'
+                                )
+                                ->orWhere(
+                                    'empresas.nombre_legal',
+                                    'like',
+                                    '%' . $busqueda . '%'
+                                )
+                                ->orWhere(
+                                    'empresas.nombre_comercial',
+                                    'like',
+                                    '%' . $busqueda . '%'
+                                );
+                        }
+                    );
+                }
+            )
+            ->when(
+                $hayFiltros && count($empresaIds) > 0,
+                function ($query) use ($empresaIds) {
+                    $query->whereIn(
+                        'licencias.empresa_id',
+                        $empresaIds
+                    );
+                }
+            )
+            ->when(
+                $hayFiltros && count($placas) > 0,
+                function ($query) use ($placas) {
+                    $query->whereIn(
+                        'unidades.placa',
+                        $placas
+                    );
+                }
+            )
+            ->when(
+                $hayFiltros
+                    && count($periodosVigenciaSeleccionados) > 0,
+                function ($query) use (
+                    $periodosVigenciaSeleccionados
+                ) {
+                    $query->whereIn(
+                        'licencias.periodo_vigencia_meses',
+                        $periodosVigenciaSeleccionados
+                    );
+                }
+            )
+            ->when(
+                $hayFiltros && filled($estado),
+                function ($query) use ($estado) {
+                    $query->where(
+                        'licencias.estado',
+                        $estado
+                    );
+                }
+            )
+            ->when(
+                ! $hayFiltros,
+                function ($query) {
+                    $query->whereRaw('1 = 0');
+                }
+            );
 
         $resumenLicencias = [
             'total' => $hayFiltros
-                ? (clone $licenciasQuery)->count('licencias.id')
+                ? (clone $licenciasQuery)
+                    ->count('licencias.id')
                 : $totalLicencias,
 
             'activas' => $hayFiltros
-                ? (clone $licenciasQuery)->where('licencias.estado', 'activa')->count('licencias.id')
+                ? (clone $licenciasQuery)
+                    ->where(
+                        'licencias.estado',
+                        'activa'
+                    )
+                    ->count('licencias.id')
                 : $totalActivas,
 
             'inactivas' => $hayFiltros
-                ? (clone $licenciasQuery)->where('licencias.estado', 'inactiva')->count('licencias.id')
+                ? (clone $licenciasQuery)
+                    ->where(
+                        'licencias.estado',
+                        'inactiva'
+                    )
+                    ->count('licencias.id')
                 : $totalInactivas,
+
+            'vigentes' => $hayFiltros
+                ? (clone $licenciasQuery)
+                    ->where(
+                        'licencias.estado',
+                        'activa'
+                    )
+                    ->whereDate(
+                        'licencias.fecha_activacion',
+                        '<=',
+                        $hoy
+                    )
+                    ->whereDate(
+                        'licencias.fecha_vencimiento',
+                        '>=',
+                        $hoy
+                    )
+                    ->count('licencias.id')
+                : $totalVigentes,
+
+            'pendientes_activacion' => $hayFiltros
+                ? (clone $licenciasQuery)
+                    ->where(
+                        'licencias.estado',
+                        'activa'
+                    )
+                    ->whereDate(
+                        'licencias.fecha_activacion',
+                        '>',
+                        $hoy
+                    )
+                    ->count('licencias.id')
+                : $totalPendientesActivacion,
+
+            'vencidas' => $hayFiltros
+                ? (clone $licenciasQuery)
+                    ->where(
+                        'licencias.estado',
+                        'activa'
+                    )
+                    ->whereDate(
+                        'licencias.fecha_vencimiento',
+                        '<',
+                        $hoy
+                    )
+                    ->count('licencias.id')
+                : $totalVencidas,
         ];
 
         $licencias = $licenciasQuery
@@ -216,14 +535,15 @@ class LicenciaController extends Controller
             'empresas' => $empresas,
 
             /*
-             * Variables múltiples para consulta.
+             * Variables múltiples.
              */
             'empresaIds' => $empresaIds,
             'placas' => $placas,
-            'periodosVigenciaSeleccionados' => $periodosVigenciaSeleccionados,
+            'periodosVigenciaSeleccionados' =>
+                $periodosVigenciaSeleccionados,
 
             /*
-             * Variables simples para administración y compatibilidad temporal.
+             * Variables simples.
              */
             'empresaId' => $empresaId,
             'placa' => $placa,
@@ -233,9 +553,15 @@ class LicenciaController extends Controller
             'placasSelector' => $placasSelector,
             'busqueda' => $busqueda,
             'hayFiltros' => $hayFiltros,
+
             'totalLicencias' => $totalLicencias,
             'totalActivas' => $totalActivas,
             'totalInactivas' => $totalInactivas,
+            'totalVigentes' => $totalVigentes,
+            'totalPendientesActivacion' =>
+                $totalPendientesActivacion,
+            'totalVencidas' => $totalVencidas,
+
             'resumenLicencias' => $resumenLicencias,
             'esUsuarioDieselCop' => $esUsuarioDieselCop,
             'periodosVigencia' => $this->periodosVigencia(),
@@ -244,9 +570,13 @@ class LicenciaController extends Controller
 
     /**
      * Formulario de creación de licencia.
+     *
+     * Disponible únicamente para Diesel Cop.
      */
     public function create(Request $request): View
     {
+        $this->autorizarAdministracionLicencias();
+
         $data = $this->prepararFormularioLicencia($request);
 
         return view('licencias.create', $data);
@@ -254,88 +584,140 @@ class LicenciaController extends Controller
 
     /**
      * Formulario de creación de licencia en ventana independiente.
+     *
+     * Disponible únicamente para Diesel Cop.
      */
     public function createVentana(Request $request): View
     {
+        $this->autorizarAdministracionLicencias();
+
         $data = $this->prepararFormularioLicencia($request);
 
         return view('licencias.create-ventana', $data);
     }
 
     /**
-     * Prepara catálogos para el formulario de licencia.
+     * Prepara empresas y unidades elegibles para una licencia nueva.
      */
-    private function prepararFormularioLicencia(Request $request): array
-    {
-        $user = Auth::user();
-        $esUsuarioDieselCop = is_null($user->empresa_id);
-
-        $empresaSeleccionadaId = $esUsuarioDieselCop
-            ? $request->input('empresa_id')
-            : $user->empresa_id;
+    private function prepararFormularioLicencia(
+        Request $request
+    ): array {
+        $empresaSeleccionadaId = $request->input(
+            'empresa_id'
+        );
 
         $empresas = Empresa::query()
-            ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
-                $query->where('id', $user->empresa_id);
-            })
-            ->where('estado', 'activa')
+            ->where(
+                'estado',
+                'activa'
+            )
             ->orderBy('nombre_comercial')
             ->orderBy('nombre_legal')
             ->get();
 
-        $empresaSeleccionadaValida = filled($empresaSeleccionadaId)
-            && $empresas->contains('id', (int) $empresaSeleccionadaId);
+        $empresaSeleccionadaValida =
+            filled($empresaSeleccionadaId)
+            && $empresas->contains(
+                'id',
+                (int) $empresaSeleccionadaId
+            );
 
         if (! $empresaSeleccionadaValida) {
             $empresaSeleccionadaId = null;
         }
 
         $unidades = Unidad::query()
-            ->with(['empresa', 'licencia'])
-            ->where('estado', 'registrada')
+            ->with([
+                'empresa',
+                'licencia',
+            ])
+            ->where(
+                'estado',
+                'registrada'
+            )
             ->whereDoesntHave('licencia')
-            ->when(filled($empresaSeleccionadaId), function ($query) use ($empresaSeleccionadaId) {
-                $query->where('empresa_id', $empresaSeleccionadaId);
-            })
-            ->when(! filled($empresaSeleccionadaId), function ($query) {
-                $query->whereRaw('1 = 0');
-            })
-            ->whereHas('empresa', function ($query) {
-                $query->where('estado', 'activa');
-            })
+            ->when(
+                filled($empresaSeleccionadaId),
+                function ($query) use (
+                    $empresaSeleccionadaId
+                ) {
+                    $query->where(
+                        'empresa_id',
+                        $empresaSeleccionadaId
+                    );
+                }
+            )
+            ->when(
+                ! filled($empresaSeleccionadaId),
+                function ($query) {
+                    $query->whereRaw('1 = 0');
+                }
+            )
+            ->whereHas(
+                'empresa',
+                function ($query) {
+                    $query->where(
+                        'estado',
+                        'activa'
+                    );
+                }
+            )
             ->orderBy('placa')
             ->get();
 
         return [
             'empresas' => $empresas,
             'unidades' => $unidades,
-            'empresaSeleccionadaId' => $empresaSeleccionadaId,
-            'esUsuarioDieselCop' => $esUsuarioDieselCop,
-            'periodosVigencia' => $this->periodosVigencia(),
+            'empresaSeleccionadaId' =>
+                $empresaSeleccionadaId,
+            'esUsuarioDieselCop' => true,
+            'periodosVigencia' =>
+                $this->periodosVigencia(),
         ];
     }
 
     /**
-     * Guarda una nueva licencia y genera los puntos de seguridad de la unidad.
+     * Guarda una nueva licencia y genera los puntos de seguridad iniciales.
+     *
+     * La unidad permanece en estado registrada hasta completar
+     * la asignación inicial de marchamos.
      */
     public function store(Request $request): RedirectResponse
     {
-        $user = Auth::user();
-        $esUsuarioDieselCop = is_null($user->empresa_id);
+        $this->autorizarAdministracionLicencias();
 
-        $validated = $request->validate($this->reglasValidacionCrearLicencia($request, $esUsuarioDieselCop));
+        $validated = $request->validate(
+            $this->reglasValidacionCrearLicencia($request)
+        );
 
         $unidad = Unidad::query()
-            ->with(['empresa', 'licencia', 'puntosSeguridad'])
-            ->findOrFail($validated['unidad_id']);
+            ->with([
+                'empresa',
+                'licencia',
+                'puntosSeguridad',
+            ])
+            ->findOrFail(
+                $validated['unidad_id']
+            );
 
-        $this->autorizarAccesoUnidad($unidad);
+        if (
+            (int) $unidad->empresa_id
+            !== (int) $validated['empresa_id']
+        ) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'unidad_id' =>
+                        'La unidad seleccionada no pertenece a la empresa indicada.',
+                ]);
+        }
 
         if ($unidad->licencia) {
             return back()
                 ->withInput()
                 ->withErrors([
-                    'unidad_id' => 'Esta unidad ya tiene una licencia registrada.',
+                    'unidad_id' =>
+                        'Esta unidad ya tiene una licencia registrada.',
                 ]);
         }
 
@@ -343,15 +725,20 @@ class LicenciaController extends Controller
             return back()
                 ->withInput()
                 ->withErrors([
-                    'unidad_id' => 'Solo se puede crear licencia para unidades registradas pendientes de configuración.',
+                    'unidad_id' =>
+                        'Solo se puede crear una licencia para unidades registradas pendientes de configuración.',
                 ]);
         }
 
-        if (! $unidad->empresa || $unidad->empresa->estado !== 'activa') {
+        if (
+            ! $unidad->empresa
+            || $unidad->empresa->estado !== 'activa'
+        ) {
             return back()
                 ->withInput()
                 ->withErrors([
-                    'unidad_id' => 'La empresa asociada a la unidad debe estar activa.',
+                    'unidad_id' =>
+                        'La empresa asociada a la unidad debe estar activa.',
                 ]);
         }
 
@@ -359,176 +746,332 @@ class LicenciaController extends Controller
             return back()
                 ->withInput()
                 ->withErrors([
-                    'unidad_id' => 'Esta unidad ya tiene puntos de seguridad generados.',
+                    'unidad_id' =>
+                        'Esta unidad ya tiene puntos de seguridad generados.',
                 ]);
         }
 
-        $fechaActivacion = Carbon::parse($validated['fecha_activacion']);
-        $periodoVigencia = (int) $validated['periodo_vigencia_meses'];
-        $plantilla = $this->plantillaDesdeTanquesProtegidos((int) $unidad->cantidad_tanques_con_licencia);
+        $fechaActivacion = Carbon::parse(
+            $validated['fecha_activacion']
+        )->startOfDay();
 
-        DB::transaction(function () use ($unidad, $user, $fechaActivacion, $periodoVigencia, $plantilla): void {
-            Licencia::create([
-                'empresa_id' => $unidad->empresa_id,
-                'unidad_id' => $unidad->id,
-                'periodo_vigencia_meses' => $periodoVigencia,
-                'fecha_activacion' => $fechaActivacion->toDateString(),
-                'fecha_vencimiento' => $fechaActivacion->copy()->addMonthsNoOverflow($periodoVigencia)->toDateString(),
-                'estado' => 'activa',
-                'plantilla_puntos_seguridad' => $plantilla,
-                'creado_por' => $user->id,
-                'actualizado_por' => $user->id,
-            ]);
+        $periodoVigencia = (int) $validated[
+            'periodo_vigencia_meses'
+        ];
 
-            foreach (PlantillasPuntosSeguridad::porPlantilla($plantilla) as $punto) {
-                PuntoSeguridadUnidad::create([
+        $plantilla = $this->plantillaDesdeTanquesProtegidos(
+            (int) $unidad->cantidad_tanques_con_licencia
+        );
+
+        $licencia = DB::transaction(
+            function () use (
+                $unidad,
+                $fechaActivacion,
+                $periodoVigencia,
+                $plantilla
+            ): Licencia {
+                $licenciaCreada = Licencia::create([
+                    'empresa_id' => $unidad->empresa_id,
                     'unidad_id' => $unidad->id,
-                    'orden' => $punto['orden_visual'] ?? $punto['orden'] ?? null,
-                    'codigo_punto' => $punto['codigo_punto'] ?? null,
-                    'grupo' => $punto['grupo'] ?? null,
-                    'subgrupo' => $punto['subgrupo'] ?? null,
-                    'nombre_punto' => $punto['nombre_punto'] ?? $punto['nombre'] ?? 'Punto sin nombre',
-                    'descripcion' => null,
-                    'posicion_tanque' => $punto['posicion_tanque'] ?? null,
-                    'tipo_punto' => $punto['tipo_punto'] ?? null,
-                    'requiere_marchamo' => (bool) ($punto['requiere_marchamo'] ?? true),
-                    'plantilla_origen' => $plantilla,
-                    'criterio_origen' => $punto['criterio_origen'] ?? null,
-                    'estado_asignacion' => 'pendiente',
-                    'marchamo_actual_id' => null,
-                    'estado' => 'activo',
-                    'creado_por' => $user->id,
-                    'actualizado_por' => $user->id,
+                    'periodo_vigencia_meses' =>
+                        $periodoVigencia,
+                    'fecha_activacion' =>
+                        $fechaActivacion->toDateString(),
+                    'fecha_vencimiento' =>
+                        $fechaActivacion
+                            ->copy()
+                            ->addMonthsNoOverflow(
+                                $periodoVigencia
+                            )
+                            ->toDateString(),
+                    'estado' => 'activa',
+                    'plantilla_puntos_seguridad' =>
+                        $plantilla,
+                    'creado_por' => Auth::id(),
+                    'actualizado_por' => Auth::id(),
                 ]);
-            }
-        });
 
-        if ($request->input('return_to') === 'ventana') {
+                foreach (
+                    PlantillasPuntosSeguridad::porPlantilla(
+                        $plantilla
+                    ) as $punto
+                ) {
+                    PuntoSeguridadUnidad::create([
+                        'unidad_id' => $unidad->id,
+                        'orden' =>
+                            $punto['orden_visual']
+                            ?? $punto['orden']
+                            ?? null,
+                        'codigo_punto' =>
+                            $punto['codigo_punto']
+                            ?? null,
+                        'grupo' =>
+                            $punto['grupo']
+                            ?? null,
+                        'subgrupo' =>
+                            $punto['subgrupo']
+                            ?? null,
+                        'nombre_punto' =>
+                            $punto['nombre_punto']
+                            ?? $punto['nombre']
+                            ?? 'Punto sin nombre',
+                        'descripcion' => null,
+                        'posicion_tanque' =>
+                            $punto['posicion_tanque']
+                            ?? null,
+                        'tipo_punto' =>
+                            $punto['tipo_punto']
+                            ?? null,
+                        'requiere_marchamo' =>
+                            (bool) (
+                                $punto['requiere_marchamo']
+                                ?? true
+                            ),
+                        'plantilla_origen' =>
+                            $plantilla,
+                        'criterio_origen' =>
+                            $punto['criterio_origen']
+                            ?? null,
+                        'estado_asignacion' =>
+                            'pendiente',
+                        'marchamo_actual_id' => null,
+                        'estado' => 'activo',
+                        'creado_por' => Auth::id(),
+                        'actualizado_por' => Auth::id(),
+                    ]);
+                }
+
+                return $licenciaCreada;
+            }
+        );
+
+        $queryParams = $this->parametrosRetorno($request);
+
+        if (
+            $request->input('return_to')
+            === 'ventana'
+        ) {
             return redirect()
-                ->route('licencias.consulta.ventana', ['consultar' => 1])
-                ->with('success', 'Licencia creada correctamente. Los puntos de seguridad fueron generados.');
+                ->route(
+                    'licencias.show.ventana',
+                    array_merge(
+                        $queryParams,
+                        [
+                            'licencia' => $licencia,
+                        ]
+                    )
+                )
+                ->with(
+                    'success',
+                    'Licencia creada correctamente. Los puntos de seguridad fueron generados.'
+                );
         }
 
         return redirect()
-            ->route('licencias.index', ['consultar' => 1])
-            ->with('success', 'Licencia creada correctamente. Los puntos de seguridad fueron generados.');
+            ->route(
+                'licencias.show',
+                array_merge(
+                    $queryParams,
+                    [
+                        'licencia' => $licencia,
+                    ]
+                )
+            )
+            ->with(
+                'success',
+                'Licencia creada correctamente. Los puntos de seguridad fueron generados.'
+            );
     }
 
     /**
      * Ficha administrativa de la licencia.
+     *
+     * Disponible únicamente para Diesel Cop.
      */
-    public function show(Licencia $licencia): View
-    {
-        $this->autorizarAccesoLicencia($licencia);
+    public function show(
+        Request $request,
+        Licencia $licencia
+    ): View {
+        $this->autorizarAdministracionLicencias();
         $this->validarEmpresaActivaLicencia($licencia);
 
-        $licencia->load([
-            'empresa',
-            'unidad.puntosSeguridad.marchamoActual',
-            'creadoPor',
-            'actualizadoPor',
-            'inactivadoPor',
-        ]);
+        $this->cargarRelacionesFicha($licencia);
 
-        return view('licencias.show', compact('licencia'));
+        return view(
+            'licencias.show',
+            compact('licencia')
+        );
     }
 
     /**
-     * Ficha administrativa de la licencia en ventana independiente.
+     * Ficha administrativa en ventana independiente.
+     *
+     * Disponible únicamente para Diesel Cop.
      */
-    public function showVentana(Licencia $licencia): View
-    {
-        $this->autorizarAccesoLicencia($licencia);
+    public function showVentana(
+        Request $request,
+        Licencia $licencia
+    ): View {
+        $this->autorizarAdministracionLicencias();
         $this->validarEmpresaActivaLicencia($licencia);
 
-        $licencia->load([
-            'empresa',
-            'unidad.puntosSeguridad.marchamoActual',
-            'creadoPor',
-            'actualizadoPor',
-            'inactivadoPor',
-        ]);
+        $this->cargarRelacionesFicha($licencia);
 
-        return view('licencias.show-ventana', compact('licencia'));
+        return view(
+            'licencias.show-ventana',
+            compact('licencia')
+        );
     }
 
     /**
-     * Formulario de edición de licencia.
+     * Formulario de edición.
+     *
+     * Solo puede editarse una licencia activa, no vencida
+     * y perteneciente a una empresa activa.
      */
-    public function edit(Licencia $licencia): View
-    {
-        $this->autorizarAccesoLicencia($licencia);
-        $this->validarEmpresaActivaLicencia($licencia);
+    public function edit(
+        Request $request,
+        Licencia $licencia
+    ): View {
+        $this->autorizarAdministracionLicencias();
+        $this->validarLicenciaEditable($licencia);
 
-        $licencia->load(['empresa', 'unidad']);
+        $licencia->load([
+            'empresa',
+            'unidad',
+        ]);
 
         return view('licencias.edit', [
             'licencia' => $licencia,
-            'periodosVigencia' => $this->periodosVigencia(),
+            'periodosVigencia' =>
+                $this->periodosVigencia(),
+            'esUsuarioDieselCop' => true,
         ]);
     }
 
     /**
-     * Formulario de edición de licencia en ventana independiente.
+     * Formulario de edición en ventana independiente.
      */
-    public function editVentana(Licencia $licencia): View
-    {
-        $this->autorizarAccesoLicencia($licencia);
-        $this->validarEmpresaActivaLicencia($licencia);
+    public function editVentana(
+        Request $request,
+        Licencia $licencia
+    ): View {
+        $this->autorizarAdministracionLicencias();
+        $this->validarLicenciaEditable($licencia);
 
-        $licencia->load(['empresa', 'unidad']);
+        $licencia->load([
+            'empresa',
+            'unidad',
+        ]);
 
         return view('licencias.edit-ventana', [
             'licencia' => $licencia,
-            'periodosVigencia' => $this->periodosVigencia(),
+            'periodosVigencia' =>
+                $this->periodosVigencia(),
+            'esUsuarioDieselCop' => true,
         ]);
     }
 
     /**
-     * Actualiza una licencia existente.
+     * Actualiza una licencia activa y no vencida.
      */
-    public function update(Request $request, Licencia $licencia): RedirectResponse
-    {
-        $this->autorizarAccesoLicencia($licencia);
-        $this->validarEmpresaActivaLicencia($licencia);
+    public function update(
+        Request $request,
+        Licencia $licencia
+    ): RedirectResponse {
+        $this->autorizarAdministracionLicencias();
+        $this->validarLicenciaEditable($licencia);
 
-        $validated = $request->validate($this->reglasValidacionActualizarLicencia());
+        $validated = $request->validate(
+            $this->reglasValidacionActualizarLicencia()
+        );
 
-        $fechaActivacion = Carbon::parse($validated['fecha_activacion']);
-        $periodoVigencia = (int) $validated['periodo_vigencia_meses'];
+        $fechaActivacion = Carbon::parse(
+            $validated['fecha_activacion']
+        )->startOfDay();
+
+        $periodoVigencia = (int) $validated[
+            'periodo_vigencia_meses'
+        ];
 
         $licencia->update([
-            'periodo_vigencia_meses' => $periodoVigencia,
-            'fecha_activacion' => $fechaActivacion->toDateString(),
-            'fecha_vencimiento' => $fechaActivacion->copy()->addMonthsNoOverflow($periodoVigencia)->toDateString(),
+            'periodo_vigencia_meses' =>
+                $periodoVigencia,
+            'fecha_activacion' =>
+                $fechaActivacion->toDateString(),
+            'fecha_vencimiento' =>
+                $fechaActivacion
+                    ->copy()
+                    ->addMonthsNoOverflow(
+                        $periodoVigencia
+                    )
+                    ->toDateString(),
             'actualizado_por' => Auth::id(),
         ]);
 
-        if ($request->input('return_to') === 'ventana') {
+        $queryParams = $this->parametrosRetorno($request);
+
+        if (
+            $request->input('return_to')
+            === 'ventana'
+        ) {
             return redirect()
-                ->route('licencias.show.ventana', $licencia)
-                ->with('success', 'Licencia actualizada correctamente.');
+                ->route(
+                    'licencias.show.ventana',
+                    array_merge(
+                        $queryParams,
+                        [
+                            'licencia' => $licencia,
+                        ]
+                    )
+                )
+                ->with(
+                    'success',
+                    'Licencia actualizada correctamente.'
+                );
         }
 
         return redirect()
-            ->route('licencias.show', $licencia)
-            ->with('success', 'Licencia actualizada correctamente.');
+            ->route(
+                'licencias.show',
+                array_merge(
+                    $queryParams,
+                    [
+                        'licencia' => $licencia,
+                    ]
+                )
+            )
+            ->with(
+                'success',
+                'Licencia actualizada correctamente.'
+            );
     }
 
     /**
-     * Inactiva una licencia sin eliminarla físicamente.
+     * Inactiva administrativamente una licencia.
      */
-    public function inactivar(Request $request, Licencia $licencia): RedirectResponse
-    {
-        $this->autorizarAccesoLicencia($licencia);
+    public function inactivar(
+        Request $request,
+        Licencia $licencia
+    ): RedirectResponse {
+        $this->autorizarAdministracionLicencias();
         $this->validarEmpresaActivaLicencia($licencia);
+
+        if ($licencia->estado === 'inactiva') {
+            return back()->withErrors([
+                'motivo_inactivacion' =>
+                    'La licencia ya se encuentra inactiva.',
+            ]);
+        }
 
         $validated = $request->validate([
             'motivo_inactivacion' => [
                 'required',
                 'string',
                 'max:150',
-                Rule::in($this->motivosInactivacion()),
+                Rule::in(
+                    $this->motivosInactivacion()
+                ),
             ],
         ]);
 
@@ -536,34 +1079,81 @@ class LicenciaController extends Controller
             'estado' => 'inactiva',
             'fecha_inactivacion' => now(),
             'inactivado_por' => Auth::id(),
-            'motivo_inactivacion' => $validated['motivo_inactivacion'],
+            'motivo_inactivacion' =>
+                $validated['motivo_inactivacion'],
             'actualizado_por' => Auth::id(),
         ]);
 
-        if ($request->input('return_to') === 'ventana') {
+        $queryParams = $this->parametrosRetorno($request);
+
+        if (
+            $request->input('return_to')
+            === 'ventana'
+        ) {
             return redirect()
-                ->route('licencias.show.ventana', $licencia)
-                ->with('success', 'Licencia inactivada correctamente.');
+                ->route(
+                    'licencias.show.ventana',
+                    array_merge(
+                        $queryParams,
+                        [
+                            'licencia' => $licencia,
+                        ]
+                    )
+                )
+                ->with(
+                    'success',
+                    'Licencia inactivada correctamente. La unidad quedó bloqueada operativamente.'
+                );
         }
 
         return redirect()
-            ->route('licencias.show', $licencia)
-            ->with('success', 'Licencia inactivada correctamente.');
+            ->route(
+                'licencias.show',
+                array_merge(
+                    $queryParams,
+                    [
+                        'licencia' => $licencia,
+                    ]
+                )
+            )
+            ->with(
+                'success',
+                'Licencia inactivada correctamente. La unidad quedó bloqueada operativamente.'
+            );
     }
 
     /**
-     * Reactiva una licencia previamente inactivada.
+     * Reactiva una licencia inactiva o renueva una licencia vencida.
+     *
+     * No modifica el estado administrativo de la unidad
+     * ni regenera puntos de seguridad.
      */
-    public function reactivar(Request $request, Licencia $licencia): RedirectResponse
-    {
-        $this->autorizarAccesoLicencia($licencia);
+    public function reactivar(
+        Request $request,
+        Licencia $licencia
+    ): RedirectResponse {
+        $this->autorizarAdministracionLicencias();
         $this->validarEmpresaActivaLicencia($licencia);
+
+        if (
+            $licencia->estado === 'activa'
+            && ! $this->licenciaEstaVencida($licencia)
+        ) {
+            return back()->withErrors([
+                'fecha_activacion' =>
+                    'La licencia se encuentra activa y no está vencida.',
+            ]);
+        }
 
         $validated = $request->validate([
             'periodo_vigencia_meses' => [
                 'required',
                 'integer',
-                Rule::in(array_keys($this->periodosVigencia())),
+                Rule::in(
+                    array_keys(
+                        $this->periodosVigencia()
+                    )
+                ),
             ],
             'fecha_activacion' => [
                 'required',
@@ -571,13 +1161,26 @@ class LicenciaController extends Controller
             ],
         ]);
 
-        $fechaActivacion = Carbon::parse($validated['fecha_activacion']);
-        $periodoVigencia = (int) $validated['periodo_vigencia_meses'];
+        $fechaActivacion = Carbon::parse(
+            $validated['fecha_activacion']
+        )->startOfDay();
+
+        $periodoVigencia = (int) $validated[
+            'periodo_vigencia_meses'
+        ];
 
         $licencia->update([
-            'periodo_vigencia_meses' => $periodoVigencia,
-            'fecha_activacion' => $fechaActivacion->toDateString(),
-            'fecha_vencimiento' => $fechaActivacion->copy()->addMonthsNoOverflow($periodoVigencia)->toDateString(),
+            'periodo_vigencia_meses' =>
+                $periodoVigencia,
+            'fecha_activacion' =>
+                $fechaActivacion->toDateString(),
+            'fecha_vencimiento' =>
+                $fechaActivacion
+                    ->copy()
+                    ->addMonthsNoOverflow(
+                        $periodoVigencia
+                    )
+                    ->toDateString(),
             'estado' => 'activa',
             'fecha_inactivacion' => null,
             'inactivado_por' => null,
@@ -585,44 +1188,94 @@ class LicenciaController extends Controller
             'actualizado_por' => Auth::id(),
         ]);
 
-        if ($request->input('return_to') === 'ventana') {
+        $queryParams = $this->parametrosRetorno($request);
+
+        if (
+            $request->input('return_to')
+            === 'ventana'
+        ) {
             return redirect()
-                ->route('licencias.show.ventana', $licencia)
-                ->with('success', 'Licencia reactivada correctamente.');
+                ->route(
+                    'licencias.show.ventana',
+                    array_merge(
+                        $queryParams,
+                        [
+                            'licencia' => $licencia,
+                        ]
+                    )
+                )
+                ->with(
+                    'success',
+                    'Licencia reactivada o renovada correctamente.'
+                );
         }
 
         return redirect()
-            ->route('licencias.show', $licencia)
-            ->with('success', 'Licencia reactivada correctamente.');
+            ->route(
+                'licencias.show',
+                array_merge(
+                    $queryParams,
+                    [
+                        'licencia' => $licencia,
+                    ]
+                )
+            )
+            ->with(
+                'success',
+                'Licencia reactivada o renovada correctamente.'
+            );
     }
 
     /**
-     * Reglas de validación para crear licencia.
+     * Reglas para crear una licencia.
      */
-    private function reglasValidacionCrearLicencia(Request $request, bool $esUsuarioDieselCop): array
-    {
-        $empresaId = $esUsuarioDieselCop
-            ? $request->input('empresa_id')
-            : Auth::user()->empresa_id;
+    private function reglasValidacionCrearLicencia(
+        Request $request
+    ): array {
+        $empresaId = $request->input(
+            'empresa_id'
+        );
 
         return [
             'empresa_id' => [
-                $esUsuarioDieselCop ? 'required' : 'nullable',
+                'required',
                 'integer',
-                Rule::exists('empresas', 'id')->where('estado', 'activa'),
+                Rule::exists(
+                    'empresas',
+                    'id'
+                )->where(
+                    'estado',
+                    'activa'
+                ),
             ],
             'unidad_id' => [
                 'required',
                 'integer',
-                Rule::exists('unidades', 'id')
-                    ->where('empresa_id', $empresaId)
-                    ->where('estado', 'registrada'),
-                Rule::unique('licencias', 'unidad_id'),
+                Rule::exists(
+                    'unidades',
+                    'id'
+                )
+                    ->where(
+                        'empresa_id',
+                        $empresaId
+                    )
+                    ->where(
+                        'estado',
+                        'registrada'
+                    ),
+                Rule::unique(
+                    'licencias',
+                    'unidad_id'
+                ),
             ],
             'periodo_vigencia_meses' => [
                 'required',
                 'integer',
-                Rule::in(array_keys($this->periodosVigencia())),
+                Rule::in(
+                    array_keys(
+                        $this->periodosVigencia()
+                    )
+                ),
             ],
             'fecha_activacion' => [
                 'required',
@@ -632,7 +1285,7 @@ class LicenciaController extends Controller
     }
 
     /**
-     * Reglas de validación para actualizar licencia.
+     * Reglas para actualizar una licencia.
      */
     private function reglasValidacionActualizarLicencia(): array
     {
@@ -640,7 +1293,11 @@ class LicenciaController extends Controller
             'periodo_vigencia_meses' => [
                 'required',
                 'integer',
-                Rule::in(array_keys($this->periodosVigencia())),
+                Rule::in(
+                    array_keys(
+                        $this->periodosVigencia()
+                    )
+                ),
             ],
             'fecha_activacion' => [
                 'required',
@@ -650,7 +1307,7 @@ class LicenciaController extends Controller
     }
 
     /**
-     * Catálogo fijo de períodos de vigencia.
+     * Períodos permitidos.
      */
     private function periodosVigencia(): array
     {
@@ -662,7 +1319,7 @@ class LicenciaController extends Controller
     }
 
     /**
-     * Catálogo fijo de motivos de inactivación.
+     * Motivos manuales permitidos para inactivación.
      */
     private function motivosInactivacion(): array
     {
@@ -672,58 +1329,159 @@ class LicenciaController extends Controller
             'Solicitud administrativa',
             'Cambio operativo',
             'Unidad fuera de servicio',
-            'Empresa inactiva',
             'Corrección de registro',
-            'Otro',
         ];
     }
 
     /**
-     * Determina la plantilla de puntos de seguridad según tanques protegidos.
+     * Determina la plantilla por cantidad de tanques protegidos.
      */
-    private function plantillaDesdeTanquesProtegidos(int $cantidadTanquesProtegidos): string
-    {
+    private function plantillaDesdeTanquesProtegidos(
+        int $cantidadTanquesProtegidos
+    ): string {
         return match ($cantidadTanquesProtegidos) {
             1 => 'plantilla_1_tanque',
             2 => 'plantilla_2_tanques',
             3 => 'plantilla_3_tanques',
-            default => abort(422, 'La cantidad de tanques protegidos debe ser 1, 2 o 3.'),
+            default => abort(
+                422,
+                'La cantidad de tanques protegidos debe ser 1, 2 o 3.'
+            ),
         };
     }
 
     /**
-     * Control básico de acceso multiempresa para licencia.
+     * Restringe operaciones administrativas a Diesel Cop.
      */
-    private function autorizarAccesoLicencia(Licencia $licencia): void
+    private function autorizarAdministracionLicencias(): void
     {
-        $user = Auth::user();
-
-        if (! is_null($user->empresa_id) && (int) $licencia->empresa_id !== (int) $user->empresa_id) {
-            abort(403, 'No tiene autorización para acceder a esta licencia.');
+        if (! $this->esUsuarioDieselCop()) {
+            abort(
+                403,
+                'La administración de licencias está disponible únicamente para Diesel Cop. Contacte a su punto de contacto para solicitar cambios.'
+            );
         }
     }
 
     /**
-     * Control básico de acceso multiempresa para unidad.
+     * Determina si el usuario autenticado pertenece a Diesel Cop.
      */
-    private function autorizarAccesoUnidad(Unidad $unidad): void
+    private function esUsuarioDieselCop(): bool
     {
-        $user = Auth::user();
+        return is_null(
+            Auth::user()->empresa_id
+        );
+    }
 
-        if (! is_null($user->empresa_id) && (int) $unidad->empresa_id !== (int) $user->empresa_id) {
-            abort(403, 'No tiene autorización para acceder a esta unidad.');
+    /**
+     * Bloquea operaciones cuando la empresa está inactiva.
+     */
+    private function validarEmpresaActivaLicencia(
+        Licencia $licencia
+    ): void {
+        $licencia->loadMissing([
+            'empresa',
+            'unidad',
+        ]);
+
+        if (
+            ! $licencia->empresa
+            || $licencia->empresa->estado !== 'activa'
+        ) {
+            abort(
+                403,
+                'No se puede administrar esta licencia porque la empresa está inactiva.'
+            );
+        }
+
+        if (! $licencia->unidad) {
+            abort(
+                422,
+                'La licencia no tiene una unidad válida asociada.'
+            );
+        }
+
+        if (
+            (int) $licencia->empresa_id
+            !== (int) $licencia->unidad->empresa_id
+        ) {
+            abort(
+                422,
+                'La empresa de la licencia no coincide con la empresa propietaria de la unidad.'
+            );
         }
     }
 
     /**
-     * Bloquea operaciones administrativas sobre licencias de empresas inactivas.
+     * Valida que una licencia pueda editarse.
      */
-    private function validarEmpresaActivaLicencia(Licencia $licencia): void
-    {
-        $licencia->loadMissing('empresa');
+    private function validarLicenciaEditable(
+        Licencia $licencia
+    ): void {
+        $this->validarEmpresaActivaLicencia(
+            $licencia
+        );
 
-        if (! $licencia->empresa || $licencia->empresa->estado !== 'activa') {
-            abort(403, 'No se puede operar sobre esta licencia porque la empresa está inactiva.');
+        if ($licencia->estado !== 'activa') {
+            abort(
+                403,
+                'La licencia está inactiva y no puede editarse. Debe reactivarse desde su ficha.'
+            );
         }
+
+        if ($this->licenciaEstaVencida($licencia)) {
+            abort(
+                403,
+                'La licencia está vencida y no puede editarse. Debe renovarse desde su ficha.'
+            );
+        }
+    }
+
+    /**
+     * Determina si la licencia venció.
+     *
+     * El día de vencimiento todavía se considera vigente.
+     */
+    private function licenciaEstaVencida(
+        Licencia $licencia
+    ): bool {
+        if (! $licencia->fecha_vencimiento) {
+            return true;
+        }
+
+        return $licencia
+            ->fecha_vencimiento
+            ->startOfDay()
+            ->lt(
+                now()->startOfDay()
+            );
+    }
+
+    /**
+     * Carga las relaciones requeridas en la ficha.
+     */
+    private function cargarRelacionesFicha(
+        Licencia $licencia
+    ): void {
+        $licencia->load([
+            'empresa',
+            'unidad.puntosSeguridad.marchamoActual',
+            'creadoPor',
+            'actualizadoPor',
+            'inactivadoPor',
+        ]);
+    }
+
+    /**
+     * Conserva parámetros de navegación y filtros.
+     */
+    private function parametrosRetorno(
+        Request $request
+    ): array {
+        return collect($request->query())
+            ->except([
+                'licencia',
+            ])
+            ->all();
     }
 }
