@@ -22,10 +22,6 @@
                             Abrir en nueva pestaña
                         </a>
 
-                        <a href="{{ route('empresas.index', $queryParams) }}"
-                           class="cc-btn-secondary cc-btn-wide">
-                            Ir a consulta
-                        </a>
                     </div>
                 </div>
 

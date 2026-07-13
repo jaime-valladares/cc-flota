@@ -34,40 +34,79 @@ class PuntoSeguridadUnidad extends Model
 {
     protected $table = 'puntos_seguridad_unidad';
 
+    /*
+    |--------------------------------------------------------------------------
+    | Relaciones
+    |--------------------------------------------------------------------------
+    */
+
     public function unidad(): BelongsTo
     {
-        return $this->belongsTo(Unidad::class, 'unidad_id');
+        return $this->belongsTo(
+            Unidad::class,
+            'unidad_id'
+        );
     }
 
+    /**
+     * Marchamo que actualmente cubre este punto.
+     *
+     * Durante la asignación inicial puede representar un avance provisional.
+     * Después de finalizar la asignación representa el marchamo oficial actual.
+     */
     public function marchamoActual(): BelongsTo
     {
-        return $this->belongsTo(Marchamo::class, 'marchamo_actual_id');
+        return $this->belongsTo(
+            Marchamo::class,
+            'marchamo_actual_id'
+        );
     }
 
+    /**
+     * Historial completo de marchamos asociados al punto.
+     */
     public function marchamos(): HasMany
     {
-        return $this->hasMany(Marchamo::class, 'punto_seguridad_id');
+        return $this->hasMany(
+            Marchamo::class,
+            'punto_seguridad_id'
+        )->orderByDesc('fecha_activacion');
     }
 
     public function creadoPor(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'creado_por');
+        return $this->belongsTo(
+            User::class,
+            'creado_por'
+        );
     }
 
     public function actualizadoPor(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'actualizado_por');
+        return $this->belongsTo(
+            User::class,
+            'actualizado_por'
+        );
     }
 
     public function inactivadoPor(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'inactivado_por');
+        return $this->belongsTo(
+            User::class,
+            'inactivado_por'
+        );
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Textos legibles
+    |--------------------------------------------------------------------------
+    */
 
     protected function estadoTexto(): Attribute
     {
         return Attribute::make(
-            get: fn () => match ($this->estado) {
+            get: fn (): string => match ($this->estado) {
                 'activo' => 'Activo',
                 'inactivo' => 'Inactivo',
                 default => 'No definido',
@@ -78,7 +117,7 @@ class PuntoSeguridadUnidad extends Model
     protected function estadoAsignacionTexto(): Attribute
     {
         return Attribute::make(
-            get: fn () => match ($this->estado_asignacion) {
+            get: fn (): string => match ($this->estado_asignacion) {
                 'pendiente' => 'Pendiente',
                 'asignado' => 'Asignado',
                 'corregido' => 'Corregido',
@@ -90,21 +129,151 @@ class PuntoSeguridadUnidad extends Model
     protected function plantillaOrigenTexto(): Attribute
     {
         return Attribute::make(
-            get: fn () => match ($this->plantilla_origen) {
-                'plantilla_1_tanque' => 'Plantilla 1 tanque',
-                'plantilla_2_tanques' => 'Plantilla 2 tanques',
-                'plantilla_3_tanques' => 'Plantilla 3 tanques',
-                default => 'No definida',
+            get: fn (): string => match ($this->plantilla_origen) {
+                'plantilla_1_tanque' =>
+                    'Plantilla 1 tanque',
+
+                'plantilla_2_tanques' =>
+                    'Plantilla 2 tanques',
+
+                'plantilla_3_tanques' =>
+                    'Plantilla 3 tanques',
+
+                default =>
+                    'No definida',
             }
         );
     }
 
+    /**
+     * Estado físico resumido del punto.
+     *
+     * No determina por sí solo que la unidad sea operable. La empresa,
+     * la unidad y la licencia también deben estar habilitadas.
+     */
+    protected function coberturaTexto(): Attribute
+    {
+        return Attribute::make(
+            get: function (): string {
+                if ($this->estado !== 'activo') {
+                    return 'Punto inactivo';
+                }
+
+                if (! $this->requiere_marchamo) {
+                    return 'No requiere marchamo';
+                }
+
+                if (is_null($this->marchamo_actual_id)) {
+                    return 'Pendiente de marchamo';
+                }
+
+                return 'Marchamo asignado';
+            }
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Indicadores funcionales
+    |--------------------------------------------------------------------------
+    */
+
+    protected function estaActivo(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): bool =>
+                $this->estado === 'activo'
+        );
+    }
+
+    protected function estaInactivo(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): bool =>
+                $this->estado === 'inactivo'
+        );
+    }
+
+    protected function tieneMarchamoActual(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): bool =>
+                ! is_null($this->marchamo_actual_id)
+        );
+    }
+
+    protected function estaPendienteAsignacion(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): bool =>
+                $this->estado === 'activo'
+                && $this->requiere_marchamo
+                && is_null($this->marchamo_actual_id)
+        );
+    }
+
+    protected function estaAsignado(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): bool =>
+                $this->estado === 'activo'
+                && $this->requiere_marchamo
+                && ! is_null($this->marchamo_actual_id)
+                && in_array(
+                    $this->estado_asignacion,
+                    [
+                        'asignado',
+                        'corregido',
+                    ],
+                    true
+                )
+        );
+    }
+
+    /**
+     * Indica que el punto posee cobertura física registrada.
+     *
+     * No significa que pueda reemplazarse. La elegibilidad de reemplazo
+     * también depende de empresa activa, unidad activa, licencia vigente
+     * y cobertura completa de todos los puntos.
+     */
+    protected function tieneCoberturaActual(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): bool =>
+                $this->estado === 'activo'
+                && $this->requiere_marchamo
+                && ! is_null($this->marchamo_actual_id)
+        );
+    }
+
+    protected function requiereAsignacion(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): bool =>
+                $this->estado === 'activo'
+                && $this->requiere_marchamo
+                && is_null($this->marchamo_actual_id)
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Conversiones
+    |--------------------------------------------------------------------------
+    */
+
     protected function casts(): array
     {
         return [
-            'orden' => 'integer',
-            'requiere_marchamo' => 'boolean',
-            'fecha_inactivacion' => 'datetime',
+            'orden' =>
+                'integer',
+
+            'requiere_marchamo' =>
+                'boolean',
+
+            'fecha_inactivacion' =>
+                'datetime',
         ];
     }
 }

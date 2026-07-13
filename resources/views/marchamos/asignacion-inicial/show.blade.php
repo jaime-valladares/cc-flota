@@ -3,29 +3,53 @@
         <div class="cc-content-container" style="max-width: 80rem;">
             <div class="cc-card">
 
+                @php
+                    $rutaVolverAsignacion = route(
+                        'marchamos.asignacion-inicial.index',
+                        [
+                            'empresa_ids' => [
+                                $unidad->empresa_id,
+                            ],
+                            'placas' => [
+                                $unidad->placa,
+                            ],
+                            'consultar' => 1,
+                        ]
+                    );
+
+                    $asignacionCompleta =
+                        $totalPuntos > 0
+                        && $puntosPendientes === 0;
+                @endphp
+
                 <div class="cc-card-header cc-card-header-compact">
                     <div>
                         <h3 class="cc-title cc-title-compact">
                             Asignación inicial de marchamos
                         </h3>
+
                         <p class="cc-subtitle cc-subtitle-compact">
-                            Registre, revise o corrija los marchamos físicos instalados en cada punto de seguridad de la unidad.
+                            Registre o corrija los códigos instalados antes de finalizar oficialmente la asignación.
                         </p>
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <a href="{{ route('marchamos.asignacion-inicial.show.ventana', $unidad) }}"
-                           target="_blank"
-                           rel="noopener noreferrer"
-                           class="cc-btn-secondary cc-btn-wide">
+                        <a
+                            href="{{ route(
+                                'marchamos.asignacion-inicial.show.ventana',
+                                $unidad
+                            ) }}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="cc-btn-secondary cc-btn-wide"
+                        >
                             Abrir en nueva pestaña
                         </a>
 
-                        <a href="{{ route('marchamos.asignacion-inicial.index', [
-                            'empresa_id' => $unidad->empresa_id,
-                            'unidad_id' => $unidad->id,
-                            'consultar' => 1,
-                        ]) }}" class="cc-btn-secondary cc-btn-wide">
+                        <a
+                            href="{{ $rutaVolverAsignacion }}"
+                            class="cc-btn-secondary cc-btn-wide"
+                        >
                             Volver a asignación
                         </a>
                     </div>
@@ -45,7 +69,9 @@
 
                         <ul class="mt-2 list-disc list-inside">
                             @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
+                                <li>
+                                    {{ $error }}
+                                </li>
                             @endforeach
                         </ul>
                     </div>
@@ -67,56 +93,42 @@
                                 {{ $unidad->marca ?: 'Sin marca registrada' }}
                             </span>
 
-                            @if ($unidad->empresa)
-                                <span>
-                                    <strong>Empresa:</strong>
+                            <span>
+                                <strong>Empresa:</strong>
+
+                                @if ($unidad->empresa)
                                     {{ $unidad->empresa->nombre_comercial ?: $unidad->empresa->nombre_legal }}
-                                </span>
-                            @else
-                                <span>
-                                    <strong>Empresa:</strong>
+                                @else
                                     Sin empresa
-                                </span>
-                            @endif
+                                @endif
+                            </span>
 
-                            @if ($unidad->licencia)
-                                <span>
-                                    <strong>Licencia:</strong>
+                            <span>
+                                <strong>Licencia:</strong>
+
+                                @if ($unidad->licencia)
                                     {{ $unidad->licencia->periodo_vigencia_texto }}
-                                </span>
-
-                                <span>
-                                    <strong>Plantilla:</strong>
-                                    {{ $unidad->licencia->plantilla_puntos_seguridad_texto }}
-                                </span>
-                            @else
-                                <span>
-                                    <strong>Licencia:</strong>
+                                @else
                                     Sin licencia
-                                </span>
+                                @endif
+                            </span>
 
-                                <span>
-                                    <strong>Plantilla:</strong>
+                            <span>
+                                <strong>Plantilla:</strong>
+
+                                @if ($unidad->licencia)
+                                    {{ $unidad->licencia->plantilla_puntos_seguridad_texto }}
+                                @else
                                     Sin plantilla
-                                </span>
-                            @endif
+                                @endif
+                            </span>
                         </div>
                     </div>
 
                     <div class="cc-profile-status">
-                        @if ($unidad->estado === 'registrada')
-                            <span class="cc-badge cc-badge-warning">
-                                Registrada
-                            </span>
-                        @elseif ($unidad->estado === 'activa')
-                            <span class="cc-badge cc-badge-active">
-                                Activa
-                            </span>
-                        @else
-                            <span class="cc-badge cc-badge-inactive">
-                                Inactiva
-                            </span>
-                        @endif
+                        <span class="cc-badge cc-badge-warning">
+                            Registrada
+                        </span>
                     </div>
                 </div>
 
@@ -125,8 +137,9 @@
                         <h5>
                             Avance de asignación
                         </h5>
+
                         <p>
-                            Estado actual de la instalación física de marchamos en los puntos de seguridad.
+                            Los códigos guardados permanecen como avances provisionales hasta que la asignación inicial sea finalizada.
                         </p>
                     </div>
 
@@ -135,6 +148,7 @@
                             <span class="cc-summary-strip-label">
                                 Avance
                             </span>
+
                             <span class="cc-summary-strip-value">
                                 {{ $porcentajeAvance }}%
                             </span>
@@ -144,6 +158,7 @@
                             <span class="cc-summary-strip-label">
                                 Total puntos
                             </span>
+
                             <span class="cc-summary-strip-value">
                                 {{ $totalPuntos }}
                             </span>
@@ -153,6 +168,7 @@
                             <span class="cc-summary-strip-label">
                                 Asignados
                             </span>
+
                             <span class="cc-summary-strip-value">
                                 {{ $puntosAsignados }}
                             </span>
@@ -162,6 +178,7 @@
                             <span class="cc-summary-strip-label">
                                 Pendientes
                             </span>
+
                             <span class="cc-summary-strip-value">
                                 {{ $puntosPendientes }}
                             </span>
@@ -174,48 +191,81 @@
                         <h5>
                             Registro de marchamos
                         </h5>
+
                         <p>
-                            Puede guardar avances parciales o corregir códigos antes de finalizar. Los códigos deben tener exactamente 7 dígitos, conservando ceros a la izquierda.
+                            Ingrese códigos de exactamente 7 dígitos. Puede guardar avances parciales y corregirlos antes de finalizar.
                         </p>
                     </div>
 
-                    <form method="POST" action="{{ route('marchamos.asignacion-inicial.guardar-avance', $unidad) }}">
+                    <form
+                        method="POST"
+                        action="{{ route(
+                            'marchamos.asignacion-inicial.guardar-avance',
+                            $unidad
+                        ) }}"
+                    >
                         @csrf
 
                         <div class="cc-table-adaptive-wrapper">
-                            <table class="cc-table-adaptive" style="min-width: 73rem;">
+                            <table
+                                class="cc-table-adaptive"
+                                style="min-width: 73rem;"
+                            >
                                 <thead>
                                     <tr>
-                                        <th class="cc-table-adaptive-nowrap" style="width: 7rem;">
+                                        <th
+                                            class="cc-table-adaptive-nowrap"
+                                            style="width: 7rem;"
+                                        >
                                             Orden
                                         </th>
 
-                                        <th class="cc-table-adaptive-nowrap" style="width: 26rem;">
+                                        <th
+                                            class="cc-table-adaptive-nowrap"
+                                            style="width: 27rem;"
+                                        >
                                             Punto de seguridad
                                         </th>
 
-                                        <th class="cc-table-adaptive-nowrap" style="width: 11rem;">
+                                        <th
+                                            class="cc-table-adaptive-nowrap"
+                                            style="width: 11rem;"
+                                        >
                                             Código punto
                                         </th>
 
-                                        <th class="cc-table-adaptive-nowrap" style="width: 11rem;">
+                                        <th
+                                            class="cc-table-adaptive-nowrap"
+                                            style="width: 11rem;"
+                                        >
                                             Posición
                                         </th>
 
-                                        <th class="cc-table-adaptive-nowrap" style="width: 11rem;">
+                                        <th
+                                            class="cc-table-adaptive-nowrap"
+                                            style="width: 11rem;"
+                                        >
                                             Estado
                                         </th>
 
-                                        <th class="cc-table-adaptive-nowrap" style="width: 12rem;">
+                                        <th
+                                            class="cc-table-adaptive-nowrap"
+                                            style="width: 14rem;"
+                                        >
                                             Marchamo
                                         </th>
                                     </tr>
                                 </thead>
 
                                 <tbody>
-                                    @foreach ($unidad->puntosSeguridad as $punto)
+                                    @forelse ($unidad->puntosSeguridad as $punto)
                                         @php
-                                            $codigoActual = $punto->marchamoActual?->codigo_marchamo;
+                                            $codigoActual =
+                                                $punto->marchamoActual
+                                                    ?->codigo_marchamo;
+
+                                            $tieneCodigo =
+                                                filled($codigoActual);
                                         @endphp
 
                                         <tr>
@@ -232,7 +282,7 @@
 
                                                 @if ($punto->grupo || $punto->subgrupo)
                                                     <div class="cc-table-adaptive-muted">
-                                                        {{ $punto->grupo }}
+                                                        {{ $punto->grupo ?: 'Sin grupo' }}
 
                                                         @if ($punto->subgrupo)
                                                             · {{ $punto->subgrupo }}
@@ -250,7 +300,7 @@
                                             </td>
 
                                             <td class="cc-table-adaptive-nowrap">
-                                                @if ($codigoActual)
+                                                @if ($tieneCodigo)
                                                     <span class="cc-badge cc-badge-active">
                                                         Asignado
                                                     </span>
@@ -265,31 +315,46 @@
                                                 <input
                                                     type="text"
                                                     name="marchamos[{{ $punto->id }}]"
-                                                    value="{{ old('marchamos.' . $punto->id, $codigoActual) }}"
+                                                    value="{{ old(
+                                                        'marchamos.' . $punto->id,
+                                                        $codigoActual
+                                                    ) }}"
                                                     class="cc-input"
                                                     placeholder="0006387"
                                                     maxlength="7"
                                                     inputmode="numeric"
-                                                    pattern="\d{7}">
+                                                    pattern="\d{7}"
+                                                    autocomplete="off"
+                                                >
 
-                                                @if ($codigoActual)
-                                                    <div class="cc-table-adaptive-muted mt-1">
-                                                        Código editable
-                                                    </div>
-                                                @else
-                                                    <div class="cc-table-adaptive-muted mt-1">
-                                                        Pendiente
-                                                    </div>
-                                                @endif
+                                                <div class="cc-table-adaptive-muted mt-1">
+                                                    @if ($tieneCodigo)
+                                                        Código provisional editable
+                                                    @else
+                                                        Pendiente de registro
+                                                    @endif
+                                                </div>
                                             </td>
                                         </tr>
-                                    @endforeach
+                                    @empty
+                                        <tr>
+                                            <td
+                                                colspan="6"
+                                                class="text-center text-[var(--cc-text-muted)] py-8"
+                                            >
+                                                La unidad no tiene puntos de seguridad disponibles para asignación.
+                                            </td>
+                                        </tr>
+                                    @endforelse
                                 </tbody>
                             </table>
                         </div>
 
                         <div class="cc-actions cc-actions-compact mt-6 mb-6">
-                            <button type="submit" class="cc-btn-primary cc-btn-form-action">
+                            <button
+                                type="submit"
+                                class="cc-btn-primary cc-btn-form-action"
+                            >
                                 Guardar avance
                             </button>
                         </div>
@@ -302,29 +367,50 @@
                             Finalización de asignación inicial
                         </h5>
 
-                        @if ($puntosPendientes > 0)
+                        @if ($asignacionCompleta)
                             <p>
-                                La unidad aún tiene puntos pendientes. Para finalizar, todos los puntos activos deben tener un marchamo asignado.
+                                Todos los puntos tienen un marchamo provisional asignado. Puede finalizar para hacer oficial la cobertura y activar la unidad.
                             </p>
                         @else
                             <p>
-                                Todos los puntos de seguridad tienen marchamo asignado. Puede finalizar la asignación inicial para activar la unidad.
+                                La asignación todavía no puede finalizarse. Todos los puntos activos que requieren marchamo deben estar completos.
                             </p>
                         @endif
                     </div>
 
                     <div class="flex flex-col gap-4 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
-                        <p class="text-sm text-[var(--cc-text-muted)] leading-relaxed">
-                            Esta acción cambia la unidad de Registrada a Activa. Debe usarse únicamente cuando la instalación física esté completa.
-                        </p>
+                        <div>
+                            <p class="text-sm text-[var(--cc-text-muted)] leading-relaxed">
+                                Al finalizar, los marchamos pasan a formar parte oficial de la unidad y esta cambia de Registrada a Activa.
+                            </p>
 
-                        <form method="POST"
-                              action="{{ route('marchamos.asignacion-inicial.finalizar', $unidad) }}"
-                              onsubmit="return confirm('¿Está seguro de finalizar la asignación inicial? La unidad pasará a estado activa.');">
+                            @if (! $asignacionCompleta)
+                                <p class="mt-2 text-sm font-semibold text-[var(--cc-danger)]">
+                                    Faltan {{ $puntosPendientes }} puntos por completar.
+                                </p>
+                            @endif
+                        </div>
+
+                        <form
+                            method="POST"
+                            action="{{ route(
+                                'marchamos.asignacion-inicial.finalizar',
+                                $unidad
+                            ) }}"
+                            onsubmit="return confirm(
+                                '¿Está seguro de finalizar la asignación inicial? La unidad pasará a estado activa y los marchamos quedarán registrados oficialmente.'
+                            );"
+                        >
                             @csrf
 
-                            <button type="submit"
-                                    class="cc-btn-success cc-btn-form-action">
+                            <button
+                                type="submit"
+                                class="{{ $asignacionCompleta
+                                    ? 'cc-btn-success'
+                                    : 'cc-btn-secondary opacity-60 cursor-not-allowed'
+                                }} cc-btn-form-action"
+                                @disabled(! $asignacionCompleta)
+                            >
                                 Finalizar asignación inicial
                             </button>
                         </form>

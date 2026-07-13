@@ -11,74 +11,159 @@ use Illuminate\View\View;
 
 class MarchamoController extends Controller
 {
+    /**
+     * Consulta general de marchamos dentro del sistema.
+     */
     public function index(Request $request): View
     {
-        $datos = $this->obtenerDatosConsulta($request);
-
-        return view('marchamos.index', $datos);
+        return view(
+            'marchamos.index',
+            $this->obtenerDatosConsulta($request)
+        );
     }
 
+    /**
+     * Consulta general de marchamos en ventana independiente.
+     */
     public function consultaVentana(Request $request): View
     {
-        $datos = $this->obtenerDatosConsulta($request);
-
-        return view('marchamos.index-ventana', $datos);
+        return view(
+            'marchamos.index-ventana',
+            $this->obtenerDatosConsulta($request)
+        );
     }
 
-    public function detalleUnidad(Request $request, Unidad $unidad): View
-    {
-        $datos = $this->obtenerDatosDetalleUnidad($unidad);
-
-        return view('marchamos.detalle-unidad', $datos);
+    /**
+     * Detalle histórico de marchamos asociados a una unidad.
+     */
+    public function detalleUnidad(
+        Request $request,
+        Unidad $unidad
+    ): View {
+        return view(
+            'marchamos.detalle-unidad',
+            $this->obtenerDatosDetalleUnidad($unidad)
+        );
     }
 
-    public function detalleUnidadVentana(Request $request, Unidad $unidad): View
-    {
-        $datos = $this->obtenerDatosDetalleUnidad($unidad);
-
-        return view('marchamos.detalle-unidad-ventana', $datos);
+    /**
+     * Detalle histórico en ventana independiente.
+     */
+    public function detalleUnidadVentana(
+        Request $request,
+        Unidad $unidad
+    ): View {
+        return view(
+            'marchamos.detalle-unidad-ventana',
+            $this->obtenerDatosDetalleUnidad($unidad)
+        );
     }
 
-    private function obtenerDatosConsulta(Request $request): array
-    {
+    /**
+     * Prepara filtros, selectores y resultados de la consulta general.
+     *
+     * Esta consulta es histórica. No filtra por estado operativo de empresa,
+     * unidad o licencia. Una condición inactiva, pendiente o vencida impide
+     * operaciones nuevas, pero no oculta registros previamente existentes.
+     */
+    private function obtenerDatosConsulta(
+        Request $request
+    ): array {
         $user = Auth::user();
-        $esUsuarioDieselCop = is_null($user->empresa_id);
 
-        $busquedaEmpresa = trim((string) $request->input('busqueda_empresa', ''));
-        $busquedaPlaca = trim((string) $request->input('busqueda_placa', ''));
+        $esUsuarioDieselCop = is_null(
+            $user->empresa_id
+        );
+
+        $busquedaEmpresa = trim(
+            (string) $request->input(
+                'busqueda_empresa',
+                ''
+            )
+        );
+
+        $busquedaPlaca = trim(
+            (string) $request->input(
+                'busqueda_placa',
+                ''
+            )
+        );
 
         /*
-         * Compatibilidad:
-         * - Nueva consulta: empresa_ids[] y placas[].
-         * - Consulta anterior: empresa_id y unidad_id.
+         * Compatibilidad con ambas versiones de filtros:
+         *
+         * - empresa_ids[]
+         * - empresa_id
          */
-        $empresaIds = collect($request->input('empresa_ids', []))
-            ->when(filled($request->input('empresa_id')), function ($collection) use ($request) {
-                return $collection->push($request->input('empresa_id'));
-            })
-            ->filter(fn ($id) => filled($id))
-            ->map(fn ($id) => (int) $id)
+        $empresaIds = collect(
+            $request->input(
+                'empresa_ids',
+                []
+            )
+        )
+            ->when(
+                filled(
+                    $request->input('empresa_id')
+                ),
+                function ($collection) use ($request) {
+                    return $collection->push(
+                        $request->input('empresa_id')
+                    );
+                }
+            )
+            ->filter(
+                fn ($id) => filled($id)
+            )
+            ->map(
+                fn ($id) => (int) $id
+            )
             ->unique()
             ->values()
             ->all();
 
-        $placas = collect($request->input('placas', []))
-            ->filter(fn ($placa) => filled($placa))
-            ->map(fn ($placa) => trim((string) $placa))
+        /*
+         * Compatibilidad con:
+         *
+         * - placas[]
+         * - búsqueda directa
+         */
+        $placas = collect(
+            $request->input(
+                'placas',
+                []
+            )
+        )
+            ->filter(
+                fn ($placa) => filled($placa)
+            )
+            ->map(
+                fn ($placa) =>
+                    trim((string) $placa)
+            )
             ->unique()
             ->values()
             ->all();
 
-        $unidadId = $request->input('unidad_id');
+        $unidadId = $request->input(
+            'unidad_id'
+        );
 
+        /*
+         * Un usuario perteneciente a una empresa solo puede consultar
+         * información histórica de su propia empresa.
+         */
         if (! $esUsuarioDieselCop) {
-            $empresaIds = [(int) $user->empresa_id];
+            $empresaIds = [
+                (int) $user->empresa_id,
+            ];
         }
 
         $empresaId = $empresaIds[0] ?? null;
         $placa = $placas[0] ?? null;
 
-        $consultaEjecutada = $request->boolean('consultar');
+        $consultaEjecutada = $request->boolean(
+            'consultar'
+        );
 
         $hayFiltros = $consultaEjecutada
             || filled($busquedaEmpresa)
@@ -87,37 +172,105 @@ class MarchamoController extends Controller
             || count($placas) > 0
             || filled($unidadId);
 
+        /*
+         * En Consulta se muestran empresas activas e inactivas.
+         * El estado de la empresa no elimina su historial.
+         */
         $empresas = Empresa::query()
-            ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
-                $query->where('id', $user->empresa_id);
-            })
+            ->when(
+                ! $esUsuarioDieselCop,
+                function ($query) use ($user) {
+                    $query->where(
+                        'id',
+                        $user->empresa_id
+                    );
+                }
+            )
             ->orderBy('nombre_comercial')
             ->orderBy('nombre_legal')
             ->get();
 
+        /*
+         * Una unidad es consultable cuando posee puntos de seguridad,
+         * marchamos actuales o marchamos históricos.
+         *
+         * No se exige que la empresa, unidad o licencia estén activas.
+         */
         $baseUnidadesQuery = Unidad::query()
-            ->with(['empresa', 'licencia'])
-            ->withCount([
-                'puntosSeguridad as total_puntos' => function ($query) {
-                    $query->where('estado', 'activo');
-                },
-                'puntosSeguridad as puntos_asignados' => function ($query) {
-                    $query->where('estado', 'activo')
-                        ->whereNotNull('marchamo_actual_id');
-                },
-                'marchamos as marchamos_activos' => function ($query) {
-                    $query->where('estado', 'activo');
-                },
-                'marchamos as marchamos_historicos' => function ($query) {
-                    $query->whereIn('estado', ['reemplazado', 'anulado']);
-                },
+            ->with([
+                'empresa',
+                'licencia',
             ])
-            ->whereHas('licencia')
-            ->whereHas('puntosSeguridad')
-            ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
-                $query->where('empresa_id', $user->empresa_id);
-            });
+            ->withCount([
+                'puntosSeguridad as total_puntos' =>
+                    function ($query) {
+                        $query->where(
+                            'estado',
+                            'activo'
+                        );
+                    },
 
+                'puntosSeguridad as puntos_asignados' =>
+                    function ($query) {
+                        $query
+                            ->where(
+                                'estado',
+                                'activo'
+                            )
+                            ->whereNotNull(
+                                'marchamo_actual_id'
+                            );
+                    },
+
+                'marchamos as marchamos_activos' =>
+                    function ($query) {
+                        $query
+                            ->where(
+                                'estado',
+                                'activo'
+                            )
+                            ->where(
+                                'activo_actual',
+                                true
+                            );
+                    },
+
+                'marchamos as marchamos_historicos' =>
+                    function ($query) {
+                        $query->whereIn(
+                            'estado',
+                            [
+                                'reemplazado',
+                                'anulado',
+                            ]
+                        );
+                    },
+            ])
+            ->where(
+                function ($query) {
+                    $query
+                        ->whereHas(
+                            'puntosSeguridad'
+                        )
+                        ->orWhereHas(
+                            'marchamos'
+                        );
+                }
+            )
+            ->when(
+                ! $esUsuarioDieselCop,
+                function ($query) use ($user) {
+                    $query->where(
+                        'empresa_id',
+                        $user->empresa_id
+                    );
+                }
+            );
+
+        /*
+         * El selector de placas contiene todas las unidades consultables,
+         * incluyendo las pertenecientes a empresas o licencias inactivas.
+         */
         $placasSelector = (clone $baseUnidadesQuery)
             ->orderBy('placa')
             ->pluck('placa')
@@ -125,110 +278,301 @@ class MarchamoController extends Controller
             ->unique()
             ->values();
 
+        /*
+         * Se conserva esta colección para compatibilidad con vistas
+         * existentes y filtros anteriores.
+         */
         $unidades = (clone $baseUnidadesQuery)
             ->orderBy('placa')
             ->get();
-            
+
         $unidadesConCobertura = (clone $baseUnidadesQuery)
-            ->when($hayFiltros && filled($busquedaEmpresa), function ($query) use ($busquedaEmpresa) {
-                $query->whereHas('empresa', function ($empresaQuery) use ($busquedaEmpresa) {
-                    $empresaQuery
-                        ->where('nombre_legal', 'like', '%' . $busquedaEmpresa . '%')
-                        ->orWhere('nombre_comercial', 'like', '%' . $busquedaEmpresa . '%');
-                });
-            })
-            ->when($hayFiltros && count($empresaIds) > 0, function ($query) use ($empresaIds) {
-                $query->whereIn('empresa_id', $empresaIds);
-            })
-            ->when($hayFiltros && filled($busquedaPlaca), function ($query) use ($busquedaPlaca) {
-                $query->where('placa', 'like', '%' . $busquedaPlaca . '%');
-            })
-            ->when($hayFiltros && count($placas) > 0, function ($query) use ($placas) {
-                $query->whereIn('placa', $placas);
-            })
-            ->when($hayFiltros && filled($unidadId), function ($query) use ($unidadId) {
-                $query->where('id', $unidadId);
-            })
-            ->when(! $hayFiltros, function ($query) {
-                $query->whereRaw('1 = 0');
-            })
-            ->orderBy('estado')
+            ->when(
+                $hayFiltros
+                && filled($busquedaEmpresa),
+                function ($query) use (
+                    $busquedaEmpresa
+                ) {
+                    $query->whereHas(
+                        'empresa',
+                        function (
+                            $empresaQuery
+                        ) use (
+                            $busquedaEmpresa
+                        ) {
+                            $empresaQuery
+                                ->where(
+                                    'nombre_legal',
+                                    'like',
+                                    '%' . $busquedaEmpresa . '%'
+                                )
+                                ->orWhere(
+                                    'nombre_comercial',
+                                    'like',
+                                    '%' . $busquedaEmpresa . '%'
+                                );
+                        }
+                    );
+                }
+            )
+            ->when(
+                $hayFiltros
+                && count($empresaIds) > 0,
+                function ($query) use (
+                    $empresaIds
+                ) {
+                    $query->whereIn(
+                        'empresa_id',
+                        $empresaIds
+                    );
+                }
+            )
+            ->when(
+                $hayFiltros
+                && filled($busquedaPlaca),
+                function ($query) use (
+                    $busquedaPlaca
+                ) {
+                    $query->where(
+                        'placa',
+                        'like',
+                        '%' . $busquedaPlaca . '%'
+                    );
+                }
+            )
+            ->when(
+                $hayFiltros
+                && count($placas) > 0,
+                function ($query) use ($placas) {
+                    $query->whereIn(
+                        'placa',
+                        $placas
+                    );
+                }
+            )
+            ->when(
+                $hayFiltros
+                && filled($unidadId),
+                function ($query) use (
+                    $unidadId
+                ) {
+                    $query->where(
+                        'id',
+                        $unidadId
+                    );
+                }
+            )
+            ->when(
+                ! $hayFiltros,
+                function ($query) {
+                    $query->whereRaw(
+                        '1 = 0'
+                    );
+                }
+            )
             ->orderBy('placa')
             ->get();
 
         return [
-            'unidadesConCobertura' => $unidadesConCobertura,
-            'empresas' => $empresas,
-            'unidades' => $unidades,
-            'placasSelector' => $placasSelector,
+            'unidadesConCobertura' =>
+                $unidadesConCobertura,
 
-            'busquedaEmpresa' => $busquedaEmpresa,
-            'busquedaPlaca' => $busquedaPlaca,
+            'empresas' =>
+                $empresas,
 
-            'empresaIds' => $empresaIds,
-            'placas' => $placas,
+            'unidades' =>
+                $unidades,
+
+            'placasSelector' =>
+                $placasSelector,
+
+            'busquedaEmpresa' =>
+                $busquedaEmpresa,
+
+            'busquedaPlaca' =>
+                $busquedaPlaca,
+
+            'empresaIds' =>
+                $empresaIds,
+
+            'placas' =>
+                $placas,
 
             /*
-             * Variables simples para compatibilidad temporal.
+             * Variables simples conservadas para compatibilidad.
              */
-            'empresaId' => $empresaId,
-            'unidadId' => $unidadId,
-            'placa' => $placa,
+            'empresaId' =>
+                $empresaId,
 
-            'hayFiltros' => $hayFiltros,
-            'consultaEjecutada' => $consultaEjecutada,
-            'esUsuarioDieselCop' => $esUsuarioDieselCop,
+            'unidadId' =>
+                $unidadId,
+
+            'placa' =>
+                $placa,
+
+            'hayFiltros' =>
+                $hayFiltros,
+
+            'consultaEjecutada' =>
+                $consultaEjecutada,
+
+            'esUsuarioDieselCop' =>
+                $esUsuarioDieselCop,
         ];
     }
 
-    private function obtenerDatosDetalleUnidad(Unidad $unidad): array
-    {
-        $user = Auth::user();
+    /**
+     * Prepara el historial completo de marchamos de una unidad.
+     *
+     * El detalle sigue disponible aunque la empresa, la unidad o la licencia
+     * estén inactivas, pendientes o vencidas.
+     */
+    private function obtenerDatosDetalleUnidad(
+        Unidad $unidad
+    ): array {
+        $this->autorizarAccesoUnidad(
+            $unidad
+        );
 
-        if (! is_null($user->empresa_id) && (int) $unidad->empresa_id !== (int) $user->empresa_id) {
-            abort(403);
-        }
-
-        $unidad->load(['empresa', 'licencia']);
+        $unidad->load([
+            'empresa',
+            'licencia',
+        ]);
 
         $unidad->loadCount([
-            'puntosSeguridad as total_puntos' => function ($query) {
-                $query->where('estado', 'activo');
-            },
-            'puntosSeguridad as puntos_asignados' => function ($query) {
-                $query->where('estado', 'activo')
-                    ->whereNotNull('marchamo_actual_id');
-            },
-            'marchamos as marchamos_activos' => function ($query) {
-                $query->where('estado', 'activo');
-            },
-            'marchamos as marchamos_historicos' => function ($query) {
-                $query->whereIn('estado', ['reemplazado', 'anulado']);
-            },
+            'puntosSeguridad as total_puntos' =>
+                function ($query) {
+                    $query->where(
+                        'estado',
+                        'activo'
+                    );
+                },
+
+            'puntosSeguridad as puntos_asignados' =>
+                function ($query) {
+                    $query
+                        ->where(
+                            'estado',
+                            'activo'
+                        )
+                        ->whereNotNull(
+                            'marchamo_actual_id'
+                        );
+                },
+
+            'marchamos as marchamos_activos' =>
+                function ($query) {
+                    $query
+                        ->where(
+                            'estado',
+                            'activo'
+                        )
+                        ->where(
+                            'activo_actual',
+                            true
+                        );
+                },
+
+            'marchamos as marchamos_historicos' =>
+                function ($query) {
+                    $query->whereIn(
+                        'estado',
+                        [
+                            'reemplazado',
+                            'anulado',
+                        ]
+                    );
+                },
         ]);
 
         $marchamos = Marchamo::query()
-            ->with(['empresa', 'unidad', 'puntoSeguridad'])
-            ->where('unidad_id', $unidad->id)
-            ->when(! is_null($user->empresa_id), function ($query) use ($user) {
-                $query->where('empresa_id', $user->empresa_id);
-            })
-            ->orderByDesc('fecha_activacion')
+            ->with([
+                'empresa',
+                'unidad',
+                'puntoSeguridad',
+            ])
+            ->where(
+                'unidad_id',
+                $unidad->id
+            )
+            ->when(
+                ! is_null(
+                    Auth::user()->empresa_id
+                ),
+                function ($query) {
+                    $query->where(
+                        'empresa_id',
+                        Auth::user()->empresa_id
+                    );
+                }
+            )
+            ->orderByRaw(
+                "
+                CASE
+                    WHEN estado = 'activo' THEN 1
+                    WHEN estado = 'reemplazado' THEN 2
+                    WHEN estado = 'anulado' THEN 3
+                    ELSE 4
+                END
+                "
+            )
+            ->orderByDesc(
+                'fecha_activacion'
+            )
             ->orderByDesc('id')
             ->paginate(15)
             ->withQueryString();
 
         $totalMarchamos = Marchamo::query()
-            ->where('unidad_id', $unidad->id)
-            ->when(! is_null($user->empresa_id), function ($query) use ($user) {
-                $query->where('empresa_id', $user->empresa_id);
-            })
+            ->where(
+                'unidad_id',
+                $unidad->id
+            )
+            ->when(
+                ! is_null(
+                    Auth::user()->empresa_id
+                ),
+                function ($query) {
+                    $query->where(
+                        'empresa_id',
+                        Auth::user()->empresa_id
+                    );
+                }
+            )
             ->count();
 
         return [
-            'unidad' => $unidad,
-            'marchamos' => $marchamos,
-            'totalMarchamos' => $totalMarchamos,
+            'unidad' =>
+                $unidad,
+
+            'marchamos' =>
+                $marchamos,
+
+            'totalMarchamos' =>
+                $totalMarchamos,
         ];
+    }
+
+    /**
+     * Control de acceso multiempresa.
+     *
+     * La consulta histórica no se bloquea por estados operativos, pero un
+     * usuario de empresa nunca puede consultar unidades de otra empresa.
+     */
+    private function autorizarAccesoUnidad(
+        Unidad $unidad
+    ): void {
+        $user = Auth::user();
+
+        if (
+            ! is_null($user->empresa_id)
+            && (int) $unidad->empresa_id
+                !== (int) $user->empresa_id
+        ) {
+            abort(
+                403,
+                'No tiene autorización para consultar esta unidad.'
+            );
+        }
     }
 }

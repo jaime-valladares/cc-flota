@@ -32,7 +32,7 @@
                             <div class="flex items-center gap-3">
                                 <a href="{{ route('empresas.administrar', request()->query()) }}"
                                    class="cc-btn-secondary cc-btn-wide">
-                                    Volver a Administrar
+                                    Volver al Sistema
                                 </a>
                             </div>
                         </div>

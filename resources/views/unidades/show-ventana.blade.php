@@ -115,15 +115,6 @@
                                     Volver a administrar
                                 </a>
 
-                                <a
-                                    href="{{ route(
-                                        'unidades.administrar',
-                                        $queryParams
-                                    ) }}"
-                                    class="cc-btn-secondary cc-btn-wide"
-                                >
-                                    Volver al sistema
-                                </a>
                             </div>
                         </div>
 

@@ -41,18 +41,9 @@
                                     ) }}"
                                     class="cc-btn-secondary cc-btn-wide"
                                 >
-                                    Volver al Registro
+                                    Volver al Sistema
                                 </a>
 
-                                <a
-                                    href="{{ route(
-                                        'unidades.index',
-                                        $queryParams
-                                    ) }}"
-                                    class="cc-btn-secondary cc-btn-wide"
-                                >
-                                    Volver al sistema
-                                </a>
                             </div>
                         </div>
 

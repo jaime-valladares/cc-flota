@@ -11,28 +11,57 @@
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
 
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap"
+            rel="stylesheet"
+        >
+
+        @vite([
+            'resources/css/app.css',
+            'resources/js/app.js',
+        ])
     </head>
 
     <body class="antialiased">
-        <div class="min-h-screen" style="background: var(--cc-bg-main);">
+        <div
+            class="min-h-screen"
+            style="background: var(--cc-bg-main);"
+        >
             <div class="cc-page-wrapper">
-                <div class="cc-window-container" style="max-width: 80rem;">
+                <div
+                    class="cc-window-container"
+                    style="max-width: 80rem;"
+                >
                     <div class="cc-card">
 
                         @php
                             $totalPuntos = $puntos->count();
-                            $totalMarchamosActuales = $puntos->filter(fn ($punto) => ! is_null($punto->marchamo_actual_id))->count();
 
-                            $rutaVolver = route('marchamos.reemplazos.index.ventana', [
-                                'empresa_id' => $unidad->empresa_id,
-                                'unidad_id' => $unidad->id,
-                                'consultar' => 1,
-                            ]);
+                            $totalMarchamosActuales = $puntos
+                                ->filter(
+                                    fn ($punto) =>
+                                        ! is_null($punto->marchamo_actual_id)
+                                )
+                                ->count();
 
-                            $rutaSistema = route('marchamos.reemplazos.show', $unidad);
+                            $coberturaCompleta =
+                                $totalPuntos > 0
+                                && $totalPuntos === $totalMarchamosActuales;
+
+                            $rutaVolver = route(
+                                'marchamos.reemplazos.index.ventana',
+                                [
+                                    'empresa_id' => $unidad->empresa_id,
+                                    'unidad_id' => $unidad->id,
+                                    'consultar' => 1,
+                                ]
+                            );
+
+                            $rutaSistema = route(
+                                'marchamos.reemplazos.show',
+                                $unidad
+                            );
                         @endphp
 
                         <div class="cc-card-header cc-card-header-compact">
@@ -40,14 +69,24 @@
                                 <h3 class="cc-title cc-title-compact">
                                     Reemplazo de marchamos
                                 </h3>
+
+                                <p class="cc-subtitle cc-subtitle-compact">
+                                    Sustituya uno o varios marchamos conservando el historial completo de la unidad.
+                                </p>
                             </div>
 
                             <div class="flex items-center gap-3">
-                                <a href="{{ $rutaVolver }}" class="cc-btn-secondary cc-btn-wide">
-                                    Volver
+                                <a
+                                    href="{{ $rutaVolver }}"
+                                    class="cc-btn-secondary cc-btn-wide"
+                                >
+                                    Volver a Administrar
                                 </a>
 
-                                <a href="{{ $rutaSistema }}" class="cc-btn-secondary cc-btn-wide">
+                                <a
+                                    href="{{ $rutaSistema }}"
+                                    class="cc-btn-secondary cc-btn-wide"
+                                >
                                     Volver al sistema
                                 </a>
                             </div>
@@ -67,7 +106,9 @@
 
                                 <ul class="mt-2 list-disc list-inside">
                                     @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
+                                        <li>
+                                            {{ $error }}
+                                        </li>
                                     @endforeach
                                 </ul>
                             </div>
@@ -89,39 +130,35 @@
                                         {{ $unidad->marca ?: 'Sin marca registrada' }}
                                     </span>
 
-                                    @if ($unidad->empresa)
-                                        <span>
-                                            <strong>Empresa:</strong>
+                                    <span>
+                                        <strong>Empresa:</strong>
+
+                                        @if ($unidad->empresa)
                                             {{ $unidad->empresa->nombre_comercial ?: $unidad->empresa->nombre_legal }}
-                                        </span>
-                                    @else
-                                        <span>
-                                            <strong>Empresa:</strong>
+                                        @else
                                             Sin empresa
-                                        </span>
-                                    @endif
+                                        @endif
+                                    </span>
 
-                                    @if ($unidad->licencia)
-                                        <span>
-                                            <strong>Licencia:</strong>
+                                    <span>
+                                        <strong>Licencia:</strong>
+
+                                        @if ($unidad->licencia)
                                             {{ $unidad->licencia->periodo_vigencia_texto }}
-                                        </span>
-
-                                        <span>
-                                            <strong>Plantilla:</strong>
-                                            {{ $unidad->licencia->plantilla_puntos_seguridad_texto }}
-                                        </span>
-                                    @else
-                                        <span>
-                                            <strong>Licencia:</strong>
+                                        @else
                                             Sin licencia
-                                        </span>
+                                        @endif
+                                    </span>
 
-                                        <span>
-                                            <strong>Plantilla:</strong>
+                                    <span>
+                                        <strong>Plantilla:</strong>
+
+                                        @if ($unidad->licencia)
+                                            {{ $unidad->licencia->plantilla_puntos_seguridad_texto }}
+                                        @else
                                             Sin plantilla
-                                        </span>
-                                    @endif
+                                        @endif
+                                    </span>
                                 </div>
                             </div>
 
@@ -137,8 +174,9 @@
                                 <h5>
                                     Cobertura actual
                                 </h5>
+
                                 <p>
-                                    La unidad cuenta con marchamos activos. El reemplazo registra historial y conserva trazabilidad.
+                                    El reemplazo conserva el marchamo retirado como histórico y registra el nuevo código como marchamo actual.
                                 </p>
                             </div>
 
@@ -147,6 +185,7 @@
                                     <span class="cc-summary-strip-label">
                                         Total puntos
                                     </span>
+
                                     <span class="cc-summary-strip-value">
                                         {{ $totalPuntos }}
                                     </span>
@@ -156,7 +195,8 @@
                                     <span class="cc-summary-strip-label">
                                         Marchamos actuales
                                     </span>
-                                    <span class="cc-summary-strip-value cc-summary-strip-value-success">
+
+                                    <span class="cc-summary-strip-value">
                                         {{ $totalMarchamosActuales }}
                                     </span>
                                 </div>
@@ -165,52 +205,95 @@
                                     <span class="cc-summary-strip-label">
                                         Cobertura
                                     </span>
-                                    <span class="cc-summary-strip-value cc-summary-strip-value-success">
-                                        Completa
-                                    </span>
+
+                                    @if ($coberturaCompleta)
+                                        <span class="cc-summary-strip-value cc-summary-strip-value-success">
+                                            Completa
+                                        </span>
+                                    @else
+                                        <span class="cc-summary-strip-value">
+                                            Incompleta
+                                        </span>
+                                    @endif
                                 </div>
                             </div>
                         </section>
 
-                        <form method="POST" action="{{ route('marchamos.reemplazos.store', $unidad) }}" class="mt-6">
+                        <form
+                            method="POST"
+                            action="{{ route(
+                                'marchamos.reemplazos.store',
+                                $unidad
+                            ) }}"
+                            class="mt-6"
+                            id="form-reemplazo-marchamos"
+                            onsubmit="return confirmarReemplazos();"
+                        >
                             @csrf
-                            <input type="hidden" name="return_to" value="ventana">
+
+                            <input
+                                type="hidden"
+                                name="return_to"
+                                value="ventana"
+                            >
 
                             <section class="cc-detail-section">
                                 <div class="cc-detail-section-header">
                                     <h5>
                                         Puntos de seguridad
                                     </h5>
+
                                     <p>
-                                        Marque los puntos que desea reemplazar. Cada punto seleccionado requiere un nuevo código de 7 dígitos y un motivo.
+                                        Seleccione los puntos que desea reemplazar. Cada selección requiere un nuevo código de 7 dígitos y un motivo.
                                     </p>
                                 </div>
 
                                 <div class="cc-table-adaptive-wrapper">
-                                    <table class="cc-table-adaptive" style="min-width: 96rem;">
+                                    <table
+                                        class="cc-table-adaptive"
+                                        style="min-width: 96rem;"
+                                    >
                                         <thead>
                                             <tr>
-                                                <th class="cc-table-adaptive-nowrap" style="width: 5rem;">
+                                                <th
+                                                    class="cc-table-adaptive-nowrap"
+                                                    style="width: 5rem;"
+                                                >
                                                     Sel.
                                                 </th>
 
-                                                <th class="cc-table-adaptive-nowrap" style="width: 8rem;">
+                                                <th
+                                                    class="cc-table-adaptive-nowrap"
+                                                    style="width: 8rem;"
+                                                >
                                                     Orden
                                                 </th>
 
-                                                <th class="cc-table-adaptive-nowrap" style="width: 32rem;">
+                                                <th
+                                                    class="cc-table-adaptive-nowrap"
+                                                    style="width: 32rem;"
+                                                >
                                                     Punto de seguridad
                                                 </th>
 
-                                                <th class="cc-table-adaptive-nowrap" style="width: 14rem;">
+                                                <th
+                                                    class="cc-table-adaptive-nowrap"
+                                                    style="width: 14rem;"
+                                                >
                                                     Marchamo actual
                                                 </th>
 
-                                                <th class="cc-table-adaptive-nowrap" style="width: 16rem;">
+                                                <th
+                                                    class="cc-table-adaptive-nowrap"
+                                                    style="width: 16rem;"
+                                                >
                                                     Nuevo marchamo
                                                 </th>
 
-                                                <th class="cc-table-adaptive-nowrap" style="width: 21rem;">
+                                                <th
+                                                    class="cc-table-adaptive-nowrap"
+                                                    style="width: 21rem;"
+                                                >
                                                     Motivo
                                                 </th>
                                             </tr>
@@ -218,19 +301,38 @@
 
                                         <tbody>
                                             @forelse ($puntos as $index => $punto)
-                                                <tr>
+                                                @php
+                                                    $seleccionado = old(
+                                                        "reemplazos.{$index}.seleccionado"
+                                                    );
+
+                                                    $codigoAnterior =
+                                                        $punto->marchamoActual
+                                                            ?->codigo_marchamo;
+                                                @endphp
+
+                                                <tr
+                                                    data-reemplazo-fila
+                                                    class="{{ $seleccionado
+                                                        ? ''
+                                                        : 'opacity-80'
+                                                    }}"
+                                                >
                                                     <td class="cc-table-adaptive-nowrap">
                                                         <input
                                                             type="hidden"
                                                             name="reemplazos[{{ $index }}][punto_seguridad_id]"
-                                                            value="{{ $punto->id }}">
+                                                            value="{{ $punto->id }}"
+                                                        >
 
                                                         <input
                                                             type="checkbox"
                                                             name="reemplazos[{{ $index }}][seleccionado]"
                                                             value="1"
                                                             class="h-5 w-5 rounded border-[var(--cc-border)] text-[var(--cc-primary)] focus:ring-[var(--cc-primary)]"
-                                                            @checked(old("reemplazos.{$index}.seleccionado"))>
+                                                            data-reemplazo-check
+                                                            @checked($seleccionado)
+                                                        >
                                                     </td>
 
                                                     <td class="cc-table-adaptive-nowrap">
@@ -264,9 +366,9 @@
                                                     </td>
 
                                                     <td class="cc-table-adaptive-nowrap">
-                                                        @if ($punto->marchamoActual)
+                                                        @if ($codigoAnterior)
                                                             <div class="cc-table-adaptive-strong">
-                                                                {{ $punto->marchamoActual->codigo_marchamo }}
+                                                                {{ $codigoAnterior }}
                                                             </div>
 
                                                             <div class="cc-table-adaptive-muted text-[var(--cc-success)]">
@@ -283,22 +385,51 @@
                                                         <input
                                                             type="text"
                                                             name="reemplazos[{{ $index }}][nuevo_codigo_marchamo]"
-                                                            value="{{ old("reemplazos.{$index}.nuevo_codigo_marchamo") }}"
+                                                            value="{{ old(
+                                                                "reemplazos.{$index}.nuevo_codigo_marchamo"
+                                                            ) }}"
                                                             class="cc-input"
                                                             placeholder="0000000"
                                                             maxlength="7"
                                                             inputmode="numeric"
-                                                            pattern="\d{7}">
+                                                            pattern="\d{7}"
+                                                            autocomplete="off"
+                                                            data-reemplazo-codigo
+                                                            @disabled(! $seleccionado)
+                                                        >
+
+                                                        <div
+                                                            class="cc-table-adaptive-muted mt-1"
+                                                            data-reemplazo-ayuda
+                                                        >
+                                                            @if ($seleccionado)
+                                                                Código requerido
+                                                            @else
+                                                                Seleccione el punto
+                                                            @endif
+                                                        </div>
                                                     </td>
 
                                                     <td class="cc-table-adaptive-nowrap">
                                                         <select
                                                             name="reemplazos[{{ $index }}][motivo_reemplazo]"
-                                                            class="cc-input">
-                                                            <option value="">Seleccione motivo</option>
+                                                            class="cc-input"
+                                                            data-reemplazo-motivo
+                                                            @disabled(! $seleccionado)
+                                                        >
+                                                            <option value="">
+                                                                Seleccione motivo
+                                                            </option>
 
                                                             @foreach ($motivosReemplazo as $codigo => $texto)
-                                                                <option value="{{ $codigo }}" @selected(old("reemplazos.{$index}.motivo_reemplazo") === $codigo)>
+                                                                <option
+                                                                    value="{{ $codigo }}"
+                                                                    @selected(
+                                                                        old(
+                                                                            "reemplazos.{$index}.motivo_reemplazo"
+                                                                        ) === $codigo
+                                                                    )
+                                                                >
                                                                     {{ $texto }}
                                                                 </option>
                                                             @endforeach
@@ -307,7 +438,10 @@
                                                 </tr>
                                             @empty
                                                 <tr>
-                                                    <td colspan="6" class="text-center text-[var(--cc-text-muted)] py-8">
+                                                    <td
+                                                        colspan="6"
+                                                        class="text-center text-[var(--cc-text-muted)] py-8"
+                                                    >
                                                         No hay puntos de seguridad disponibles para esta unidad.
                                                     </td>
                                                 </tr>
@@ -316,12 +450,23 @@
                                     </table>
                                 </div>
 
+                                <div class="mt-5 px-5 text-sm text-[var(--cc-text-muted)]">
+                                    Los marchamos reemplazados permanecerán disponibles en Consulta como registros históricos y no podrán reactivarse.
+                                </div>
+
                                 <div class="cc-form-actions mt-6">
-                                    <a href="{{ $rutaVolver }}" class="cc-btn-secondary cc-btn-form-action">
+                                    <a
+                                        href="{{ $rutaVolver }}"
+                                        class="cc-btn-secondary cc-btn-form-action"
+                                    >
                                         Cancelar
                                     </a>
 
-                                    <button type="submit" class="cc-btn-primary cc-btn-form-action">
+                                    <button
+                                        type="submit"
+                                        class="cc-btn-primary cc-btn-form-action"
+                                        id="boton-confirmar-reemplazos"
+                                    >
                                         Confirmar reemplazos
                                     </button>
                                 </div>
@@ -332,5 +477,115 @@
                 </div>
             </div>
         </div>
+
+        <script>
+            document
+                .querySelectorAll('[data-reemplazo-fila]')
+                .forEach(function (fila) {
+                    const checkbox = fila.querySelector(
+                        '[data-reemplazo-check]'
+                    );
+
+                    const codigo = fila.querySelector(
+                        '[data-reemplazo-codigo]'
+                    );
+
+                    const motivo = fila.querySelector(
+                        '[data-reemplazo-motivo]'
+                    );
+
+                    const ayuda = fila.querySelector(
+                        '[data-reemplazo-ayuda]'
+                    );
+
+                    function actualizarFila() {
+                        const seleccionado = checkbox.checked;
+
+                        codigo.disabled = ! seleccionado;
+                        motivo.disabled = ! seleccionado;
+
+                        fila.classList.toggle(
+                            'opacity-80',
+                            ! seleccionado
+                        );
+
+                        ayuda.textContent = seleccionado
+                            ? 'Código requerido'
+                            : 'Seleccione el punto';
+
+                        if (! seleccionado) {
+                            codigo.value = '';
+                            motivo.value = '';
+                        }
+                    }
+
+                    checkbox.addEventListener(
+                        'change',
+                        actualizarFila
+                    );
+
+                    actualizarFila();
+                });
+
+            function confirmarReemplazos() {
+                const seleccionados = Array.from(
+                    document.querySelectorAll(
+                        '[data-reemplazo-check]:checked'
+                    )
+                );
+
+                if (seleccionados.length === 0) {
+                    window.alert(
+                        'Seleccione al menos un punto de seguridad para reemplazar.'
+                    );
+
+                    return false;
+                }
+
+                for (const checkbox of seleccionados) {
+                    const fila = checkbox.closest(
+                        '[data-reemplazo-fila]'
+                    );
+
+                    const codigo = fila.querySelector(
+                        '[data-reemplazo-codigo]'
+                    );
+
+                    const motivo = fila.querySelector(
+                        '[data-reemplazo-motivo]'
+                    );
+
+                    if (! /^\d{7}$/.test(codigo.value.trim())) {
+                        window.alert(
+                            'Cada punto seleccionado debe tener un nuevo código de exactamente 7 dígitos.'
+                        );
+
+                        codigo.focus();
+
+                        return false;
+                    }
+
+                    if (! motivo.value) {
+                        window.alert(
+                            'Seleccione el motivo de reemplazo para cada punto marcado.'
+                        );
+
+                        motivo.focus();
+
+                        return false;
+                    }
+                }
+
+                const cantidad = seleccionados.length;
+
+                const mensaje = cantidad === 1
+                    ? '¿Está seguro de reemplazar el marchamo seleccionado? El marchamo actual quedará registrado como histórico.'
+                    : '¿Está seguro de reemplazar los '
+                        + cantidad
+                        + ' marchamos seleccionados? Los marchamos actuales quedarán registrados como históricos.';
+
+                return window.confirm(mensaje);
+            }
+        </script>
     </body>
 </html>

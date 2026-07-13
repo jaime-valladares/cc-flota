@@ -27,15 +27,6 @@
                             Abrir en nueva pestaña
                         </a>
 
-                        <a
-                            href="{{ route(
-                                'unidades.index',
-                                $queryParams
-                            ) }}"
-                            class="cc-btn-secondary cc-btn-wide"
-                        >
-                            Ir a Consulta
-                        </a>
                     </div>
                 </div>
 

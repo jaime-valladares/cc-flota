@@ -62,7 +62,7 @@
                                     ) }}"
                                     class="cc-btn-secondary cc-btn-wide"
                                 >
-                                    Volver a administrar
+                                    Volver al Sistema
                                 </a>
                             </div>
                         </div>
