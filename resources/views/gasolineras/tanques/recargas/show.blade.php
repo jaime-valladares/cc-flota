@@ -1,11 +1,16 @@
 <x-app-layout>
     @php
-        $empresaNombre = $gasolinera->empresa?->nombre_comercial ?: $gasolinera->empresa?->nombre_legal;
+        $empresaNombre = $gasolinera->empresa?->nombre_comercial
+            ?: $gasolinera->empresa?->nombre_legal
+            ?: 'Sin empresa';
 
-        $totalCapacidad = $resumenTanques->sum('capacidad_total');
-        $totalInventario = $resumenTanques->sum('volumen_actual');
-        $totalDisponible = $resumenTanques->sum('capacidad_disponible');
-        $tanquesBajoAlerta = $resumenTanques->where('bajo_alerta', true)->count();
+        $totalCapacidad = (float) $resumenTanques->sum('capacidad_total');
+        $totalInventario = (float) $resumenTanques->sum('volumen_actual');
+        $totalDisponible = (float) $resumenTanques->sum('capacidad_disponible');
+
+        $tanquesBajoAlerta = $resumenTanques
+            ->where('bajo_alerta', true)
+            ->count();
     @endphp
 
     <div class="cc-page-wrapper">
@@ -17,19 +22,28 @@
                         <h3 class="cc-title cc-title-compact">
                             Registrar recarga
                         </h3>
-
                     </div>
 
-                    <div class="flex items-center gap-3">
-                        <a href="{{ route('gasolineras.tanques.recargas.create.ventana', ['gasolinera' => $gasolinera, 'tanque_id' => $tanquePreseleccionadoId]) }}"
-                           target="_blank"
-                           rel="noopener noreferrer"
-                           class="cc-btn-secondary cc-btn-wide">
+                    <div class="flex flex-wrap items-center gap-3">
+                        <a
+                            href="{{ route('gasolineras.tanques.recargas.create.ventana', [
+                                'gasolinera' => $gasolinera,
+                                'tanque_id' => $tanquePreseleccionadoId,
+                            ]) }}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="cc-btn-secondary cc-btn-wide"
+                        >
                             Abrir en nueva pestaña
                         </a>
 
-                        <a href="{{ route('gasolineras.tanques.recargas.index', ['consultar' => 1, 'gasolinera_id' => $gasolinera->id]) }}"
-                           class="cc-btn-secondary cc-btn-wide">
+                        <a
+                            href="{{ route('gasolineras.tanques.recargas.index', [
+                                'consultar' => 1,
+                                'gasolinera_ids' => [$gasolinera->id],
+                            ]) }}"
+                            class="cc-btn-secondary cc-btn-wide"
+                        >
                             Volver a recargas
                         </a>
                     </div>
@@ -51,7 +65,10 @@
                     </div>
                 @endif
 
-                <div class="cc-profile-summary" style="margin-bottom: 1.1rem;">
+                <div
+                    class="cc-profile-summary"
+                    style="margin-bottom: 1.1rem;"
+                >
                     <div style="min-width: 0;">
                         <div class="cc-profile-eyebrow">
                             Gasolinera
@@ -67,7 +84,9 @@
                             </span>
 
                             <span>
-                                {{ $tanques->count() }} tanque{{ $tanques->count() === 1 ? '' : 's' }} activo{{ $tanques->count() === 1 ? '' : 's' }}
+                                {{ $tanques->count() }}
+                                tanque{{ $tanques->count() === 1 ? '' : 's' }}
+                                activo{{ $tanques->count() === 1 ? '' : 's' }}
                             </span>
                         </div>
                     </div>
@@ -79,7 +98,8 @@
 
                         @if ($tanquesBajoAlerta > 0)
                             <span class="cc-badge cc-badge-warning">
-                                {{ $tanquesBajoAlerta }} bajo mínimo
+                                {{ $tanquesBajoAlerta }}
+                                bajo mínimo
                             </span>
                         @endif
                     </div>
@@ -90,6 +110,7 @@
                         <span class="cc-summary-strip-label">
                             Capacidad total
                         </span>
+
                         <span class="cc-summary-strip-value">
                             {{ number_format($totalCapacidad, 2) }} gal
                         </span>
@@ -99,6 +120,7 @@
                         <span class="cc-summary-strip-label">
                             Inventario actual
                         </span>
+
                         <span class="cc-summary-strip-value">
                             {{ number_format($totalInventario, 2) }} gal
                         </span>
@@ -108,6 +130,7 @@
                         <span class="cc-summary-strip-label">
                             Espacio disponible
                         </span>
+
                         <span class="cc-summary-strip-value">
                             {{ number_format($totalDisponible, 2) }} gal
                         </span>
@@ -117,6 +140,7 @@
                         <span class="cc-summary-strip-label">
                             Bajo mínimo
                         </span>
+
                         <span class="cc-summary-strip-value {{ $tanquesBajoAlerta > 0 ? 'cc-summary-strip-value-danger' : 'cc-summary-strip-value-success' }}">
                             {{ $tanquesBajoAlerta }}
                         </span>
@@ -132,7 +156,7 @@
                             </h5>
 
                             <p>
-                                Ingrese el precio por galón y el volumen a recargar únicamente en los tanques que recibirán combustible.
+                                Ingrese el precio por galón y la cantidad que recibirá cada tanque incluido en esta operación.
                             </p>
                         </div>
 
@@ -144,14 +168,16 @@
                                     </h5>
 
                                     <p>
-                                        Esta gasolinera no tiene tanques activos disponibles para recarga.
+                                        Esta gasolinera no tiene tanques activos disponibles para recibir una recarga.
                                     </p>
                                 </div>
                             @else
-                                <form method="POST"
-                                      action="{{ route('gasolineras.tanques.recargas.store', $gasolinera) }}"
-                                      novalidate
-                                      data-recarga-form>
+                                <form
+                                    method="POST"
+                                    action="{{ route('gasolineras.tanques.recargas.store', $gasolinera) }}"
+                                    novalidate
+                                    data-recarga-form
+                                >
                                     @csrf
 
                                     <div class="cc-grid cc-grid-compact">
@@ -164,7 +190,8 @@
 
                                         <div class="cc-field">
                                             <label for="precio_galon">
-                                                Precio por galón <span class="cc-required">*</span>
+                                                Precio por galón
+                                                <span class="cc-required">*</span>
                                             </label>
 
                                             <input
@@ -189,7 +216,7 @@
 
                                         <div class="cc-field">
                                             <label for="total_galones_visible">
-                                                Total galones
+                                                Total de galones
                                             </label>
 
                                             <input
@@ -204,7 +231,7 @@
 
                                         <div class="cc-field">
                                             <label for="total_compra_visible">
-                                                Total compra
+                                                Total de compra
                                             </label>
 
                                             <input
@@ -226,23 +253,56 @@
                                     </div>
 
                                     @error('volumenes')
-                                        <div class="cc-error" style="margin-bottom: 1rem;">
+                                        <div
+                                            class="cc-error"
+                                            style="margin-bottom: 1rem;"
+                                        >
                                             {{ $message }}
                                         </div>
                                     @enderror
+
+                                    <div class="cc-callout" style="margin-bottom: 1rem;">
+                                        <span class="cc-callout-marker"></span>
+
+                                        <div>
+                                            <div class="cc-callout-title">
+                                                Una sola operación
+                                            </div>
+
+                                            <div class="cc-callout-text">
+                                                Los tanques con una cantidad mayor que cero formarán parte de la misma recarga. La operación se registrará completa o no realizará ningún cambio.
+                                            </div>
+                                        </div>
+                                    </div>
 
                                     <div class="cc-admin-result-list">
                                         @foreach ($resumenTanques as $resumen)
                                             @php
                                                 $tanque = $resumen['tanque'];
-                                                $capacidadTotal = (float) $resumen['capacidad_total'];
-                                                $volumenActual = (float) $resumen['volumen_actual'];
-                                                $capacidadDisponible = (float) $resumen['capacidad_disponible'];
-                                                $porcentajeDisponible = (float) $resumen['porcentaje_disponible'];
-                                                $bajoAlerta = (bool) $resumen['bajo_alerta'];
 
-                                                $valorAnterior = old("volumenes.{$tanque->id}", '');
-                                                $esPreseleccionado = (int) $tanquePreseleccionadoId === (int) $tanque->id;
+                                                $capacidadTotal =
+                                                    (float) $resumen['capacidad_total'];
+
+                                                $volumenActual =
+                                                    (float) $resumen['volumen_actual'];
+
+                                                $capacidadDisponible =
+                                                    (float) $resumen['capacidad_disponible'];
+
+                                                $porcentajeInventario =
+                                                    (float) $resumen['porcentaje_disponible'];
+
+                                                $bajoAlerta =
+                                                    (bool) $resumen['bajo_alerta'];
+
+                                                $valorAnterior = old(
+                                                    "volumenes.{$tanque->id}",
+                                                    ''
+                                                );
+
+                                                $esPreseleccionado =
+                                                    (int) $tanquePreseleccionadoId
+                                                    === (int) $tanque->id;
                                             @endphp
 
                                             <article class="cc-admin-result-card">
@@ -266,20 +326,21 @@
 
                                                             @if ($esPreseleccionado)
                                                                 <span class="cc-badge">
-                                                                    Seleccionado
+                                                                    Preseleccionado
                                                                 </span>
                                                             @endif
                                                         </div>
 
                                                         <div class="cc-admin-result-subtitle">
-                                                            Tanque recargable
+                                                            Disponible para recarga
                                                         </div>
                                                     </div>
 
                                                     <div class="min-w-0 sm:grid sm:grid-cols-3 sm:gap-5 xl:col-span-5 xl:grid-cols-3">
+
                                                         <div class="min-w-0">
                                                             <div class="cc-admin-result-label">
-                                                                Inventario
+                                                                Inventario actual
                                                             </div>
 
                                                             <div class="cc-admin-result-value">
@@ -287,13 +348,13 @@
                                                             </div>
 
                                                             <div class="cc-admin-result-value-muted">
-                                                                Actual
+                                                                {{ number_format($porcentajeInventario, 2) }}% de capacidad
                                                             </div>
                                                         </div>
 
                                                         <div class="min-w-0">
                                                             <div class="cc-admin-result-label">
-                                                                Espacio libre
+                                                                Espacio disponible
                                                             </div>
 
                                                             <div class="cc-admin-result-value">
@@ -301,13 +362,13 @@
                                                             </div>
 
                                                             <div class="cc-admin-result-value-muted">
-                                                                {{ number_format($porcentajeDisponible, 2) }}% disponible
+                                                                Máximo recargable
                                                             </div>
                                                         </div>
 
                                                         <div class="min-w-0">
                                                             <div class="cc-admin-result-label">
-                                                                Capacidad
+                                                                Capacidad total
                                                             </div>
 
                                                             <div class="cc-admin-result-value">
@@ -315,16 +376,21 @@
                                                             </div>
 
                                                             <div class="cc-admin-result-value-muted">
-                                                                Máximo instalado
+                                                                Capacidad instalada
                                                             </div>
                                                         </div>
+
                                                     </div>
 
                                                     <div class="min-w-0 xl:col-span-4">
                                                         <div class="grid gap-3 sm:grid-cols-2">
-                                                            <div class="cc-field" style="margin-bottom: 0;">
+
+                                                            <div
+                                                                class="cc-field"
+                                                                style="margin-bottom: 0;"
+                                                            >
                                                                 <label for="volumen_{{ $tanque->id }}">
-                                                                    Volumen a recargar
+                                                                    Galones a recargar
                                                                 </label>
 
                                                                 <input
@@ -351,9 +417,12 @@
                                                                 @enderror
                                                             </div>
 
-                                                            <div class="cc-field" style="margin-bottom: 0;">
+                                                            <div
+                                                                class="cc-field"
+                                                                style="margin-bottom: 0;"
+                                                            >
                                                                 <label for="resultado_{{ $tanque->id }}">
-                                                                    Resultado
+                                                                    Inventario resultante
                                                                 </label>
 
                                                                 <input
@@ -365,11 +434,17 @@
                                                                     data-volumen-resultante
                                                                 >
                                                             </div>
+
                                                         </div>
 
-                                                        <div class="cc-admin-result-value-muted" style="margin-top: .65rem;">
+                                                        <div
+                                                            class="cc-admin-result-value-muted"
+                                                            style="margin-top: .65rem;"
+                                                        >
                                                             Subtotal estimado:
-                                                            <strong data-subtotal-tanque>$0.00</strong>
+                                                            <strong data-subtotal-tanque>
+                                                                $0.00
+                                                            </strong>
                                                         </div>
                                                     </div>
 
@@ -379,12 +454,20 @@
                                     </div>
 
                                     <div class="cc-actions cc-actions-compact">
-                                        <button type="submit" class="cc-btn-primary cc-btn-form-action">
+                                        <button
+                                            type="submit"
+                                            class="cc-btn-primary cc-btn-form-action"
+                                        >
                                             Registrar recarga
                                         </button>
 
-                                        <a href="{{ route('gasolineras.tanques.recargas.index', ['consultar' => 1, 'gasolinera_id' => $gasolinera->id]) }}"
-                                           class="cc-btn-secondary cc-btn-form-action">
+                                        <a
+                                            href="{{ route('gasolineras.tanques.recargas.index', [
+                                                'consultar' => 1,
+                                                'gasolinera_ids' => [$gasolinera->id],
+                                            ]) }}"
+                                            class="cc-btn-secondary cc-btn-form-action"
+                                        >
                                             Cancelar
                                         </a>
                                     </div>
@@ -400,7 +483,7 @@
                             </h5>
 
                             <p>
-                                Historial reciente de recargas registradas y anuladas para esta gasolinera.
+                                Historial reciente de operaciones registradas y anuladas para esta gasolinera.
                             </p>
                         </div>
 
@@ -412,12 +495,15 @@
                                     </h5>
 
                                     <p>
-                                        Todavía no hay recargas registradas para esta gasolinera.
+                                        Todavía no existen recargas registradas para esta gasolinera.
                                     </p>
                                 </div>
                             @else
                                 <div class="cc-table-adaptive-wrapper">
-                                    <table class="cc-table-adaptive" style="min-width: 86rem;">
+                                    <table
+                                        class="cc-table-adaptive"
+                                        style="min-width: 86rem;"
+                                    >
                                         <thead>
                                             <tr>
                                                 <th>Fecha</th>
@@ -434,14 +520,20 @@
                                         <tbody>
                                             @foreach ($recargasRecientes as $recarga)
                                                 @php
-                                                    $tanquesRecargados = $recarga->movimientosInventario
-                                                        ->where('tipo_movimiento', 'entrada_recarga')
+                                                    $tanquesRecargados = $recarga
+                                                        ->movimientosInventario
+                                                        ->where(
+                                                            'tipo_movimiento',
+                                                            'entrada_recarga'
+                                                        )
                                                         ->pluck('tanque.nombre')
                                                         ->filter()
                                                         ->unique()
                                                         ->values();
 
-                                                    $estaRegistrada = $recarga->estado === 'registrado';
+                                                    $estaRegistrada =
+                                                        $recarga->estado
+                                                        === 'registrado';
                                                 @endphp
 
                                                 <tr>
@@ -450,18 +542,21 @@
                                                     </td>
 
                                                     <td>
-                                                        {{ $tanquesRecargados->isNotEmpty() ? $tanquesRecargados->join(', ') : 'Sin detalle' }}
+                                                        {{ $tanquesRecargados->isNotEmpty()
+                                                            ? $tanquesRecargados->join(', ')
+                                                            : 'Sin detalle' }}
                                                     </td>
 
                                                     <td>
-                                                        {{ number_format((float) $recarga->total_galones, 2) }} gal
+                                                        {{ number_format((float) $recarga->total_galones, 2) }}
+                                                        gal
                                                     </td>
 
                                                     <td>
                                                         ${{ number_format((float) $recarga->precio_galon, 4) }}
                                                     </td>
 
-                                                    <td>
+                                                    <td class="cc-table-adaptive-strong">
                                                         ${{ number_format((float) $recarga->total_compra, 2) }}
                                                     </td>
 
@@ -484,12 +579,14 @@
                                                             </div>
 
                                                             <div class="cc-table-adaptive-muted">
-                                                                Por: {{ $recarga->anuladoPor?->name ?: 'Sistema' }}
+                                                                Por:
+                                                                {{ $recarga->anuladoPor?->name ?: 'Sistema' }}
                                                             </div>
 
                                                             @if ($recarga->motivo_anulacion)
                                                                 <div class="cc-table-adaptive-muted">
-                                                                    Motivo: {{ $recarga->motivo_anulacion }}
+                                                                    Motivo:
+                                                                    {{ $recarga->motivo_anulacion }}
                                                                 </div>
                                                             @endif
                                                         @endif
@@ -497,13 +594,21 @@
 
                                                     <td>
                                                         @if ($estaRegistrada)
-                                                            <form method="POST"
-                                                                  action="{{ route('gasolineras.tanques.recargas.anular', [$gasolinera, $recarga]) }}"
-                                                                  onsubmit="return confirm('Esta acción anulará la recarga completa y revertirá el inventario de todos los tanques involucrados. La anulación es irreversible. ¿Desea continuar?');">
+                                                            <form
+                                                                method="POST"
+                                                                action="{{ route('gasolineras.tanques.recargas.anular', [
+                                                                    $gasolinera,
+                                                                    $recarga,
+                                                                ]) }}"
+                                                                onsubmit="return confirm('Esta acción anulará la recarga completa y revertirá el inventario de todos los tanques involucrados. La anulación es irreversible. ¿Desea continuar?');"
+                                                            >
                                                                 @csrf
                                                                 @method('PATCH')
 
-                                                                <div class="cc-field" style="min-width: 17rem; margin-bottom: .65rem;">
+                                                                <div
+                                                                    class="cc-field"
+                                                                    style="min-width: 17rem; margin-bottom: .65rem;"
+                                                                >
                                                                     <label for="motivo_anulacion_{{ $recarga->id }}">
                                                                         Motivo de anulación
                                                                     </label>
@@ -519,7 +624,10 @@
                                                                     >
                                                                 </div>
 
-                                                                <button type="submit" class="cc-btn-danger cc-btn-result">
+                                                                <button
+                                                                    type="submit"
+                                                                    class="cc-btn-danger cc-btn-result"
+                                                                >
                                                                     Anular recarga
                                                                 </button>
                                                             </form>
@@ -545,19 +653,41 @@
     </div>
 
     <script>
-        const recargaForm = document.querySelector('[data-recarga-form]');
+        document.addEventListener('DOMContentLoaded', function () {
+            const recargaForm = document.querySelector(
+                '[data-recarga-form]'
+            );
 
-        if (recargaForm) {
-            const precioInput = recargaForm.querySelector('[data-precio-galon]');
-            const volumenInputs = Array.from(recargaForm.querySelectorAll('[data-volumen-input]'));
-            const totalGalonesInput = recargaForm.querySelector('[data-total-galones]');
-            const totalCompraInput = recargaForm.querySelector('[data-total-compra]');
+            if (! recargaForm) {
+                return;
+            }
+
+            const precioInput = recargaForm.querySelector(
+                '[data-precio-galon]'
+            );
+
+            const volumenInputs = Array.from(
+                recargaForm.querySelectorAll(
+                    '[data-volumen-input]'
+                )
+            );
+
+            const totalGalonesInput = recargaForm.querySelector(
+                '[data-total-galones]'
+            );
+
+            const totalCompraInput = recargaForm.querySelector(
+                '[data-total-compra]'
+            );
 
             function formatNumber(value, decimals = 2) {
-                return Number(value || 0).toLocaleString('es-SV', {
-                    minimumFractionDigits: decimals,
-                    maximumFractionDigits: decimals
-                });
+                return Number(value || 0).toLocaleString(
+                    'es-SV',
+                    {
+                        minimumFractionDigits: decimals,
+                        maximumFractionDigits: decimals
+                    }
+                );
             }
 
             function formatMoney(value, decimals = 2) {
@@ -565,48 +695,99 @@
             }
 
             function updateTotals() {
-                const precioGalon = Number(precioInput.value || 0);
+                const precioGalon = Number(
+                    precioInput?.value || 0
+                );
+
                 let totalGalones = 0;
 
-                volumenInputs.forEach((input) => {
-                    const volumenMovimiento = Number(input.value || 0);
-                    const volumenActual = Number(input.dataset.volumenActual || 0);
-                    const capacidadTotal = Number(input.dataset.capacidadTotal || 0);
-                    const volumenResultante = volumenActual + volumenMovimiento;
-                    const subtotal = volumenMovimiento * precioGalon;
+                volumenInputs.forEach(function (input) {
+                    const volumenMovimiento = Number(
+                        input.value || 0
+                    );
 
-                    const card = input.closest('.cc-admin-result-card');
-                    const resultanteInput = card ? card.querySelector('[data-volumen-resultante]') : null;
-                    const subtotalLabel = card ? card.querySelector('[data-subtotal-tanque]') : null;
+                    const volumenActual = Number(
+                        input.dataset.volumenActual || 0
+                    );
+
+                    const capacidadTotal = Number(
+                        input.dataset.capacidadTotal || 0
+                    );
+
+                    const volumenResultante =
+                        volumenActual + volumenMovimiento;
+
+                    const subtotal =
+                        volumenMovimiento * precioGalon;
+
+                    const card = input.closest(
+                        '.cc-admin-result-card'
+                    );
+
+                    const resultanteInput = card
+                        ? card.querySelector(
+                            '[data-volumen-resultante]'
+                        )
+                        : null;
+
+                    const subtotalLabel = card
+                        ? card.querySelector(
+                            '[data-subtotal-tanque]'
+                        )
+                        : null;
 
                     if (resultanteInput) {
-                        resultanteInput.value = formatNumber(volumenResultante) + ' gal';
+                        resultanteInput.value =
+                            formatNumber(volumenResultante)
+                            + ' gal';
                     }
 
                     if (subtotalLabel) {
-                        subtotalLabel.textContent = formatMoney(subtotal);
+                        subtotalLabel.textContent =
+                            formatMoney(subtotal);
                     }
 
                     totalGalones += volumenMovimiento;
 
-                    if (capacidadTotal > 0 && volumenResultante > capacidadTotal) {
-                        input.setCustomValidity('La recarga excede la capacidad total del tanque.');
+                    if (
+                        capacidadTotal > 0
+                        && volumenResultante > capacidadTotal
+                    ) {
+                        input.setCustomValidity(
+                            'La recarga excede la capacidad total del tanque.'
+                        );
                     } else {
                         input.setCustomValidity('');
                     }
                 });
 
-                totalGalonesInput.value = formatNumber(totalGalones) + ' gal';
-                totalCompraInput.value = formatMoney(totalGalones * precioGalon);
+                if (totalGalonesInput) {
+                    totalGalonesInput.value =
+                        formatNumber(totalGalones)
+                        + ' gal';
+                }
+
+                if (totalCompraInput) {
+                    totalCompraInput.value =
+                        formatMoney(
+                            totalGalones * precioGalon
+                        );
+                }
             }
 
-            precioInput.addEventListener('input', updateTotals);
+            precioInput?.addEventListener(
+                'input',
+                updateTotals
+            );
 
-            volumenInputs.forEach((input) => {
-                input.addEventListener('input', updateTotals);
+            volumenInputs.forEach(function (input) {
+                input.addEventListener(
+                    'input',
+                    updateTotals
+                );
             });
 
             updateTotals();
-        }
+        });
     </script>
 </x-app-layout>

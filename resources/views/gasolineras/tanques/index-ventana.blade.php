@@ -17,9 +17,15 @@
     </head>
 
     <body class="antialiased">
-        <div class="min-h-screen" style="background: var(--cc-bg-main);">
+        <div
+            class="min-h-screen"
+            style="background: var(--cc-bg-main);"
+        >
             <div class="cc-page-wrapper">
-                <div class="cc-window-container" style="max-width: 80rem;">
+                <div
+                    class="cc-window-container"
+                    style="max-width: 80rem;"
+                >
                     <div class="cc-card">
 
                         <div class="cc-card-header cc-card-header-compact">
@@ -27,12 +33,13 @@
                                 <h3 class="cc-title cc-title-compact">
                                     Gestión de tanques
                                 </h3>
-
                             </div>
 
                             <div class="flex items-center gap-3">
-                                <a href="{{ route('gasolineras.tanques.index', request()->query()) }}"
-                                   class="cc-btn-secondary cc-btn-wide">
+                                <a
+                                    href="{{ route('gasolineras.tanques.index', request()->query()) }}"
+                                    class="cc-btn-secondary cc-btn-wide"
+                                >
                                     Volver a Gestión
                                 </a>
                             </div>
@@ -54,12 +61,23 @@
                             </div>
                         @endif
 
-                        <form method="GET" action="{{ route('gasolineras.tanques.index.ventana') }}" class="mb-5">
-                            <input type="hidden" name="consultar" value="1">
+                        <form
+                            method="GET"
+                            action="{{ route('gasolineras.tanques.index.ventana') }}"
+                            class="mb-5"
+                        >
+                            <input
+                                type="hidden"
+                                name="consultar"
+                                value="1"
+                            >
 
                             <div class="cc-filter-panel cc-filter-panel-compact cc-filter-panel-inline">
 
-                                <div class="cc-form-section cc-form-section-compact" style="margin-top: 0;">
+                                <div
+                                    class="cc-form-section cc-form-section-compact"
+                                    style="margin-top: 0;"
+                                >
                                     <div class="cc-form-section-title">
                                         Filtros de consulta
                                     </div>
@@ -90,31 +108,120 @@
                                     </div>
 
                                     <div class="cc-field">
-                                        <label for="empresa_id">
+                                        <label>
                                             Empresa
                                         </label>
 
                                         @if ($esUsuarioDieselCop)
-                                            <select id="empresa_id" name="empresa_id" class="cc-input">
-                                                <option value="">Todas</option>
+                                            <div
+                                                class="cc-filter-multiselect"
+                                                data-cc-filter-multiselect
+                                                data-all-text="Todas"
+                                                data-singular-text="seleccionada"
+                                                data-plural-text="seleccionadas"
+                                            >
+                                                <button
+                                                    type="button"
+                                                    class="cc-filter-multiselect-toggle"
+                                                    data-cc-filter-toggle
+                                                >
+                                                    <span
+                                                        data-cc-filter-label
+                                                        data-default-label="Todas"
+                                                    >
+                                                        Todas
+                                                    </span>
 
-                                                @foreach ($empresasSelector as $empresa)
-                                                    <option value="{{ $empresa->id }}" @selected((string) $empresaId === (string) $empresa->id)>
-                                                        {{ $empresa->nombre_comercial ?: $empresa->nombre_legal }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
+                                                    <span class="cc-filter-multiselect-arrow">
+                                                        ⌄
+                                                    </span>
+                                                </button>
+
+                                                <div
+                                                    class="cc-filter-multiselect-menu"
+                                                    data-cc-filter-menu
+                                                >
+                                                    <div class="cc-filter-multiselect-list">
+
+                                                        <label class="cc-filter-multiselect-option cc-filter-multiselect-option-master">
+                                                            <input
+                                                                type="checkbox"
+                                                                data-cc-filter-master
+                                                            >
+
+                                                            <span>
+                                                                Seleccionar todo
+                                                            </span>
+                                                        </label>
+
+                                                        @foreach ($empresasSelector as $empresaOpcion)
+                                                            <label
+                                                                class="cc-filter-multiselect-option"
+                                                                data-cc-filter-option
+                                                                data-cc-filter-text="{{ $empresaOpcion->nombre_comercial ?: $empresaOpcion->nombre_legal }}"
+                                                            >
+                                                                <input
+                                                                    type="checkbox"
+                                                                    name="empresa_ids[]"
+                                                                    value="{{ $empresaOpcion->id }}"
+                                                                    @checked(
+                                                                        in_array(
+                                                                            (string) $empresaOpcion->id,
+                                                                            array_map(
+                                                                                'strval',
+                                                                                $empresaIds ?? []
+                                                                            ),
+                                                                            true
+                                                                        )
+                                                                    )
+                                                                    data-cc-filter-checkbox
+                                                                >
+
+                                                                <span data-cc-filter-option-label>
+                                                                    {{ $empresaOpcion->nombre_comercial ?: $empresaOpcion->nombre_legal }}
+                                                                </span>
+                                                            </label>
+                                                        @endforeach
+
+                                                    </div>
+                                                </div>
+                                            </div>
                                         @else
-                                            <select id="empresa_id_visible" class="cc-input" disabled>
-                                                @foreach ($empresasSelector as $empresa)
-                                                    <option value="{{ $empresa->id }}" selected>
-                                                        {{ $empresa->nombre_comercial ?: $empresa->nombre_legal }}
+                                            <select
+                                                id="empresa_id_visible"
+                                                class="cc-input"
+                                                disabled
+                                            >
+                                                @forelse ($empresasSelector as $empresaOpcion)
+                                                    <option
+                                                        value="{{ $empresaOpcion->id }}"
+                                                        selected
+                                                    >
+                                                        {{ $empresaOpcion->nombre_comercial ?: $empresaOpcion->nombre_legal }}
                                                     </option>
-                                                @endforeach
+                                                @empty
+                                                    <option selected>
+                                                        Empresa no disponible
+                                                    </option>
+                                                @endforelse
                                             </select>
+
+                                            @foreach ($empresaIds ?? [] as $empresaSeleccionadaId)
+                                                <input
+                                                    type="hidden"
+                                                    name="empresa_ids[]"
+                                                    value="{{ $empresaSeleccionadaId }}"
+                                                >
+                                            @endforeach
                                         @endif
 
-                                        @error('empresa_id')
+                                        @error('empresa_ids')
+                                            <div class="cc-error">
+                                                {{ $message }}
+                                            </div>
+                                        @enderror
+
+                                        @error('empresa_ids.*')
                                             <div class="cc-error">
                                                 {{ $message }}
                                             </div>
@@ -144,21 +251,103 @@
                                     </div>
 
                                     <div class="cc-field">
-                                        <label for="gasolinera_id">
+                                        <label>
                                             Gasolinera
                                         </label>
 
-                                        <select id="gasolinera_id" name="gasolinera_id" class="cc-input">
-                                            <option value="">Todas</option>
+                                        <div
+                                            class="cc-filter-multiselect"
+                                            data-cc-filter-multiselect
+                                            data-all-text="Todas"
+                                            data-singular-text="seleccionada"
+                                            data-plural-text="seleccionadas"
+                                        >
+                                            <button
+                                                type="button"
+                                                class="cc-filter-multiselect-toggle"
+                                                data-cc-filter-toggle
+                                            >
+                                                <span
+                                                    data-cc-filter-label
+                                                    data-default-label="Todas"
+                                                >
+                                                    Todas
+                                                </span>
 
-                                            @foreach ($gasolinerasSelector as $gasolineraOpcion)
-                                                <option value="{{ $gasolineraOpcion->id }}" @selected((string) $gasolineraId === (string) $gasolineraOpcion->id)>
-                                                    {{ $gasolineraOpcion->nombre }}
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                                <span class="cc-filter-multiselect-arrow">
+                                                    ⌄
+                                                </span>
+                                            </button>
 
-                                        @error('gasolinera_id')
+                                            <div
+                                                class="cc-filter-multiselect-menu"
+                                                data-cc-filter-menu
+                                            >
+                                                <div class="cc-filter-multiselect-list">
+
+                                                    <label class="cc-filter-multiselect-option cc-filter-multiselect-option-master">
+                                                        <input
+                                                            type="checkbox"
+                                                            data-cc-filter-master
+                                                        >
+
+                                                        <span>
+                                                            Seleccionar todo
+                                                        </span>
+                                                    </label>
+
+                                                    @foreach ($gasolinerasSelector as $gasolineraOpcion)
+                                                        @php
+                                                            $empresaGasolinera = $gasolineraOpcion->empresa;
+
+                                                            $nombreEmpresaGasolinera =
+                                                                $empresaGasolinera?->nombre_comercial
+                                                                ?: $empresaGasolinera?->nombre_legal;
+                                                        @endphp
+
+                                                        <label
+                                                            class="cc-filter-multiselect-option"
+                                                            data-cc-filter-option
+                                                            data-cc-filter-text="{{ $gasolineraOpcion->nombre }} {{ $nombreEmpresaGasolinera }}"
+                                                        >
+                                                            <input
+                                                                type="checkbox"
+                                                                name="gasolinera_ids[]"
+                                                                value="{{ $gasolineraOpcion->id }}"
+                                                                @checked(
+                                                                    in_array(
+                                                                        (string) $gasolineraOpcion->id,
+                                                                        array_map(
+                                                                            'strval',
+                                                                            $gasolineraIds ?? []
+                                                                        ),
+                                                                        true
+                                                                    )
+                                                                )
+                                                                data-cc-filter-checkbox
+                                                            >
+
+                                                            <span data-cc-filter-option-label>
+                                                                {{ $gasolineraOpcion->nombre }}
+
+                                                                @if ($esUsuarioDieselCop && $nombreEmpresaGasolinera)
+                                                                    — {{ $nombreEmpresaGasolinera }}
+                                                                @endif
+                                                            </span>
+                                                        </label>
+                                                    @endforeach
+
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        @error('gasolinera_ids')
+                                            <div class="cc-error">
+                                                {{ $message }}
+                                            </div>
+                                        @enderror
+
+                                        @error('gasolinera_ids.*')
                                             <div class="cc-error">
                                                 {{ $message }}
                                             </div>
@@ -166,11 +355,17 @@
                                     </div>
 
                                     <div class="cc-standard-filter-actions">
-                                        <button type="submit" class="cc-btn-primary">
+                                        <button
+                                            type="submit"
+                                            class="cc-btn-primary"
+                                        >
                                             Consultar
                                         </button>
 
-                                        <a href="{{ route('gasolineras.tanques.index.ventana') }}" class="cc-btn-secondary">
+                                        <a
+                                            href="{{ route('gasolineras.tanques.index.ventana') }}"
+                                            class="cc-btn-secondary"
+                                        >
                                             Limpiar
                                         </a>
                                     </div>
@@ -182,14 +377,19 @@
                         @if ($hayFiltros && $tanques->total() > 0)
                             <div class="mb-4 flex justify-end text-sm text-[var(--cc-text-muted)]">
                                 Mostrando
+
                                 <span class="mx-1 font-bold text-[var(--cc-text-main)]">
                                     {{ $tanques->firstItem() }}
                                 </span>
+
                                 -
+
                                 <span class="mx-1 font-bold text-[var(--cc-text-main)]">
                                     {{ $tanques->lastItem() }}
                                 </span>
+
                                 de
+
                                 <span class="ml-1 font-bold text-[var(--cc-text-main)]">
                                     {{ $tanques->total() }}
                                 </span>
@@ -227,12 +427,27 @@
                                         $volumenActual = (float) $tanque->volumen_actual;
                                         $volumenMinimoAlerta = (float) $tanque->volumen_minimo_alerta;
 
-                                        $porcentajeDisponible = $tanque->porcentajeDisponible();
+                                        $espacioDisponible = max(
+                                            $capacidadTotal - $volumenActual,
+                                            0
+                                        );
+
+                                        $porcentajeInventario = $tanque->porcentajeDisponible();
                                         $bajoAlerta = $tanque->estaBajoAlerta();
 
-                                        $estadoOperativo = $tanque->estado === 'activo'
-                                            ? 'Disponible'
-                                            : 'No disponible';
+                                        $operativamenteAdministrable =
+                                            $gasolinera
+                                            && $empresa
+                                            && $gasolinera->estado === 'activa'
+                                            && $empresa->estado === 'activa';
+
+                                        $parametrosFicha = array_merge(
+                                            [
+                                                'gasolinera' => $gasolinera,
+                                                'tanque' => $tanque,
+                                            ],
+                                            request()->query()
+                                        );
                                     @endphp
 
                                     <article class="cc-admin-result-card">
@@ -244,15 +459,9 @@
                                                         {{ $tanque->nombre }}
                                                     </h5>
 
-                                                    @if ($tanque->estado === 'activo')
-                                                        <span class="cc-badge cc-badge-active">
-                                                            Activo
-                                                        </span>
-                                                    @else
-                                                        <span class="cc-badge cc-badge-inactive">
-                                                            Inactivo
-                                                        </span>
-                                                    @endif
+                                                    <span class="cc-badge {{ $tanque->estado === 'activo' ? 'cc-badge-active' : 'cc-badge-inactive' }}">
+                                                        {{ $tanque->estado === 'activo' ? 'Activo' : 'Inactivo' }}
+                                                    </span>
 
                                                     @if ($bajoAlerta)
                                                         <span class="cc-badge cc-badge-warning">
@@ -262,7 +471,9 @@
                                                 </div>
 
                                                 <div class="cc-admin-result-subtitle">
-                                                    Tanque interno
+                                                    {{ $tanque->estado === 'activo'
+                                                        ? 'Disponible para administración'
+                                                        : 'Disponible únicamente para consulta' }}
                                                 </div>
                                             </div>
 
@@ -276,14 +487,17 @@
                                                 </div>
 
                                                 <div class="cc-admin-result-value-muted">
-                                                    {{ $empresa?->nombre_comercial ?: $empresa?->nombre_legal ?: 'Sin empresa' }}
+                                                    {{ $empresa?->nombre_comercial
+                                                        ?: $empresa?->nombre_legal
+                                                        ?: 'Sin empresa' }}
                                                 </div>
                                             </div>
 
                                             <div class="min-w-0 sm:grid sm:grid-cols-3 sm:gap-5 xl:col-span-4 xl:grid-cols-3">
+
                                                 <div class="min-w-0">
                                                     <div class="cc-admin-result-label">
-                                                        Inventario
+                                                        Inventario actual
                                                     </div>
 
                                                     <div class="cc-admin-result-value">
@@ -291,27 +505,27 @@
                                                     </div>
 
                                                     <div class="cc-admin-result-value-muted">
-                                                        Disponible
+                                                        {{ number_format($porcentajeInventario, 2) }}% de capacidad
                                                     </div>
                                                 </div>
 
                                                 <div class="min-w-0">
                                                     <div class="cc-admin-result-label">
-                                                        Capacidad
+                                                        Espacio disponible
                                                     </div>
 
                                                     <div class="cc-admin-result-value">
-                                                        {{ number_format($capacidadTotal, 2) }} gal
+                                                        {{ number_format($espacioDisponible, 2) }} gal
                                                     </div>
 
                                                     <div class="cc-admin-result-value-muted">
-                                                        {{ number_format($porcentajeDisponible, 2) }}% disponible
+                                                        Capacidad libre
                                                     </div>
                                                 </div>
 
                                                 <div class="min-w-0">
                                                     <div class="cc-admin-result-label">
-                                                        Mínimo alerta
+                                                        Mínimo de alerta
                                                     </div>
 
                                                     <div class="cc-admin-result-value {{ $bajoAlerta ? 'text-[var(--cc-danger)]' : '' }}">
@@ -319,17 +533,29 @@
                                                     </div>
 
                                                     <div class="cc-admin-result-value-muted">
-                                                        {{ $estadoOperativo }}
+                                                        Capacidad {{ number_format($capacidadTotal, 2) }} gal
                                                     </div>
                                                 </div>
+
                                             </div>
 
-                                            <div class="flex flex-col sm:flex-row gap-3 xl:col-span-2 xl:justify-end xl:self-center">
-                                                @if ($gasolinera)
-                                                    <a href="{{ route('gasolineras.tanques.show.ventana', [$gasolinera, $tanque]) }}"
-                                                       class="{{ $tanque->estado === 'activo' ? 'cc-btn-primary' : 'cc-btn-secondary' }} cc-btn-result w-full sm:w-auto">
-                                                        {{ $tanque->estado === 'activo' ? 'Administrar' : 'Ver ficha' }}
+                                            <div class="flex flex-col gap-3 sm:flex-row xl:col-span-2 xl:self-center xl:justify-end">
+                                                @if ($gasolinera && $operativamenteAdministrable)
+                                                    <a
+                                                        href="{{ route(
+                                                            'gasolineras.tanques.show.ventana',
+                                                            $parametrosFicha
+                                                        ) }}"
+                                                        class="cc-btn-primary cc-btn-result w-full sm:w-auto"
+                                                    >
+                                                        {{ $tanque->estado === 'activo'
+                                                            ? 'Administrar'
+                                                            : 'Ver ficha' }}
                                                     </a>
+                                                @else
+                                                    <span class="cc-admin-result-value-muted">
+                                                        Sin acciones disponibles
+                                                    </span>
                                                 @endif
                                             </div>
 
@@ -339,7 +565,7 @@
                             </div>
 
                             <div class="mt-6">
-                                {{ $tanques->appends(array_merge(request()->query(), ['consultar' => 1]))->links() }}
+                                {{ $tanques->links() }}
                             </div>
                         @endif
 
@@ -347,5 +573,167 @@
                 </div>
             </div>
         </div>
+
+        <script>
+            document
+                .querySelectorAll('[data-cc-filter-multiselect]')
+                .forEach(function (multiselect) {
+                    const toggle = multiselect.querySelector(
+                        '[data-cc-filter-toggle]'
+                    );
+
+                    const menu = multiselect.querySelector(
+                        '[data-cc-filter-menu]'
+                    );
+
+                    const label = multiselect.querySelector(
+                        '[data-cc-filter-label]'
+                    );
+
+                    const master = multiselect.querySelector(
+                        '[data-cc-filter-master]'
+                    );
+
+                    const checkboxes = Array.from(
+                        multiselect.querySelectorAll(
+                            '[data-cc-filter-checkbox]'
+                        )
+                    );
+
+                    const defaultLabel =
+                        label?.dataset.defaultLabel
+                        || multiselect.dataset.allText
+                        || 'Todos';
+
+                    const singularText =
+                        multiselect.dataset.singularText
+                        || 'seleccionado';
+
+                    const pluralText =
+                        multiselect.dataset.pluralText
+                        || 'seleccionados';
+
+                    function updateLabel() {
+                        const selected = checkboxes.filter(
+                            function (checkbox) {
+                                return checkbox.checked;
+                            }
+                        );
+
+                        if (label) {
+                            if (selected.length === 0) {
+                                label.textContent = defaultLabel;
+                            } else if (selected.length === 1) {
+                                const selectedOption = selected[0].closest(
+                                    '[data-cc-filter-option]'
+                                );
+
+                                const selectedLabel = selectedOption?.querySelector(
+                                    '[data-cc-filter-option-label]'
+                                );
+
+                                label.textContent = selectedLabel
+                                    ? selectedLabel.textContent.trim()
+                                    : `1 ${singularText}`;
+                            } else {
+                                label.textContent =
+                                    `${selected.length} ${pluralText}`;
+                            }
+                        }
+
+                        if (master) {
+                            master.checked =
+                                checkboxes.length > 0
+                                && selected.length === checkboxes.length;
+
+                            master.indeterminate =
+                                selected.length > 0
+                                && selected.length < checkboxes.length;
+                        }
+                    }
+
+                    function closeOtherMenus() {
+                        document
+                            .querySelectorAll('[data-cc-filter-multiselect]')
+                            .forEach(function (otherMultiselect) {
+                                if (otherMultiselect === multiselect) {
+                                    return;
+                                }
+
+                                otherMultiselect
+                                    .querySelector('[data-cc-filter-toggle]')
+                                    ?.classList.remove('is-open');
+
+                                otherMultiselect
+                                    .querySelector('[data-cc-filter-menu]')
+                                    ?.classList.remove('is-open');
+                            });
+                    }
+
+                    toggle?.addEventListener('click', function () {
+                        closeOtherMenus();
+
+                        toggle.classList.toggle('is-open');
+                        menu?.classList.toggle('is-open');
+                    });
+
+                    master?.addEventListener('change', function () {
+                        checkboxes.forEach(function (checkbox) {
+                            checkbox.checked = master.checked;
+                        });
+
+                        updateLabel();
+                    });
+
+                    checkboxes.forEach(function (checkbox) {
+                        checkbox.addEventListener(
+                            'change',
+                            updateLabel
+                        );
+                    });
+
+                    updateLabel();
+                });
+
+            document.addEventListener('click', function (event) {
+                if (
+                    event.target.closest(
+                        '[data-cc-filter-multiselect]'
+                    )
+                ) {
+                    return;
+                }
+
+                document
+                    .querySelectorAll('[data-cc-filter-toggle]')
+                    .forEach(function (toggle) {
+                        toggle.classList.remove('is-open');
+                    });
+
+                document
+                    .querySelectorAll('[data-cc-filter-menu]')
+                    .forEach(function (menu) {
+                        menu.classList.remove('is-open');
+                    });
+            });
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key !== 'Escape') {
+                    return;
+                }
+
+                document
+                    .querySelectorAll('[data-cc-filter-toggle]')
+                    .forEach(function (toggle) {
+                        toggle.classList.remove('is-open');
+                    });
+
+                document
+                    .querySelectorAll('[data-cc-filter-menu]')
+                    .forEach(function (menu) {
+                        menu.classList.remove('is-open');
+                    });
+            });
+        </script>
     </body>
 </html>
