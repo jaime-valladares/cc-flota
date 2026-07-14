@@ -1,5 +1,11 @@
 @php
     $queryParams = request()->query();
+
+    $esEdicion = isset($motorista) && $motorista;
+
+    $empresaActual = $esEdicion
+        ? $motorista->empresa
+        : null;
 @endphp
 
 <div class="cc-grid cc-grid-compact">
@@ -15,29 +21,65 @@
             Empresa <span class="cc-required">*</span>
         </label>
 
-        @if ($esUsuarioDieselCop)
-            <select id="empresa_id" name="empresa_id" class="cc-input" required>
-                <option value="">Seleccione una empresa</option>
+        @if ($esEdicion)
+            <select
+                id="empresa_id"
+                class="cc-input"
+                disabled
+            >
+                <option selected>
+                    {{ $empresaActual?->nombre_comercial ?: $empresaActual?->nombre_legal }}
+                </option>
+            </select>
+
+            <div class="cc-field-help">
+                La empresa no puede modificarse después del registro.
+            </div>
+        @elseif ($esUsuarioDieselCop)
+            <select
+                id="empresa_id"
+                name="empresa_id"
+                class="cc-input"
+                required
+            >
+                <option value="">
+                    Seleccione una empresa
+                </option>
 
                 @foreach ($empresasSelector as $empresaOpcion)
-                    <option value="{{ $empresaOpcion->id }}"
-                        @selected((string) old('empresa_id', $motorista->empresa_id ?? '') === (string) $empresaOpcion->id)>
+                    <option
+                        value="{{ $empresaOpcion->id }}"
+                        @selected(
+                            (string) old('empresa_id')
+                            === (string) $empresaOpcion->id
+                        )
+                    >
                         {{ $empresaOpcion->nombre_comercial ?: $empresaOpcion->nombre_legal }}
                     </option>
                 @endforeach
             </select>
         @else
-            <select id="empresa_id" name="empresa_id" class="cc-input" disabled>
+            <select
+                id="empresa_id"
+                class="cc-input"
+                disabled
+            >
                 @foreach ($empresasSelector as $empresaOpcion)
-                    <option value="{{ $empresaOpcion->id }}" selected>
+                    <option selected>
                         {{ $empresaOpcion->nombre_comercial ?: $empresaOpcion->nombre_legal }}
                     </option>
                 @endforeach
             </select>
+
+            <div class="cc-field-help">
+                El motorista será registrado para su empresa.
+            </div>
         @endif
 
         @error('empresa_id')
-            <div class="cc-error">{{ $message }}</div>
+            <div class="cc-error">
+                {{ $message }}
+            </div>
         @enderror
     </div>
 
@@ -48,18 +90,29 @@
 
         <input
             id="licencia"
-            name="licencia"
+            @unless ($esEdicion)
+                name="licencia"
+            @endunless
             type="text"
             class="cc-input"
             value="{{ old('licencia', $motorista->licencia ?? '') }}"
             maxlength="14"
             inputmode="numeric"
             placeholder="Solo números, sin guiones"
+            @disabled($esEdicion)
             required
         >
 
+        @if ($esEdicion)
+            <div class="cc-field-help">
+                La licencia no puede modificarse después del registro.
+            </div>
+        @endif
+
         @error('licencia')
-            <div class="cc-error">{{ $message }}</div>
+            <div class="cc-error">
+                {{ $message }}
+            </div>
         @enderror
     </div>
 
@@ -75,11 +128,14 @@
             class="cc-input"
             value="{{ old('nombres', $motorista->nombres ?? '') }}"
             maxlength="100"
+            autocomplete="off"
             required
         >
 
         @error('nombres')
-            <div class="cc-error">{{ $message }}</div>
+            <div class="cc-error">
+                {{ $message }}
+            </div>
         @enderror
     </div>
 
@@ -95,11 +151,14 @@
             class="cc-input"
             value="{{ old('apellidos', $motorista->apellidos ?? '') }}"
             maxlength="100"
+            autocomplete="off"
             required
         >
 
         @error('apellidos')
-            <div class="cc-error">{{ $message }}</div>
+            <div class="cc-error">
+                {{ $message }}
+            </div>
         @enderror
     </div>
 
@@ -115,66 +174,109 @@
             class="cc-input"
             value="{{ old('telefono', $motorista->telefono ?? '') }}"
             maxlength="9"
+            inputmode="numeric"
             placeholder="0000-0000"
+            autocomplete="off"
             required
         >
 
         @error('telefono')
-            <div class="cc-error">{{ $message }}</div>
+            <div class="cc-error">
+                {{ $message }}
+            </div>
         @enderror
     </div>
 
 </div>
 
 <div class="cc-actions cc-actions-compact">
-    <button type="submit" class="cc-btn-primary cc-btn-form-action">
+    <button
+        type="submit"
+        class="cc-btn-primary cc-btn-form-action"
+    >
         {{ $submitLabel }}
     </button>
 
-    @if ($motorista)
-        <a href="{{ ($modoVentana ?? false)
-            ? route('motoristas.show.ventana', array_merge($queryParams, ['motorista' => $motorista]))
-            : route('motoristas.show', array_merge($queryParams, ['motorista' => $motorista])) }}"
-           class="cc-btn-secondary cc-btn-form-action">
+    @if ($esEdicion)
+        <a
+            href="{{ ($modoVentana ?? false)
+                ? route(
+                    'motoristas.show.ventana',
+                    array_merge(
+                        $queryParams,
+                        ['motorista' => $motorista]
+                    )
+                )
+                : route(
+                    'motoristas.show',
+                    array_merge(
+                        $queryParams,
+                        ['motorista' => $motorista]
+                    )
+                ) }}"
+            class="cc-btn-secondary cc-btn-form-action"
+        >
             Cancelar
         </a>
     @else
-        <a href="{{ ($modoVentana ?? false)
-            ? route('motoristas.consulta.ventana', $queryParams)
-            : route('motoristas.index', $queryParams) }}"
-           class="cc-btn-secondary cc-btn-form-action">
+        <a
+            href="{{ ($modoVentana ?? false)
+                ? route(
+                    'motoristas.consulta.ventana',
+                    $queryParams
+                )
+                : route(
+                    'motoristas.index',
+                    $queryParams
+                ) }}"
+            class="cc-btn-secondary cc-btn-form-action"
+        >
             Cancelar
         </a>
     @endif
 </div>
 
 <script>
-    function formatPhone(value) {
-        const digits = value.replace(/\D/g, '').slice(0, 8);
+    document.addEventListener('DOMContentLoaded', function () {
+        const telefonoInput = document.getElementById('telefono');
+        const licenciaInput = document.getElementById('licencia');
 
-        if (digits.length <= 4) {
-            return digits;
+        function formatearTelefono(value) {
+            const digits = value
+                .replace(/\D/g, '')
+                .slice(0, 8);
+
+            if (digits.length <= 4) {
+                return digits;
+            }
+
+            return digits.slice(0, 4)
+                + '-'
+                + digits.slice(4);
         }
 
-        return `${digits.slice(0, 4)}-${digits.slice(4)}`;
-    }
+        function conservarSoloNumeros(value, maxLength) {
+            return value
+                .replace(/\D/g, '')
+                .slice(0, maxLength);
+        }
 
-    function onlyNumbers(value, maxLength) {
-        return value.replace(/\D/g, '').slice(0, maxLength);
-    }
+        if (telefonoInput) {
+            telefonoInput.addEventListener('input', function () {
+                this.value = formatearTelefono(this.value);
+            });
+        }
 
-    const telefonoInput = document.getElementById('telefono');
-    const licenciaInput = document.getElementById('licencia');
-
-    if (telefonoInput) {
-        telefonoInput.addEventListener('input', function () {
-            this.value = formatPhone(this.value);
-        });
-    }
-
-    if (licenciaInput) {
-        licenciaInput.addEventListener('input', function () {
-            this.value = onlyNumbers(this.value, 14);
-        });
-    }
+        if (
+            licenciaInput
+            && ! licenciaInput.disabled
+        ) {
+            licenciaInput.addEventListener('input', function () {
+                this.value = conservarSoloNumeros(
+                    this.value,
+                    14
+                );
+            });
+        }
+    });
 </script>

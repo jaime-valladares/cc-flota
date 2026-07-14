@@ -1,9 +1,5 @@
 @php
     $queryParams = request()->query();
-
-    $empresaActualSelector = collect([$motorista->empresa])
-        ->filter()
-        ->values();
 @endphp
 
 <x-app-layout>
@@ -18,18 +14,31 @@
                         </h3>
 
                         <p class="cc-subtitle cc-subtitle-compact">
-                            Actualice la información del motorista disponible para solicitudes de abastecimiento.
+                            Actualice los datos personales y de contacto del motorista.
                         </p>
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <a href="{{ route('motoristas.show', array_merge(['motorista' => $motorista], $queryParams)) }}"
-                           class="cc-btn-secondary cc-btn-wide">
+                        <a
+                            href="{{ route(
+                                'motoristas.show',
+                                array_merge(
+                                    ['motorista' => $motorista],
+                                    $queryParams
+                                )
+                            ) }}"
+                            class="cc-btn-secondary cc-btn-wide"
+                        >
                             Volver a ficha
                         </a>
 
-                        <a href="{{ route('motoristas.administrar', $queryParams) }}"
-                           class="cc-btn-secondary cc-btn-wide">
+                        <a
+                            href="{{ route(
+                                'motoristas.administrar',
+                                $queryParams
+                            ) }}"
+                            class="cc-btn-secondary cc-btn-wide"
+                        >
                             Volver a administrar
                         </a>
                     </div>
@@ -41,9 +50,17 @@
                     </div>
                 @endif
 
-                <form method="POST"
-                      action="{{ route('motoristas.update', array_merge(['motorista' => $motorista], $queryParams)) }}"
-                      novalidate>
+                <form
+                    method="POST"
+                    action="{{ route(
+                        'motoristas.update',
+                        array_merge(
+                            ['motorista' => $motorista],
+                            $queryParams
+                        )
+                    ) }}"
+                    novalidate
+                >
                     @csrf
                     @method('PUT')
 
@@ -51,14 +68,6 @@
                         'motorista' => $motorista,
                         'submitLabel' => 'Actualizar motorista',
                         'modoVentana' => false,
-
-                        /*
-                         * En edición la empresa no debe modificarse.
-                         * Se fuerza el formulario a mostrar solo la empresa actual
-                         * como campo bloqueado, aunque el usuario sea Diesel Cop.
-                         */
-                        'esUsuarioDieselCop' => false,
-                        'empresasSelector' => $empresaActualSelector,
                     ])
                 </form>
 

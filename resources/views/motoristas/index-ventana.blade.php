@@ -11,15 +11,25 @@
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap"
+            rel="stylesheet"
+        >
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
 
     <body class="antialiased">
-        <div class="min-h-screen" style="background: var(--cc-bg-main);">
+        <div
+            class="min-h-screen"
+            style="background: var(--cc-bg-main);"
+        >
             <div class="cc-page-wrapper">
-                <div class="cc-window-container" style="max-width: 80rem;">
+                <div
+                    class="cc-window-container"
+                    style="max-width: 80rem;"
+                >
                     <div class="cc-card">
 
                         <div class="cc-card-header cc-card-header-compact">
@@ -29,14 +39,16 @@
                                 </h3>
 
                                 <p class="cc-subtitle cc-subtitle-compact">
-                                    Consulte los motoristas disponibles por empresa, nombre o apellido.
+                                    Consulte los motoristas registrados por empresa y estado.
                                 </p>
                             </div>
 
                             <div class="flex items-center gap-3">
-                                <a href="{{ route('motoristas.index', request()->query()) }}"
-                                   class="cc-btn-secondary cc-btn-wide">
-                                    Volver a Consulta
+                                <a
+                                    href="{{ route('motoristas.index', request()->query()) }}"
+                                    class="cc-btn-secondary cc-btn-wide"
+                                >
+                                    Volver al Sistema
                                 </a>
                             </div>
                         </div>
@@ -47,73 +59,73 @@
                             </div>
                         @endif
 
-                        <div class="cc-summary-strip"
-                             style="display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem; align-items: stretch;">
-                            <div class="cc-summary-strip-item"
-                                 style="justify-content: flex-start; gap: .65rem;">
+                        <div
+                            class="cc-summary-strip"
+                            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem; align-items: stretch;"
+                        >
+                            <div
+                                class="cc-summary-strip-item"
+                                style="justify-content: flex-start; gap: .65rem;"
+                            >
                                 <span class="cc-summary-strip-label">
                                     {{ $hayFiltros ? 'Resultados' : 'Total motoristas' }}
                                 </span>
+
                                 <span class="cc-summary-strip-value">
                                     {{ $hayFiltros ? $motoristas->total() : $totalMotoristas }}
                                 </span>
                             </div>
 
-                            <div class="cc-summary-strip-item"
-                                 style="justify-content: flex-start; gap: .65rem;">
+                            <div
+                                class="cc-summary-strip-item"
+                                style="justify-content: flex-start; gap: .65rem;"
+                            >
                                 <span class="cc-summary-strip-label">
                                     Activos
                                 </span>
+
                                 <span class="cc-summary-strip-value cc-summary-strip-value-success">
                                     {{ $motoristasActivos }}
                                 </span>
                             </div>
 
-                            <div class="cc-summary-strip-item"
-                                 style="justify-content: flex-start; gap: .65rem;">
+                            <div
+                                class="cc-summary-strip-item"
+                                style="justify-content: flex-start; gap: .65rem;"
+                            >
                                 <span class="cc-summary-strip-label">
                                     Inactivos
                                 </span>
+
                                 <span class="cc-summary-strip-value cc-summary-strip-value-danger">
                                     {{ $motoristasInactivos }}
                                 </span>
                             </div>
                         </div>
 
-                        <form method="GET" action="{{ route('motoristas.consulta.ventana') }}" class="mb-5">
-                            <input type="hidden" name="consultar" value="1">
+                        <form
+                            method="GET"
+                            action="{{ route('motoristas.consulta.ventana') }}"
+                            class="mb-5"
+                        >
+                            <input
+                                type="hidden"
+                                name="consultar"
+                                value="1"
+                            >
 
                             <div class="cc-filter-panel cc-filter-panel-compact cc-filter-panel-inline">
 
-                                <div class="cc-form-section cc-form-section-compact" style="margin-top: 0;">
+                                <div
+                                    class="cc-form-section cc-form-section-compact"
+                                    style="margin-top: 0;"
+                                >
                                     <div class="cc-form-section-title">
                                         Filtros de consulta
                                     </div>
                                 </div>
 
-                                <div class="cc-standard-filter-grid cc-unidades-consulta-filter-grid">
-
-                                    <div class="cc-field">
-                                        <label for="busqueda_empresa">
-                                            Buscar empresa
-                                        </label>
-
-                                        <input
-                                            id="busqueda_empresa"
-                                            name="busqueda_empresa"
-                                            type="text"
-                                            class="cc-input"
-                                            value="{{ $busquedaEmpresa ?? '' }}"
-                                            maxlength="150"
-                                            placeholder="Nombre legal o comercial"
-                                        >
-
-                                        @error('busqueda_empresa')
-                                            <div class="cc-error">
-                                                {{ $message }}
-                                            </div>
-                                        @enderror
-                                    </div>
+                                <div class="cc-standard-filter-grid">
 
                                     <div class="cc-field">
                                         <label>
@@ -121,34 +133,66 @@
                                         </label>
 
                                         @if ($esUsuarioDieselCop)
-                                            <div class="cc-filter-multiselect" data-cc-filter-multiselect>
-                                                <button type="button" class="cc-filter-multiselect-toggle" data-cc-filter-toggle>
-                                                    <span data-cc-filter-label data-default-label="Todas">
+                                            <div
+                                                class="cc-filter-multiselect"
+                                                data-cc-filter-multiselect
+                                            >
+                                                <button
+                                                    type="button"
+                                                    class="cc-filter-multiselect-toggle"
+                                                    data-cc-filter-toggle
+                                                >
+                                                    <span
+                                                        data-cc-filter-label
+                                                        data-default-label="Todas"
+                                                    >
                                                         @if (! empty($empresaIds))
                                                             {{ count($empresaIds) }} seleccionadas
                                                         @else
                                                             Todas
                                                         @endif
                                                     </span>
-                                                    <span class="cc-filter-multiselect-arrow">⌄</span>
+
+                                                    <span class="cc-filter-multiselect-arrow">
+                                                        ⌄
+                                                    </span>
                                                 </button>
 
-                                                <div class="cc-filter-multiselect-menu" data-cc-filter-menu>
+                                                <div
+                                                    class="cc-filter-multiselect-menu"
+                                                    data-cc-filter-menu
+                                                >
                                                     <div class="cc-filter-multiselect-list">
                                                         <label class="cc-filter-multiselect-option cc-filter-multiselect-option-master">
-                                                            <input type="checkbox" data-cc-filter-master>
-                                                            <span>Seleccionar todo</span>
+                                                            <input
+                                                                type="checkbox"
+                                                                data-cc-filter-master
+                                                            >
+
+                                                            <span>
+                                                                Seleccionar todo
+                                                            </span>
                                                         </label>
 
                                                         @foreach ($empresasSelector as $empresaOpcion)
-                                                            <label class="cc-filter-multiselect-option" data-cc-filter-option>
+                                                            <label
+                                                                class="cc-filter-multiselect-option"
+                                                                data-cc-filter-option
+                                                            >
                                                                 <input
                                                                     type="checkbox"
                                                                     name="empresa_ids[]"
                                                                     value="{{ $empresaOpcion->id }}"
-                                                                    @checked(in_array((string) $empresaOpcion->id, array_map('strval', $empresaIds ?? []), true))
+                                                                    @checked(
+                                                                        in_array(
+                                                                            (string) $empresaOpcion->id,
+                                                                            array_map('strval', $empresaIds ?? []),
+                                                                            true
+                                                                        )
+                                                                    )
                                                                     data-cc-filter-checkbox
                                                                 >
+
                                                                 <span data-cc-filter-option-label>
                                                                     {{ $empresaOpcion->nombre_comercial ?: $empresaOpcion->nombre_legal }}
                                                                 </span>
@@ -158,16 +202,23 @@
                                                 </div>
                                             </div>
                                         @else
-                                            <select class="cc-input" disabled>
+                                            <select
+                                                class="cc-input"
+                                                disabled
+                                            >
                                                 @foreach ($empresasSelector as $empresaOpcion)
-                                                    <option value="{{ $empresaOpcion->id }}" selected>
+                                                    <option selected>
                                                         {{ $empresaOpcion->nombre_comercial ?: $empresaOpcion->nombre_legal }}
                                                     </option>
                                                 @endforeach
                                             </select>
 
                                             @foreach ($empresaIds ?? [] as $empresaSeleccionadaId)
-                                                <input type="hidden" name="empresa_ids[]" value="{{ $empresaSeleccionadaId }}">
+                                                <input
+                                                    type="hidden"
+                                                    name="empresa_ids[]"
+                                                    value="{{ $empresaSeleccionadaId }}"
+                                                >
                                             @endforeach
                                         @endif
 
@@ -185,60 +236,70 @@
                                     </div>
 
                                     <div class="cc-field">
-                                        <label for="busqueda_motorista">
-                                            Buscar motorista
-                                        </label>
-
-                                        <input
-                                            id="busqueda_motorista"
-                                            name="busqueda_motorista"
-                                            type="text"
-                                            class="cc-input"
-                                            value="{{ $busquedaMotorista ?? '' }}"
-                                            maxlength="150"
-                                            placeholder="Nombre o apellido"
-                                        >
-
-                                        @error('busqueda_motorista')
-                                            <div class="cc-error">
-                                                {{ $message }}
-                                            </div>
-                                        @enderror
-                                    </div>
-
-                                    <div class="cc-field">
                                         <label>
                                             Motorista
                                         </label>
 
-                                        <div class="cc-filter-multiselect" data-cc-filter-multiselect>
-                                            <button type="button" class="cc-filter-multiselect-toggle" data-cc-filter-toggle>
-                                                <span data-cc-filter-label data-default-label="Todos">
+                                        <div
+                                            class="cc-filter-multiselect"
+                                            data-cc-filter-multiselect
+                                        >
+                                            <button
+                                                type="button"
+                                                class="cc-filter-multiselect-toggle"
+                                                data-cc-filter-toggle
+                                            >
+                                                <span
+                                                    data-cc-filter-label
+                                                    data-default-label="Todos"
+                                                >
                                                     @if (! empty($motoristaIds))
                                                         {{ count($motoristaIds) }} seleccionados
                                                     @else
                                                         Todos
                                                     @endif
                                                 </span>
-                                                <span class="cc-filter-multiselect-arrow">⌄</span>
+
+                                                <span class="cc-filter-multiselect-arrow">
+                                                    ⌄
+                                                </span>
                                             </button>
 
-                                            <div class="cc-filter-multiselect-menu" data-cc-filter-menu>
+                                            <div
+                                                class="cc-filter-multiselect-menu"
+                                                data-cc-filter-menu
+                                            >
                                                 <div class="cc-filter-multiselect-list">
                                                     <label class="cc-filter-multiselect-option cc-filter-multiselect-option-master">
-                                                        <input type="checkbox" data-cc-filter-master>
-                                                        <span>Seleccionar todo</span>
+                                                        <input
+                                                            type="checkbox"
+                                                            data-cc-filter-master
+                                                        >
+
+                                                        <span>
+                                                            Seleccionar todo
+                                                        </span>
                                                     </label>
 
                                                     @foreach ($motoristasSelector as $motoristaOpcion)
-                                                        <label class="cc-filter-multiselect-option" data-cc-filter-option>
+                                                        <label
+                                                            class="cc-filter-multiselect-option"
+                                                            data-cc-filter-option
+                                                        >
                                                             <input
                                                                 type="checkbox"
                                                                 name="motorista_ids[]"
                                                                 value="{{ $motoristaOpcion->id }}"
-                                                                @checked(in_array((string) $motoristaOpcion->id, array_map('strval', $motoristaIds ?? []), true))
+                                                                @checked(
+                                                                    in_array(
+                                                                        (string) $motoristaOpcion->id,
+                                                                        array_map('strval', $motoristaIds ?? []),
+                                                                        true
+                                                                    )
+                                                                )
                                                                 data-cc-filter-checkbox
                                                             >
+
                                                             <span data-cc-filter-option-label>
                                                                 {{ $motoristaOpcion->nombre_completo }}
                                                             </span>
@@ -261,12 +322,126 @@
                                         @enderror
                                     </div>
 
+                                    <div class="cc-field">
+                                        <label>
+                                            Estado
+                                        </label>
+
+                                        <div
+                                            class="cc-filter-multiselect"
+                                            data-cc-filter-multiselect
+                                        >
+                                            <button
+                                                type="button"
+                                                class="cc-filter-multiselect-toggle"
+                                                data-cc-filter-toggle
+                                            >
+                                                <span
+                                                    data-cc-filter-label
+                                                    data-default-label="Todos"
+                                                >
+                                                    @if (! empty($estadoIds))
+                                                        {{ count($estadoIds) }} seleccionados
+                                                    @else
+                                                        Todos
+                                                    @endif
+                                                </span>
+
+                                                <span class="cc-filter-multiselect-arrow">
+                                                    ⌄
+                                                </span>
+                                            </button>
+
+                                            <div
+                                                class="cc-filter-multiselect-menu"
+                                                data-cc-filter-menu
+                                            >
+                                                <div class="cc-filter-multiselect-list">
+                                                    <label class="cc-filter-multiselect-option cc-filter-multiselect-option-master">
+                                                        <input
+                                                            type="checkbox"
+                                                            data-cc-filter-master
+                                                        >
+
+                                                        <span>
+                                                            Seleccionar todo
+                                                        </span>
+                                                    </label>
+
+                                                    <label
+                                                        class="cc-filter-multiselect-option"
+                                                        data-cc-filter-option
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            name="estado_ids[]"
+                                                            value="activo"
+                                                            @checked(
+                                                                in_array(
+                                                                    'activo',
+                                                                    $estadoIds ?? [],
+                                                                    true
+                                                                )
+                                                            )
+                                                            data-cc-filter-checkbox
+                                                        >
+
+                                                        <span data-cc-filter-option-label>
+                                                            Activo
+                                                        </span>
+                                                    </label>
+
+                                                    <label
+                                                        class="cc-filter-multiselect-option"
+                                                        data-cc-filter-option
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            name="estado_ids[]"
+                                                            value="inactivo"
+                                                            @checked(
+                                                                in_array(
+                                                                    'inactivo',
+                                                                    $estadoIds ?? [],
+                                                                    true
+                                                                )
+                                                            )
+                                                            data-cc-filter-checkbox
+                                                        >
+
+                                                        <span data-cc-filter-option-label>
+                                                            Inactivo
+                                                        </span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        @error('estado_ids')
+                                            <div class="cc-error">
+                                                {{ $message }}
+                                            </div>
+                                        @enderror
+
+                                        @error('estado_ids.*')
+                                            <div class="cc-error">
+                                                {{ $message }}
+                                            </div>
+                                        @enderror
+                                    </div>
+
                                     <div class="cc-standard-filter-actions">
-                                        <button type="submit" class="cc-btn-primary">
+                                        <button
+                                            type="submit"
+                                            class="cc-btn-primary"
+                                        >
                                             Consultar
                                         </button>
 
-                                        <a href="{{ route('motoristas.consulta.ventana') }}" class="cc-btn-secondary">
+                                        <a
+                                            href="{{ route('motoristas.consulta.ventana') }}"
+                                            class="cc-btn-secondary"
+                                        >
                                             Limpiar
                                         </a>
                                     </div>
@@ -278,11 +453,22 @@
                         @if ($hayFiltros && $motoristas->total() > 0)
                             <div class="mb-4 flex justify-end text-sm text-[var(--cc-text-muted)]">
                                 Mostrando
-                                <span class="mx-1 font-bold text-[var(--cc-text-main)]">{{ $motoristas->firstItem() }}</span>
+
+                                <span class="mx-1 font-bold text-[var(--cc-text-main)]">
+                                    {{ $motoristas->firstItem() }}
+                                </span>
+
                                 -
-                                <span class="mx-1 font-bold text-[var(--cc-text-main)]">{{ $motoristas->lastItem() }}</span>
+
+                                <span class="mx-1 font-bold text-[var(--cc-text-main)]">
+                                    {{ $motoristas->lastItem() }}
+                                </span>
+
                                 de
-                                <span class="ml-1 font-bold text-[var(--cc-text-main)]">{{ $motoristas->total() }}</span>
+
+                                <span class="ml-1 font-bold text-[var(--cc-text-main)]">
+                                    {{ $motoristas->total() }}
+                                </span>
                             </div>
                         @endif
 
@@ -293,7 +479,7 @@
                                 </h5>
 
                                 <p>
-                                    Los resultados permanecerán vacíos hasta que realice una búsqueda.
+                                    Seleccione uno o más filtros para cargar los motoristas.
                                 </p>
                             </div>
                         @elseif ($motoristas->isEmpty())
@@ -308,14 +494,31 @@
                             </div>
                         @else
                             <div class="cc-table-adaptive-wrapper">
-                                <table class="cc-table-adaptive" style="min-width: 68rem;">
+                                <table
+                                    class="cc-table-adaptive"
+                                    style="min-width: 68rem;"
+                                >
                                     <thead>
                                         <tr>
-                                            <th style="width: 18rem;">Motorista</th>
-                                            <th style="width: 18rem;">Empresa</th>
-                                            <th style="width: 14rem;">Licencia</th>
-                                            <th style="width: 11rem;">Teléfono</th>
-                                            <th style="width: 7rem;">Estado</th>
+                                            <th style="width: 18rem;">
+                                                Motorista
+                                            </th>
+
+                                            <th style="width: 18rem;">
+                                                Empresa
+                                            </th>
+
+                                            <th style="width: 14rem;">
+                                                Licencia
+                                            </th>
+
+                                            <th style="width: 11rem;">
+                                                Teléfono
+                                            </th>
+
+                                            <th style="width: 7rem;">
+                                                Estado
+                                            </th>
                                         </tr>
                                     </thead>
 
@@ -358,7 +561,14 @@
                             </div>
 
                             <div class="mt-6">
-                                {{ $motoristas->appends(array_merge(request()->query(), ['consultar' => 1]))->links() }}
+                                {{ $motoristas
+                                    ->appends(
+                                        array_merge(
+                                            request()->query(),
+                                            ['consultar' => 1]
+                                        )
+                                    )
+                                    ->links() }}
                             </div>
                         @endif
 
@@ -368,102 +578,159 @@
         </div>
 
         <script>
-            document.querySelectorAll('[data-cc-filter-multiselect]').forEach(function (multiselect) {
-                const toggle = multiselect.querySelector('[data-cc-filter-toggle]');
-                const menu = multiselect.querySelector('[data-cc-filter-menu]');
-                const label = multiselect.querySelector('[data-cc-filter-label]');
-                const master = multiselect.querySelector('[data-cc-filter-master]');
-                const checkboxes = Array.from(multiselect.querySelectorAll('[data-cc-filter-checkbox]'));
-                const defaultLabel = label.dataset.defaultLabel || 'Todos';
+            document.addEventListener('DOMContentLoaded', function () {
+                document
+                    .querySelectorAll('[data-cc-filter-multiselect]')
+                    .forEach(function (multiselect) {
+                        const toggle = multiselect.querySelector(
+                            '[data-cc-filter-toggle]'
+                        );
 
-                function updateLabel() {
-                    const selected = checkboxes.filter(function (checkbox) {
-                        return checkbox.checked;
-                    });
+                        const menu = multiselect.querySelector(
+                            '[data-cc-filter-menu]'
+                        );
 
-                    if (selected.length === 0) {
-                        label.textContent = defaultLabel;
-                    } else if (selected.length === 1) {
-                        const selectedOption = selected[0].closest('[data-cc-filter-option]');
-                        const selectedLabel = selectedOption.querySelector('[data-cc-filter-option-label]');
-                        label.textContent = selectedLabel ? selectedLabel.textContent.trim() : '1 seleccionado';
-                    } else {
-                        label.textContent = selected.length + ' seleccionados';
-                    }
+                        const label = multiselect.querySelector(
+                            '[data-cc-filter-label]'
+                        );
 
-                    if (master) {
-                        master.checked = selected.length === checkboxes.length && checkboxes.length > 0;
-                        master.indeterminate = selected.length > 0 && selected.length < checkboxes.length;
-                    }
-                }
+                        const master = multiselect.querySelector(
+                            '[data-cc-filter-master]'
+                        );
 
-                function closeAllExceptCurrent() {
-                    document.querySelectorAll('[data-cc-filter-multiselect]').forEach(function (otherMultiselect) {
-                        if (otherMultiselect === multiselect) {
-                            return;
+                        const checkboxes = Array.from(
+                            multiselect.querySelectorAll(
+                                '[data-cc-filter-checkbox]'
+                            )
+                        );
+
+                        const defaultLabel =
+                            label?.dataset.defaultLabel || 'Todos';
+
+                        function actualizarEtiqueta() {
+                            const seleccionados = checkboxes.filter(function (checkbox) {
+                                return checkbox.checked;
+                            });
+
+                            if (! label) {
+                                return;
+                            }
+
+                            if (seleccionados.length === 0) {
+                                label.textContent = defaultLabel;
+                            } else if (seleccionados.length === 1) {
+                                const opcion = seleccionados[0].closest(
+                                    '[data-cc-filter-option]'
+                                );
+
+                                const texto = opcion?.querySelector(
+                                    '[data-cc-filter-option-label]'
+                                );
+
+                                label.textContent = texto
+                                    ? texto.textContent.trim()
+                                    : '1 seleccionado';
+                            } else {
+                                label.textContent =
+                                    seleccionados.length + ' seleccionados';
+                            }
+
+                            if (master) {
+                                master.checked =
+                                    seleccionados.length === checkboxes.length
+                                    && checkboxes.length > 0;
+
+                                master.indeterminate =
+                                    seleccionados.length > 0
+                                    && seleccionados.length < checkboxes.length;
+                            }
                         }
 
-                        const otherToggle = otherMultiselect.querySelector('[data-cc-filter-toggle]');
-                        const otherMenu = otherMultiselect.querySelector('[data-cc-filter-menu]');
+                        function cerrarOtros() {
+                            document
+                                .querySelectorAll('[data-cc-filter-multiselect]')
+                                .forEach(function (otroMultiselect) {
+                                    if (otroMultiselect === multiselect) {
+                                        return;
+                                    }
 
-                        if (otherToggle && otherMenu) {
-                            otherToggle.classList.remove('is-open');
-                            otherMenu.classList.remove('is-open');
+                                    otroMultiselect
+                                        .querySelector('[data-cc-filter-toggle]')
+                                        ?.classList.remove('is-open');
+
+                                    otroMultiselect
+                                        .querySelector('[data-cc-filter-menu]')
+                                        ?.classList.remove('is-open');
+                                });
                         }
-                    });
-                }
 
-                if (toggle && menu) {
-                    toggle.addEventListener('click', function () {
-                        closeAllExceptCurrent();
+                        if (toggle && menu) {
+                            toggle.addEventListener('click', function () {
+                                cerrarOtros();
 
-                        toggle.classList.toggle('is-open');
-                        menu.classList.toggle('is-open');
-                    });
-                }
+                                toggle.classList.toggle('is-open');
+                                menu.classList.toggle('is-open');
+                            });
+                        }
 
-                if (master) {
-                    master.addEventListener('change', function () {
+                        if (master) {
+                            master.addEventListener('change', function () {
+                                checkboxes.forEach(function (checkbox) {
+                                    checkbox.checked = master.checked;
+                                });
+
+                                actualizarEtiqueta();
+                            });
+                        }
+
                         checkboxes.forEach(function (checkbox) {
-                            checkbox.checked = master.checked;
+                            checkbox.addEventListener(
+                                'change',
+                                actualizarEtiqueta
+                            );
                         });
 
-                        updateLabel();
+                        actualizarEtiqueta();
                     });
-                }
 
-                checkboxes.forEach(function (checkbox) {
-                    checkbox.addEventListener('change', updateLabel);
+                document.addEventListener('click', function (event) {
+                    if (
+                        event.target.closest(
+                            '[data-cc-filter-multiselect]'
+                        )
+                    ) {
+                        return;
+                    }
+
+                    document
+                        .querySelectorAll('[data-cc-filter-toggle]')
+                        .forEach(function (toggle) {
+                            toggle.classList.remove('is-open');
+                        });
+
+                    document
+                        .querySelectorAll('[data-cc-filter-menu]')
+                        .forEach(function (menu) {
+                            menu.classList.remove('is-open');
+                        });
                 });
 
-                updateLabel();
-            });
+                document.addEventListener('keydown', function (event) {
+                    if (event.key !== 'Escape') {
+                        return;
+                    }
 
-            document.addEventListener('click', function (event) {
-                if (event.target.closest('[data-cc-filter-multiselect]')) {
-                    return;
-                }
+                    document
+                        .querySelectorAll('[data-cc-filter-toggle]')
+                        .forEach(function (toggle) {
+                            toggle.classList.remove('is-open');
+                        });
 
-                document.querySelectorAll('[data-cc-filter-toggle]').forEach(function (toggle) {
-                    toggle.classList.remove('is-open');
-                });
-
-                document.querySelectorAll('[data-cc-filter-menu]').forEach(function (menu) {
-                    menu.classList.remove('is-open');
-                });
-            });
-
-            document.addEventListener('keydown', function (event) {
-                if (event.key !== 'Escape') {
-                    return;
-                }
-
-                document.querySelectorAll('[data-cc-filter-toggle]').forEach(function (toggle) {
-                    toggle.classList.remove('is-open');
-                });
-
-                document.querySelectorAll('[data-cc-filter-menu]').forEach(function (menu) {
-                    menu.classList.remove('is-open');
+                    document
+                        .querySelectorAll('[data-cc-filter-menu]')
+                        .forEach(function (menu) {
+                            menu.classList.remove('is-open');
+                        });
                 });
             });
         </script>

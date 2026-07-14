@@ -10,6 +10,12 @@ use Illuminate\Validation\Rule;
 
 class MotoristaController extends Controller
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Consulta
+    |--------------------------------------------------------------------------
+    */
+
     public function index(Request $request)
     {
         $data = $this->prepararConsultaMotoristas($request, false);
@@ -23,6 +29,12 @@ class MotoristaController extends Controller
 
         return view('motoristas.index-ventana', $data);
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Administración
+    |--------------------------------------------------------------------------
+    */
 
     public function administrar(Request $request)
     {
@@ -38,43 +50,81 @@ class MotoristaController extends Controller
         return view('motoristas.administrar-ventana', $data);
     }
 
-    private function prepararConsultaMotoristas(Request $request, bool $soloEmpresasActivas): array
-    {
+    /*
+    |--------------------------------------------------------------------------
+    | Preparación de consultas
+    |--------------------------------------------------------------------------
+    */
+
+    private function prepararConsultaMotoristas(
+        Request $request,
+        bool $soloEmpresasActivas
+    ): array {
         $user = Auth::user();
 
         $esUsuarioDieselCop = is_null($user->empresa_id);
+
         $empresaUsuario = $esUsuarioDieselCop
             ? null
             : Empresa::find($user->empresa_id);
 
         $validated = $request->validate([
-            'busqueda_empresa' => ['nullable', 'string', 'max:150'],
-            'busqueda_motorista' => ['nullable', 'string', 'max:150'],
-
             'empresa_ids' => ['nullable', 'array'],
-            'empresa_ids.*' => ['nullable', 'integer', 'exists:empresas,id'],
+            'empresa_ids.*' => [
+                'nullable',
+                'integer',
+                'exists:empresas,id',
+            ],
 
             'motorista_ids' => ['nullable', 'array'],
-            'motorista_ids.*' => ['nullable', 'integer', 'exists:motoristas,id'],
+            'motorista_ids.*' => [
+                'nullable',
+                'integer',
+                'exists:motoristas,id',
+            ],
 
-            'empresa_id' => ['nullable', 'integer', 'exists:empresas,id'],
-            'motorista_id' => ['nullable', 'integer', 'exists:motoristas,id'],
+            'estado_ids' => ['nullable', 'array'],
+            'estado_ids.*' => [
+                'nullable',
+                'string',
+                Rule::in(['activo', 'inactivo']),
+            ],
 
-            'buscar' => ['nullable', 'string', 'max:150'],
-            'estado' => ['nullable', 'in:activo,inactivo'],
+            /*
+             * Compatibilidad temporal con filtros anteriores.
+             * Estos parámetros pueden eliminarse cuando todas las vistas
+             * actualizadas hayan sido validadas.
+             */
+            'empresa_id' => [
+                'nullable',
+                'integer',
+                'exists:empresas,id',
+            ],
+
+            'motorista_id' => [
+                'nullable',
+                'integer',
+                'exists:motoristas,id',
+            ],
+
+            'estado' => [
+                'nullable',
+                Rule::in(['activo', 'inactivo']),
+            ],
         ], [
-            'busqueda_empresa.max' => 'La búsqueda de empresa no debe exceder 150 caracteres.',
-            'busqueda_motorista.max' => 'La búsqueda de motorista no debe exceder 150 caracteres.',
+            'empresa_ids.array' => 'La selección de empresas no es válida.',
             'empresa_ids.*.exists' => 'Una de las empresas seleccionadas no es válida.',
+
+            'motorista_ids.array' => 'La selección de motoristas no es válida.',
             'motorista_ids.*.exists' => 'Uno de los motoristas seleccionados no es válido.',
+
+            'estado_ids.array' => 'La selección de estados no es válida.',
+            'estado_ids.*.in' => 'Uno de los estados seleccionados no es válido.',
+
             'empresa_id.exists' => 'La empresa seleccionada no es válida.',
             'motorista_id.exists' => 'El motorista seleccionado no es válido.',
             'estado.in' => 'El estado seleccionado no es válido.',
         ]);
-
-        $busquedaEmpresa = trim((string) ($validated['busqueda_empresa'] ?? ''));
-        $busquedaMotorista = trim((string) ($validated['busqueda_motorista'] ?? ($validated['buscar'] ?? '')));
-        $estado = $validated['estado'] ?? null;
 
         $empresaIds = collect($validated['empresa_ids'] ?? [])
             ->filter()
@@ -102,19 +152,36 @@ class MotoristaController extends Controller
             ->values()
             ->all();
 
+        $estadoIds = collect($validated['estado_ids'] ?? [])
+            ->filter()
+            ->map(fn ($estado) => (string) $estado);
+
+        if (! empty($validated['estado'])) {
+            $estadoIds->push((string) $validated['estado']);
+        }
+
+        $estadoIds = $estadoIds
+            ->filter(fn ($estado) => in_array(
+                $estado,
+                ['activo', 'inactivo'],
+                true
+            ))
+            ->unique()
+            ->values()
+            ->all();
+
+        /*
+         * Un usuario perteneciente a una empresa solo puede consultar
+         * motoristas de su propia empresa.
+         */
         if (! $esUsuarioDieselCop) {
             $empresaIds = [(int) $user->empresa_id];
         }
 
-        $empresaId = $empresaIds[0] ?? null;
-        $motoristaId = $motoristaIds[0] ?? null;
-
         $hayFiltros = $request->boolean('consultar')
-            || $busquedaEmpresa !== ''
-            || $busquedaMotorista !== ''
             || count($empresaIds) > 0
             || count($motoristaIds) > 0
-            || in_array($estado, ['activo', 'inactivo'], true);
+            || count($estadoIds) > 0;
 
         $empresasSelector = $this->obtenerEmpresasSelector(
             $esUsuarioDieselCop,
@@ -122,7 +189,10 @@ class MotoristaController extends Controller
             $soloEmpresasActivas
         );
 
-        $baseMotoristasSelectorQuery = Motorista::query()
+        /*
+         * El selector de motoristas depende de las empresas seleccionadas.
+         */
+        $motoristasSelector = Motorista::query()
             ->with('empresa')
             ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
                 $query->where('empresa_id', $user->empresa_id);
@@ -132,17 +202,9 @@ class MotoristaController extends Controller
                     $empresaQuery->where('estado', 'activa');
                 });
             })
-            ->when($busquedaEmpresa !== '', function ($query) use ($busquedaEmpresa) {
-                $query->whereHas('empresa', function ($empresaQuery) use ($busquedaEmpresa) {
-                    $empresaQuery->where('nombre_legal', 'like', '%' . $busquedaEmpresa . '%')
-                        ->orWhere('nombre_comercial', 'like', '%' . $busquedaEmpresa . '%');
-                });
-            })
             ->when(count($empresaIds) > 0, function ($query) use ($empresaIds) {
                 $query->whereIn('empresa_id', $empresaIds);
-            });
-
-        $motoristasSelector = (clone $baseMotoristasSelectorQuery)
+            })
             ->orderBy('apellidos')
             ->orderBy('nombres')
             ->get();
@@ -159,32 +221,16 @@ class MotoristaController extends Controller
             });
 
         if ($hayFiltros) {
-            if ($busquedaEmpresa !== '') {
-                $query->whereHas('empresa', function ($empresaQuery) use ($busquedaEmpresa) {
-                    $empresaQuery->where('nombre_legal', 'like', '%' . $busquedaEmpresa . '%')
-                        ->orWhere('nombre_comercial', 'like', '%' . $busquedaEmpresa . '%');
-                });
-            }
-
             if (count($empresaIds) > 0) {
                 $query->whereIn('empresa_id', $empresaIds);
-            }
-
-            if ($busquedaMotorista !== '') {
-                $query->where(function ($subquery) use ($busquedaMotorista) {
-                    $subquery->where('nombres', 'like', '%' . $busquedaMotorista . '%')
-                        ->orWhere('apellidos', 'like', '%' . $busquedaMotorista . '%')
-                        ->orWhereRaw("CONCAT(nombres, ' ', apellidos) LIKE ?", ['%' . $busquedaMotorista . '%'])
-                        ->orWhereRaw("CONCAT(apellidos, ' ', nombres) LIKE ?", ['%' . $busquedaMotorista . '%']);
-                });
             }
 
             if (count($motoristaIds) > 0) {
                 $query->whereIn('id', $motoristaIds);
             }
 
-            if (in_array($estado, ['activo', 'inactivo'], true)) {
-                $query->where('estado', $estado);
+            if (count($estadoIds) > 0) {
+                $query->whereIn('estado', $estadoIds);
             }
         } else {
             $query->whereRaw('1 = 0');
@@ -196,6 +242,9 @@ class MotoristaController extends Controller
             ->paginate(10)
             ->withQueryString();
 
+        /*
+         * Los indicadores utilizan el mismo contexto de filtros.
+         */
         $baseResumen = Motorista::query()
             ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
                 $query->where('empresa_id', $user->empresa_id);
@@ -207,55 +256,45 @@ class MotoristaController extends Controller
             });
 
         if ($hayFiltros) {
-            if ($busquedaEmpresa !== '') {
-                $baseResumen->whereHas('empresa', function ($empresaQuery) use ($busquedaEmpresa) {
-                    $empresaQuery->where('nombre_legal', 'like', '%' . $busquedaEmpresa . '%')
-                        ->orWhere('nombre_comercial', 'like', '%' . $busquedaEmpresa . '%');
-                });
-            }
-
             if (count($empresaIds) > 0) {
                 $baseResumen->whereIn('empresa_id', $empresaIds);
-            }
-
-            if ($busquedaMotorista !== '') {
-                $baseResumen->where(function ($subquery) use ($busquedaMotorista) {
-                    $subquery->where('nombres', 'like', '%' . $busquedaMotorista . '%')
-                        ->orWhere('apellidos', 'like', '%' . $busquedaMotorista . '%')
-                        ->orWhereRaw("CONCAT(nombres, ' ', apellidos) LIKE ?", ['%' . $busquedaMotorista . '%'])
-                        ->orWhereRaw("CONCAT(apellidos, ' ', nombres) LIKE ?", ['%' . $busquedaMotorista . '%']);
-                });
             }
 
             if (count($motoristaIds) > 0) {
                 $baseResumen->whereIn('id', $motoristaIds);
             }
 
-            if (in_array($estado, ['activo', 'inactivo'], true)) {
-                $baseResumen->where('estado', $estado);
+            if (count($estadoIds) > 0) {
+                $baseResumen->whereIn('estado', $estadoIds);
             }
         }
 
         $totalMotoristas = (clone $baseResumen)->count();
-        $motoristasActivos = (clone $baseResumen)->where('estado', 'activo')->count();
-        $motoristasInactivos = (clone $baseResumen)->where('estado', 'inactivo')->count();
+
+        $motoristasActivos = (clone $baseResumen)
+            ->where('estado', 'activo')
+            ->count();
+
+        $motoristasInactivos = (clone $baseResumen)
+            ->where('estado', 'inactivo')
+            ->count();
 
         return [
             'motoristas' => $motoristas,
             'empresasSelector' => $empresasSelector,
             'motoristasSelector' => $motoristasSelector,
 
-            'busquedaEmpresa' => $busquedaEmpresa,
-            'busquedaMotorista' => $busquedaMotorista,
-            'buscar' => $busquedaMotorista,
-
             'empresaIds' => $empresaIds,
             'motoristaIds' => $motoristaIds,
+            'estadoIds' => $estadoIds,
 
-            'empresaId' => $empresaId,
-            'motoristaId' => $motoristaId,
+            /*
+             * Compatibilidad temporal con vistas anteriores.
+             */
+            'empresaId' => $empresaIds[0] ?? null,
+            'motoristaId' => $motoristaIds[0] ?? null,
+            'estado' => $estadoIds[0] ?? null,
 
-            'estado' => $estado,
             'hayFiltros' => $hayFiltros,
 
             'totalMotoristas' => $totalMotoristas,
@@ -267,8 +306,11 @@ class MotoristaController extends Controller
         ];
     }
 
-    private function obtenerEmpresasSelector(bool $esUsuarioDieselCop, ?Empresa $empresaUsuario, bool $soloEmpresasActivas)
-    {
+    private function obtenerEmpresasSelector(
+        bool $esUsuarioDieselCop,
+        ?Empresa $empresaUsuario,
+        bool $soloEmpresasActivas
+    ) {
         if ($esUsuarioDieselCop) {
             return Empresa::query()
                 ->when($soloEmpresasActivas, function ($query) {
@@ -285,7 +327,10 @@ class MotoristaController extends Controller
                     return false;
                 }
 
-                if ($soloEmpresasActivas && $empresa->estado !== 'activa') {
+                if (
+                    $soloEmpresasActivas
+                    && $empresa->estado !== 'activa'
+                ) {
                     return false;
                 }
 
@@ -293,6 +338,12 @@ class MotoristaController extends Controller
             })
             ->values();
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Registro
+    |--------------------------------------------------------------------------
+    */
 
     public function create()
     {
@@ -313,20 +364,33 @@ class MotoristaController extends Controller
         $user = Auth::user();
 
         $esUsuarioDieselCop = is_null($user->empresa_id);
+
         $empresaUsuario = $esUsuarioDieselCop
             ? null
             : Empresa::find($user->empresa_id);
 
-        if (! $esUsuarioDieselCop && (! $empresaUsuario || $empresaUsuario->estado !== 'activa')) {
-            abort(403, 'No se puede operar sobre motoristas porque la empresa está inactiva.');
+        if (
+            ! $esUsuarioDieselCop
+            && (
+                ! $empresaUsuario
+                || $empresaUsuario->estado !== 'activa'
+            )
+        ) {
+            abort(
+                403,
+                'No se puede operar sobre motoristas porque la empresa está inactiva.'
+            );
         }
 
         $empresasSelector = $esUsuarioDieselCop
-            ? Empresa::where('estado', 'activa')
+            ? Empresa::query()
+                ->where('estado', 'activa')
                 ->orderBy('nombre_comercial')
                 ->orderBy('nombre_legal')
                 ->get()
-            : collect([$empresaUsuario])->filter()->values();
+            : collect([$empresaUsuario])
+                ->filter()
+                ->values();
 
         return [
             'empresasSelector' => $empresasSelector,
@@ -338,36 +402,64 @@ class MotoristaController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
+
         $esUsuarioDieselCop = is_null($user->empresa_id);
 
-        $baseRules = [
-            'nombres' => ['required', 'string', 'max:100'],
-            'apellidos' => ['required', 'string', 'max:100'],
-            'licencia' => ['required', 'string', 'max:14', 'regex:/^[0-9]+$/'],
-            'telefono' => ['required', 'string', 'max:9', 'regex:/^\d{4}-\d{4}$/'],
+        $rules = [
+            'nombres' => [
+                'required',
+                'string',
+                'max:100',
+            ],
+
+            'apellidos' => [
+                'required',
+                'string',
+                'max:100',
+            ],
+
+            'licencia' => [
+                'required',
+                'string',
+                'max:14',
+                'regex:/^[0-9]+$/',
+            ],
+
+            'telefono' => [
+                'required',
+                'string',
+                'max:9',
+                'regex:/^\d{4}-\d{4}$/',
+            ],
         ];
 
         if ($esUsuarioDieselCop) {
-            $baseRules['empresa_id'] = [
+            $rules['empresa_id'] = [
                 'required',
                 'integer',
-                Rule::exists('empresas', 'id')->where('estado', 'activa'),
+                Rule::exists('empresas', 'id')
+                    ->where('estado', 'activa'),
             ];
         } else {
-            $baseRules['empresa_id'] = ['nullable'];
+            $rules['empresa_id'] = ['nullable'];
         }
 
-        $validated = $request->validate($baseRules, [
+        $validated = $request->validate($rules, [
             'empresa_id.required' => 'Debe seleccionar una empresa.',
             'empresa_id.exists' => 'La empresa seleccionada no es válida o no está activa.',
+
             'nombres.required' => 'Debe ingresar los nombres del motorista.',
             'nombres.max' => 'Los nombres no deben exceder 100 caracteres.',
+
             'apellidos.required' => 'Debe ingresar los apellidos del motorista.',
             'apellidos.max' => 'Los apellidos no deben exceder 100 caracteres.',
+
             'licencia.required' => 'Debe ingresar la licencia del motorista.',
             'licencia.max' => 'La licencia no debe exceder 14 dígitos.',
             'licencia.regex' => 'La licencia debe contener solo números, sin guiones.',
+
             'telefono.required' => 'Debe ingresar el teléfono del motorista.',
+            'telefono.max' => 'El teléfono no debe exceder 9 caracteres.',
             'telefono.regex' => 'El teléfono debe tener el formato 0000-0000.',
         ]);
 
@@ -377,6 +469,10 @@ class MotoristaController extends Controller
 
         $this->validarEmpresaActivaPorId($empresaId);
 
+        /*
+         * La licencia puede repetirse en empresas diferentes,
+         * pero no dentro de la misma empresa.
+         */
         $request->validate([
             'licencia' => [
                 Rule::unique('motoristas', 'licencia')
@@ -388,8 +484,8 @@ class MotoristaController extends Controller
 
         Motorista::create([
             'empresa_id' => $empresaId,
-            'nombres' => $validated['nombres'],
-            'apellidos' => $validated['apellidos'],
+            'nombres' => trim($validated['nombres']),
+            'apellidos' => trim($validated['apellidos']),
             'licencia' => $validated['licencia'],
             'telefono' => $validated['telefono'],
             'estado' => 'activo',
@@ -400,13 +496,25 @@ class MotoristaController extends Controller
         if ($request->input('return_to') === 'ventana') {
             return redirect()
                 ->route('motoristas.create.ventana')
-                ->with('success', 'Motorista guardado correctamente.');
+                ->with(
+                    'success',
+                    'Motorista guardado correctamente.'
+                );
         }
 
         return redirect()
             ->route('motoristas.create')
-            ->with('success', 'Motorista guardado correctamente.');
+            ->with(
+                'success',
+                'Motorista guardado correctamente.'
+            );
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Ficha administrativa
+    |--------------------------------------------------------------------------
+    */
 
     public function show(Motorista $motorista)
     {
@@ -420,7 +528,10 @@ class MotoristaController extends Controller
             'inactivadoPor',
         ]);
 
-        return view('motoristas.show', compact('motorista'));
+        return view(
+            'motoristas.show',
+            compact('motorista')
+        );
     }
 
     public function showVentana(Motorista $motorista)
@@ -435,8 +546,17 @@ class MotoristaController extends Controller
             'inactivadoPor',
         ]);
 
-        return view('motoristas.show-ventana', compact('motorista'));
+        return view(
+            'motoristas.show-ventana',
+            compact('motorista')
+        );
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Edición
+    |--------------------------------------------------------------------------
+    */
 
     public function edit(Motorista $motorista)
     {
@@ -445,6 +565,7 @@ class MotoristaController extends Controller
         $this->validarMotoristaActivoParaOperacion($motorista);
 
         $data = $this->prepararFormularioMotorista();
+
         $data['motorista'] = $motorista;
 
         return view('motoristas.edit', $data);
@@ -457,50 +578,58 @@ class MotoristaController extends Controller
         $this->validarMotoristaActivoParaOperacion($motorista);
 
         $data = $this->prepararFormularioMotorista();
+
         $data['motorista'] = $motorista;
 
         return view('motoristas.edit-ventana', $data);
     }
 
-    public function update(Request $request, Motorista $motorista)
-    {
+    public function update(
+        Request $request,
+        Motorista $motorista
+    ) {
         $this->autorizarAccesoMotorista($motorista);
         $this->validarEmpresaActivaMotorista($motorista);
         $this->validarMotoristaActivoParaOperacion($motorista);
 
+        /*
+         * La empresa y la licencia no forman parte de la actualización.
+         * Ambas quedan fijas después del registro.
+         */
         $validated = $request->validate([
-            'nombres' => ['required', 'string', 'max:100'],
-            'apellidos' => ['required', 'string', 'max:100'],
-            'licencia' => ['required', 'string', 'max:14', 'regex:/^[0-9]+$/'],
-            'telefono' => ['required', 'string', 'max:9', 'regex:/^\d{4}-\d{4}$/'],
+            'nombres' => [
+                'required',
+                'string',
+                'max:100',
+            ],
+
+            'apellidos' => [
+                'required',
+                'string',
+                'max:100',
+            ],
+
+            'telefono' => [
+                'required',
+                'string',
+                'max:9',
+                'regex:/^\d{4}-\d{4}$/',
+            ],
         ], [
             'nombres.required' => 'Debe ingresar los nombres del motorista.',
             'nombres.max' => 'Los nombres no deben exceder 100 caracteres.',
+
             'apellidos.required' => 'Debe ingresar los apellidos del motorista.',
             'apellidos.max' => 'Los apellidos no deben exceder 100 caracteres.',
-            'licencia.required' => 'Debe ingresar la licencia del motorista.',
-            'licencia.max' => 'La licencia no debe exceder 14 dígitos.',
-            'licencia.regex' => 'La licencia debe contener solo números, sin guiones.',
+
             'telefono.required' => 'Debe ingresar el teléfono del motorista.',
+            'telefono.max' => 'El teléfono no debe exceder 9 caracteres.',
             'telefono.regex' => 'El teléfono debe tener el formato 0000-0000.',
         ]);
 
-        $empresaId = (int) $motorista->empresa_id;
-
-        $request->validate([
-            'licencia' => [
-                Rule::unique('motoristas', 'licencia')
-                    ->where('empresa_id', $empresaId)
-                    ->ignore($motorista->id),
-            ],
-        ], [
-            'licencia.unique' => 'Ya existe un motorista con esa licencia para la empresa actual.',
-        ]);
-
         $motorista->update([
-            'nombres' => $validated['nombres'],
-            'apellidos' => $validated['apellidos'],
-            'licencia' => $validated['licencia'],
+            'nombres' => trim($validated['nombres']),
+            'apellidos' => trim($validated['apellidos']),
             'telefono' => $validated['telefono'],
             'fecha_actualizacion' => now(),
             'actualizado_por' => Auth::id(),
@@ -510,17 +639,43 @@ class MotoristaController extends Controller
 
         if ($request->input('return_to') === 'ventana') {
             return redirect()
-                ->route('motoristas.show.ventana', array_merge($queryParams, ['motorista' => $motorista]))
-                ->with('success', 'Motorista actualizado correctamente.');
+                ->route(
+                    'motoristas.show.ventana',
+                    array_merge(
+                        $queryParams,
+                        ['motorista' => $motorista]
+                    )
+                )
+                ->with(
+                    'success',
+                    'Motorista actualizado correctamente.'
+                );
         }
 
         return redirect()
-            ->route('motoristas.show', array_merge($queryParams, ['motorista' => $motorista]))
-            ->with('success', 'Motorista actualizado correctamente.');
+            ->route(
+                'motoristas.show',
+                array_merge(
+                    $queryParams,
+                    ['motorista' => $motorista]
+                )
+            )
+            ->with(
+                'success',
+                'Motorista actualizado correctamente.'
+            );
     }
 
-    public function inactivar(Request $request, Motorista $motorista)
-    {
+    /*
+    |--------------------------------------------------------------------------
+    | Inactivación y reactivación
+    |--------------------------------------------------------------------------
+    */
+
+    public function inactivar(
+        Request $request,
+        Motorista $motorista
+    ) {
         $this->autorizarAccesoMotorista($motorista);
         $this->validarEmpresaActivaMotorista($motorista);
         $this->validarMotoristaActivoParaOperacion($motorista);
@@ -530,7 +685,15 @@ class MotoristaController extends Controller
                 'required',
                 'string',
                 'max:255',
-                'in:No continúa en servicio,Cambio operativo,Licencia vencida,Datos incorrectos en registro,Solicitud del cliente,Suspensión administrativa,Otro',
+                Rule::in([
+                    'No continúa en servicio',
+                    'Cambio operativo',
+                    'Licencia vencida',
+                    'Datos incorrectos en registro',
+                    'Solicitud del cliente',
+                    'Suspensión administrativa',
+                    'Otro',
+                ]),
             ],
         ], [
             'motivo_inactivacion.required' => 'Debe seleccionar el motivo de inactivación.',
@@ -551,19 +714,46 @@ class MotoristaController extends Controller
 
         if ($request->input('return_to') === 'ventana') {
             return redirect()
-                ->route('motoristas.show.ventana', array_merge($queryParams, ['motorista' => $motorista]))
-                ->with('success', 'Motorista inactivado correctamente.');
+                ->route(
+                    'motoristas.show.ventana',
+                    array_merge(
+                        $queryParams,
+                        ['motorista' => $motorista]
+                    )
+                )
+                ->with(
+                    'success',
+                    'Motorista inactivado correctamente.'
+                );
         }
 
         return redirect()
-            ->route('motoristas.show', array_merge($queryParams, ['motorista' => $motorista]))
-            ->with('success', 'Motorista inactivado correctamente.');
+            ->route(
+                'motoristas.show',
+                array_merge(
+                    $queryParams,
+                    ['motorista' => $motorista]
+                )
+            )
+            ->with(
+                'success',
+                'Motorista inactivado correctamente.'
+            );
     }
 
-    public function reactivar(Request $request, Motorista $motorista)
-    {
+    public function reactivar(
+        Request $request,
+        Motorista $motorista
+    ) {
         $this->autorizarAccesoMotorista($motorista);
         $this->validarEmpresaActivaMotorista($motorista);
+
+        if ($motorista->estado !== 'inactivo') {
+            abort(
+                403,
+                'El motorista ya se encuentra activo.'
+            );
+        }
 
         $motorista->update([
             'estado' => 'activo',
@@ -578,49 +768,95 @@ class MotoristaController extends Controller
 
         if ($request->input('return_to') === 'ventana') {
             return redirect()
-                ->route('motoristas.show.ventana', array_merge($queryParams, ['motorista' => $motorista]))
-                ->with('success', 'Motorista reactivado correctamente.');
+                ->route(
+                    'motoristas.show.ventana',
+                    array_merge(
+                        $queryParams,
+                        ['motorista' => $motorista]
+                    )
+                )
+                ->with(
+                    'success',
+                    'Motorista reactivado correctamente.'
+                );
         }
 
         return redirect()
-            ->route('motoristas.show', array_merge($queryParams, ['motorista' => $motorista]))
-            ->with('success', 'Motorista reactivado correctamente.');
+            ->route(
+                'motoristas.show',
+                array_merge(
+                    $queryParams,
+                    ['motorista' => $motorista]
+                )
+            )
+            ->with(
+                'success',
+                'Motorista reactivado correctamente.'
+            );
     }
 
-    private function autorizarAccesoMotorista(Motorista $motorista): void
-    {
+    /*
+    |--------------------------------------------------------------------------
+    | Validaciones de acceso y operación
+    |--------------------------------------------------------------------------
+    */
+
+    private function autorizarAccesoMotorista(
+        Motorista $motorista
+    ): void {
         $user = Auth::user();
 
-        if (! is_null($user->empresa_id) && (int) $user->empresa_id !== (int) $motorista->empresa_id) {
-            abort(403, 'No tiene autorización para acceder a este motorista.');
+        if (
+            ! is_null($user->empresa_id)
+            && (int) $user->empresa_id !== (int) $motorista->empresa_id
+        ) {
+            abort(
+                403,
+                'No tiene autorización para acceder a este motorista.'
+            );
         }
     }
 
-    private function validarEmpresaActivaMotorista(Motorista $motorista): void
-    {
+    private function validarEmpresaActivaMotorista(
+        Motorista $motorista
+    ): void {
         $motorista->loadMissing('empresa');
 
-        if (! $motorista->empresa || $motorista->empresa->estado !== 'activa') {
-            abort(403, 'No se puede operar sobre este motorista porque la empresa está inactiva.');
+        if (
+            ! $motorista->empresa
+            || $motorista->empresa->estado !== 'activa'
+        ) {
+            abort(
+                403,
+                'No se puede operar sobre este motorista porque la empresa está inactiva.'
+            );
         }
     }
 
-    private function validarMotoristaActivoParaOperacion(Motorista $motorista): void
-    {
+    private function validarMotoristaActivoParaOperacion(
+        Motorista $motorista
+    ): void {
         if ($motorista->estado !== 'activo') {
-            abort(403, 'No se puede modificar este motorista porque está inactivo. Debe reactivarlo desde la ficha antes de realizar cambios.');
+            abort(
+                403,
+                'No se puede modificar este motorista porque está inactivo. Debe reactivarlo desde la ficha antes de realizar cambios.'
+            );
         }
     }
 
-    private function validarEmpresaActivaPorId(int $empresaId): void
-    {
+    private function validarEmpresaActivaPorId(
+        int $empresaId
+    ): void {
         $empresaActiva = Empresa::query()
             ->where('id', $empresaId)
             ->where('estado', 'activa')
             ->exists();
 
         if (! $empresaActiva) {
-            abort(403, 'No se puede operar sobre motoristas porque la empresa está inactiva.');
+            abort(
+                403,
+                'No se puede operar sobre motoristas porque la empresa está inactiva.'
+            );
         }
     }
 }
