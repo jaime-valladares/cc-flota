@@ -1,6 +1,41 @@
+@php
+    $queryParams = collect(request()->query())
+        ->except([
+            'ruta',
+            'return_to',
+            'return_query',
+        ])
+        ->all();
+
+    $returnQuery = http_build_query($queryParams);
+
+    $nombreEmpresa = $ruta->empresa?->nombre_comercial
+        ?: $ruta->empresa?->nombre_legal
+        ?: 'Empresa no disponible';
+
+    $rutaActiva = $ruta->estado === 'activo';
+
+    $empresaActiva = $ruta->empresa
+        && $ruta->empresa->estado === 'activa';
+
+    $puntoUnoActivo = $ruta->puntoOrigen
+        && $ruta->puntoOrigen->estado === 'activo';
+
+    $puntoDosActivo = $ruta->puntoDestino
+        && $ruta->puntoDestino->estado === 'activo';
+
+    $puedeReactivarse = ! $rutaActiva
+        && $empresaActiva
+        && $puntoUnoActivo
+        && $puntoDosActivo;
+@endphp
+
 <x-app-layout>
     <div class="cc-page-wrapper">
-        <div class="cc-content-container" style="max-width: 80rem;">
+        <div
+            class="cc-content-container"
+            style="max-width: 80rem;"
+        >
             <div class="cc-card">
 
                 <div class="cc-card-header cc-card-header-compact">
@@ -11,29 +46,59 @@
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <a href="{{ route('rutas.show.ventana', $ruta) }}"
-                           target="_blank"
-                           rel="noopener noreferrer"
-                           class="cc-btn-secondary cc-btn-wide">
+                        <a
+                            href="{{ route(
+                                'rutas.show.ventana',
+                                array_merge(
+                                    $queryParams,
+                                    ['ruta' => $ruta]
+                                )
+                            ) }}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="cc-btn-secondary cc-btn-wide"
+                        >
                             Abrir en nueva pestaña
                         </a>
 
-                        <a href="{{ route('rutas.administrar') }}" class="cc-btn-secondary cc-btn-wide">
+                        <a
+                            href="{{ route(
+                                'rutas.administrar',
+                                $queryParams
+                            ) }}"
+                            class="cc-btn-secondary cc-btn-wide"
+                        >
                             Volver a administrar
                         </a>
                     </div>
                 </div>
 
                 @if (session('success'))
-                    <div class="cc-alert-success">
+                    <div class="cc-alert cc-alert-success">
                         {{ session('success') }}
+                    </div>
+                @endif
+
+                @if ($errors->any())
+                    <div class="cc-alert cc-alert-danger">
+                        <div class="font-bold">
+                            No fue posible completar la operación.
+                        </div>
+
+                        <ul class="mt-2 list-disc list-inside">
+                            @foreach ($errors->all() as $error)
+                                <li>
+                                    {{ $error }}
+                                </li>
+                            @endforeach
+                        </ul>
                     </div>
                 @endif
 
                 <div class="cc-profile-summary">
                     <div>
                         <div class="cc-profile-eyebrow">
-                            Ruta operativa
+                            Ruta
                         </div>
 
                         <h4 class="cc-profile-title">
@@ -42,27 +107,27 @@
 
                         <div class="cc-profile-meta">
                             <span>
-                                Empresa: {{ $ruta->empresa->nombre_comercial ?: $ruta->empresa->nombre_legal }}
+                                Empresa: {{ $nombreEmpresa }}
                             </span>
 
                             <span>
-                                Origen: {{ $ruta->puntoOrigen->nombre }}
-                            </span>
-
-                            <span>
-                                Destino: {{ $ruta->puntoDestino->nombre }}
+                                {{ $ruta->puntoOrigen?->nombre
+                                    ?: 'Punto no disponible' }}
+                                ↔
+                                {{ $ruta->puntoDestino?->nombre
+                                    ?: 'Punto no disponible' }}
                             </span>
                         </div>
                     </div>
 
                     <div class="cc-profile-status">
-                        @if ($ruta->estado === 'activo')
+                        @if ($rutaActiva)
                             <span class="cc-badge cc-badge-active">
-                                Activo
+                                Activa
                             </span>
                         @else
                             <span class="cc-badge cc-badge-inactive">
-                                Inactivo
+                                Inactiva
                             </span>
                         @endif
                     </div>
@@ -72,8 +137,13 @@
 
                     <section class="cc-detail-section">
                         <div class="cc-detail-section-header">
-                            <h5>Identificación de la ruta</h5>
-                            <p>Datos principales de la ruta construida entre puntos operativos de la empresa.</p>
+                            <h5>
+                                Identificación de la ruta
+                            </h5>
+
+                            <p>
+                                Puntos que conforman la combinación registrada para la empresa.
+                            </p>
                         </div>
 
                         <div class="cc-detail-grid">
@@ -81,8 +151,9 @@
                                 <div class="cc-detail-label">
                                     Empresa
                                 </div>
+
                                 <div class="cc-detail-value">
-                                    {{ $ruta->empresa->nombre_comercial ?: $ruta->empresa->nombre_legal }}
+                                    {{ $nombreEmpresa }}
                                 </div>
                             </div>
 
@@ -90,6 +161,7 @@
                                 <div class="cc-detail-label">
                                     Ruta
                                 </div>
+
                                 <div class="cc-detail-value">
                                     {{ $ruta->ruta }}
                                 </div>
@@ -97,19 +169,34 @@
 
                             <div class="cc-detail-item">
                                 <div class="cc-detail-label">
-                                    Punto de origen
+                                    Punto 1
                                 </div>
+
                                 <div class="cc-detail-value">
-                                    {{ $ruta->puntoOrigen->nombre }}
+                                    {{ $ruta->puntoOrigen?->nombre
+                                        ?: 'Punto no disponible' }}
                                 </div>
                             </div>
 
                             <div class="cc-detail-item">
                                 <div class="cc-detail-label">
-                                    Punto de destino
+                                    Punto 2
                                 </div>
+
                                 <div class="cc-detail-value">
-                                    {{ $ruta->puntoDestino->nombre }}
+                                    {{ $ruta->puntoDestino?->nombre
+                                        ?: 'Punto no disponible' }}
+                                </div>
+                            </div>
+
+                            <div class="cc-detail-item cc-detail-item-wide">
+                                <div class="cc-detail-label">
+                                    Alcance
+                                </div>
+
+                                <div class="cc-detail-value">
+                                    La combinación representa una sola ruta,
+                                    independientemente de la dirección del recorrido.
                                 </div>
                             </div>
                         </div>
@@ -117,8 +204,13 @@
 
                     <section class="cc-detail-section">
                         <div class="cc-detail-section-header">
-                            <h5>Valores estimados</h5>
-                            <p>Parámetros operativos utilizados como referencia para cálculos de consumo por viaje.</p>
+                            <h5>
+                                Valores estimados
+                            </h5>
+
+                            <p>
+                                Referencias operativas registradas para la ruta.
+                            </p>
                         </div>
 
                         <div class="cc-detail-grid">
@@ -126,8 +218,12 @@
                                 <div class="cc-detail-label">
                                     Kilómetros estimados
                                 </div>
+
                                 <div class="cc-detail-value">
-                                    {{ number_format((float) $ruta->kilometros_estimados, 2) }} km
+                                    {{ number_format(
+                                        (float) $ruta->kilometros_estimados,
+                                        1
+                                    ) }} km
                                 </div>
                             </div>
 
@@ -135,21 +231,12 @@
                                 <div class="cc-detail-label">
                                     Galones estimados
                                 </div>
-                                <div class="cc-detail-value">
-                                    {{ number_format((float) $ruta->galones_estimados, 2) }} gal
-                                </div>
-                            </div>
 
-                            <div class="cc-detail-item">
-                                <div class="cc-detail-label">
-                                    Rendimiento estimado
-                                </div>
                                 <div class="cc-detail-value">
-                                    @if ((float) $ruta->galones_estimados > 0)
-                                        {{ number_format((float) $ruta->kilometros_estimados / (float) $ruta->galones_estimados, 2) }} km/gal
-                                    @else
-                                        —
-                                    @endif
+                                    {{ number_format(
+                                        (float) $ruta->galones_estimados,
+                                        1
+                                    ) }} gal
                                 </div>
                             </div>
                         </div>
@@ -157,17 +244,59 @@
 
                     <section class="cc-detail-section">
                         <div class="cc-detail-section-header">
-                            <h5>Control administrativo</h5>
-                            <p>Información de estado, creación, actualización e inactivación del registro.</p>
+                            <h5>
+                                Disponibilidad administrativa
+                            </h5>
+
+                            <p>
+                                Condiciones actuales para editar, utilizar o reactivar la ruta.
+                            </p>
                         </div>
 
                         <div class="cc-detail-grid">
                             <div class="cc-detail-item">
                                 <div class="cc-detail-label">
-                                    Estado actual
+                                    Estado de la ruta
                                 </div>
+
                                 <div class="cc-detail-value">
-                                    @if ($ruta->estado === 'activo')
+                                    @if ($rutaActiva)
+                                        <span class="cc-badge cc-badge-active">
+                                            Activa
+                                        </span>
+                                    @else
+                                        <span class="cc-badge cc-badge-inactive">
+                                            Inactiva
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <div class="cc-detail-item">
+                                <div class="cc-detail-label">
+                                    Empresa
+                                </div>
+
+                                <div class="cc-detail-value">
+                                    @if ($empresaActiva)
+                                        <span class="cc-badge cc-badge-active">
+                                            Activa
+                                        </span>
+                                    @else
+                                        <span class="cc-badge cc-badge-inactive">
+                                            Inactiva
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <div class="cc-detail-item">
+                                <div class="cc-detail-label">
+                                    Punto 1
+                                </div>
+
+                                <div class="cc-detail-value">
+                                    @if ($puntoUnoActivo)
                                         <span class="cc-badge cc-badge-active">
                                             Activo
                                         </span>
@@ -181,10 +310,63 @@
 
                             <div class="cc-detail-item">
                                 <div class="cc-detail-label">
+                                    Punto 2
+                                </div>
+
+                                <div class="cc-detail-value">
+                                    @if ($puntoDosActivo)
+                                        <span class="cc-badge cc-badge-active">
+                                            Activo
+                                        </span>
+                                    @else
+                                        <span class="cc-badge cc-badge-inactive">
+                                            Inactivo
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <div class="cc-detail-item cc-detail-item-wide">
+                                <div class="cc-detail-label">
+                                    Condición actual
+                                </div>
+
+                                <div class="cc-detail-value">
+                                    @if ($rutaActiva)
+                                        La ruta se encuentra disponible para
+                                        operaciones futuras y puede editarse.
+                                    @elseif ($puedeReactivarse)
+                                        La ruta está disponible para reactivación.
+                                    @else
+                                        La ruta no puede reactivarse hasta que la
+                                        empresa y ambos puntos se encuentren activos.
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="cc-detail-section">
+                        <div class="cc-detail-section-header">
+                            <h5>
+                                Control administrativo
+                            </h5>
+
+                            <p>
+                                Información de creación, actualización e inactivación del registro.
+                            </p>
+                        </div>
+
+                        <div class="cc-detail-grid">
+                            <div class="cc-detail-item">
+                                <div class="cc-detail-label">
                                     Fecha de creación
                                 </div>
+
                                 <div class="cc-detail-value">
-                                    {{ optional($ruta->fecha_creacion)->format('d/m/Y H:i') ?? '—' }}
+                                    {{ optional(
+                                        $ruta->fecha_creacion
+                                    )->format('d/m/Y H:i') ?? '—' }}
                                 </div>
                             </div>
 
@@ -192,8 +374,9 @@
                                 <div class="cc-detail-label">
                                     Creado por
                                 </div>
+
                                 <div class="cc-detail-value">
-                                    {{ optional($ruta->creadoPor)->name ?? '—' }}
+                                    {{ $ruta->creadoPor?->name ?? '—' }}
                                 </div>
                             </div>
 
@@ -201,8 +384,11 @@
                                 <div class="cc-detail-label">
                                     Fecha de actualización
                                 </div>
+
                                 <div class="cc-detail-value">
-                                    {{ optional($ruta->fecha_actualizacion)->format('d/m/Y H:i') ?? '—' }}
+                                    {{ optional(
+                                        $ruta->fecha_actualizacion
+                                    )->format('d/m/Y H:i') ?? '—' }}
                                 </div>
                             </div>
 
@@ -210,8 +396,9 @@
                                 <div class="cc-detail-label">
                                     Actualizado por
                                 </div>
+
                                 <div class="cc-detail-value">
-                                    {{ optional($ruta->actualizadoPor)->name ?? '—' }}
+                                    {{ $ruta->actualizadoPor?->name ?? '—' }}
                                 </div>
                             </div>
 
@@ -219,8 +406,11 @@
                                 <div class="cc-detail-label">
                                     Fecha de inactivación
                                 </div>
+
                                 <div class="cc-detail-value">
-                                    {{ optional($ruta->fecha_inactivacion)->format('d/m/Y H:i') ?? '—' }}
+                                    {{ optional(
+                                        $ruta->fecha_inactivacion
+                                    )->format('d/m/Y H:i') ?? '—' }}
                                 </div>
                             </div>
 
@@ -228,8 +418,9 @@
                                 <div class="cc-detail-label">
                                     Inactivado por
                                 </div>
+
                                 <div class="cc-detail-value">
-                                    {{ optional($ruta->inactivadoPor)->name ?? '—' }}
+                                    {{ $ruta->inactivadoPor?->name ?? '—' }}
                                 </div>
                             </div>
 
@@ -237,6 +428,7 @@
                                 <div class="cc-detail-label">
                                     Motivo de inactivación
                                 </div>
+
                                 <div class="cc-detail-value">
                                     {{ $ruta->motivo_inactivacion ?? '—' }}
                                 </div>
@@ -248,33 +440,71 @@
 
                 <div class="cc-actions cc-actions-split">
                     <div class="cc-actions-normal">
-                        <a href="{{ route('rutas.edit', $ruta) }}" class="cc-btn-primary cc-btn-form-action">
-                            Editar ruta
-                        </a>
 
-                        <a href="{{ route('rutas.administrar') }}" class="cc-btn-secondary cc-btn-form-action">
+                        @if ($rutaActiva && $empresaActiva)
+                            <a
+                                href="{{ route(
+                                    'rutas.edit',
+                                    array_merge(
+                                        $queryParams,
+                                        ['ruta' => $ruta]
+                                    )
+                                ) }}"
+                                class="cc-btn-primary cc-btn-form-action"
+                            >
+                                Editar ruta
+                            </a>
+                        @endif
+
+                        <a
+                            href="{{ route(
+                                'rutas.administrar',
+                                $queryParams
+                            ) }}"
+                            class="cc-btn-secondary cc-btn-form-action"
+                        >
                             Volver a administrar
                         </a>
+
                     </div>
                 </div>
 
-                @if ($ruta->estado === 'activo')
+                @if ($rutaActiva)
                     <section class="cc-danger-zone">
                         <div class="cc-danger-zone-header">
                             <div>
-                                <h5>Zona de riesgo</h5>
+                                <h5>
+                                    Zona de riesgo
+                                </h5>
+
                                 <p>
-                                    Inactive la ruta únicamente cuando exista una razón operativa o administrativa válida.
+                                    Inactive la ruta únicamente cuando ya no deba
+                                    estar disponible para operaciones futuras.
+                                    Los registros históricos permanecerán intactos.
                                 </p>
                             </div>
                         </div>
 
-                        <form method="POST"
-                              action="{{ route('rutas.inactivar', $ruta) }}"
-                              class="cc-danger-zone-form"
-                              onsubmit="return confirmarInactivacionRuta();">
+                        <form
+                            method="POST"
+                            action="{{ route(
+                                'rutas.inactivar',
+                                array_merge(
+                                    $queryParams,
+                                    ['ruta' => $ruta]
+                                )
+                            ) }}"
+                            class="cc-danger-zone-form"
+                            onsubmit="return confirmarInactivacionRuta();"
+                        >
                             @csrf
                             @method('PATCH')
+
+                            <input
+                                type="hidden"
+                                name="return_query"
+                                value="{{ $returnQuery }}"
+                            >
 
                             <div class="cc-danger-zone-field">
                                 <label for="motivo_inactivacion">
@@ -287,13 +517,69 @@
                                     class="cc-input"
                                     required
                                 >
-                                    <option value="">Seleccione un motivo</option>
-                                    <option value="No continúa en uso">No continúa en uso</option>
-                                    <option value="Cambio operativo">Cambio operativo</option>
-                                    <option value="Datos incorrectos en registro">Datos incorrectos en registro</option>
-                                    <option value="Solicitud del cliente">Solicitud del cliente</option>
-                                    <option value="Suspensión administrativa">Suspensión administrativa</option>
-                                    <option value="Otro">Otro</option>
+                                    <option value="">
+                                        Seleccione un motivo
+                                    </option>
+
+                                    <option
+                                        value="No continúa en uso"
+                                        @selected(
+                                            old('motivo_inactivacion')
+                                                === 'No continúa en uso'
+                                        )
+                                    >
+                                        No continúa en uso
+                                    </option>
+
+                                    <option
+                                        value="Cambio operativo"
+                                        @selected(
+                                            old('motivo_inactivacion')
+                                                === 'Cambio operativo'
+                                        )
+                                    >
+                                        Cambio operativo
+                                    </option>
+
+                                    <option
+                                        value="Datos incorrectos en registro"
+                                        @selected(
+                                            old('motivo_inactivacion')
+                                                === 'Datos incorrectos en registro'
+                                        )
+                                    >
+                                        Datos incorrectos en registro
+                                    </option>
+
+                                    <option
+                                        value="Solicitud del cliente"
+                                        @selected(
+                                            old('motivo_inactivacion')
+                                                === 'Solicitud del cliente'
+                                        )
+                                    >
+                                        Solicitud del cliente
+                                    </option>
+
+                                    <option
+                                        value="Suspensión administrativa"
+                                        @selected(
+                                            old('motivo_inactivacion')
+                                                === 'Suspensión administrativa'
+                                        )
+                                    >
+                                        Suspensión administrativa
+                                    </option>
+
+                                    <option
+                                        value="Otro"
+                                        @selected(
+                                            old('motivo_inactivacion')
+                                                === 'Otro'
+                                        )
+                                    >
+                                        Otro
+                                    </option>
                                 </select>
 
                                 @error('motivo_inactivacion')
@@ -303,23 +589,53 @@
                                 @enderror
                             </div>
 
-                            <button type="submit" class="cc-btn-danger cc-btn-form-action">
+                            <button
+                                type="submit"
+                                class="cc-btn-danger cc-btn-form-action"
+                            >
                                 Inactivar ruta
                             </button>
                         </form>
                     </section>
                 @else
                     <div class="cc-actions">
-                        <form method="POST"
-                              action="{{ route('rutas.reactivar', $ruta) }}"
-                              onsubmit="return confirm('¿Seguro que deseas reactivar esta ruta?');">
-                            @csrf
-                            @method('PATCH')
+                        @if ($puedeReactivarse)
+                            <form
+                                method="POST"
+                                action="{{ route(
+                                    'rutas.reactivar',
+                                    array_merge(
+                                        $queryParams,
+                                        ['ruta' => $ruta]
+                                    )
+                                ) }}"
+                                onsubmit="return confirm(
+                                    '¿Seguro que deseas reactivar esta ruta?'
+                                );"
+                            >
+                                @csrf
+                                @method('PATCH')
 
-                            <button type="submit" class="cc-btn-success cc-btn-form-action">
-                                Reactivar ruta
-                            </button>
-                        </form>
+                                <input
+                                    type="hidden"
+                                    name="return_query"
+                                    value="{{ $returnQuery }}"
+                                >
+
+                                <button
+                                    type="submit"
+                                    class="cc-btn-success cc-btn-form-action"
+                                >
+                                    Reactivar ruta
+                                </button>
+                            </form>
+                        @else
+                            <div class="cc-alert cc-alert-danger">
+                                La reactivación no está disponible porque la
+                                empresa o alguno de los puntos de la ruta se
+                                encuentra inactivo.
+                            </div>
+                        @endif
                     </div>
                 @endif
 
@@ -329,14 +645,21 @@
 
     <script>
         function confirmarInactivacionRuta() {
-            const motivo = document.getElementById('motivo_inactivacion').value;
+            const motivo = document.getElementById(
+                'motivo_inactivacion'
+            )?.value;
 
-            if (!motivo) {
-                alert('Debe seleccionar un motivo de inactivación.');
+            if (! motivo) {
+                alert(
+                    'Debe seleccionar un motivo de inactivación.'
+                );
+
                 return false;
             }
 
-            return confirm(`¿Seguro que deseas inactivar esta ruta por el motivo "${motivo}"?`);
+            return confirm(
+                `¿Seguro que deseas inactivar esta ruta por el motivo "${motivo}"?`
+            );
         }
     </script>
 </x-app-layout>

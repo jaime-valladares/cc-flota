@@ -36,33 +36,101 @@ class Ruta extends Model
         'fecha_inactivacion' => 'datetime',
     ];
 
+    /**
+     * Empresa propietaria de la ruta.
+     */
     public function empresa(): BelongsTo
     {
-        return $this->belongsTo(Empresa::class, 'empresa_id');
+        return $this->belongsTo(
+            Empresa::class,
+            'empresa_id'
+        );
     }
 
+    /**
+     * Punto que quedó registrado como origen.
+     *
+     * La ruta es funcionalmente bidireccional, por lo que este campo
+     * conserva únicamente el orden utilizado al crear el registro.
+     */
     public function puntoOrigen(): BelongsTo
     {
-        return $this->belongsTo(PuntoRuta::class, 'punto_origen_id');
+        return $this->belongsTo(
+            PuntoRuta::class,
+            'punto_origen_id'
+        );
     }
 
+    /**
+     * Punto que quedó registrado como destino.
+     *
+     * La combinación inversa representa la misma ruta y es bloqueada
+     * por las reglas funcionales del módulo.
+     */
     public function puntoDestino(): BelongsTo
     {
-        return $this->belongsTo(PuntoRuta::class, 'punto_destino_id');
+        return $this->belongsTo(
+            PuntoRuta::class,
+            'punto_destino_id'
+        );
     }
 
+    /**
+     * Usuario que creó el registro.
+     */
     public function creadoPor(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'creado_por');
+        return $this->belongsTo(
+            User::class,
+            'creado_por'
+        );
     }
 
+    /**
+     * Usuario que realizó la última actualización.
+     */
     public function actualizadoPor(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'actualizado_por');
+        return $this->belongsTo(
+            User::class,
+            'actualizado_por'
+        );
     }
 
+    /**
+     * Usuario que inactivó el registro.
+     */
     public function inactivadoPor(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'inactivado_por');
+        return $this->belongsTo(
+            User::class,
+            'inactivado_por'
+        );
+    }
+
+    /**
+     * Determina si la ruta se encuentra activa.
+     */
+    public function getEstaActivaAttribute(): bool
+    {
+        return $this->estado === 'activo';
+    }
+
+    /**
+     * Calcula el rendimiento estimado sin almacenarlo.
+     */
+    public function getRendimientoEstimadoAttribute(): ?float
+    {
+        $kilometros = (float) $this->kilometros_estimados;
+        $galones = (float) $this->galones_estimados;
+
+        if ($galones <= 0) {
+            return null;
+        }
+
+        return round(
+            $kilometros / $galones,
+            2
+        );
     }
 }
