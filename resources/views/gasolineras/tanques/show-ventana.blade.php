@@ -20,6 +20,7 @@
         @php
             $empresaNombre = $gasolinera->empresa?->nombre_comercial ?: $gasolinera->empresa?->nombre_legal;
             $bajoAlerta = $bajoAlerta ?? $tanque->estaBajoAlerta();
+            $tanqueActivo = $tanque->estado === 'activo';
         @endphp
 
         <div class="min-h-screen" style="background: var(--cc-bg-main);">
@@ -140,7 +141,11 @@
                                     </h5>
 
                                     <p>
-                                        Actualice únicamente los datos controlados del tanque. El volumen actual se modifica mediante movimientos de inventario.
+                                        @if ($tanqueActivo)
+                                            Actualice únicamente los datos controlados del tanque. El volumen actual se modifica mediante movimientos de inventario.
+                                        @else
+                                            El tanque permanece disponible para consulta, pero no puede editarse ni utilizarse mientras esté inactivo.
+                                        @endif
                                     </p>
                                 </div>
 
@@ -201,6 +206,7 @@
                                                     maxlength="100"
                                                     required
                                                     placeholder="Ej. Tanque 1"
+                                                    @disabled(! $tanqueActivo)
                                                 >
 
                                                 @error('nombre')
@@ -231,6 +237,7 @@
                                                     step="0.01"
                                                     required
                                                     placeholder="Ej. 10000.00"
+                                                    @disabled(! $tanqueActivo)
                                                 >
 
                                                 @error('capacidad_total')
@@ -269,6 +276,7 @@
                                                     step="0.01"
                                                     required
                                                     placeholder="Ej. 1000.00"
+                                                    @disabled(! $tanqueActivo)
                                                 >
 
                                                 @error('volumen_minimo_alerta')
@@ -280,18 +288,18 @@
 
                                         </div>
 
-                                        <div class="cc-actions cc-actions-compact">
-                                            <button type="submit" class="cc-btn-primary cc-btn-form-action">
-                                                Guardar cambios
-                                            </button>
+                                        @if ($tanqueActivo)
+                                            <div class="cc-actions cc-actions-compact">
+                                                <button type="submit" class="cc-btn-primary cc-btn-form-action">
+                                                    Guardar cambios
+                                                </button>
 
-                                            @if ($gasolinera->estado === 'activa' && $tanque->estado === 'activo')
-                                                <a href="{{ route('gasolineras.tanques.recarga.ventana', [$gasolinera, $tanque]) }}"
+                                                <a href="{{ route('gasolineras.tanques.recargas.create.ventana', ['gasolinera' => $gasolinera, 'tanque_id' => $tanque->id]) }}"
                                                    class="cc-btn-secondary cc-btn-form-action">
                                                     Recargar tanque
                                                 </a>
-                                            @endif
-                                        </div>
+                                            </div>
+                                        @endif
                                     </form>
                                 </div>
                             </section>
@@ -308,8 +316,10 @@
                                 </div>
 
                                 <div style="padding: 1rem 1.2rem;">
-                                    @if ($tanque->estado === 'activo')
-                                        <form method="POST" action="{{ route('gasolineras.tanques.inactivar', [$gasolinera, $tanque]) }}" class="cc-inline-action-form">
+                                    @if ($tanqueActivo)
+                                        <form method="POST"
+                                              action="{{ route('gasolineras.tanques.inactivar', [$gasolinera, $tanque]) }}"
+                                              class="cc-inline-action-form">
                                             @csrf
                                             @method('PATCH')
 
@@ -335,7 +345,21 @@
                                                 Inactivar tanque
                                             </button>
                                         </form>
-                                    @elseif ($gasolinera->estado === 'activa')
+                                    @else
+                                        <div class="cc-callout cc-callout-warning" style="margin-bottom: 1rem;">
+                                            <span class="cc-callout-marker"></span>
+
+                                            <div>
+                                                <div class="cc-callout-title">
+                                                    Tanque inactivo
+                                                </div>
+
+                                                <div class="cc-callout-text">
+                                                    Mientras permanezca inactivo, el tanque solo puede consultarse. No admite edición, recargas ni otras operaciones.
+                                                </div>
+                                            </div>
+                                        </div>
+
                                         <form method="POST" action="{{ route('gasolineras.tanques.reactivar', [$gasolinera, $tanque]) }}">
                                             @csrf
                                             @method('PATCH')
@@ -346,16 +370,6 @@
                                                 Reactivar tanque
                                             </button>
                                         </form>
-                                    @else
-                                        <div class="cc-empty-panel cc-empty-panel-compact">
-                                            <h5>
-                                                Gasolinera inactiva
-                                            </h5>
-
-                                            <p>
-                                                No se puede reactivar el tanque mientras la gasolinera esté inactiva.
-                                            </p>
-                                        </div>
                                     @endif
                                 </div>
                             </section>

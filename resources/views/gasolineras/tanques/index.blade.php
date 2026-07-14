@@ -310,8 +310,8 @@
                                     <div class="flex flex-col sm:flex-row gap-3 xl:col-span-2 xl:justify-end xl:self-center">
                                         @if ($gasolinera)
                                             <a href="{{ route('gasolineras.tanques.show', [$gasolinera, $tanque]) }}"
-                                               class="cc-btn-primary cc-btn-result w-full sm:w-auto">
-                                                Administrar
+                                               class="{{ $tanque->estado === 'activo' ? 'cc-btn-primary' : 'cc-btn-secondary' }} cc-btn-result w-full sm:w-auto">
+                                                {{ $tanque->estado === 'activo' ? 'Administrar' : 'Ver ficha' }}
                                             </a>
                                         @endif
                                     </div>

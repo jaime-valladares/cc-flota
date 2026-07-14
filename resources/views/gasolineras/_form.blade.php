@@ -5,8 +5,12 @@
     $submitLabel = $submitLabel ?? 'Guardar gasolinera';
 
     $empresas = $empresas ?? $empresasSelector ?? collect();
+    $filtrosAdministracion = $filtrosAdministracion ?? request()->query();
 
-    $empresaActual = old('empresa_id', $gasolinera->empresa_id ?? ($empresaUsuario->id ?? ''));
+    $empresaActual = old(
+        'empresa_id',
+        $gasolinera->empresa_id ?? ($empresaUsuario->id ?? '')
+    );
 
     $tanquesOld = old('tanques', [
         [
@@ -26,7 +30,9 @@
     <div class="cc-alert cc-alert-danger">
         <ul class="cc-alert-list">
             @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
+                <li>
+                    {{ $error }}
+                </li>
             @endforeach
         </ul>
     </div>
@@ -46,26 +52,46 @@
         </label>
 
         @if ($esUsuarioDieselCop)
-            <select id="empresa_id" name="empresa_id" class="cc-input" required>
-                <option value="">Seleccione una empresa</option>
+            <select
+                id="empresa_id"
+                name="empresa_id"
+                class="cc-input"
+                required
+            >
+                <option value="">
+                    Seleccione una empresa
+                </option>
 
                 @foreach ($empresas as $empresa)
-                    <option value="{{ $empresa->id }}"
-                            @selected((string) $empresaActual === (string) $empresa->id)>
+                    <option
+                        value="{{ $empresa->id }}"
+                        @selected((string) $empresaActual === (string) $empresa->id)
+                    >
                         {{ $empresa->nombre_comercial ?: $empresa->nombre_legal }}
                     </option>
                 @endforeach
             </select>
         @else
-            <select id="empresa_id_visible" class="cc-input" disabled>
+            <select
+                id="empresa_id_visible"
+                class="cc-input"
+                disabled
+            >
                 @foreach ($empresas as $empresa)
-                    <option value="{{ $empresa->id }}" selected>
+                    <option
+                        value="{{ $empresa->id }}"
+                        selected
+                    >
                         {{ $empresa->nombre_comercial ?: $empresa->nombre_legal }}
                     </option>
                 @endforeach
             </select>
 
-            <input type="hidden" name="empresa_id" value="{{ $empresaActual }}">
+            <input
+                type="hidden"
+                name="empresa_id"
+                value="{{ $empresaActual }}"
+            >
         @endif
 
         @error('empresa_id')
@@ -203,7 +229,8 @@
         <div class="cc-field cc-col-span-2">
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p class="text-sm leading-relaxed text-[var(--cc-text-muted)]">
-                    Registre al menos un tanque para que la gasolinera pueda operar. El volumen actual generará una carga inicial de inventario.
+                    Registre al menos un tanque para que la gasolinera pueda operar.
+                    El volumen actual generará una carga inicial de inventario.
                 </p>
 
                 <button
@@ -218,19 +245,26 @@
 
         <div id="tanquesContainer" class="cc-col-span-2">
             @foreach ($tanquesOld as $index => $tanqueOld)
-                <div class="tanque-item" data-index="{{ $index }}">
+                <div
+                    class="tanque-item"
+                    data-index="{{ $index }}"
+                >
                     <div class="cc-admin-result-card" style="margin-bottom: 1rem;">
                         <div class="cc-grid cc-grid-compact">
 
                             <div class="cc-form-section-slim">
                                 <div class="cc-form-section-title">
-                                    Tanque <span class="tanque-numero">{{ $index + 1 }}</span>
+                                    Tanque
+                                    <span class="tanque-numero">
+                                        {{ $index + 1 }}
+                                    </span>
                                 </div>
                             </div>
 
                             <div class="cc-field">
                                 <label>
-                                    Nombre del tanque <span class="cc-required">*</span>
+                                    Nombre del tanque
+                                    <span class="cc-required">*</span>
                                 </label>
 
                                 <input
@@ -252,7 +286,8 @@
 
                             <div class="cc-field">
                                 <label>
-                                    Capacidad total (galones) <span class="cc-required">*</span>
+                                    Capacidad total (galones)
+                                    <span class="cc-required">*</span>
                                 </label>
 
                                 <input
@@ -275,7 +310,8 @@
 
                             <div class="cc-field">
                                 <label>
-                                    Volumen actual (galones) <span class="cc-required">*</span>
+                                    Volumen actual (galones)
+                                    <span class="cc-required">*</span>
                                 </label>
 
                                 <input
@@ -298,7 +334,8 @@
 
                             <div class="cc-field">
                                 <label>
-                                    Volumen mínimo de alerta (galones) <span class="cc-required">*</span>
+                                    Volumen mínimo de alerta (galones)
+                                    <span class="cc-required">*</span>
                                 </label>
 
                                 <input
@@ -338,18 +375,38 @@
 </div>
 
 <div class="cc-actions cc-actions-compact">
-    <button type="submit" class="cc-btn-primary cc-btn-form-action">
+    <button
+        type="submit"
+        class="cc-btn-primary cc-btn-form-action"
+    >
         {{ $submitLabel }}
     </button>
 
     @if ($esEdicion)
-        <a href="{{ $modoVentana ? route('gasolineras.show.ventana', $gasolinera) : route('gasolineras.show', $gasolinera) }}"
-           class="cc-btn-secondary cc-btn-form-action">
+        <a
+            href="{{ route(
+                $modoVentana
+                    ? 'gasolineras.show.ventana'
+                    : 'gasolineras.show',
+                array_merge(
+                    ['gasolinera' => $gasolinera],
+                    $filtrosAdministracion
+                )
+            ) }}"
+            class="cc-btn-secondary cc-btn-form-action"
+        >
             Cancelar
         </a>
     @else
-        <a href="{{ $modoVentana ? route('gasolineras.consulta.ventana') : route('gasolineras.index') }}"
-           class="cc-btn-secondary cc-btn-form-action">
+        <a
+            href="{{ route(
+                $modoVentana
+                    ? 'gasolineras.consulta.ventana'
+                    : 'gasolineras.index',
+                $filtrosAdministracion
+            ) }}"
+            class="cc-btn-secondary cc-btn-form-action"
+        >
             Cancelar
         </a>
     @endif
@@ -407,7 +464,9 @@
             if (eliminarBtn) {
                 eliminarBtn.disabled = items.length === 1;
                 eliminarBtn.style.opacity = items.length === 1 ? '0.45' : '1';
-                eliminarBtn.style.cursor = items.length === 1 ? 'not-allowed' : 'pointer';
+                eliminarBtn.style.cursor = items.length === 1
+                    ? 'not-allowed'
+                    : 'pointer';
             }
         });
     }
@@ -417,9 +476,12 @@
             return;
         }
 
-        const index = tanquesContainer.querySelectorAll('.tanque-item').length;
+        const index = tanquesContainer
+            .querySelectorAll('.tanque-item')
+            .length;
 
         const wrapper = document.createElement('div');
+
         wrapper.className = 'tanque-item';
         wrapper.dataset.index = index;
 
@@ -429,13 +491,17 @@
 
                     <div class="cc-form-section-slim">
                         <div class="cc-form-section-title">
-                            Tanque <span class="tanque-numero">${index + 1}</span>
+                            Tanque
+                            <span class="tanque-numero">
+                                ${index + 1}
+                            </span>
                         </div>
                     </div>
 
                     <div class="cc-field">
                         <label>
-                            Nombre del tanque <span class="cc-required">*</span>
+                            Nombre del tanque
+                            <span class="cc-required">*</span>
                         </label>
 
                         <input
@@ -451,7 +517,8 @@
 
                     <div class="cc-field">
                         <label>
-                            Capacidad total (galones) <span class="cc-required">*</span>
+                            Capacidad total (galones)
+                            <span class="cc-required">*</span>
                         </label>
 
                         <input
@@ -467,7 +534,8 @@
 
                     <div class="cc-field">
                         <label>
-                            Volumen actual (galones) <span class="cc-required">*</span>
+                            Volumen actual (galones)
+                            <span class="cc-required">*</span>
                         </label>
 
                         <input
@@ -483,7 +551,8 @@
 
                     <div class="cc-field">
                         <label>
-                            Volumen mínimo de alerta (galones) <span class="cc-required">*</span>
+                            Volumen mínimo de alerta (galones)
+                            <span class="cc-required">*</span>
                         </label>
 
                         <input
@@ -522,11 +591,23 @@
         const items = tanquesContainer.querySelectorAll('.tanque-item');
 
         items.forEach((item) => {
-            const capacidadInput = item.querySelector('input[name*="[capacidad_total]"]');
-            const volumenActualInput = item.querySelector('input[name*="[volumen_actual]"]');
-            const minimoInput = item.querySelector('input[name*="[volumen_minimo_alerta]"]');
+            const capacidadInput = item.querySelector(
+                'input[name*="[capacidad_total]"]'
+            );
 
-            if (! capacidadInput || ! volumenActualInput || ! minimoInput) {
+            const volumenActualInput = item.querySelector(
+                'input[name*="[volumen_actual]"]'
+            );
+
+            const minimoInput = item.querySelector(
+                'input[name*="[volumen_minimo_alerta]"]'
+            );
+
+            if (
+                ! capacidadInput
+                || ! volumenActualInput
+                || ! minimoInput
+            ) {
                 return;
             }
 
@@ -534,14 +615,24 @@
             const volumenActual = Number(volumenActualInput.value);
             const minimo = Number(minimoInput.value);
 
-            if (capacidad > 0 && volumenActual > capacidad) {
-                volumenActualInput.setCustomValidity('El volumen actual no puede superar la capacidad total.');
+            if (
+                capacidad > 0
+                && volumenActual > capacidad
+            ) {
+                volumenActualInput.setCustomValidity(
+                    'El volumen actual no puede superar la capacidad total.'
+                );
             } else {
                 volumenActualInput.setCustomValidity('');
             }
 
-            if (capacidad > 0 && minimo >= capacidad) {
-                minimoInput.setCustomValidity('El volumen mínimo debe ser menor que la capacidad total.');
+            if (
+                capacidad > 0
+                && minimo >= capacidad
+            ) {
+                minimoInput.setCustomValidity(
+                    'El volumen mínimo debe ser menor que la capacidad total.'
+                );
             } else {
                 minimoInput.setCustomValidity('');
             }
@@ -549,33 +640,47 @@
     }
 
     if (telefonoInput) {
-        telefonoInput.addEventListener('input', normalizarTelefono);
+        telefonoInput.addEventListener(
+            'input',
+            normalizarTelefono
+        );
     }
 
     if (agregarTanqueBtn) {
-        agregarTanqueBtn.addEventListener('click', crearTanque);
+        agregarTanqueBtn.addEventListener(
+            'click',
+            crearTanque
+        );
     }
 
     if (tanquesContainer) {
         tanquesContainer.addEventListener('click', (event) => {
-            const btn = event.target.closest('.eliminar-tanque-btn');
+            const btn = event.target.closest(
+                '.eliminar-tanque-btn'
+            );
 
             if (! btn) {
                 return;
             }
 
-            const items = tanquesContainer.querySelectorAll('.tanque-item');
+            const items = tanquesContainer.querySelectorAll(
+                '.tanque-item'
+            );
 
             if (items.length <= 1) {
                 return;
             }
 
             btn.closest('.tanque-item')?.remove();
+
             actualizarTanques();
             validarTanques();
         });
 
-        tanquesContainer.addEventListener('input', validarTanques);
+        tanquesContainer.addEventListener(
+            'input',
+            validarTanques
+        );
     }
 
     actualizarTanques();

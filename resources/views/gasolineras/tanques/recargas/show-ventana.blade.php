@@ -414,7 +414,7 @@
                                     </h5>
 
                                     <p>
-                                        Últimas recargas registradas para esta gasolinera.
+                                        Historial reciente de recargas registradas y anuladas para esta gasolinera.
                                     </p>
                                 </div>
 
@@ -431,7 +431,7 @@
                                         </div>
                                     @else
                                         <div class="cc-table-adaptive-wrapper">
-                                            <table class="cc-table-adaptive" style="min-width: 62rem;">
+                                            <table class="cc-table-adaptive" style="min-width: 86rem;">
                                                 <thead>
                                                     <tr>
                                                         <th>Fecha</th>
@@ -440,25 +440,30 @@
                                                         <th>Precio/galón</th>
                                                         <th>Total</th>
                                                         <th>Registró</th>
+                                                        <th>Estado</th>
+                                                        <th>Acción</th>
                                                     </tr>
                                                 </thead>
 
                                                 <tbody>
                                                     @foreach ($recargasRecientes as $recarga)
+                                                        @php
+                                                            $tanquesRecargados = $recarga->movimientosInventario
+                                                                ->where('tipo_movimiento', 'entrada_recarga')
+                                                                ->pluck('tanque.nombre')
+                                                                ->filter()
+                                                                ->unique()
+                                                                ->values();
+
+                                                            $estaRegistrada = $recarga->estado === 'registrado';
+                                                        @endphp
+
                                                         <tr>
                                                             <td class="cc-table-adaptive-nowrap">
                                                                 {{ optional($recarga->fecha_hora_recarga)->format('d/m/Y H:i') }}
                                                             </td>
 
                                                             <td>
-                                                                @php
-                                                                    $tanquesRecargados = $recarga->movimientosInventario
-                                                                        ->pluck('tanque.nombre')
-                                                                        ->filter()
-                                                                        ->unique()
-                                                                        ->values();
-                                                                @endphp
-
                                                                 {{ $tanquesRecargados->isNotEmpty() ? $tanquesRecargados->join(', ') : 'Sin detalle' }}
                                                             </td>
 
@@ -476,6 +481,69 @@
 
                                                             <td>
                                                                 {{ $recarga->usuarioRegistra?->name ?: 'Sistema' }}
+                                                            </td>
+
+                                                            <td>
+                                                                @if ($estaRegistrada)
+                                                                    <span class="cc-badge cc-badge-active">
+                                                                        Registrada
+                                                                    </span>
+                                                                @else
+                                                                    <span class="cc-badge cc-badge-inactive">
+                                                                        Anulada
+                                                                    </span>
+
+                                                                    <div class="cc-table-adaptive-muted">
+                                                                        {{ optional($recarga->fecha_anulacion)->format('d/m/Y H:i') }}
+                                                                    </div>
+
+                                                                    <div class="cc-table-adaptive-muted">
+                                                                        Por: {{ $recarga->anuladoPor?->name ?: 'Sistema' }}
+                                                                    </div>
+
+                                                                    @if ($recarga->motivo_anulacion)
+                                                                        <div class="cc-table-adaptive-muted">
+                                                                            Motivo: {{ $recarga->motivo_anulacion }}
+                                                                        </div>
+                                                                    @endif
+                                                                @endif
+                                                            </td>
+
+                                                            <td>
+                                                                @if ($estaRegistrada)
+                                                                    <form method="POST"
+                                                                          action="{{ route('gasolineras.tanques.recargas.anular', [$gasolinera, $recarga]) }}"
+                                                                          onsubmit="return confirm('Esta acción anulará la recarga completa y revertirá el inventario de todos los tanques involucrados. La anulación es irreversible. ¿Desea continuar?');">
+                                                                        @csrf
+                                                                        @method('PATCH')
+
+                                                                        <input type="hidden" name="return_to" value="ventana">
+
+                                                                        <div class="cc-field" style="min-width: 17rem; margin-bottom: .65rem;">
+                                                                            <label for="motivo_anulacion_{{ $recarga->id }}">
+                                                                                Motivo de anulación
+                                                                            </label>
+
+                                                                            <input
+                                                                                id="motivo_anulacion_{{ $recarga->id }}"
+                                                                                type="text"
+                                                                                name="motivo_anulacion"
+                                                                                class="cc-input"
+                                                                                maxlength="255"
+                                                                                required
+                                                                                placeholder="Describa el motivo"
+                                                                            >
+                                                                        </div>
+
+                                                                        <button type="submit" class="cc-btn-danger cc-btn-result">
+                                                                            Anular recarga
+                                                                        </button>
+                                                                    </form>
+                                                                @else
+                                                                    <span class="cc-admin-result-value-muted">
+                                                                        Sin acciones disponibles
+                                                                    </span>
+                                                                @endif
                                                             </td>
                                                         </tr>
                                                     @endforeach

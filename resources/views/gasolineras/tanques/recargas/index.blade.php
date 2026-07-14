@@ -251,6 +251,10 @@
                                 $espacioDisponible = max($capacidadTotal - $volumenActual, 0);
                                 $porcentajeDisponible = $tanque->porcentajeDisponible();
                                 $bajoAlerta = $tanque->estaBajoAlerta();
+
+                                $operativamenteRecargable = $tanque->estado === 'activo'
+                                    && $gasolinera?->estado === 'activa'
+                                    && $empresa?->estado === 'activa';
                             @endphp
 
                             <article class="cc-admin-result-card">
@@ -262,9 +266,15 @@
                                                 {{ $tanque->nombre }}
                                             </h5>
 
-                                            <span class="cc-badge cc-badge-active">
-                                                Activo
-                                            </span>
+                                            @if ($operativamenteRecargable)
+                                                <span class="cc-badge cc-badge-active">
+                                                    Disponible
+                                                </span>
+                                            @else
+                                                <span class="cc-badge cc-badge-inactive">
+                                                    No disponible
+                                                </span>
+                                            @endif
 
                                             @if ($bajoAlerta)
                                                 <span class="cc-badge cc-badge-warning">
@@ -274,7 +284,7 @@
                                         </div>
 
                                         <div class="cc-admin-result-subtitle">
-                                            Tanque recargable
+                                            {{ $operativamenteRecargable ? 'Tanque recargable' : 'Operación bloqueada' }}
                                         </div>
                                     </div>
 
@@ -337,11 +347,15 @@
                                     </div>
 
                                     <div class="flex flex-col sm:flex-row gap-3 xl:col-span-2 xl:justify-end xl:self-center">
-                                        @if ($gasolinera)
+                                        @if ($gasolinera && $operativamenteRecargable)
                                             <a href="{{ route('gasolineras.tanques.recargas.create', ['gasolinera' => $gasolinera, 'tanque_id' => $tanque->id]) }}"
                                                class="cc-btn-primary cc-btn-result w-full sm:w-auto">
                                                 Recargar
                                             </a>
+                                        @else
+                                            <span class="cc-admin-result-value-muted">
+                                                Sin acciones disponibles
+                                            </span>
                                         @endif
                                     </div>
 

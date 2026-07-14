@@ -1,6 +1,10 @@
 <x-app-layout>
     @php
-        $empresaNombre = $gasolinera->empresa?->nombre_comercial ?: $gasolinera->empresa?->nombre_legal;
+        $empresaNombre = $gasolinera->empresa?->nombre_comercial
+            ?: $gasolinera->empresa?->nombre_legal;
+
+        $gasolineraActiva = $gasolinera->estado === 'activa';
+        $filtrosAdministracion = request()->query();
     @endphp
 
     <div class="cc-page-wrapper">
@@ -9,21 +13,37 @@
 
                 <div class="cc-card-header cc-card-header-compact">
                     <div>
-                        <h3 class="cc-title cc-title-compact" style="font-size: 1.8rem; line-height: 1.2;">
-                            Administrar gasolinera
+                        <h3
+                            class="cc-title cc-title-compact"
+                            style="font-size: 1.8rem; line-height: 1.2;"
+                        >
+                            {{ $gasolineraActiva ? 'Administrar gasolinera' : 'Ficha de gasolinera' }}
                         </h3>
-
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <a href="{{ route('gasolineras.show.ventana', $gasolinera) }}"
-                           target="_blank"
-                           rel="noopener noreferrer"
-                           class="cc-btn-secondary cc-btn-wide">
+                        <a
+                            href="{{ route(
+                                'gasolineras.show.ventana',
+                                array_merge(
+                                    ['gasolinera' => $gasolinera],
+                                    $filtrosAdministracion
+                                )
+                            ) }}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="cc-btn-secondary cc-btn-wide"
+                        >
                             Abrir en nueva pestaña
                         </a>
 
-                        <a href="{{ route('gasolineras.administrar') }}" class="cc-btn-secondary cc-btn-wide">
+                        <a
+                            href="{{ route(
+                                'gasolineras.administrar',
+                                $filtrosAdministracion
+                            ) }}"
+                            class="cc-btn-secondary cc-btn-wide"
+                        >
                             Volver a administrar
                         </a>
                     </div>
@@ -67,7 +87,9 @@
                     </div>
 
                     <div class="cc-profile-status">
-                        <span class="cc-badge {{ $gasolinera->estado === 'activa' ? 'cc-badge-active' : 'cc-badge-inactive' }}">
+                        <span
+                            class="cc-badge {{ $gasolineraActiva ? 'cc-badge-active' : 'cc-badge-inactive' }}"
+                        >
                             {{ ucfirst($gasolinera->estado) }}
                         </span>
                     </div>
@@ -75,42 +97,118 @@
 
                 <div class="cc-summary-strip">
                     <div class="cc-summary-strip-item">
-                        <span class="cc-summary-strip-label">Capacidad</span>
-                        <span class="cc-summary-strip-value">{{ number_format($capacidadTotal, 2) }} gal</span>
+                        <span class="cc-summary-strip-label">
+                            Capacidad
+                        </span>
+
+                        <span class="cc-summary-strip-value">
+                            {{ number_format($capacidadTotal, 2) }} gal
+                        </span>
                     </div>
 
                     <div class="cc-summary-strip-item">
-                        <span class="cc-summary-strip-label">Disponible</span>
-                        <span class="cc-summary-strip-value">{{ number_format($volumenActual, 2) }} gal</span>
+                        <span class="cc-summary-strip-label">
+                            Disponible
+                        </span>
+
+                        <span class="cc-summary-strip-value">
+                            {{ number_format($volumenActual, 2) }} gal
+                        </span>
                     </div>
 
                     <div class="cc-summary-strip-item">
-                        <span class="cc-summary-strip-label">Disponibilidad</span>
-                        <span class="cc-summary-strip-value">{{ number_format($porcentajeDisponible, 2) }}%</span>
+                        <span class="cc-summary-strip-label">
+                            Disponibilidad
+                        </span>
+
+                        <span class="cc-summary-strip-value">
+                            {{ number_format($porcentajeDisponible, 2) }}%
+                        </span>
                     </div>
 
                     <div class="cc-summary-strip-item">
-                        <span class="cc-summary-strip-label">Alertas</span>
-                        <span class="cc-summary-strip-value {{ $tanquesBajoAlerta > 0 ? 'cc-summary-strip-value-danger' : 'cc-summary-strip-value-success' }}">
+                        <span class="cc-summary-strip-label">
+                            Alertas
+                        </span>
+
+                        <span
+                            class="cc-summary-strip-value {{ $tanquesBajoAlerta > 0 ? 'cc-summary-strip-value-danger' : 'cc-summary-strip-value-success' }}"
+                        >
                             {{ $tanquesBajoAlerta }}
                         </span>
                     </div>
                 </div>
 
+                @if (! $gasolineraActiva)
+                    <div
+                        class="cc-callout cc-callout-warning"
+                        style="margin-bottom: 1.1rem;"
+                    >
+                        <span class="cc-callout-marker"></span>
+
+                        <div>
+                            <div class="cc-callout-title">
+                                Gasolinera inactiva
+                            </div>
+
+                            <div class="cc-callout-text">
+                                El registro permanece disponible para consulta, pero no admite edición,
+                                creación de tanques ni operaciones de inventario hasta que la gasolinera
+                                sea reactivada.
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <div class="cc-detail-layout">
 
                     <section class="cc-detail-section">
                         <div class="cc-detail-section-header">
-                            <h5>Datos de gasolinera</h5>
-                            <p>Actualice la identificación, ubicación y contacto operativo desde un solo punto.</p>
+                            <h5>
+                                Datos de gasolinera
+                            </h5>
+
+                            <p>
+                                @if ($gasolineraActiva)
+                                    Actualice la identificación, ubicación y contacto operativo desde un solo punto.
+                                @else
+                                    Información general conservada para consulta y trazabilidad.
+                                @endif
+                            </p>
                         </div>
 
                         <div style="padding: 1rem 1.2rem;">
-                            <form method="POST" action="{{ route('gasolineras.update', $gasolinera) }}" novalidate>
+                            <form
+                                method="POST"
+                                action="{{ route('gasolineras.update', $gasolinera) }}"
+                                novalidate
+                            >
                                 @csrf
                                 @method('PUT')
 
-                                <input type="hidden" name="empresa_id" value="{{ $gasolinera->empresa_id }}">
+                                <input
+                                    type="hidden"
+                                    name="empresa_id"
+                                    value="{{ $gasolinera->empresa_id }}"
+                                >
+
+                                @foreach ($filtrosAdministracion as $nombreFiltro => $valorFiltro)
+                                    @if (is_array($valorFiltro))
+                                        @foreach ($valorFiltro as $valorItem)
+                                            <input
+                                                type="hidden"
+                                                name="filtros_retorno[{{ $nombreFiltro }}][]"
+                                                value="{{ $valorItem }}"
+                                            >
+                                        @endforeach
+                                    @else
+                                        <input
+                                            type="hidden"
+                                            name="filtros_retorno[{{ $nombreFiltro }}]"
+                                            value="{{ $valorFiltro }}"
+                                        >
+                                    @endif
+                                @endforeach
 
                                 <div class="cc-grid cc-grid-compact">
 
@@ -136,7 +234,8 @@
 
                                     <div class="cc-field">
                                         <label for="nombre">
-                                            Nombre de gasolinera <span class="cc-required">*</span>
+                                            Nombre de gasolinera
+                                            <span class="cc-required">*</span>
                                         </label>
 
                                         <input
@@ -148,16 +247,20 @@
                                             maxlength="150"
                                             required
                                             placeholder="Ej. Gasolinera central"
+                                            @disabled(! $gasolineraActiva)
                                         >
 
                                         @error('nombre')
-                                            <div class="cc-error">{{ $message }}</div>
+                                            <div class="cc-error">
+                                                {{ $message }}
+                                            </div>
                                         @enderror
                                     </div>
 
                                     <div class="cc-field cc-col-span-2">
                                         <label for="direccion">
-                                            Dirección <span class="cc-required">*</span>
+                                            Dirección
+                                            <span class="cc-required">*</span>
                                         </label>
 
                                         <input
@@ -169,10 +272,13 @@
                                             maxlength="255"
                                             required
                                             placeholder="Dirección física de la gasolinera"
+                                            @disabled(! $gasolineraActiva)
                                         >
 
                                         @error('direccion')
-                                            <div class="cc-error">{{ $message }}</div>
+                                            <div class="cc-error">
+                                                {{ $message }}
+                                            </div>
                                         @enderror
                                     </div>
 
@@ -195,10 +301,13 @@
                                             class="cc-input"
                                             maxlength="150"
                                             placeholder="Nombre del encargado"
+                                            @disabled(! $gasolineraActiva)
                                         >
 
                                         @error('encargado')
-                                            <div class="cc-error">{{ $message }}</div>
+                                            <div class="cc-error">
+                                                {{ $message }}
+                                            </div>
                                         @enderror
                                     </div>
 
@@ -215,10 +324,13 @@
                                             class="cc-input"
                                             maxlength="9"
                                             placeholder="0000-0000"
+                                            @disabled(! $gasolineraActiva)
                                         >
 
                                         @error('telefono')
-                                            <div class="cc-error">{{ $message }}</div>
+                                            <div class="cc-error">
+                                                {{ $message }}
+                                            </div>
                                         @enderror
                                     </div>
 
@@ -235,34 +347,52 @@
                                             class="cc-input"
                                             maxlength="150"
                                             placeholder="encargado@empresa.com"
+                                            @disabled(! $gasolineraActiva)
                                         >
 
                                         @error('correo')
-                                            <div class="cc-error">{{ $message }}</div>
+                                            <div class="cc-error">
+                                                {{ $message }}
+                                            </div>
                                         @enderror
                                     </div>
                                 </div>
 
-                                <div class="cc-actions cc-actions-compact">
-                                    <button type="submit" class="cc-btn-primary cc-btn-form-action">
-                                        Guardar cambios
-                                    </button>
-                                </div>
+                                @if ($gasolineraActiva)
+                                    <div class="cc-actions cc-actions-compact">
+                                        <button
+                                            type="submit"
+                                            class="cc-btn-primary cc-btn-form-action"
+                                        >
+                                            Guardar cambios
+                                        </button>
+                                    </div>
+                                @endif
                             </form>
                         </div>
                     </section>
 
                     <section class="cc-detail-section">
                         <div class="cc-detail-section-header">
-                            <h5>Tanques asociados</h5>
-                            <p>Capacidad instalada, inventario actual y estado operativo por tanque.</p>
+                            <h5>
+                                Tanques asociados
+                            </h5>
+
+                            <p>
+                                Capacidad instalada, inventario actual, estado operativo y acceso a la ficha de cada tanque.
+                            </p>
                         </div>
 
                         <div style="padding: 1rem 1.2rem;">
                             @if ($tanques->isEmpty())
                                 <div class="cc-empty-panel cc-empty-panel-compact">
-                                    <h5>Sin tanques registrados</h5>
-                                    <p>Esta gasolinera no tiene tanques asociados.</p>
+                                    <h5>
+                                        Sin tanques registrados
+                                    </h5>
+
+                                    <p>
+                                        Esta gasolinera no tiene tanques asociados.
+                                    </p>
                                 </div>
                             @else
                                 <div class="cc-results-list">
@@ -270,17 +400,39 @@
                                         @php
                                             $porcentajeTanque = $tanque->porcentajeDisponible();
                                             $bajoAlerta = $tanque->estaBajoAlerta();
+                                            $tanqueActivo = $tanque->estado === 'activo';
                                         @endphp
 
                                         <article class="cc-result-card cc-result-card-compact">
-                                            <div style="display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.85fr) minmax(0, 0.85fr) minmax(0, 0.85fr); gap: 1rem; align-items: center;">
+                                            <div
+                                                style="
+                                                    display: grid;
+                                                    grid-template-columns:
+                                                        minmax(0, 1.25fr)
+                                                        minmax(0, 0.8fr)
+                                                        minmax(0, 0.8fr)
+                                                        minmax(0, 0.85fr)
+                                                        auto;
+                                                    gap: 1rem;
+                                                    align-items: center;
+                                                "
+                                            >
                                                 <div>
-                                                    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
+                                                    <div
+                                                        style="
+                                                            display: flex;
+                                                            flex-wrap: wrap;
+                                                            align-items: center;
+                                                            gap: 0.5rem;
+                                                        "
+                                                    >
                                                         <h5 class="cc-result-title cc-cell-truncate">
                                                             {{ $tanque->nombre }}
                                                         </h5>
 
-                                                        <span class="cc-badge {{ $tanque->estado === 'activo' ? 'cc-badge-active' : 'cc-badge-inactive' }}">
+                                                        <span
+                                                            class="cc-badge {{ $tanqueActivo ? 'cc-badge-active' : 'cc-badge-inactive' }}"
+                                                        >
                                                             {{ ucfirst($tanque->estado) }}
                                                         </span>
 
@@ -292,7 +444,10 @@
                                                     </div>
 
                                                     <div class="cc-result-value-muted">
-                                                        {{ number_format((float) $tanque->volumen_actual, 2) }} gal disponibles de {{ number_format((float) $tanque->capacidad_total, 2) }} gal.
+                                                        {{ number_format((float) $tanque->volumen_actual, 2) }}
+                                                        gal disponibles de
+                                                        {{ number_format((float) $tanque->capacidad_total, 2) }}
+                                                        gal.
                                                     </div>
                                                 </div>
 
@@ -302,7 +457,8 @@
                                                     </div>
 
                                                     <div class="cc-result-value">
-                                                        {{ number_format((float) $tanque->volumen_minimo_alerta, 2) }} gal
+                                                        {{ number_format((float) $tanque->volumen_minimo_alerta, 2) }}
+                                                        gal
                                                     </div>
                                                 </div>
 
@@ -322,8 +478,38 @@
                                                     </div>
 
                                                     <div class="cc-result-value">
-                                                        {{ $tanque->estado === 'activo' ? 'Disponible' : 'No disponible' }}
+                                                        @if (! $gasolineraActiva)
+                                                            Bloqueado por gasolinera
+                                                        @elseif ($tanqueActivo)
+                                                            Disponible
+                                                        @else
+                                                            No disponible
+                                                        @endif
                                                     </div>
+                                                </div>
+
+                                                <div class="cc-result-actions">
+                                                    @if ($gasolineraActiva)
+                                                        <a
+                                                            href="{{ route(
+                                                                'gasolineras.tanques.show',
+                                                                array_merge(
+                                                                    [
+                                                                        'gasolinera' => $gasolinera,
+                                                                        'tanque' => $tanque,
+                                                                    ],
+                                                                    $filtrosAdministracion
+                                                                )
+                                                            ) }}"
+                                                            class="{{ $tanqueActivo ? 'cc-btn-primary' : 'cc-btn-secondary' }} cc-btn-result"
+                                                        >
+                                                            {{ $tanqueActivo ? 'Administrar' : 'Ver ficha' }}
+                                                        </a>
+                                                    @else
+                                                        <span class="cc-admin-result-value-muted">
+                                                            Sin acciones disponibles
+                                                        </span>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </article>
@@ -335,19 +521,47 @@
 
                     <section class="cc-detail-section">
                         <div class="cc-detail-section-header">
-                            <h5>Agregar tanque</h5>
-                            <p>Registre un tanque adicional para esta gasolinera activa.</p>
+                            <h5>
+                                Agregar tanque
+                            </h5>
+
+                            <p>
+                                Registre un tanque adicional para esta gasolinera activa.
+                            </p>
                         </div>
 
                         <div style="padding: 1rem 1.2rem;">
-                            @if ($gasolinera->estado === 'activa')
-                                <form method="POST" action="{{ route('gasolineras.tanques.store', $gasolinera) }}" novalidate>
+                            @if ($gasolineraActiva)
+                                <form
+                                    method="POST"
+                                    action="{{ route('gasolineras.tanques.store', $gasolinera) }}"
+                                    novalidate
+                                >
                                     @csrf
+
+                                    @foreach ($filtrosAdministracion as $nombreFiltro => $valorFiltro)
+                                        @if (is_array($valorFiltro))
+                                            @foreach ($valorFiltro as $valorItem)
+                                                <input
+                                                    type="hidden"
+                                                    name="filtros_retorno[{{ $nombreFiltro }}][]"
+                                                    value="{{ $valorItem }}"
+                                                >
+                                            @endforeach
+                                        @else
+                                            <input
+                                                type="hidden"
+                                                name="filtros_retorno[{{ $nombreFiltro }}]"
+                                                value="{{ $valorFiltro }}"
+                                            >
+                                        @endif
+                                    @endforeach
 
                                     <div class="cc-grid cc-grid-compact">
                                         <div class="cc-field">
                                             <label for="nombre_tanque">
-                                                Nombre del tanque <span class="cc-required">*</span>
+                                                Nombre del tanque
+                                                <span class="cc-required">*</span>
                                             </label>
 
                                             <input
@@ -363,7 +577,8 @@
 
                                         <div class="cc-field">
                                             <label for="capacidad_total">
-                                                Capacidad total (galones) <span class="cc-required">*</span>
+                                                Capacidad total (galones)
+                                                <span class="cc-required">*</span>
                                             </label>
 
                                             <input
@@ -380,7 +595,8 @@
 
                                         <div class="cc-field">
                                             <label for="volumen_actual">
-                                                Volumen actual (galones) <span class="cc-required">*</span>
+                                                Volumen actual (galones)
+                                                <span class="cc-required">*</span>
                                             </label>
 
                                             <input
@@ -397,7 +613,8 @@
 
                                         <div class="cc-field">
                                             <label for="volumen_minimo_alerta">
-                                                Volumen mínimo de alerta (galones) <span class="cc-required">*</span>
+                                                Volumen mínimo de alerta (galones)
+                                                <span class="cc-required">*</span>
                                             </label>
 
                                             <input
@@ -414,15 +631,23 @@
                                     </div>
 
                                     <div class="cc-actions cc-actions-compact">
-                                        <button type="submit" class="cc-btn-primary cc-btn-form-action">
+                                        <button
+                                            type="submit"
+                                            class="cc-btn-primary cc-btn-form-action"
+                                        >
                                             Agregar tanque
                                         </button>
                                     </div>
                                 </form>
                             @else
                                 <div class="cc-empty-panel cc-empty-panel-compact">
-                                    <h5>Gasolinera inactiva</h5>
-                                    <p>No se pueden agregar tanques a una gasolinera inactiva.</p>
+                                    <h5>
+                                        Gasolinera inactiva
+                                    </h5>
+
+                                    <p>
+                                        No se pueden agregar tanques mientras la gasolinera esté inactiva.
+                                    </p>
                                 </div>
                             @endif
                         </div>
@@ -430,43 +655,125 @@
 
                     <section class="cc-detail-section">
                         <div class="cc-detail-section-header">
-                            <h5>Estado de gasolinera</h5>
-                            <p>Administre únicamente la activación o inactivación del registro principal.</p>
+                            <h5>
+                                Estado de gasolinera
+                            </h5>
+
+                            <p>
+                                Administre únicamente la activación o inactivación del registro principal.
+                            </p>
                         </div>
 
                         <div style="padding: 1rem 1.2rem;">
-                            @if ($gasolinera->estado === 'activa')
-                                <form method="POST" action="{{ route('gasolineras.inactivar', $gasolinera) }}" class="cc-inline-action-form">
+                            @if ($gasolineraActiva)
+                                <form
+                                    method="POST"
+                                    action="{{ route('gasolineras.inactivar', $gasolinera) }}"
+                                    class="cc-inline-action-form"
+                                >
                                     @csrf
                                     @method('PATCH')
+
+                                    @foreach ($filtrosAdministracion as $nombreFiltro => $valorFiltro)
+                                        @if (is_array($valorFiltro))
+                                            @foreach ($valorFiltro as $valorItem)
+                                                <input
+                                                    type="hidden"
+                                                    name="filtros_retorno[{{ $nombreFiltro }}][]"
+                                                    value="{{ $valorItem }}"
+                                                >
+                                            @endforeach
+                                        @else
+                                            <input
+                                                type="hidden"
+                                                name="filtros_retorno[{{ $nombreFiltro }}]"
+                                                value="{{ $valorFiltro }}"
+                                            >
+                                        @endif
+                                    @endforeach
 
                                     <div class="cc-inline-action-field">
                                         <label for="motivo_inactivacion">
                                             Motivo de inactivación
                                         </label>
 
-                                        <select id="motivo_inactivacion" name="motivo_inactivacion" class="cc-input" required>
-                                            <option value="">Seleccione un motivo</option>
-                                            <option value="Mantenimiento operativo">Mantenimiento operativo</option>
-                                            <option value="Cierre de gasolinera">Cierre de gasolinera</option>
-                                            <option value="No continúa en operación">No continúa en operación</option>
-                                            <option value="Datos incorrectos en registro">Datos incorrectos en registro</option>
-                                            <option value="Suspensión administrativa">Suspensión administrativa</option>
-                                            <option value="Solicitud del cliente">Solicitud del cliente</option>
-                                            <option value="Otro">Otro</option>
+                                        <select
+                                            id="motivo_inactivacion"
+                                            name="motivo_inactivacion"
+                                            class="cc-input"
+                                            required
+                                        >
+                                            <option value="">
+                                                Seleccione un motivo
+                                            </option>
+
+                                            <option value="Mantenimiento operativo">
+                                                Mantenimiento operativo
+                                            </option>
+
+                                            <option value="Cierre de gasolinera">
+                                                Cierre de gasolinera
+                                            </option>
+
+                                            <option value="No continúa en operación">
+                                                No continúa en operación
+                                            </option>
+
+                                            <option value="Datos incorrectos en registro">
+                                                Datos incorrectos en registro
+                                            </option>
+
+                                            <option value="Suspensión administrativa">
+                                                Suspensión administrativa
+                                            </option>
+
+                                            <option value="Solicitud del cliente">
+                                                Solicitud del cliente
+                                            </option>
+
+                                            <option value="Otro">
+                                                Otro
+                                            </option>
                                         </select>
                                     </div>
 
-                                    <button type="submit" class="cc-btn-danger cc-btn-form-action">
+                                    <button
+                                        type="submit"
+                                        class="cc-btn-danger cc-btn-form-action"
+                                    >
                                         Inactivar gasolinera
                                     </button>
                                 </form>
                             @else
-                                <form method="POST" action="{{ route('gasolineras.reactivar', $gasolinera) }}">
+                                <form
+                                    method="POST"
+                                    action="{{ route('gasolineras.reactivar', $gasolinera) }}"
+                                >
                                     @csrf
                                     @method('PATCH')
 
-                                    <button type="submit" class="cc-btn-success cc-btn-form-action">
+                                    @foreach ($filtrosAdministracion as $nombreFiltro => $valorFiltro)
+                                        @if (is_array($valorFiltro))
+                                            @foreach ($valorFiltro as $valorItem)
+                                                <input
+                                                    type="hidden"
+                                                    name="filtros_retorno[{{ $nombreFiltro }}][]"
+                                                    value="{{ $valorItem }}"
+                                                >
+                                            @endforeach
+                                        @else
+                                            <input
+                                                type="hidden"
+                                                name="filtros_retorno[{{ $nombreFiltro }}]"
+                                                value="{{ $valorFiltro }}"
+                                            >
+                                        @endif
+                                    @endforeach
+
+                                    <button
+                                        type="submit"
+                                        class="cc-btn-success cc-btn-form-action"
+                                    >
                                         Reactivar gasolinera
                                     </button>
                                 </form>

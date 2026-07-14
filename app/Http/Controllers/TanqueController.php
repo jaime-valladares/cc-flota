@@ -244,6 +244,7 @@ class TanqueController extends Controller
     {
         $this->autorizarAccesoGasolinera($gasolinera);
         $this->validarEmpresaActivaGasolinera($gasolinera);
+        $this->validarGasolineraActiva($gasolinera);
         $this->validarTanquePerteneceGasolinera($gasolinera, $tanque);
 
         $tanque->load([
@@ -265,6 +266,7 @@ class TanqueController extends Controller
     {
         $this->autorizarAccesoGasolinera($gasolinera);
         $this->validarEmpresaActivaGasolinera($gasolinera);
+        $this->validarGasolineraActiva($gasolinera);
         $this->validarTanquePerteneceGasolinera($gasolinera, $tanque);
 
         $tanque->load([
@@ -322,7 +324,9 @@ class TanqueController extends Controller
     {
         $this->autorizarAccesoGasolinera($gasolinera);
         $this->validarEmpresaActivaGasolinera($gasolinera);
+        $this->validarGasolineraActiva($gasolinera);
         $this->validarTanquePerteneceGasolinera($gasolinera, $tanque);
+        $this->validarTanqueActivoParaEdicion($tanque);
 
         $validated = $request->validate([
             'nombre' => [
@@ -386,6 +390,113 @@ class TanqueController extends Controller
     }
 
     /**
+     * Deactivate an individual active tank.
+     */
+    public function inactivar(Request $request, Gasolinera $gasolinera, Tanque $tanque)
+    {
+        $this->autorizarAccesoGasolinera($gasolinera);
+        $this->validarEmpresaActivaGasolinera($gasolinera);
+        $this->validarGasolineraActiva($gasolinera);
+        $this->validarTanquePerteneceGasolinera($gasolinera, $tanque);
+
+        if ($tanque->estado !== 'activo') {
+            return back()->withErrors([
+                'tanque' => 'El tanque ya está inactivo.',
+            ]);
+        }
+
+        $validated = $request->validate([
+            'motivo_inactivacion' => [
+                'required',
+                'string',
+                'max:255',
+                'in:Mantenimiento,Daño operativo,Fuera de servicio,Datos incorrectos en registro,Solicitud del cliente,Otro',
+            ],
+            'return_to' => ['nullable', 'in:ventana'],
+        ], [
+            'motivo_inactivacion.required' => 'Debe seleccionar el motivo de inactivación.',
+            'motivo_inactivacion.in' => 'El motivo de inactivación seleccionado no es válido.',
+            'motivo_inactivacion.max' => 'El motivo de inactivación no debe exceder 255 caracteres.',
+            'return_to.in' => 'El destino de retorno no es válido.',
+        ]);
+
+        $tanque->update([
+            'estado' => 'inactivo',
+            'fecha_inactivacion' => now(),
+            'inactivado_por' => Auth::id(),
+            'motivo_inactivacion' => $validated['motivo_inactivacion'],
+            'fecha_actualizacion' => now(),
+            'actualizado_por' => Auth::id(),
+        ]);
+
+        return $this->redirigirFichaTanque(
+            $request,
+            $gasolinera,
+            $tanque,
+            'Tanque inactivado correctamente.'
+        );
+    }
+
+    /**
+     * Reactivate an individual inactive tank.
+     */
+    public function reactivar(Request $request, Gasolinera $gasolinera, Tanque $tanque)
+    {
+        $this->autorizarAccesoGasolinera($gasolinera);
+        $this->validarEmpresaActivaGasolinera($gasolinera);
+        $this->validarGasolineraActiva($gasolinera);
+        $this->validarTanquePerteneceGasolinera($gasolinera, $tanque);
+
+        $request->validate([
+            'return_to' => ['nullable', 'in:ventana'],
+        ], [
+            'return_to.in' => 'El destino de retorno no es válido.',
+        ]);
+
+        if ($tanque->estado !== 'inactivo') {
+            return back()->withErrors([
+                'tanque' => 'El tanque ya está activo.',
+            ]);
+        }
+
+        $tanque->update([
+            'estado' => 'activo',
+            'fecha_inactivacion' => null,
+            'inactivado_por' => null,
+            'motivo_inactivacion' => null,
+            'fecha_actualizacion' => now(),
+            'actualizado_por' => Auth::id(),
+        ]);
+
+        return $this->redirigirFichaTanque(
+            $request,
+            $gasolinera,
+            $tanque,
+            'Tanque reactivado correctamente.'
+        );
+    }
+
+    /**
+     * Redirect status actions to the corresponding tank detail screen.
+     */
+    private function redirigirFichaTanque(
+        Request $request,
+        Gasolinera $gasolinera,
+        Tanque $tanque,
+        string $mensaje
+    ) {
+        if ($request->input('return_to') === 'ventana') {
+            return redirect()
+                ->route('gasolineras.tanques.show.ventana', [$gasolinera, $tanque])
+                ->with('success', $mensaje);
+        }
+
+        return redirect()
+            ->route('gasolineras.tanques.show', [$gasolinera, $tanque])
+            ->with('success', $mensaje);
+    }
+
+    /**
      * Prevent company users from accessing other companies' gas stations.
      */
     private function autorizarAccesoGasolinera(Gasolinera $gasolinera): void
@@ -406,6 +517,26 @@ class TanqueController extends Controller
 
         if (! $gasolinera->empresa || $gasolinera->empresa->estado !== 'activa') {
             abort(403, 'No se puede operar sobre esta gasolinera porque la empresa está inactiva.');
+        }
+    }
+
+    /**
+     * Ensure the selected gas station is operationally active.
+     */
+    private function validarGasolineraActiva(Gasolinera $gasolinera): void
+    {
+        if ($gasolinera->estado !== 'activa') {
+            abort(403, 'No se puede administrar tanques mientras la gasolinera esté inactiva.');
+        }
+    }
+
+    /**
+     * Prevent edits to an inactive tank.
+     */
+    private function validarTanqueActivoParaEdicion(Tanque $tanque): void
+    {
+        if ($tanque->estado !== 'activo') {
+            abort(403, 'No se puede editar un tanque inactivo. Debe reactivarlo desde su ficha.');
         }
     }
 

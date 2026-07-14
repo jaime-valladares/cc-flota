@@ -626,7 +626,6 @@ class CcFlotaDemoSeeder extends Seeder
             'volumen_actual' => $inventario['volumen_inicial'],
             'volumen_minimo_alerta' => $inventario['volumen_minimo_alerta'],
             'estado' => 'activo',
-            'inactivado_por_gasolinera' => false,
             'fecha_creacion' => $fechaBase,
             'creado_por' => $usuarioResponsableId,
             'fecha_actualizacion' => null,

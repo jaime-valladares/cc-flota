@@ -193,20 +193,11 @@ Route::middleware('auth')->group(function () {
     Route::put('/gasolineras/{gasolinera}/tanques/{tanque}', [TanqueController::class, 'update'])
         ->name('gasolineras.tanques.update');
 
-    Route::patch('/gasolineras/{gasolinera}/tanques/{tanque}/inactivar', [GasolineraController::class, 'inactivarTanque'])
+    Route::patch('/gasolineras/{gasolinera}/tanques/{tanque}/inactivar', [TanqueController::class, 'inactivar'])
         ->name('gasolineras.tanques.inactivar');
 
-    Route::patch('/gasolineras/{gasolinera}/tanques/{tanque}/reactivar', [GasolineraController::class, 'reactivarTanque'])
+    Route::patch('/gasolineras/{gasolinera}/tanques/{tanque}/reactivar', [TanqueController::class, 'reactivar'])
         ->name('gasolineras.tanques.reactivar');
-
-    Route::get('/gasolineras/{gasolinera}/tanques/{tanque}/recarga', [GasolineraController::class, 'recargarTanque'])
-        ->name('gasolineras.tanques.recarga');
-
-    Route::get('/gasolineras/{gasolinera}/tanques/{tanque}/recarga/ventana', [GasolineraController::class, 'recargarTanqueVentana'])
-        ->name('gasolineras.tanques.recarga.ventana');
-
-    Route::post('/gasolineras/{gasolinera}/tanques/{tanque}/recarga', [GasolineraController::class, 'guardarRecargaTanque'])
-        ->name('gasolineras.tanques.recarga.store');
 
     /*
     |--------------------------------------------------------------------------
@@ -228,6 +219,9 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/gasolineras/{gasolinera}/tanques/recargas', [RecargaTanqueController::class, 'store'])
         ->name('gasolineras.tanques.recargas.store');
+
+    Route::patch('/gasolineras/{gasolinera}/tanques/recargas/{recarga}/anular', [RecargaTanqueController::class, 'anular'])
+        ->name('gasolineras.tanques.recargas.anular');
 
     /*
     |--------------------------------------------------------------------------

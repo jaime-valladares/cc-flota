@@ -7,11 +7,7 @@
 
         <title>Editar gasolinera | CC-Flota</title>
 
-        
         @include('layouts.partials.favicon')
-<link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/cc-flota/favicon.png') }}?v=3">
-        <link rel="shortcut icon" type="image/png" href="{{ asset('images/cc-flota/favicon.png') }}?v=3">
-        <link rel="apple-touch-icon" href="{{ asset('images/cc-flota/favicon.png') }}?v=3">
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,6 +17,10 @@
     </head>
 
     <body class="antialiased">
+        @php
+            $filtrosAdministracion = request()->query();
+        @endphp
+
         <div class="cc-window-wrapper" style="padding-top: 2.1rem;">
             <div class="cc-window-container" style="max-width: 79rem;">
                 <div class="cc-card">
@@ -37,20 +37,76 @@
                         </div>
 
                         <div class="flex items-center gap-3">
-                            <a href="{{ route('gasolineras.show.ventana', $gasolinera) }}" class="cc-btn-secondary cc-btn-wide">
+                            <a
+                                href="{{ route(
+                                    'gasolineras.show.ventana',
+                                    array_merge(
+                                        ['gasolinera' => $gasolinera],
+                                        $filtrosAdministracion
+                                    )
+                                ) }}"
+                                class="cc-btn-secondary cc-btn-wide"
+                            >
                                 Volver a ficha
                             </a>
                         </div>
                     </div>
 
-                    <form method="POST" action="{{ route('gasolineras.update', $gasolinera) }}" novalidate>
+                    @if (session('success'))
+                        <div class="cc-alert cc-alert-success">
+                            {{ session('success') }}
+                        </div>
+                    @endif
+
+                    @if ($errors->any())
+                        <div class="cc-alert cc-alert-danger">
+                            <ul class="cc-alert-list">
+                                @foreach ($errors->all() as $error)
+                                    <li>
+                                        {{ $error }}
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
+                    <form
+                        method="POST"
+                        action="{{ route(
+                            'gasolineras.update',
+                            array_merge(
+                                ['gasolinera' => $gasolinera],
+                                $filtrosAdministracion
+                            )
+                        ) }}"
+                        novalidate
+                    >
                         @csrf
                         @method('PUT')
+
+                        @foreach ($filtrosAdministracion as $nombreFiltro => $valorFiltro)
+                            @if (is_array($valorFiltro))
+                                @foreach ($valorFiltro as $valorItem)
+                                    <input
+                                        type="hidden"
+                                        name="filtros_retorno[{{ $nombreFiltro }}][]"
+                                        value="{{ $valorItem }}"
+                                    >
+                                @endforeach
+                            @else
+                                <input
+                                    type="hidden"
+                                    name="filtros_retorno[{{ $nombreFiltro }}]"
+                                    value="{{ $valorFiltro }}"
+                                >
+                            @endif
+                        @endforeach
 
                         @include('gasolineras._form', [
                             'gasolinera' => $gasolinera,
                             'modoVentana' => true,
                             'submitLabel' => 'Guardar cambios',
+                            'filtrosAdministracion' => $filtrosAdministracion,
                         ])
                     </form>
 

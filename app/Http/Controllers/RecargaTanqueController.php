@@ -14,29 +14,16 @@ use Illuminate\Validation\ValidationException;
 
 class RecargaTanqueController extends Controller
 {
-    /**
-     * Display the tank recharge search panel.
-     */
     public function index(Request $request)
     {
-        $data = $this->prepararConsultaRecargas($request);
-
-        return view('gasolineras.tanques.recargas.index', $data);
+        return view('gasolineras.tanques.recargas.index', $this->prepararConsultaRecargas($request));
     }
 
-    /**
-     * Display the standalone tank recharge search panel.
-     */
     public function indexVentana(Request $request)
     {
-        $data = $this->prepararConsultaRecargas($request);
-
-        return view('gasolineras.tanques.recargas.index-ventana', $data);
+        return view('gasolineras.tanques.recargas.index-ventana', $this->prepararConsultaRecargas($request));
     }
 
-    /**
-     * Prepare searchable tanks for recharge.
-     */
     private function prepararConsultaRecargas(Request $request): array
     {
         $user = Auth::user();
@@ -123,9 +110,7 @@ class RecargaTanqueController extends Controller
             ->get();
 
         $query = Tanque::query()
-            ->with([
-                'gasolinera.empresa',
-            ])
+            ->with('gasolinera.empresa')
             ->where('tanques.estado', 'activo')
             ->whereHas('gasolinera', function ($query) {
                 $query->where('gasolineras.estado', 'activa');
@@ -196,60 +181,53 @@ class RecargaTanqueController extends Controller
 
         $capacidadDisponible = (clone $baseResumen)
             ->get()
-            ->sum(function ($tanque) {
-                return max(0, (float) $tanque->capacidad_total - (float) $tanque->volumen_actual);
-            });
+            ->sum(fn ($tanque) => max(
+                0,
+                (float) $tanque->capacidad_total - (float) $tanque->volumen_actual
+            ));
 
         return [
             'tanques' => $tanques,
             'empresasSelector' => $empresasSelector,
             'gasolinerasSelector' => $gasolinerasSelector,
-
             'busquedaEmpresa' => $busquedaEmpresa,
             'busquedaGasolinera' => $busquedaGasolinera,
-
             'empresaId' => $empresaId,
             'gasolineraId' => $gasolineraId,
-
             'hayFiltros' => $hayFiltros,
             'consultaEjecutada' => $consultaEjecutada,
-
             'tanquesRecargables' => $tanquesRecargables,
             'tanquesBajoAlerta' => $tanquesBajoAlerta,
             'capacidadDisponible' => $capacidadDisponible,
-
             'esUsuarioDieselCop' => $esUsuarioDieselCop,
             'empresaUsuario' => $empresaUsuario,
         ];
     }
 
-    /**
-     * Display the multi-tank recharge form.
-     */
     public function create(Request $request, Gasolinera $gasolinera)
     {
         $this->autorizarAccesoGasolinera($gasolinera);
         $this->validarEmpresaActivaGasolinera($gasolinera);
         $this->validarGasolineraRecargable($gasolinera);
 
-        return view('gasolineras.tanques.recargas.show', $this->prepararFormularioRecargaMultiple($request, $gasolinera));
+        return view(
+            'gasolineras.tanques.recargas.show',
+            $this->prepararFormularioRecargaMultiple($request, $gasolinera)
+        );
     }
 
-    /**
-     * Display the standalone multi-tank recharge form.
-     */
     public function createVentana(Request $request, Gasolinera $gasolinera)
     {
         $this->autorizarAccesoGasolinera($gasolinera);
         $this->validarEmpresaActivaGasolinera($gasolinera);
         $this->validarGasolineraRecargable($gasolinera);
 
-        return view('gasolineras.tanques.recargas.show-ventana', $this->prepararFormularioRecargaMultiple($request, $gasolinera));
+        return view(
+            'gasolineras.tanques.recargas.show-ventana',
+            $this->prepararFormularioRecargaMultiple($request, $gasolinera)
+        );
     }
 
-    /**
-     * Legacy individual screen redirect.
-     */
     public function show(Gasolinera $gasolinera, Tanque $tanque)
     {
         $this->autorizarAccesoGasolinera($gasolinera);
@@ -263,9 +241,6 @@ class RecargaTanqueController extends Controller
         ]);
     }
 
-    /**
-     * Legacy individual standalone screen redirect.
-     */
     public function showVentana(Gasolinera $gasolinera, Tanque $tanque)
     {
         $this->autorizarAccesoGasolinera($gasolinera);
@@ -279,9 +254,6 @@ class RecargaTanqueController extends Controller
         ]);
     }
 
-    /**
-     * Prepare multi-tank recharge form data.
-     */
     private function prepararFormularioRecargaMultiple(Request $request, Gasolinera $gasolinera): array
     {
         $gasolinera->load('empresa');
@@ -316,10 +288,10 @@ class RecargaTanqueController extends Controller
         $recargasRecientes = RecargaCombustible::query()
             ->with([
                 'usuarioRegistra',
+                'anuladoPor',
                 'movimientosInventario.tanque',
             ])
             ->where('gasolinera_id', $gasolinera->id)
-            ->where('estado', 'registrado')
             ->latest('fecha_hora_recarga')
             ->limit(8)
             ->get();
@@ -333,9 +305,6 @@ class RecargaTanqueController extends Controller
         ];
     }
 
-    /**
-     * Store a multi-tank fuel recharge.
-     */
     public function store(Request $request, Gasolinera $gasolinera)
     {
         $this->autorizarAccesoGasolinera($gasolinera);
@@ -361,6 +330,7 @@ class RecargaTanqueController extends Controller
         ]);
 
         $precioGalon = round((float) $validated['precio_galon'], 4);
+
         $volumenesIngresados = collect($validated['volumenes'])
             ->mapWithKeys(function ($volumen, $tanqueId) {
                 return [(int) $tanqueId => round((float) ($volumen ?: 0), 2)];
@@ -395,11 +365,9 @@ class RecargaTanqueController extends Controller
         foreach ($volumenesIngresados as $tanqueId => $volumenMovimiento) {
             $tanque = $tanques->get($tanqueId);
 
-            $volumenAnterior = (float) $tanque->volumen_actual;
-            $volumenResultante = $volumenAnterior + $volumenMovimiento;
-            $capacidadTotal = (float) $tanque->capacidad_total;
+            $volumenResultante = (float) $tanque->volumen_actual + $volumenMovimiento;
 
-            if ($volumenResultante > $capacidadTotal) {
+            if ($volumenResultante > (float) $tanque->capacidad_total) {
                 return back()
                     ->withErrors([
                         "volumenes.{$tanqueId}" => "La recarga del tanque {$tanque->nombre} excede su capacidad total.",
@@ -436,11 +404,9 @@ class RecargaTanqueController extends Controller
                     ]);
                 }
 
-                $volumenAnterior = (float) $tanque->volumen_actual;
-                $volumenResultante = $volumenAnterior + $volumenMovimiento;
-                $capacidadTotal = (float) $tanque->capacidad_total;
+                $volumenResultante = (float) $tanque->volumen_actual + $volumenMovimiento;
 
-                if ($volumenResultante > $capacidadTotal) {
+                if ($volumenResultante > (float) $tanque->capacidad_total) {
                     throw ValidationException::withMessages([
                         "volumenes.{$tanqueId}" => "La recarga del tanque {$tanque->nombre} excede su capacidad total.",
                     ]);
@@ -493,20 +459,158 @@ class RecargaTanqueController extends Controller
             }
         });
 
+        return $this->redirigirFormularioRecarga(
+            $request,
+            $gasolinera,
+            'Recarga de combustible registrada correctamente.'
+        );
+    }
+
+    public function anular(Request $request, Gasolinera $gasolinera, RecargaCombustible $recarga)
+    {
+        $this->autorizarAccesoGasolinera($gasolinera);
+        $this->validarEmpresaActivaGasolinera($gasolinera);
+        $this->validarGasolineraRecargable($gasolinera);
+
+        if ((int) $recarga->gasolinera_id !== (int) $gasolinera->id) {
+            abort(404);
+        }
+
+        $validated = $request->validate([
+            'motivo_anulacion' => ['required', 'string', 'max:255'],
+            'return_to' => ['nullable', 'in:ventana'],
+        ], [
+            'motivo_anulacion.required' => 'Debe ingresar el motivo de anulación.',
+            'motivo_anulacion.max' => 'El motivo de anulación no debe exceder 255 caracteres.',
+            'return_to.in' => 'El destino de retorno no es válido.',
+        ]);
+
+        DB::transaction(function () use ($recarga, $validated) {
+            $recargaBloqueada = RecargaCombustible::query()
+                ->whereKey($recarga->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($recargaBloqueada->estado !== 'registrado') {
+                throw ValidationException::withMessages([
+                    'motivo_anulacion' => 'La recarga ya fue anulada y no puede modificarse.',
+                ]);
+            }
+
+            $movimientosOriginales = MovimientoInventarioCombustible::query()
+                ->where('recarga_combustible_id', $recargaBloqueada->id)
+                ->where('tipo_movimiento', 'entrada_recarga')
+                ->where('estado', 'registrado')
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get();
+
+            if ($movimientosOriginales->isEmpty()) {
+                throw ValidationException::withMessages([
+                    'motivo_anulacion' => 'La recarga no tiene movimientos registrados para revertir.',
+                ]);
+            }
+
+            $tanquesBloqueados = Tanque::query()
+                ->whereIn('id', $movimientosOriginales->pluck('tanque_id')->unique())
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+
+            foreach ($movimientosOriginales as $movimiento) {
+                $tanque = $tanquesBloqueados->get($movimiento->tanque_id);
+
+                if (! $tanque) {
+                    throw ValidationException::withMessages([
+                        'motivo_anulacion' => 'Uno de los tanques de la recarga ya no está disponible.',
+                    ]);
+                }
+
+                if ((float) $tanque->volumen_actual < (float) $movimiento->volumen_movimiento) {
+                    throw ValidationException::withMessages([
+                        'motivo_anulacion' => "No se puede anular la recarga porque el tanque {$tanque->nombre} no conserva inventario suficiente para revertirla.",
+                    ]);
+                }
+            }
+
+            $fechaAnulacion = now();
+            $usuarioId = Auth::id();
+            $motivoAnulacion = trim($validated['motivo_anulacion']);
+
+            foreach ($movimientosOriginales as $movimiento) {
+                $tanque = $tanquesBloqueados->get($movimiento->tanque_id);
+
+                $volumenAnterior = (float) $tanque->volumen_actual;
+                $volumenMovimiento = (float) $movimiento->volumen_movimiento;
+                $volumenResultante = round($volumenAnterior - $volumenMovimiento, 2);
+
+                $tanque->update([
+                    'volumen_actual' => $volumenResultante,
+                    'fecha_actualizacion' => $fechaAnulacion,
+                    'actualizado_por' => $usuarioId,
+                ]);
+
+                $movimiento->update([
+                    'estado' => 'anulado',
+                    'fecha_actualizacion' => $fechaAnulacion,
+                    'actualizado_por' => $usuarioId,
+                    'fecha_anulacion' => $fechaAnulacion,
+                    'anulado_por' => $usuarioId,
+                    'motivo_anulacion' => $motivoAnulacion,
+                ]);
+
+                MovimientoInventarioCombustible::create([
+                    'empresa_id' => $recargaBloqueada->empresa_id,
+                    'tanque_id' => $tanque->id,
+                    'abastecimiento_id' => null,
+                    'recarga_combustible_id' => $recargaBloqueada->id,
+                    'tipo_movimiento' => 'anulacion_recarga',
+                    'volumen_anterior' => $volumenAnterior,
+                    'sentido_movimiento' => 'salida',
+                    'volumen_movimiento' => $volumenMovimiento,
+                    'volumen_resultante' => $volumenResultante,
+                    'subtotal_compra' => null,
+                    'fecha_hora_movimiento' => $fechaAnulacion,
+                    'observaciones' => 'Reversión automática por anulación completa de recarga.',
+                    'usuario_registra_id' => $usuarioId,
+                    'estado' => 'registrado',
+                    'fecha_creacion' => $fechaAnulacion,
+                ]);
+            }
+
+            $recargaBloqueada->update([
+                'estado' => 'anulado',
+                'fecha_actualizacion' => $fechaAnulacion,
+                'actualizado_por' => $usuarioId,
+                'fecha_anulacion' => $fechaAnulacion,
+                'anulado_por' => $usuarioId,
+                'motivo_anulacion' => $motivoAnulacion,
+            ]);
+        });
+
+        return $this->redirigirFormularioRecarga(
+            $request,
+            $gasolinera,
+            'La recarga fue anulada completamente y su inventario fue revertido.'
+        );
+    }
+
+    private function redirigirFormularioRecarga(
+        Request $request,
+        Gasolinera $gasolinera,
+        string $mensaje
+    ) {
         if ($request->input('return_to') === 'ventana') {
             return redirect()
                 ->route('gasolineras.tanques.recargas.create.ventana', $gasolinera)
-                ->with('success', 'Recarga de combustible registrada correctamente.');
+                ->with('success', $mensaje);
         }
 
         return redirect()
             ->route('gasolineras.tanques.recargas.create', $gasolinera)
-            ->with('success', 'Recarga de combustible registrada correctamente.');
+            ->with('success', $mensaje);
     }
 
-    /**
-     * Prevent company users from accessing other companies' gas stations.
-     */
     private function autorizarAccesoGasolinera(Gasolinera $gasolinera): void
     {
         $user = Auth::user();
@@ -516,9 +620,6 @@ class RecargaTanqueController extends Controller
         }
     }
 
-    /**
-     * Ensure the gas station belongs to an active company before recharge operations.
-     */
     private function validarEmpresaActivaGasolinera(Gasolinera $gasolinera): void
     {
         $gasolinera->loadMissing('empresa');
@@ -528,9 +629,6 @@ class RecargaTanqueController extends Controller
         }
     }
 
-    /**
-     * Ensure the tank belongs to the selected gas station.
-     */
     private function validarTanquePerteneceGasolinera(Gasolinera $gasolinera, Tanque $tanque): void
     {
         if ((int) $tanque->gasolinera_id !== (int) $gasolinera->id) {
@@ -538,9 +636,6 @@ class RecargaTanqueController extends Controller
         }
     }
 
-    /**
-     * Ensure the gas station can receive fuel.
-     */
     private function validarGasolineraRecargable(Gasolinera $gasolinera): void
     {
         if ($gasolinera->estado !== 'activa') {
@@ -548,9 +643,6 @@ class RecargaTanqueController extends Controller
         }
     }
 
-    /**
-     * Ensure the gas station and tank can receive fuel.
-     */
     private function validarTanqueRecargable(Gasolinera $gasolinera, Tanque $tanque): void
     {
         $this->validarGasolineraRecargable($gasolinera);
