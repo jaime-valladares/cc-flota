@@ -1,6 +1,31 @@
+@php
+    $queryParams = collect(request()->query())
+        ->except([
+            'puntoRuta',
+            'return_to',
+            'return_query',
+        ])
+        ->all();
+
+    $returnQuery = http_build_query($queryParams);
+
+    $nombreEmpresa = $puntoRuta->empresa?->nombre_comercial
+        ?: $puntoRuta->empresa?->nombre_legal
+        ?: 'Empresa no disponible';
+
+    $puntoActivo = $puntoRuta->estado === 'activo';
+
+    $tieneRutasActivas = $tieneRutasActivas
+        ?? $puntoRuta->tiene_rutas_activas
+        ?? false;
+@endphp
+
 <x-app-layout>
     <div class="cc-page-wrapper">
-        <div class="cc-content-container" style="max-width: 80rem;">
+        <div
+            class="cc-content-container"
+            style="max-width: 80rem;"
+        >
             <div class="cc-card">
 
                 <div class="cc-card-header cc-card-header-compact">
@@ -8,21 +33,40 @@
                         <h3 class="cc-title cc-title-compact">
                             Ficha administrativa de punto de ruta
                         </h3>
-                        <p class="cc-subtitle cc-subtitle-compact">
-                            Consulta consolidada del punto operativo utilizado como origen o destino en abastecimientos.
-                        </p>
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <a href="{{ route('puntos-ruta.administrar') }}" class="cc-btn-secondary cc-btn-wide">
+                        <a
+                            href="{{ route(
+                                'puntos-ruta.administrar',
+                                $queryParams
+                            ) }}"
+                            class="cc-btn-secondary cc-btn-wide"
+                        >
                             Volver a administrar
                         </a>
                     </div>
                 </div>
 
                 @if (session('success'))
-                    <div class="cc-alert-success">
+                    <div class="cc-alert cc-alert-success">
                         {{ session('success') }}
+                    </div>
+                @endif
+
+                @if ($errors->any())
+                    <div class="cc-alert cc-alert-danger">
+                        <div class="font-bold">
+                            Revise la información proporcionada.
+                        </div>
+
+                        <ul class="mt-2 list-disc list-inside">
+                            @foreach ($errors->all() as $error)
+                                <li>
+                                    {{ $error }}
+                                </li>
+                            @endforeach
+                        </ul>
                     </div>
                 @endif
 
@@ -38,17 +82,17 @@
 
                         <div class="cc-profile-meta">
                             <span>
-                                Empresa: {{ $puntoRuta->empresa->nombre_comercial ?: $puntoRuta->empresa->nombre_legal }}
+                                Empresa: {{ $nombreEmpresa }}
                             </span>
 
                             <span>
-                                Dirección: {{ $puntoRuta->direccion }}
+                                Uso: origen o destino de ruta
                             </span>
                         </div>
                     </div>
 
                     <div class="cc-profile-status">
-                        @if ($puntoRuta->estado === 'activo')
+                        @if ($puntoActivo)
                             <span class="cc-badge cc-badge-active">
                                 Activo
                             </span>
@@ -64,29 +108,50 @@
 
                     <section class="cc-detail-section">
                         <div class="cc-detail-section-header">
-                            <h5>Identificación</h5>
-                            <p>Datos principales del punto de ruta registrado para la empresa.</p>
+                            <h5>
+                                Identificación
+                            </h5>
+
+                            <p>
+                                Datos principales registrados para el punto de ruta.
+                            </p>
                         </div>
 
                         <div class="cc-detail-grid">
                             <div class="cc-detail-item">
-                                <div class="cc-detail-label">Empresa</div>
+                                <div class="cc-detail-label">
+                                    Empresa
+                                </div>
+
                                 <div class="cc-detail-value">
-                                    {{ $puntoRuta->empresa->nombre_comercial ?: $puntoRuta->empresa->nombre_legal }}
+                                    {{ $nombreEmpresa }}
                                 </div>
                             </div>
 
                             <div class="cc-detail-item">
-                                <div class="cc-detail-label">Nombre del punto</div>
+                                <div class="cc-detail-label">
+                                    Nombre del punto
+                                </div>
+
                                 <div class="cc-detail-value">
                                     {{ $puntoRuta->nombre }}
                                 </div>
                             </div>
 
                             <div class="cc-detail-item cc-detail-item-wide">
-                                <div class="cc-detail-label">Dirección</div>
-                                <div class="cc-detail-value">
-                                    {{ $puntoRuta->direccion }}
+                                <div class="cc-detail-label">
+                                    Dirección
+                                </div>
+
+                                <div
+                                    class="cc-detail-value"
+                                    style="
+                                        white-space: normal;
+                                        overflow-wrap: anywhere;
+                                        line-height: 1.5;
+                                    "
+                                >
+                                    {{ $puntoRuta->direccion ?: '—' }}
                                 </div>
                             </div>
                         </div>
@@ -94,15 +159,23 @@
 
                     <section class="cc-detail-section">
                         <div class="cc-detail-section-header">
-                            <h5>Control administrativo</h5>
-                            <p>Información de estado, creación, actualización e inactivación del registro.</p>
+                            <h5>
+                                Disponibilidad operativa
+                            </h5>
+
+                            <p>
+                                Condición actual del punto para utilizarse en rutas.
+                            </p>
                         </div>
 
                         <div class="cc-detail-grid">
                             <div class="cc-detail-item">
-                                <div class="cc-detail-label">Estado actual</div>
+                                <div class="cc-detail-label">
+                                    Estado actual
+                                </div>
+
                                 <div class="cc-detail-value">
-                                    @if ($puntoRuta->estado === 'activo')
+                                    @if ($puntoActivo)
                                         <span class="cc-badge cc-badge-active">
                                             Activo
                                         </span>
@@ -115,49 +188,140 @@
                             </div>
 
                             <div class="cc-detail-item">
-                                <div class="cc-detail-label">Fecha de creación</div>
+                                <div class="cc-detail-label">
+                                    Disponibilidad
+                                </div>
+
                                 <div class="cc-detail-value">
-                                    {{ optional($puntoRuta->fecha_creacion)->format('d/m/Y H:i') ?? '—' }}
+                                    {{ $puntoActivo
+                                        ? 'Disponible para nuevas rutas'
+                                        : 'Solo consulta histórica' }}
                                 </div>
                             </div>
 
                             <div class="cc-detail-item">
-                                <div class="cc-detail-label">Creado por</div>
+                                <div class="cc-detail-label">
+                                    Rutas activas relacionadas
+                                </div>
+
+                                <div class="cc-detail-value">
+                                    @if ($tieneRutasActivas)
+                                        <span class="cc-badge cc-badge-inactive">
+                                            Sí
+                                        </span>
+                                    @else
+                                        <span class="cc-badge cc-badge-active">
+                                            No
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <div class="cc-detail-item cc-detail-item-wide">
+                                <div class="cc-detail-label">
+                                    Condición administrativa
+                                </div>
+
+                                <div class="cc-detail-value">
+                                    @if (! $puntoActivo)
+                                        El punto debe reactivarse antes de volver
+                                        a utilizarse como origen o destino.
+                                    @elseif ($tieneRutasActivas)
+                                        El punto participa en rutas activas y no
+                                        puede inactivarse hasta que dichas rutas
+                                        sean inactivadas.
+                                    @else
+                                        El punto se encuentra disponible para
+                                        operaciones administrativas.
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="cc-detail-section">
+                        <div class="cc-detail-section-header">
+                            <h5>
+                                Control administrativo
+                            </h5>
+
+                            <p>
+                                Información de creación, actualización e inactivación del registro.
+                            </p>
+                        </div>
+
+                        <div class="cc-detail-grid">
+                            <div class="cc-detail-item">
+                                <div class="cc-detail-label">
+                                    Fecha de creación
+                                </div>
+
+                                <div class="cc-detail-value">
+                                    {{ optional(
+                                        $puntoRuta->fecha_creacion
+                                    )->format('d/m/Y H:i') ?? '—' }}
+                                </div>
+                            </div>
+
+                            <div class="cc-detail-item">
+                                <div class="cc-detail-label">
+                                    Creado por
+                                </div>
+
                                 <div class="cc-detail-value">
                                     {{ $puntoRuta->creadoPor?->name ?? '—' }}
                                 </div>
                             </div>
 
                             <div class="cc-detail-item">
-                                <div class="cc-detail-label">Fecha de actualización</div>
+                                <div class="cc-detail-label">
+                                    Fecha de actualización
+                                </div>
+
                                 <div class="cc-detail-value">
-                                    {{ optional($puntoRuta->fecha_actualizacion)->format('d/m/Y H:i') ?? '—' }}
+                                    {{ optional(
+                                        $puntoRuta->fecha_actualizacion
+                                    )->format('d/m/Y H:i') ?? '—' }}
                                 </div>
                             </div>
 
                             <div class="cc-detail-item">
-                                <div class="cc-detail-label">Actualizado por</div>
+                                <div class="cc-detail-label">
+                                    Actualizado por
+                                </div>
+
                                 <div class="cc-detail-value">
                                     {{ $puntoRuta->actualizadoPor?->name ?? '—' }}
                                 </div>
                             </div>
 
                             <div class="cc-detail-item">
-                                <div class="cc-detail-label">Fecha de inactivación</div>
+                                <div class="cc-detail-label">
+                                    Fecha de inactivación
+                                </div>
+
                                 <div class="cc-detail-value">
-                                    {{ optional($puntoRuta->fecha_inactivacion)->format('d/m/Y H:i') ?? '—' }}
+                                    {{ optional(
+                                        $puntoRuta->fecha_inactivacion
+                                    )->format('d/m/Y H:i') ?? '—' }}
                                 </div>
                             </div>
 
                             <div class="cc-detail-item">
-                                <div class="cc-detail-label">Inactivado por</div>
+                                <div class="cc-detail-label">
+                                    Inactivado por
+                                </div>
+
                                 <div class="cc-detail-value">
                                     {{ $puntoRuta->inactivadoPor?->name ?? '—' }}
                                 </div>
                             </div>
 
                             <div class="cc-detail-item cc-detail-item-wide">
-                                <div class="cc-detail-label">Motivo de inactivación</div>
+                                <div class="cc-detail-label">
+                                    Motivo de inactivación
+                                </div>
+
                                 <div class="cc-detail-value">
                                     {{ $puntoRuta->motivo_inactivacion ?? '—' }}
                                 </div>
@@ -169,75 +333,206 @@
 
                 <div class="cc-actions cc-actions-split">
                     <div class="cc-actions-normal">
-                        <a href="{{ route('puntos-ruta.edit', $puntoRuta) }}" class="cc-btn-primary cc-btn-form-action">
-                            Editar punto
-                        </a>
 
-                        <a href="{{ route('puntos-ruta.administrar') }}" class="cc-btn-secondary cc-btn-form-action">
+                        @if ($puntoActivo)
+                            <a
+                                href="{{ route(
+                                    'puntos-ruta.edit',
+                                    array_merge(
+                                        $queryParams,
+                                        ['puntoRuta' => $puntoRuta]
+                                    )
+                                ) }}"
+                                class="cc-btn-primary cc-btn-form-action"
+                            >
+                                Editar punto
+                            </a>
+                        @endif
+
+                        <a
+                            href="{{ route(
+                                'puntos-ruta.administrar',
+                                $queryParams
+                            ) }}"
+                            class="cc-btn-secondary cc-btn-form-action"
+                        >
                             Volver a administrar
                         </a>
+
                     </div>
                 </div>
 
-                @if ($puntoRuta->estado === 'activo')
+                @if ($puntoActivo)
                     <section class="cc-danger-zone">
                         <div class="cc-danger-zone-header">
                             <div>
-                                <h5>Zona de riesgo</h5>
-                                <p>
-                                    Inactive el punto de ruta únicamente cuando ya no deba estar disponible para nuevos registros operativos.
-                                </p>
+                                <h5>
+                                    Zona de riesgo
+                                </h5>
+
+                                @if ($tieneRutasActivas)
+                                    <p>
+                                        Este punto participa en una o más rutas
+                                        activas. Debe inactivar primero esas
+                                        rutas antes de poder inactivar el punto.
+                                    </p>
+                                @else
+                                    <p>
+                                        Inactive el punto únicamente cuando ya
+                                        no deba estar disponible como origen o
+                                        destino de nuevas rutas.
+                                    </p>
+                                @endif
                             </div>
                         </div>
 
-                        <form method="POST"
-                              action="{{ route('puntos-ruta.inactivar', $puntoRuta) }}"
-                              class="cc-danger-zone-form"
-                              onsubmit="return confirmarInactivacionPuntoRuta();">
-                            @csrf
-                            @method('PATCH')
-
-                            <div class="cc-danger-zone-field">
-                                <label for="motivo_inactivacion">
-                                    Motivo de inactivación
-                                </label>
-
-                                <select
-                                    id="motivo_inactivacion"
-                                    name="motivo_inactivacion"
-                                    class="cc-input"
-                                    required
-                                >
-                                    <option value="">Seleccione un motivo</option>
-                                    <option value="No continúa en uso">No continúa en uso</option>
-                                    <option value="Cambio operativo">Cambio operativo</option>
-                                    <option value="Datos incorrectos en registro">Datos incorrectos en registro</option>
-                                    <option value="Solicitud del cliente">Solicitud del cliente</option>
-                                    <option value="Suspensión administrativa">Suspensión administrativa</option>
-                                    <option value="Otro">Otro</option>
-                                </select>
-
-                                @error('motivo_inactivacion')
-                                    <div class="cc-error">
-                                        {{ $message }}
-                                    </div>
-                                @enderror
+                        @if ($tieneRutasActivas)
+                            <div class="cc-alert cc-alert-danger">
+                                La inactivación no está disponible mientras el
+                                punto se encuentre relacionado con rutas activas.
                             </div>
+                        @else
+                            <form
+                                method="POST"
+                                action="{{ route(
+                                    'puntos-ruta.inactivar',
+                                    array_merge(
+                                        $queryParams,
+                                        ['puntoRuta' => $puntoRuta]
+                                    )
+                                ) }}"
+                                class="cc-danger-zone-form"
+                                onsubmit="return confirmarInactivacionPuntoRuta();"
+                            >
+                                @csrf
+                                @method('PATCH')
 
-                            <button type="submit" class="cc-btn-danger cc-btn-form-action">
-                                Inactivar punto
-                            </button>
-                        </form>
+                                <input
+                                    type="hidden"
+                                    name="return_query"
+                                    value="{{ $returnQuery }}"
+                                >
+
+                                <div class="cc-danger-zone-field">
+                                    <label for="motivo_inactivacion">
+                                        Motivo de inactivación
+                                    </label>
+
+                                    <select
+                                        id="motivo_inactivacion"
+                                        name="motivo_inactivacion"
+                                        class="cc-input"
+                                        required
+                                    >
+                                        <option value="">
+                                            Seleccione un motivo
+                                        </option>
+
+                                        <option
+                                            value="No continúa en uso"
+                                            @selected(
+                                                old('motivo_inactivacion')
+                                                === 'No continúa en uso'
+                                            )
+                                        >
+                                            No continúa en uso
+                                        </option>
+
+                                        <option
+                                            value="Cambio operativo"
+                                            @selected(
+                                                old('motivo_inactivacion')
+                                                === 'Cambio operativo'
+                                            )
+                                        >
+                                            Cambio operativo
+                                        </option>
+
+                                        <option
+                                            value="Datos incorrectos en registro"
+                                            @selected(
+                                                old('motivo_inactivacion')
+                                                === 'Datos incorrectos en registro'
+                                            )
+                                        >
+                                            Datos incorrectos en registro
+                                        </option>
+
+                                        <option
+                                            value="Solicitud del cliente"
+                                            @selected(
+                                                old('motivo_inactivacion')
+                                                === 'Solicitud del cliente'
+                                            )
+                                        >
+                                            Solicitud del cliente
+                                        </option>
+
+                                        <option
+                                            value="Suspensión administrativa"
+                                            @selected(
+                                                old('motivo_inactivacion')
+                                                === 'Suspensión administrativa'
+                                            )
+                                        >
+                                            Suspensión administrativa
+                                        </option>
+
+                                        <option
+                                            value="Otro"
+                                            @selected(
+                                                old('motivo_inactivacion')
+                                                === 'Otro'
+                                            )
+                                        >
+                                            Otro
+                                        </option>
+                                    </select>
+
+                                    @error('motivo_inactivacion')
+                                        <div class="cc-error">
+                                            {{ $message }}
+                                        </div>
+                                    @enderror
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    class="cc-btn-danger cc-btn-form-action"
+                                >
+                                    Inactivar punto
+                                </button>
+                            </form>
+                        @endif
                     </section>
                 @else
                     <div class="cc-actions">
-                        <form method="POST"
-                              action="{{ route('puntos-ruta.reactivar', $puntoRuta) }}"
-                              onsubmit="return confirm('¿Seguro que deseas reactivar este punto de ruta?');">
+                        <form
+                            method="POST"
+                            action="{{ route(
+                                'puntos-ruta.reactivar',
+                                array_merge(
+                                    $queryParams,
+                                    ['puntoRuta' => $puntoRuta]
+                                )
+                            ) }}"
+                            onsubmit="return confirm(
+                                '¿Seguro que deseas reactivar este punto de ruta?'
+                            );"
+                        >
                             @csrf
                             @method('PATCH')
 
-                            <button type="submit" class="cc-btn-success cc-btn-form-action">
+                            <input
+                                type="hidden"
+                                name="return_query"
+                                value="{{ $returnQuery }}"
+                            >
+
+                            <button
+                                type="submit"
+                                class="cc-btn-success cc-btn-form-action"
+                            >
                                 Reactivar punto
                             </button>
                         </form>
@@ -250,14 +545,21 @@
 
     <script>
         function confirmarInactivacionPuntoRuta() {
-            const motivo = document.getElementById('motivo_inactivacion').value;
+            const motivo = document.getElementById(
+                'motivo_inactivacion'
+            )?.value;
 
-            if (!motivo) {
-                alert('Debe seleccionar un motivo de inactivación.');
+            if (! motivo) {
+                alert(
+                    'Debe seleccionar un motivo de inactivación.'
+                );
+
                 return false;
             }
 
-            return confirm(`¿Seguro que deseas inactivar este punto de ruta por el motivo "${motivo}"?`);
+            return confirm(
+                `¿Seguro que deseas inactivar este punto de ruta por el motivo "${motivo}"?`
+            );
         }
     </script>
 </x-app-layout>
