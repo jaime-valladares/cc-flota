@@ -1,6 +1,13 @@
+@php
+    $queryParams = request()->query();
+@endphp
+
 <x-app-layout>
     <div class="cc-page-wrapper">
-        <div class="cc-content-container" style="max-width: 80rem;">
+        <div
+            class="cc-content-container"
+            style="max-width: 80rem;"
+        >
             <div class="cc-card">
 
                 <div class="cc-card-header cc-card-header-compact">
@@ -9,16 +16,35 @@
                             Editar gasolinera externa
                         </h3>
 
+                        <p class="cc-subtitle cc-subtitle-compact">
+                            Actualice la compañía y la dirección de la gasolinera externa.
+                        </p>
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <a href="{{ route('gasolineras-externas.show', $gasolineraExterna) }}"
-                           class="cc-btn-secondary cc-btn-wide">
+                        <a
+                            href="{{ route(
+                                'gasolineras-externas.show',
+                                array_merge(
+                                    [
+                                        'gasolineraExterna' =>
+                                            $gasolineraExterna,
+                                    ],
+                                    $queryParams
+                                )
+                            ) }}"
+                            class="cc-btn-secondary cc-btn-wide"
+                        >
                             Volver a ficha
                         </a>
 
-                        <a href="{{ route('gasolineras-externas.administrar') }}"
-                           class="cc-btn-secondary cc-btn-wide">
+                        <a
+                            href="{{ route(
+                                'gasolineras-externas.administrar',
+                                $queryParams
+                            ) }}"
+                            class="cc-btn-secondary cc-btn-wide"
+                        >
                             Volver a administrar
                         </a>
                     </div>
@@ -30,7 +56,20 @@
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('gasolineras-externas.update', $gasolineraExterna) }}" novalidate>
+                <form
+                    method="POST"
+                    action="{{ route(
+                        'gasolineras-externas.update',
+                        array_merge(
+                            [
+                                'gasolineraExterna' =>
+                                    $gasolineraExterna,
+                            ],
+                            $queryParams
+                        )
+                    ) }}"
+                    novalidate
+                >
                     @csrf
                     @method('PUT')
 

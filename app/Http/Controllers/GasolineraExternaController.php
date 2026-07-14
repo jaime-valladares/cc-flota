@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Empresa;
 use App\Models\GasolineraExterna;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -11,235 +12,327 @@ use Illuminate\Validation\Rule;
 class GasolineraExternaController extends Controller
 {
     /**
-     * Display the informational external gas station consultation panel.
+     * Muestra la consulta informativa de gasolineras externas.
      */
     public function index(Request $request)
     {
-        $data = $this->prepararConsultaGasolinerasExternas($request, false);
+        $data = $this->prepararConsultaGasolinerasExternas(
+            request: $request,
+            modoAdministracion: false
+        );
 
         return view('gasolineras-externas.index', $data);
     }
 
     /**
-     * Display the standalone informational external gas station consultation panel.
+     * Muestra la consulta informativa en una ventana independiente.
      */
     public function consultaVentana(Request $request)
     {
-        $data = $this->prepararConsultaGasolinerasExternas($request, false);
+        $data = $this->prepararConsultaGasolinerasExternas(
+            request: $request,
+            modoAdministracion: false
+        );
 
         return view('gasolineras-externas.index-ventana', $data);
     }
 
     /**
-     * Display the administrative external gas station search panel.
+     * Muestra la administración de gasolineras externas.
      */
     public function administrar(Request $request)
     {
-        $data = $this->prepararConsultaGasolinerasExternas($request, true);
+        $data = $this->prepararConsultaGasolinerasExternas(
+            request: $request,
+            modoAdministracion: true
+        );
 
         return view('gasolineras-externas.administrar', $data);
     }
 
     /**
-     * Display the standalone administrative external gas station search panel.
+     * Muestra la administración en una ventana independiente.
      */
     public function administrarVentana(Request $request)
     {
-        $data = $this->prepararConsultaGasolinerasExternas($request, true);
+        $data = $this->prepararConsultaGasolinerasExternas(
+            request: $request,
+            modoAdministracion: true
+        );
 
         return view('gasolineras-externas.administrar-ventana', $data);
     }
 
     /**
-     * Prepare external gas station query data for normal and standalone screens.
+     * Prepara los datos compartidos por Consulta y Administrar.
      */
-    private function prepararConsultaGasolinerasExternas(Request $request, bool $soloEmpresasActivas): array
-    {
+    private function prepararConsultaGasolinerasExternas(
+        Request $request,
+        bool $modoAdministracion
+    ): array {
         $user = Auth::user();
 
         $esUsuarioDieselCop = is_null($user->empresa_id);
+
         $empresaUsuario = $esUsuarioDieselCop
             ? null
             : Empresa::find($user->empresa_id);
 
         $validated = $request->validate([
-            'busqueda_empresa' => ['nullable', 'string', 'max:150'],
-            'compania' => ['nullable', 'string', 'max:150'],
-            'estado' => ['nullable', 'in:activa,inactiva'],
+            'empresa_ids' => [
+                'nullable',
+                'array',
+            ],
+            'empresa_ids.*' => [
+                'integer',
+                'distinct',
+                'exists:empresas,id',
+            ],
+
+            'gasolinera_externa_ids' => [
+                'nullable',
+                'array',
+            ],
+            'gasolinera_externa_ids.*' => [
+                'integer',
+                'distinct',
+                'exists:gasolineras_externas,id',
+            ],
+
+            'estado_ids' => [
+                'nullable',
+                'array',
+            ],
+            'estado_ids.*' => [
+                'string',
+                'distinct',
+                Rule::in(['activa', 'inactiva']),
+            ],
 
             /*
-             * Nuevo estándar: multiselección.
+             * Compatibilidad temporal con enlaces anteriores.
              */
-            'empresa_ids' => ['nullable', 'array'],
-            'empresa_ids.*' => ['nullable', 'integer', 'exists:empresas,id'],
-
-            'gasolinera_externa_ids' => ['nullable', 'array'],
-            'gasolinera_externa_ids.*' => ['nullable', 'integer', 'exists:gasolineras_externas,id'],
-
-            /*
-             * Compatibilidad temporal con filtros anteriores.
-             */
-            'empresa_id' => ['nullable', 'integer', 'exists:empresas,id'],
-            'gasolinera_externa_id' => ['nullable', 'integer', 'exists:gasolineras_externas,id'],
+            'empresa_id' => [
+                'nullable',
+                'integer',
+                'exists:empresas,id',
+            ],
+            'gasolinera_externa_id' => [
+                'nullable',
+                'integer',
+                'exists:gasolineras_externas,id',
+            ],
+            'estado' => [
+                'nullable',
+                Rule::in(['activa', 'inactiva']),
+            ],
         ], [
+            'empresa_ids.array' => 'La selección de empresas no es válida.',
+            'empresa_ids.*.integer' => 'Una de las empresas seleccionadas no es válida.',
+            'empresa_ids.*.distinct' => 'No debe seleccionar una empresa más de una vez.',
+            'empresa_ids.*.exists' => 'Una de las empresas seleccionadas no existe.',
+
+            'gasolinera_externa_ids.array' => 'La selección de gasolineras externas no es válida.',
+            'gasolinera_externa_ids.*.integer' => 'Una de las gasolineras externas seleccionadas no es válida.',
+            'gasolinera_externa_ids.*.distinct' => 'No debe seleccionar una gasolinera externa más de una vez.',
+            'gasolinera_externa_ids.*.exists' => 'Una de las gasolineras externas seleccionadas no existe.',
+
+            'estado_ids.array' => 'La selección de estados no es válida.',
+            'estado_ids.*.distinct' => 'No debe seleccionar un estado más de una vez.',
+            'estado_ids.*.in' => 'Uno de los estados seleccionados no es válido.',
+
             'empresa_id.exists' => 'La empresa seleccionada no es válida.',
-            'empresa_ids.*.exists' => 'Una de las empresas seleccionadas no es válida.',
             'gasolinera_externa_id.exists' => 'La gasolinera externa seleccionada no es válida.',
-            'gasolinera_externa_ids.*.exists' => 'Una de las gasolineras externas seleccionadas no es válida.',
             'estado.in' => 'El estado seleccionado no es válido.',
         ]);
 
-        $busquedaEmpresa = trim((string) ($validated['busqueda_empresa'] ?? ''));
-        $compania = trim((string) ($validated['compania'] ?? ''));
-        $estado = $validated['estado'] ?? null;
-
-        /*
-         * Compatibilidad:
-         * - Nuevo estándar: empresa_ids[].
-         * - Filtro anterior: empresa_id.
-         */
         $empresaIds = collect($validated['empresa_ids'] ?? [])
-            ->when(filled($validated['empresa_id'] ?? null), function ($collection) use ($validated) {
-                return $collection->push($validated['empresa_id']);
-            })
-            ->filter(fn ($id) => filled($id))
+            ->when(
+                filled($validated['empresa_id'] ?? null),
+                fn ($collection) => $collection->push(
+                    (int) $validated['empresa_id']
+                )
+            )
             ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $gasolineraExternaIds = collect(
+            $validated['gasolinera_externa_ids'] ?? []
+        )
+            ->when(
+                filled($validated['gasolinera_externa_id'] ?? null),
+                fn ($collection) => $collection->push(
+                    (int) $validated['gasolinera_externa_id']
+                )
+            )
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $estadoIds = collect($validated['estado_ids'] ?? [])
+            ->when(
+                filled($validated['estado'] ?? null),
+                fn ($collection) => $collection->push(
+                    $validated['estado']
+                )
+            )
+            ->filter(
+                fn ($estado) => in_array(
+                    $estado,
+                    ['activa', 'inactiva'],
+                    true
+                )
+            )
             ->unique()
             ->values()
             ->all();
 
         /*
-         * Compatibilidad:
-         * - Nuevo estándar: gasolinera_externa_ids[].
-         * - Filtro anterior: gasolinera_externa_id.
+         * Un usuario perteneciente a una empresa solamente puede consultar
+         * registros de su propia empresa.
          */
-        $gasolineraExternaIds = collect($validated['gasolinera_externa_ids'] ?? [])
-            ->when(filled($validated['gasolinera_externa_id'] ?? null), function ($collection) use ($validated) {
-                return $collection->push($validated['gasolinera_externa_id']);
-            })
-            ->filter(fn ($id) => filled($id))
-            ->map(fn ($id) => (int) $id)
-            ->unique()
-            ->values()
-            ->all();
-
         if (! $esUsuarioDieselCop) {
             $empresaIds = [(int) $user->empresa_id];
         }
 
-        $empresaId = $empresaIds[0] ?? null;
-        $gasolineraExternaId = $gasolineraExternaIds[0] ?? null;
-
         $consultaEjecutada = $request->boolean('consultar');
 
         $hayFiltros = $consultaEjecutada
-            || filled($busquedaEmpresa)
-            || filled($compania)
             || count($empresaIds) > 0
             || count($gasolineraExternaIds) > 0
-            || filled($estado);
+            || count($estadoIds) > 0;
 
+        /*
+         * En Administrar solamente deben aparecer empresas activas.
+         * Consulta mantiene también empresas inactivas para fines históricos.
+         */
         $empresasSelector = Empresa::query()
-            ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
-                $query->where('id', $user->empresa_id);
-            })
-            ->when($soloEmpresasActivas, function ($query) {
-                $query->where('estado', 'activa');
-            })
+            ->when(
+                ! $esUsuarioDieselCop,
+                fn (Builder $query) => $query->where(
+                    'id',
+                    $user->empresa_id
+                )
+            )
+            ->when(
+                $modoAdministracion,
+                fn (Builder $query) => $query->where(
+                    'estado',
+                    'activa'
+                )
+            )
             ->orderBy('nombre_comercial')
             ->orderBy('nombre_legal')
             ->get();
 
-        $baseGasolinerasExternasQuery = GasolineraExterna::query()
+        $baseGasolinerasQuery = GasolineraExterna::query()
             ->with('empresa')
-            ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
-                $query->where('empresa_id', $user->empresa_id);
-            })
-            ->when($soloEmpresasActivas, function ($query) {
-                $query->whereHas('empresa', function ($empresaQuery) {
-                    $empresaQuery->where('estado', 'activa');
-                });
-            });
+            ->when(
+                ! $esUsuarioDieselCop,
+                fn (Builder $query) => $query->where(
+                    'empresa_id',
+                    $user->empresa_id
+                )
+            )
+            ->when(
+                $modoAdministracion,
+                fn (Builder $query) => $query->whereHas(
+                    'empresa',
+                    fn (Builder $empresaQuery) => $empresaQuery->where(
+                        'estado',
+                        'activa'
+                    )
+                )
+            );
 
         /*
-         * Selector de gasolineras externas:
-         * respeta la jerarquía de empresa para que el multiselect de compañía
-         * no muestre opciones fuera de la empresa o empresas consultadas.
+         * El selector de gasolineras respeta las empresas seleccionadas.
          */
-        $gasolinerasExternasSelector = (clone $baseGasolinerasExternasQuery)
-            ->when(filled($busquedaEmpresa), function ($query) use ($busquedaEmpresa) {
-                $query->whereHas('empresa', function ($empresaQuery) use ($busquedaEmpresa) {
-                    $empresaQuery
-                        ->where('nombre_legal', 'like', '%' . $busquedaEmpresa . '%')
-                        ->orWhere('nombre_comercial', 'like', '%' . $busquedaEmpresa . '%');
-                });
-            })
-            ->when(count($empresaIds) > 0, function ($query) use ($empresaIds) {
-                $query->whereIn('empresa_id', $empresaIds);
-            })
+        $gasolinerasExternasSelector = (clone $baseGasolinerasQuery)
+            ->when(
+                count($empresaIds) > 0,
+                fn (Builder $query) => $query->whereIn(
+                    'empresa_id',
+                    $empresaIds
+                )
+            )
             ->orderBy('compania')
             ->orderBy('direccion')
             ->get();
 
-        $gasolinerasExternas = (clone $baseGasolinerasExternasQuery)
-            ->when($hayFiltros && filled($busquedaEmpresa), function ($query) use ($busquedaEmpresa) {
-                $query->whereHas('empresa', function ($empresaQuery) use ($busquedaEmpresa) {
-                    $empresaQuery
-                        ->where('nombre_legal', 'like', '%' . $busquedaEmpresa . '%')
-                        ->orWhere('nombre_comercial', 'like', '%' . $busquedaEmpresa . '%');
-                });
-            })
-            ->when($hayFiltros && count($empresaIds) > 0, function ($query) use ($empresaIds) {
-                $query->whereIn('empresa_id', $empresaIds);
-            })
-            ->when($hayFiltros && filled($compania), function ($query) use ($compania) {
-                $query->where('compania', 'like', '%' . $compania . '%');
-            })
-            ->when($hayFiltros && count($gasolineraExternaIds) > 0, function ($query) use ($gasolineraExternaIds) {
-                $query->whereIn('id', $gasolineraExternaIds);
-            })
-            ->when($hayFiltros && in_array($estado, ['activa', 'inactiva'], true), function ($query) use ($estado) {
-                $query->where('estado', $estado);
-            })
-            ->when(! $hayFiltros, function ($query) {
-                $query->whereRaw('1 = 0');
-            })
+        $gasolinerasExternas = (clone $baseGasolinerasQuery)
+            ->when(
+                $hayFiltros && count($empresaIds) > 0,
+                fn (Builder $query) => $query->whereIn(
+                    'empresa_id',
+                    $empresaIds
+                )
+            )
+            ->when(
+                $hayFiltros && count($gasolineraExternaIds) > 0,
+                fn (Builder $query) => $query->whereIn(
+                    'id',
+                    $gasolineraExternaIds
+                )
+            )
+            ->when(
+                $hayFiltros && count($estadoIds) > 0,
+                fn (Builder $query) => $query->whereIn(
+                    'estado',
+                    $estadoIds
+                )
+            )
+            ->when(
+                ! $hayFiltros,
+                fn (Builder $query) => $query->whereRaw('1 = 0')
+            )
             ->orderBy('compania')
             ->orderBy('direccion')
             ->paginate(10)
             ->withQueryString();
 
         $baseResumen = GasolineraExterna::query()
-            ->when(! $esUsuarioDieselCop, function ($query) use ($user) {
-                $query->where('empresa_id', $user->empresa_id);
-            })
-            ->when($soloEmpresasActivas, function ($query) {
-                $query->whereHas('empresa', function ($empresaQuery) {
-                    $empresaQuery->where('estado', 'activa');
-                });
-            });
+            ->when(
+                ! $esUsuarioDieselCop,
+                fn (Builder $query) => $query->where(
+                    'empresa_id',
+                    $user->empresa_id
+                )
+            )
+            ->when(
+                $modoAdministracion,
+                fn (Builder $query) => $query->whereHas(
+                    'empresa',
+                    fn (Builder $empresaQuery) => $empresaQuery->where(
+                        'estado',
+                        'activa'
+                    )
+                )
+            );
 
         $totalGasolinerasExternas = (clone $baseResumen)->count();
-        $gasolinerasExternasActivas = (clone $baseResumen)->where('estado', 'activa')->count();
-        $gasolinerasExternasInactivas = (clone $baseResumen)->where('estado', 'inactiva')->count();
+
+        $gasolinerasExternasActivas = (clone $baseResumen)
+            ->where('estado', 'activa')
+            ->count();
+
+        $gasolinerasExternasInactivas = (clone $baseResumen)
+            ->where('estado', 'inactiva')
+            ->count();
 
         return [
             'gasolinerasExternas' => $gasolinerasExternas,
             'gasolinerasExternasSelector' => $gasolinerasExternasSelector,
             'empresasSelector' => $empresasSelector,
 
-            'busquedaEmpresa' => $busquedaEmpresa,
-            'compania' => $compania,
-            'estado' => $estado,
-
             'empresaIds' => $empresaIds,
             'gasolineraExternaIds' => $gasolineraExternaIds,
-
-            /*
-             * Variables simples para compatibilidad temporal.
-             */
-            'empresaId' => $empresaId,
-            'gasolineraExternaId' => $gasolineraExternaId,
+            'estadoIds' => $estadoIds,
 
             'hayFiltros' => $hayFiltros,
             'consultaEjecutada' => $consultaEjecutada,
@@ -254,7 +347,7 @@ class GasolineraExternaController extends Controller
     }
 
     /**
-     * Show the form for creating a new external gas station.
+     * Muestra el formulario de creación.
      */
     public function create()
     {
@@ -264,7 +357,7 @@ class GasolineraExternaController extends Controller
     }
 
     /**
-     * Show the standalone form for creating a new external gas station.
+     * Muestra el formulario de creación en ventana independiente.
      */
     public function createVentana()
     {
@@ -274,23 +367,34 @@ class GasolineraExternaController extends Controller
     }
 
     /**
-     * Prepare common data for create/edit external gas station forms.
+     * Prepara los datos compartidos por los formularios.
      */
     private function prepararFormularioGasolineraExterna(): array
     {
         $user = Auth::user();
 
         $esUsuarioDieselCop = is_null($user->empresa_id);
+
         $empresaUsuario = $esUsuarioDieselCop
             ? null
             : Empresa::find($user->empresa_id);
 
-        if (! $esUsuarioDieselCop && (! $empresaUsuario || $empresaUsuario->estado !== 'activa')) {
-            abort(403, 'No se puede operar sobre gasolineras externas porque la empresa está inactiva.');
+        if (
+            ! $esUsuarioDieselCop
+            && (
+                ! $empresaUsuario
+                || $empresaUsuario->estado !== 'activa'
+            )
+        ) {
+            abort(
+                403,
+                'No se puede operar sobre gasolineras externas porque la empresa está inactiva.'
+            );
         }
 
         $empresasSelector = $esUsuarioDieselCop
-            ? Empresa::where('estado', 'activa')
+            ? Empresa::query()
+                ->where('estado', 'activa')
                 ->orderBy('nombre_comercial')
                 ->orderBy('nombre_legal')
                 ->get()
@@ -304,33 +408,52 @@ class GasolineraExternaController extends Controller
     }
 
     /**
-     * Store a newly created external gas station.
+     * Guarda una nueva gasolinera externa.
      */
     public function store(Request $request)
     {
         $user = Auth::user();
+
         $esUsuarioDieselCop = is_null($user->empresa_id);
 
-        $baseRules = [
-            'compania' => ['required', 'string', 'max:150'],
-            'direccion' => ['required', 'string', 'max:255'],
+        $rules = [
+            'compania' => [
+                'required',
+                'string',
+                'max:150',
+            ],
+            'direccion' => [
+                'required',
+                'string',
+                'max:255',
+            ],
         ];
 
         if ($esUsuarioDieselCop) {
-            $baseRules['empresa_id'] = [
+            $rules['empresa_id'] = [
                 'required',
                 'integer',
-                Rule::exists('empresas', 'id')->where('estado', 'activa'),
+                Rule::exists('empresas', 'id')
+                    ->where('estado', 'activa'),
             ];
         } else {
-            $baseRules['empresa_id'] = ['nullable'];
+            $rules['empresa_id'] = [
+                'nullable',
+            ];
         }
 
-        $validated = $request->validate($baseRules, [
+        $validated = $request->validate($rules, [
             'empresa_id.required' => 'Debe seleccionar una empresa.',
-            'empresa_id.exists' => 'La empresa seleccionada no es válida o no está activa.',
+            'empresa_id.integer' => 'La empresa seleccionada no es válida.',
+            'empresa_id.exists' => 'La empresa seleccionada no existe o está inactiva.',
+
             'compania.required' => 'Debe ingresar la compañía de la gasolinera externa.',
+            'compania.string' => 'La compañía debe ser un texto válido.',
+            'compania.max' => 'La compañía no debe exceder 150 caracteres.',
+
             'direccion.required' => 'Debe ingresar la dirección de la gasolinera externa.',
+            'direccion.string' => 'La dirección debe ser un texto válido.',
+            'direccion.max' => 'La dirección no debe exceder 255 caracteres.',
         ]);
 
         $empresaId = $esUsuarioDieselCop
@@ -339,11 +462,20 @@ class GasolineraExternaController extends Controller
 
         $this->validarEmpresaActivaPorId($empresaId);
 
+        $compania = trim($validated['compania']);
+        $direccion = trim($validated['direccion']);
+
         $request->validate([
             'direccion' => [
-                Rule::unique('gasolineras_externas', 'direccion')
-                    ->where('empresa_id', $empresaId)
-                    ->where('compania', $validated['compania']),
+                Rule::unique(
+                    'gasolineras_externas',
+                    'direccion'
+                )
+                    ->where(
+                        fn ($query) => $query
+                            ->where('empresa_id', $empresaId)
+                            ->where('compania', $compania)
+                    ),
             ],
         ], [
             'direccion.unique' => 'Ya existe una gasolinera externa con esa compañía y dirección para la empresa seleccionada.',
@@ -351,8 +483,8 @@ class GasolineraExternaController extends Controller
 
         GasolineraExterna::create([
             'empresa_id' => $empresaId,
-            'direccion' => $validated['direccion'],
-            'compania' => $validated['compania'],
+            'compania' => $compania,
+            'direccion' => $direccion,
             'estado' => 'activa',
             'fecha_creacion' => now(),
             'creado_por' => Auth::id(),
@@ -360,22 +492,40 @@ class GasolineraExternaController extends Controller
 
         if ($request->input('return_to') === 'ventana') {
             return redirect()
-                ->route('gasolineras-externas.create.ventana')
-                ->with('success', 'Gasolinera externa guardada correctamente.');
+                ->route(
+                    'gasolineras-externas.create.ventana',
+                    $request->query()
+                )
+                ->with(
+                    'success',
+                    'Gasolinera externa guardada correctamente.'
+                );
         }
 
         return redirect()
-            ->route('gasolineras-externas.create')
-            ->with('success', 'Gasolinera externa guardada correctamente.');
+            ->route(
+                'gasolineras-externas.create',
+                $request->query()
+            )
+            ->with(
+                'success',
+                'Gasolinera externa guardada correctamente.'
+            );
     }
 
     /**
-     * Display the specified external gas station.
+     * Muestra la ficha administrativa.
      */
-    public function show(GasolineraExterna $gasolineraExterna)
-    {
-        $this->autorizarAccesoGasolineraExterna($gasolineraExterna);
-        $this->validarEmpresaActivaGasolineraExterna($gasolineraExterna);
+    public function show(
+        GasolineraExterna $gasolineraExterna
+    ) {
+        $this->autorizarAccesoGasolineraExterna(
+            $gasolineraExterna
+        );
+
+        $this->validarEmpresaActivaGasolineraExterna(
+            $gasolineraExterna
+        );
 
         $gasolineraExterna->load([
             'empresa',
@@ -384,16 +534,25 @@ class GasolineraExternaController extends Controller
             'inactivadoPor',
         ]);
 
-        return view('gasolineras-externas.show', compact('gasolineraExterna'));
+        return view(
+            'gasolineras-externas.show',
+            compact('gasolineraExterna')
+        );
     }
 
     /**
-     * Display the specified external gas station in standalone window.
+     * Muestra la ficha administrativa en ventana independiente.
      */
-    public function showVentana(GasolineraExterna $gasolineraExterna)
-    {
-        $this->autorizarAccesoGasolineraExterna($gasolineraExterna);
-        $this->validarEmpresaActivaGasolineraExterna($gasolineraExterna);
+    public function showVentana(
+        GasolineraExterna $gasolineraExterna
+    ) {
+        $this->autorizarAccesoGasolineraExterna(
+            $gasolineraExterna
+        );
+
+        $this->validarEmpresaActivaGasolineraExterna(
+            $gasolineraExterna
+        );
 
         $gasolineraExterna->load([
             'empresa',
@@ -402,60 +561,124 @@ class GasolineraExternaController extends Controller
             'inactivadoPor',
         ]);
 
-        return view('gasolineras-externas.show-ventana', compact('gasolineraExterna'));
+        return view(
+            'gasolineras-externas.show-ventana',
+            compact('gasolineraExterna')
+        );
     }
 
     /**
-     * Show the form for editing the specified external gas station.
+     * Muestra el formulario de edición.
      */
-    public function edit(GasolineraExterna $gasolineraExterna)
-    {
-        $this->autorizarAccesoGasolineraExterna($gasolineraExterna);
-        $this->validarEmpresaActivaGasolineraExterna($gasolineraExterna);
+    public function edit(
+        GasolineraExterna $gasolineraExterna
+    ) {
+        $this->autorizarAccesoGasolineraExterna(
+            $gasolineraExterna
+        );
+
+        $this->validarEmpresaActivaGasolineraExterna(
+            $gasolineraExterna
+        );
+
+        $this->validarGasolineraExternaActiva(
+            $gasolineraExterna
+        );
 
         $data = $this->prepararFormularioGasolineraExterna();
+
         $data['gasolineraExterna'] = $gasolineraExterna;
 
-        return view('gasolineras-externas.edit', $data);
+        return view(
+            'gasolineras-externas.edit',
+            $data
+        );
     }
 
     /**
-     * Show the standalone form for editing the specified external gas station.
+     * Muestra el formulario de edición en ventana independiente.
      */
-    public function editVentana(GasolineraExterna $gasolineraExterna)
-    {
-        $this->autorizarAccesoGasolineraExterna($gasolineraExterna);
-        $this->validarEmpresaActivaGasolineraExterna($gasolineraExterna);
+    public function editVentana(
+        GasolineraExterna $gasolineraExterna
+    ) {
+        $this->autorizarAccesoGasolineraExterna(
+            $gasolineraExterna
+        );
+
+        $this->validarEmpresaActivaGasolineraExterna(
+            $gasolineraExterna
+        );
+
+        $this->validarGasolineraExternaActiva(
+            $gasolineraExterna
+        );
 
         $data = $this->prepararFormularioGasolineraExterna();
+
         $data['gasolineraExterna'] = $gasolineraExterna;
 
-        return view('gasolineras-externas.edit-ventana', $data);
+        return view(
+            'gasolineras-externas.edit-ventana',
+            $data
+        );
     }
 
     /**
-     * Update the specified external gas station.
+     * Actualiza una gasolinera externa.
      */
-    public function update(Request $request, GasolineraExterna $gasolineraExterna)
-    {
-        $this->autorizarAccesoGasolineraExterna($gasolineraExterna);
-        $this->validarEmpresaActivaGasolineraExterna($gasolineraExterna);
+    public function update(
+        Request $request,
+        GasolineraExterna $gasolineraExterna
+    ) {
+        $this->autorizarAccesoGasolineraExterna(
+            $gasolineraExterna
+        );
+
+        $this->validarEmpresaActivaGasolineraExterna(
+            $gasolineraExterna
+        );
+
+        $this->validarGasolineraExternaActiva(
+            $gasolineraExterna
+        );
 
         $validated = $request->validate([
-            'compania' => ['required', 'string', 'max:150'],
-            'direccion' => ['required', 'string', 'max:255'],
+            'compania' => [
+                'required',
+                'string',
+                'max:150',
+            ],
+            'direccion' => [
+                'required',
+                'string',
+                'max:255',
+            ],
         ], [
             'compania.required' => 'Debe ingresar la compañía de la gasolinera externa.',
+            'compania.string' => 'La compañía debe ser un texto válido.',
+            'compania.max' => 'La compañía no debe exceder 150 caracteres.',
+
             'direccion.required' => 'Debe ingresar la dirección de la gasolinera externa.',
+            'direccion.string' => 'La dirección debe ser un texto válido.',
+            'direccion.max' => 'La dirección no debe exceder 255 caracteres.',
         ]);
 
         $empresaId = (int) $gasolineraExterna->empresa_id;
 
+        $compania = trim($validated['compania']);
+        $direccion = trim($validated['direccion']);
+
         $request->validate([
             'direccion' => [
-                Rule::unique('gasolineras_externas', 'direccion')
-                    ->where('empresa_id', $empresaId)
-                    ->where('compania', $validated['compania'])
+                Rule::unique(
+                    'gasolineras_externas',
+                    'direccion'
+                )
+                    ->where(
+                        fn ($query) => $query
+                            ->where('empresa_id', $empresaId)
+                            ->where('compania', $compania)
+                    )
                     ->ignore($gasolineraExterna->id),
             ],
         ], [
@@ -463,40 +686,77 @@ class GasolineraExternaController extends Controller
         ]);
 
         $gasolineraExterna->update([
-            'direccion' => $validated['direccion'],
-            'compania' => $validated['compania'],
+            'compania' => $compania,
+            'direccion' => $direccion,
             'fecha_actualizacion' => now(),
             'actualizado_por' => Auth::id(),
         ]);
 
+        $routeParameters = array_merge(
+            ['gasolineraExterna' => $gasolineraExterna],
+            $request->query()
+        );
+
         if ($request->input('return_to') === 'ventana') {
             return redirect()
-                ->route('gasolineras-externas.show.ventana', $gasolineraExterna)
-                ->with('success', 'Gasolinera externa actualizada correctamente.');
+                ->route(
+                    'gasolineras-externas.show.ventana',
+                    $routeParameters
+                )
+                ->with(
+                    'success',
+                    'Gasolinera externa actualizada correctamente.'
+                );
         }
 
         return redirect()
-            ->route('gasolineras-externas.show', $gasolineraExterna)
-            ->with('success', 'Gasolinera externa actualizada correctamente.');
+            ->route(
+                'gasolineras-externas.show',
+                $routeParameters
+            )
+            ->with(
+                'success',
+                'Gasolinera externa actualizada correctamente.'
+            );
     }
 
     /**
-     * Deactivate an external gas station.
+     * Inactiva una gasolinera externa.
      */
-    public function inactivar(Request $request, GasolineraExterna $gasolineraExterna)
-    {
-        $this->autorizarAccesoGasolineraExterna($gasolineraExterna);
-        $this->validarEmpresaActivaGasolineraExterna($gasolineraExterna);
+    public function inactivar(
+        Request $request,
+        GasolineraExterna $gasolineraExterna
+    ) {
+        $this->autorizarAccesoGasolineraExterna(
+            $gasolineraExterna
+        );
+
+        $this->validarEmpresaActivaGasolineraExterna(
+            $gasolineraExterna
+        );
+
+        $this->validarGasolineraExternaActiva(
+            $gasolineraExterna
+        );
 
         $validated = $request->validate([
             'motivo_inactivacion' => [
                 'required',
                 'string',
                 'max:255',
-                'in:No continúa en uso,Cambio de proveedor,Cierre de estación,Datos incorrectos en registro,Solicitud del cliente,Suspensión administrativa,Otro',
+                Rule::in([
+                    'No continúa en uso',
+                    'Cambio de proveedor',
+                    'Cierre de estación',
+                    'Datos incorrectos en registro',
+                    'Solicitud del cliente',
+                    'Suspensión administrativa',
+                    'Otro',
+                ]),
             ],
         ], [
             'motivo_inactivacion.required' => 'Debe seleccionar el motivo de inactivación.',
+            'motivo_inactivacion.string' => 'El motivo de inactivación no es válido.',
             'motivo_inactivacion.in' => 'El motivo de inactivación seleccionado no es válido.',
             'motivo_inactivacion.max' => 'El motivo de inactivación no debe exceder 255 caracteres.',
         ]);
@@ -510,24 +770,55 @@ class GasolineraExternaController extends Controller
             'actualizado_por' => Auth::id(),
         ]);
 
+        $routeParameters = array_merge(
+            ['gasolineraExterna' => $gasolineraExterna],
+            $request->query()
+        );
+
         if ($request->input('return_to') === 'ventana') {
             return redirect()
-                ->route('gasolineras-externas.show.ventana', $gasolineraExterna)
-                ->with('success', 'Gasolinera externa inactivada correctamente.');
+                ->route(
+                    'gasolineras-externas.show.ventana',
+                    $routeParameters
+                )
+                ->with(
+                    'success',
+                    'Gasolinera externa inactivada correctamente.'
+                );
         }
 
         return redirect()
-            ->route('gasolineras-externas.show', $gasolineraExterna)
-            ->with('success', 'Gasolinera externa inactivada correctamente.');
+            ->route(
+                'gasolineras-externas.show',
+                $routeParameters
+            )
+            ->with(
+                'success',
+                'Gasolinera externa inactivada correctamente.'
+            );
     }
 
     /**
-     * Reactivate an external gas station.
+     * Reactiva una gasolinera externa.
      */
-    public function reactivar(Request $request, GasolineraExterna $gasolineraExterna)
-    {
-        $this->autorizarAccesoGasolineraExterna($gasolineraExterna);
-        $this->validarEmpresaActivaGasolineraExterna($gasolineraExterna);
+    public function reactivar(
+        Request $request,
+        GasolineraExterna $gasolineraExterna
+    ) {
+        $this->autorizarAccesoGasolineraExterna(
+            $gasolineraExterna
+        );
+
+        $this->validarEmpresaActivaGasolineraExterna(
+            $gasolineraExterna
+        );
+
+        if ($gasolineraExterna->estado !== 'inactiva') {
+            abort(
+                409,
+                'La gasolinera externa ya se encuentra activa.'
+            );
+        }
 
         $gasolineraExterna->update([
             'estado' => 'activa',
@@ -538,53 +829,103 @@ class GasolineraExternaController extends Controller
             'actualizado_por' => Auth::id(),
         ]);
 
+        $routeParameters = array_merge(
+            ['gasolineraExterna' => $gasolineraExterna],
+            $request->query()
+        );
+
         if ($request->input('return_to') === 'ventana') {
             return redirect()
-                ->route('gasolineras-externas.show.ventana', $gasolineraExterna)
-                ->with('success', 'Gasolinera externa reactivada correctamente.');
+                ->route(
+                    'gasolineras-externas.show.ventana',
+                    $routeParameters
+                )
+                ->with(
+                    'success',
+                    'Gasolinera externa reactivada correctamente.'
+                );
         }
 
         return redirect()
-            ->route('gasolineras-externas.show', $gasolineraExterna)
-            ->with('success', 'Gasolinera externa reactivada correctamente.');
+            ->route(
+                'gasolineras-externas.show',
+                $routeParameters
+            )
+            ->with(
+                'success',
+                'Gasolinera externa reactivada correctamente.'
+            );
     }
 
     /**
-     * Prevent company users from accessing other companies' external gas stations.
+     * Evita que un usuario empresarial acceda a registros de otra empresa.
      */
-    private function autorizarAccesoGasolineraExterna(GasolineraExterna $gasolineraExterna): void
-    {
+    private function autorizarAccesoGasolineraExterna(
+        GasolineraExterna $gasolineraExterna
+    ): void {
         $user = Auth::user();
 
-        if (! is_null($user->empresa_id) && (int) $user->empresa_id !== (int) $gasolineraExterna->empresa_id) {
-            abort(403, 'No tiene autorización para acceder a esta gasolinera externa.');
+        if (
+            ! is_null($user->empresa_id)
+            && (int) $user->empresa_id
+                !== (int) $gasolineraExterna->empresa_id
+        ) {
+            abort(
+                403,
+                'No tiene autorización para acceder a esta gasolinera externa.'
+            );
         }
     }
 
     /**
-     * Ensure the external gas station belongs to an active company before administrative actions.
+     * Impide operaciones administrativas cuando la empresa está inactiva.
      */
-    private function validarEmpresaActivaGasolineraExterna(GasolineraExterna $gasolineraExterna): void
-    {
+    private function validarEmpresaActivaGasolineraExterna(
+        GasolineraExterna $gasolineraExterna
+    ): void {
         $gasolineraExterna->loadMissing('empresa');
 
-        if (! $gasolineraExterna->empresa || $gasolineraExterna->empresa->estado !== 'activa') {
-            abort(403, 'No se puede operar sobre esta gasolinera externa porque la empresa está inactiva.');
+        if (
+            ! $gasolineraExterna->empresa
+            || $gasolineraExterna->empresa->estado !== 'activa'
+        ) {
+            abort(
+                403,
+                'No se puede operar sobre esta gasolinera externa porque la empresa está inactiva.'
+            );
         }
     }
 
     /**
-     * Ensure the selected company is active before creating operational records.
+     * Verifica que la empresa seleccionada esté activa.
      */
-    private function validarEmpresaActivaPorId(int $empresaId): void
-    {
+    private function validarEmpresaActivaPorId(
+        int $empresaId
+    ): void {
         $empresaActiva = Empresa::query()
             ->where('id', $empresaId)
             ->where('estado', 'activa')
             ->exists();
 
         if (! $empresaActiva) {
-            abort(403, 'No se puede operar sobre gasolineras externas porque la empresa está inactiva.');
+            abort(
+                403,
+                'No se puede operar sobre gasolineras externas porque la empresa está inactiva.'
+            );
+        }
+    }
+
+    /**
+     * Impide editar o volver a inactivar una gasolinera ya inactiva.
+     */
+    private function validarGasolineraExternaActiva(
+        GasolineraExterna $gasolineraExterna
+    ): void {
+        if ($gasolineraExterna->estado !== 'activa') {
+            abort(
+                409,
+                'La gasolinera externa está inactiva y no puede modificarse.'
+            );
         }
     }
 }
