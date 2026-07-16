@@ -12,11 +12,21 @@ class ReemplazoMarchamoEvento extends Model
 {
     use HasFactory;
 
+    public const ORIGEN_REEMPLAZO_GENERAL =
+        'reemplazo_general';
+
+    public const ORIGEN_ABASTECIMIENTO =
+        'abastecimiento';
+
+    public const MOTIVO_APERTURA_ABASTECIMIENTO =
+        'apertura_abastecimiento';
+
     protected $table = 'reemplazo_marchamos_eventos';
 
     protected $fillable = [
         'empresa_id',
         'unidad_id',
+        'abastecimiento_id',
         'motivo_reemplazo',
         'cantidad_reemplazos',
         'origen_evento',
@@ -47,6 +57,14 @@ class ReemplazoMarchamoEvento extends Model
         return $this->belongsTo(
             Unidad::class,
             'unidad_id'
+        );
+    }
+
+    public function abastecimiento(): BelongsTo
+    {
+        return $this->belongsTo(
+            Abastecimiento::class,
+            'abastecimiento_id'
         );
     }
 
@@ -83,13 +101,6 @@ class ReemplazoMarchamoEvento extends Model
     |--------------------------------------------------------------------------
     */
 
-    /**
-     * Motivo principal almacenado en el evento.
-     *
-     * En operaciones con varios motivos corresponde al motivo principal
-     * utilizado para clasificar la transacción. Los motivos específicos se
-     * obtienen desde cada detalle y su marchamo anterior.
-     */
     protected function motivoReemplazoTexto(): Attribute
     {
         return Attribute::make(
@@ -103,8 +114,11 @@ class ReemplazoMarchamoEvento extends Model
     {
         return Attribute::make(
             get: fn (): string => match ($this->origen_evento) {
-                'reemplazo_general' =>
+                self::ORIGEN_REEMPLAZO_GENERAL =>
                     'Reemplazo general',
+
+                self::ORIGEN_ABASTECIMIENTO =>
+                    'Abastecimiento',
 
                 default =>
                     'No definido',
@@ -134,14 +148,6 @@ class ReemplazoMarchamoEvento extends Model
     |--------------------------------------------------------------------------
     */
 
-    /**
-     * Lista de motivos realmente utilizados en los reemplazos individuales.
-     *
-     * Para aprovechar este atributo sin consultas adicionales, se recomienda
-     * cargar:
-     *
-     * detalles.marchamoAnterior
-     */
     protected function motivosAplicados(): Attribute
     {
         return Attribute::make(
@@ -174,9 +180,6 @@ class ReemplazoMarchamoEvento extends Model
         );
     }
 
-    /**
-     * Texto resumido para mostrar todos los motivos de la operación.
-     */
     protected function motivosAplicadosTexto(): Attribute
     {
         return Attribute::make(
@@ -197,9 +200,6 @@ class ReemplazoMarchamoEvento extends Model
         );
     }
 
-    /**
-     * Indica si la transacción incluyó motivos diferentes.
-     */
     protected function tieneMotivosMultiples(): Attribute
     {
         return Attribute::make(
@@ -208,9 +208,6 @@ class ReemplazoMarchamoEvento extends Model
         );
     }
 
-    /**
-     * Descripción adecuada para consultas y auditoría.
-     */
     protected function clasificacionMotivoTexto(): Attribute
     {
         return Attribute::make(
@@ -246,6 +243,24 @@ class ReemplazoMarchamoEvento extends Model
         );
     }
 
+    protected function esReemplazoGeneral(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): bool =>
+                $this->origen_evento
+                === self::ORIGEN_REEMPLAZO_GENERAL
+        );
+    }
+
+    protected function esAbastecimiento(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): bool =>
+                $this->origen_evento
+                === self::ORIGEN_ABASTECIMIENTO
+        );
+    }
+
     protected function puedeConsultarse(): Attribute
     {
         return Attribute::make(
@@ -260,12 +275,6 @@ class ReemplazoMarchamoEvento extends Model
         );
     }
 
-    /**
-     * Cantidad real de detalles cargados.
-     *
-     * Si la relación no está cargada se utiliza la cantidad registrada
-     * originalmente en el evento.
-     */
     protected function cantidadDetalles(): Attribute
     {
         return Attribute::make(
@@ -279,9 +288,6 @@ class ReemplazoMarchamoEvento extends Model
         );
     }
 
-    /**
-     * Verifica que la cantidad registrada coincida con los detalles cargados.
-     */
     protected function cantidadConsistente(): Attribute
     {
         return Attribute::make(
@@ -296,9 +302,6 @@ class ReemplazoMarchamoEvento extends Model
         );
     }
 
-    /**
-     * Resumen breve del evento.
-     */
     protected function resumenTexto(): Attribute
     {
         return Attribute::make(
@@ -360,6 +363,9 @@ class ReemplazoMarchamoEvento extends Model
 
             'correccion_instalacion' =>
                 'Corrección de instalación',
+
+            self::MOTIVO_APERTURA_ABASTECIMIENTO =>
+                'Apertura por abastecimiento',
 
             default =>
                 'No definido',

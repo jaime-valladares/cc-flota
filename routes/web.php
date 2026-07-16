@@ -7,6 +7,7 @@ use App\Http\Controllers\PuntoRutaController;
 use App\Http\Controllers\RutaController;
 use App\Http\Controllers\LicenciaController;
 use App\Http\Controllers\RecargaTanqueController;
+use App\Http\Controllers\AbastecimientoController;
 use App\Http\Controllers\AnalisisOperativoController;
 use App\Http\Controllers\MarchamoAsignacionInicialController;
 use App\Http\Controllers\MarchamoController;
@@ -554,6 +555,56 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/marchamos/reemplazos/unidades/{unidad}', [MarchamoReemplazoController::class, 'store'])
         ->name('marchamos.reemplazos.store');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Abastecimientos de unidades
+    |--------------------------------------------------------------------------
+    |
+    | Las rutas fijas deben declararse antes de las rutas que contienen
+    | parámetros dinámicos.
+    |
+    */
+
+    Route::get(
+        '/abastecimientos',
+        [
+            AbastecimientoController::class,
+            'index',
+        ]
+    )->name('abastecimientos.index');
+
+    Route::get(
+        '/abastecimientos/ventana',
+        [
+            AbastecimientoController::class,
+            'indexVentana',
+        ]
+    )->name('abastecimientos.index.ventana');
+
+    Route::get(
+        '/abastecimientos/unidades/{unidad}/crear',
+        [
+            AbastecimientoController::class,
+            'create',
+        ]
+    )->name('abastecimientos.create');
+
+    Route::get(
+        '/abastecimientos/unidades/{unidad}/crear/ventana',
+        [
+            AbastecimientoController::class,
+            'createVentana',
+        ]
+    )->name('abastecimientos.create.ventana');
+
+    Route::post(
+        '/abastecimientos/unidades/{unidad}',
+        [
+            AbastecimientoController::class,
+            'store',
+        ]
+    )->name('abastecimientos.store');
 
     /*
     |--------------------------------------------------------------------------

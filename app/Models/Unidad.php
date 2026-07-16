@@ -32,23 +32,32 @@ class Unidad extends Model
      */
     protected $table = 'unidades';
 
+    /*
+    |--------------------------------------------------------------------------
+    | Relaciones principales
+    |--------------------------------------------------------------------------
+    */
+
     /**
-     * Relación con la empresa propietaria de la unidad.
+     * Empresa propietaria de la unidad.
      */
     public function empresa(): BelongsTo
     {
-        return $this->belongsTo(Empresa::class);
+        return $this->belongsTo(
+            Empresa::class,
+            'empresa_id'
+        );
     }
 
     /**
-     * Relación uno a uno con la licencia permanente de la unidad.
-     *
-     * Una unidad puede tener como máximo una licencia registrada.
-     * Las renovaciones y reactivaciones se realizan sobre ese mismo registro.
+     * Licencia permanente asociada a la unidad.
      */
     public function licencia(): HasOne
     {
-        return $this->hasOne(Licencia::class);
+        return $this->hasOne(
+            Licencia::class,
+            'unidad_id'
+        );
     }
 
     /**
@@ -63,7 +72,7 @@ class Unidad extends Model
     }
 
     /**
-     * Historial de marchamos asociados a la unidad.
+     * Historial completo de marchamos asociados a la unidad.
      */
     public function marchamos(): HasMany
     {
@@ -83,6 +92,60 @@ class Unidad extends Model
             'unidad_id'
         );
     }
+
+    /**
+     * Historial completo de abastecimientos de la unidad.
+     */
+    public function abastecimientos(): HasMany
+    {
+        return $this->hasMany(
+            Abastecimiento::class,
+            'unidad_id'
+        )->orderByDesc('fecha_hora_abastecimiento');
+    }
+
+    /**
+     * Abastecimientos registrados y vigentes de la unidad.
+     */
+    public function abastecimientosRegistrados(): HasMany
+    {
+        return $this->hasMany(
+            Abastecimiento::class,
+            'unidad_id'
+        )
+            ->where(
+                'estado',
+                Abastecimiento::ESTADO_REGISTRADO
+            )
+            ->orderByDesc('fecha_hora_abastecimiento');
+    }
+
+    /**
+     * Último abastecimiento registrado y no anulado.
+     */
+    public function ultimoAbastecimientoRegistrado(): HasOne
+    {
+        return $this->hasOne(
+            Abastecimiento::class,
+            'unidad_id'
+        )
+            ->where(
+                'estado',
+                Abastecimiento::ESTADO_REGISTRADO
+            )
+            ->ofMany(
+                [
+                    'fecha_hora_abastecimiento' => 'max',
+                    'id' => 'max',
+                ]
+            );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Auditoría
+    |--------------------------------------------------------------------------
+    */
 
     /**
      * Usuario que creó el registro.
@@ -117,13 +180,19 @@ class Unidad extends Model
         );
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Textos principales
+    |--------------------------------------------------------------------------
+    */
+
     /**
      * Texto legible para el modelo de medición.
      */
     protected function modeloMedicionTexto(): Attribute
     {
         return Attribute::make(
-            get: fn () => match ($this->modelo_medicion) {
+            get: fn (): string => match ($this->modelo_medicion) {
                 'galones_hora' =>
                     'Galones por hora',
 
@@ -147,14 +216,27 @@ class Unidad extends Model
     protected function estadoTexto(): Attribute
     {
         return Attribute::make(
-            get: fn () => match ($this->estado) {
-                'registrada' => 'Registrada',
-                'activa' => 'Activa',
-                'inactiva' => 'Inactiva',
-                default => 'No definido',
+            get: fn (): string => match ($this->estado) {
+                'registrada' =>
+                    'Registrada',
+
+                'activa' =>
+                    'Activa',
+
+                'inactiva' =>
+                    'Inactiva',
+
+                default =>
+                    'No definido',
             }
         );
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cobertura de marchamos
+    |--------------------------------------------------------------------------
+    */
 
     /**
      * Total de puntos activos que requieren marchamo.
@@ -218,10 +300,6 @@ class Unidad extends Model
 
     /**
      * Indica si la asignación inicial de marchamos está completa.
-     *
-     * Para considerarla completa:
-     * - debe existir al menos un punto activo que requiera marchamo;
-     * - todos esos puntos deben tener un marchamo actual asignado.
      */
     protected function asignacionInicialMarchamosCompleta(): Attribute
     {
@@ -271,6 +349,12 @@ class Unidad extends Model
             }
         );
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Disponibilidad operativa
+    |--------------------------------------------------------------------------
+    */
 
     /**
      * Código interno de disponibilidad operativa.
@@ -454,14 +538,7 @@ class Unidad extends Model
     }
 
     /**
-     * Indica si la unidad puede participar en la configuración inicial
-     * realizada por Diesel Cop.
-     *
-     * La unidad debe:
-     * - pertenecer a una empresa activa;
-     * - no estar inactiva;
-     * - tener licencia vigente;
-     * - conservar pendiente la asignación inicial.
+     * Indica si la unidad puede participar en la configuración inicial.
      */
     protected function puedeRecibirAsignacionInicial(): Attribute
     {
@@ -511,17 +588,70 @@ class Unidad extends Model
         );
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Abastecimientos
+    |--------------------------------------------------------------------------
+    */
+
     /**
-     * Conversión de tipos.
+     * Indica si la unidad tiene al menos un abastecimiento registrado.
      */
+    protected function tieneAbastecimientosRegistrados(): Attribute
+    {
+        return Attribute::make(
+            get: function (): bool {
+                if (
+                    $this->relationLoaded(
+                        'abastecimientosRegistrados'
+                    )
+                ) {
+                    return $this
+                        ->abastecimientosRegistrados
+                        ->isNotEmpty();
+                }
+
+                return $this
+                    ->abastecimientosRegistrados()
+                    ->exists();
+            }
+        );
+    }
+
+    /**
+     * Indica si el próximo abastecimiento será la línea base inicial.
+     */
+    protected function requiereAbastecimientoInicial(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): bool =>
+                ! $this->tiene_abastecimientos_registrados
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Conversiones
+    |--------------------------------------------------------------------------
+    */
+
     protected function casts(): array
     {
         return [
-            'total_tanques' => 'integer',
-            'cantidad_tanques_con_licencia' => 'integer',
-            'capacidad_total' => 'decimal:2',
-            'capacidad_cubierta' => 'decimal:2',
-            'fecha_inactivacion' => 'datetime',
+            'total_tanques' =>
+                'integer',
+
+            'cantidad_tanques_con_licencia' =>
+                'integer',
+
+            'capacidad_total' =>
+                'decimal:2',
+
+            'capacidad_cubierta' =>
+                'decimal:2',
+
+            'fecha_inactivacion' =>
+                'datetime',
         ];
     }
 }
