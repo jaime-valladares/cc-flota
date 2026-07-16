@@ -39,8 +39,24 @@
             $unidad
         );
 
-        $lecturaAnterior = $ultimoAbastecimiento
-            ? (float) $ultimoAbastecimiento->lectura_actual
+        $kilometrajeAnterior = $ultimoAbastecimiento
+            ? (
+                ! is_null($ultimoAbastecimiento->kilometraje_actual)
+                    ? (float) $ultimoAbastecimiento->kilometraje_actual
+                    : (
+                        ! is_null($ultimoAbastecimiento->lectura_actual)
+                            ? (float) $ultimoAbastecimiento->lectura_actual
+                            : null
+                    )
+            )
+            : null;
+
+        $horometroAnterior = (
+            $unidad->modelo_medicion === 'galones_hora'
+            && $ultimoAbastecimiento
+            && ! is_null($ultimoAbastecimiento->horometro_actual)
+        )
+            ? (float) $ultimoAbastecimiento->horometro_actual
             : null;
 
         $volumenFinalAnterior = $ultimoAbastecimiento
@@ -72,7 +88,15 @@
         >
             <div class="cc-card">
 
-                <div class="cc-card-header cc-card-header-compact">
+                <div
+                    class="cc-card-header cc-card-header-compact"
+                    style="
+                        display: grid;
+                        grid-template-columns: minmax(0, 1fr) auto;
+                        align-items: start;
+                        gap: 1rem;
+                    "
+                >
                     <div>
                         <h3 class="cc-title cc-title-compact">
                             Registrar abastecimiento
@@ -82,28 +106,41 @@
 
                     <div
                         style="
-                            display: flex;
-                            flex-wrap: nowrap;
+                            display: grid;
+                            grid-template-columns: max-content max-content;
                             align-items: center;
-                            justify-content: flex-end;
+                            justify-content: end;
                             gap: .75rem;
-                            white-space: nowrap;
                         "
                     >
                         <a
                             href="{{ $rutaVentana }}"
                             target="_blank"
                             rel="noopener noreferrer"
-                            class="cc-btn-secondary cc-btn-wide"
-                            style="flex: 0 0 auto;"
+                            class="cc-btn-secondary"
+                            style="
+                                display: inline-flex;
+                                width: auto;
+                                min-width: 0;
+                                align-items: center;
+                                justify-content: center;
+                                white-space: nowrap;
+                            "
                         >
                             Abrir en nueva pestaña
                         </a>
 
                         <a
                             href="{{ $rutaVolver }}"
-                            class="cc-btn-secondary cc-btn-wide"
-                            style="flex: 0 0 auto;"
+                            class="cc-btn-secondary"
+                            style="
+                                display: inline-flex;
+                                width: auto;
+                                min-width: 0;
+                                align-items: center;
+                                justify-content: center;
+                                white-space: nowrap;
+                            "
                         >
                             Volver a abastecimientos
                         </a>
@@ -220,17 +257,35 @@
                     <div class="cc-summary-strip">
                         <div class="cc-summary-strip-item">
                             <span class="cc-summary-strip-label">
-                                Última lectura
+                                Último kilometraje
                             </span>
 
                             <span class="cc-summary-strip-value">
-                                @if (is_null($lecturaAnterior))
+                                @if (is_null($kilometrajeAnterior))
                                     Sin registro
                                 @else
-                                    {{ number_format($lecturaAnterior, 2) }}
+                                    {{ number_format($kilometrajeAnterior, 2) }}
+                                    km
                                 @endif
                             </span>
                         </div>
+
+                        @if ($unidad->modelo_medicion === 'galones_hora')
+                            <div class="cc-summary-strip-item">
+                                <span class="cc-summary-strip-label">
+                                    Último horómetro
+                                </span>
+
+                                <span class="cc-summary-strip-value">
+                                    @if (is_null($horometroAnterior))
+                                        Sin registro
+                                    @else
+                                        {{ number_format($horometroAnterior, 2) }}
+                                        h
+                                    @endif
+                                </span>
+                            </div>
+                        @endif
 
                         <div class="cc-summary-strip-item">
                             <span class="cc-summary-strip-label">
@@ -311,17 +366,23 @@
                             </h5>
 
                             <p>
-                                Registre al motorista responsable, la lectura
-                                actual y el combustible existente antes de
-                                iniciar la carga.
+                                Registre al motorista responsable, el
+                                kilometraje actual y el combustible existente
+                                antes de iniciar la carga. Las unidades por
+                                horas también requieren la lectura del
+                                horómetro.
                             </p>
                         </div>
 
                         <div style="padding: 1rem 1.2rem;">
                             <div
-                                class="grid gap-5
-                                       md:grid-cols-2
-                                       xl:grid-cols-3"
+                                class="grid gap-5 md:grid-cols-2
+                                       {{
+                                           $unidad->modelo_medicion
+                                           === 'galones_hora'
+                                               ? 'xl:grid-cols-4'
+                                               : 'xl:grid-cols-3'
+                                       }}"
                             >
                                 <div class="cc-field">
                                     <label for="motorista_id">
@@ -365,40 +426,64 @@
                                 </div>
 
                                 <div class="cc-field">
-                                    <label for="lectura_actual">
-                                        Lectura actual (Kilometraje)
+                                    <label for="kilometraje_actual">
+                                        Kilometraje actual
                                         <span class="cc-required">*</span>
                                     </label>
 
                                     <input
-                                        id="lectura_actual"
+                                        id="kilometraje_actual"
                                         type="number"
-                                        name="lectura_actual"
-                                        value="{{ old('lectura_actual') }}"
+                                        name="kilometraje_actual"
+                                        value="{{ old('kilometraje_actual') }}"
                                         class="cc-input"
-                                        min="{{ $lecturaAnterior ?? 0 }}"
+                                        min="{{ $kilometrajeAnterior ?? 0 }}"
                                         step="0.01"
                                         required
                                         placeholder="0.00"
-                                        data-lectura-actual
                                     >
 
                                     <div class="cc-table-adaptive-muted mt-1">
-                                        @if ($unidad->modelo_medicion === 'galones_hora')
-                                            Horas acumuladas del horómetro.
-                                        @elseif ($unidad->modelo_medicion === 'galones_viaje')
-                                            Lectura acumulada de referencia.
-                                        @else
-                                            Kilometraje acumulado del odómetro.
-                                        @endif
+                                        Kilometraje acumulado del odómetro.
                                     </div>
 
-                                    @error('lectura_actual')
+                                    @error('kilometraje_actual')
                                         <div class="cc-error">
                                             {{ $message }}
                                         </div>
                                     @enderror
                                 </div>
+
+                                @if ($unidad->modelo_medicion === 'galones_hora')
+                                    <div class="cc-field">
+                                        <label for="horometro_actual">
+                                            Horómetro actual
+                                            <span class="cc-required">*</span>
+                                        </label>
+
+                                        <input
+                                            id="horometro_actual"
+                                            type="number"
+                                            name="horometro_actual"
+                                            value="{{ old('horometro_actual') }}"
+                                            class="cc-input"
+                                            min="{{ $horometroAnterior ?? 0 }}"
+                                            step="0.01"
+                                            required
+                                            placeholder="0.00"
+                                        >
+
+                                        <div class="cc-table-adaptive-muted mt-1">
+                                            Horas acumuladas del horómetro.
+                                        </div>
+
+                                        @error('horometro_actual')
+                                            <div class="cc-error">
+                                                {{ $message }}
+                                            </div>
+                                        @enderror
+                                    </div>
+                                @endif
 
                                 <div class="cc-field">
                                     <label for="volumen_inicial">

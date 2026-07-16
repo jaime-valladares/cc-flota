@@ -31,7 +31,8 @@ class AbastecimientoService
      * unidad_id
      * motorista_id
      * ultimo_abastecimiento_id
-     * lectura_actual
+     * kilometraje_actual
+     * horometro_actual (solo para galones_hora)
      * volumen_inicial
      * tipo_origen
      *
@@ -218,11 +219,24 @@ class AbastecimientoService
                     );
                 }
 
-                $lecturaActual = $this->numero(
-                    $datos['lectura_actual'] ?? null,
-                    'lectura_actual',
-                    'Debe ingresar la lectura actual de la unidad.'
+                $kilometrajeActual = $this->numero(
+                    $datos['kilometraje_actual'] ?? null,
+                    'kilometraje_actual',
+                    'Debe ingresar el kilometraje actual de la unidad.'
                 );
+
+                $horometroActual = null;
+
+                if (
+                    $modeloMedicion
+                    === Abastecimiento::MODELO_GALONES_HORA
+                ) {
+                    $horometroActual = $this->numero(
+                        $datos['horometro_actual'] ?? null,
+                        'horometro_actual',
+                        'Debe ingresar la lectura actual del horómetro.'
+                    );
+                }
 
                 $volumenInicial = $this->numero(
                     $datos['volumen_inicial'] ?? null,
@@ -230,10 +244,20 @@ class AbastecimientoService
                     'Debe ingresar el combustible existente antes de la carga.'
                 );
 
-                if ($lecturaActual < 0) {
+                if ($kilometrajeActual < 0) {
                     $this->fallar(
-                        'lectura_actual',
-                        'La lectura actual no puede ser negativa.'
+                        'kilometraje_actual',
+                        'El kilometraje actual no puede ser negativo.'
+                    );
+                }
+
+                if (
+                    ! is_null($horometroActual)
+                    && $horometroActual < 0
+                ) {
+                    $this->fallar(
+                        'horometro_actual',
+                        'La lectura del horómetro no puede ser negativa.'
                     );
                 }
 
@@ -244,28 +268,72 @@ class AbastecimientoService
                     );
                 }
 
-                $lecturaAnterior =
+                $kilometrajeAnterior =
                     $abastecimientoAnterior
-                        ? (float) $abastecimientoAnterior
-                            ->lectura_actual
+                        ? (float) (
+                            $abastecimientoAnterior
+                                ->kilometraje_actual
+                            ?? $abastecimientoAnterior
+                                ->lectura_actual
+                        )
                         : null;
 
-                $diferenciaLectura = null;
+                $diferenciaKilometraje = null;
 
-                if (! is_null($lecturaAnterior)) {
+                if (! is_null($kilometrajeAnterior)) {
                     if (
-                        $lecturaActual
-                        < $lecturaAnterior
+                        $kilometrajeActual
+                        < $kilometrajeAnterior
                     ) {
                         $this->fallar(
-                            'lectura_actual',
-                            'La lectura actual no puede ser menor que la lectura del abastecimiento anterior.'
+                            'kilometraje_actual',
+                            'El kilometraje actual no puede ser menor que el kilometraje del abastecimiento anterior.'
                         );
                     }
 
-                    $diferenciaLectura = round(
-                        $lecturaActual
-                        - $lecturaAnterior,
+                    $diferenciaKilometraje = round(
+                        $kilometrajeActual
+                        - $kilometrajeAnterior,
+                        2
+                    );
+                }
+
+                $horometroAnterior = null;
+                $diferenciaHorometro = null;
+
+                if (
+                    $modeloMedicion
+                    === Abastecimiento::MODELO_GALONES_HORA
+                    && $abastecimientoAnterior
+                ) {
+                    $horometroAnterior = filled(
+                        $abastecimientoAnterior
+                            ->horometro_actual
+                    )
+                        ? (float) $abastecimientoAnterior
+                            ->horometro_actual
+                        : null;
+
+                    if (is_null($horometroAnterior)) {
+                        $this->fallar(
+                            'horometro_actual',
+                            'El abastecimiento anterior no posee una lectura de horómetro válida. Registre una nueva línea base después de reiniciar los datos de prueba.'
+                        );
+                    }
+
+                    if (
+                        $horometroActual
+                        < $horometroAnterior
+                    ) {
+                        $this->fallar(
+                            'horometro_actual',
+                            'La lectura actual del horómetro no puede ser menor que la lectura anterior.'
+                        );
+                    }
+
+                    $diferenciaHorometro = round(
+                        $horometroActual
+                        - $horometroAnterior,
                         2
                     );
                 }
@@ -332,8 +400,11 @@ class AbastecimientoService
 
                     $moneda = 'USD';
 
-                    $origenNombre =
-                        $gasolineraExterna->compania;
+                    $origenNombre = trim(
+                        $gasolineraExterna->compania
+                        . ' — '
+                        . $gasolineraExterna->direccion
+                    );
                 }
 
                 /*
@@ -453,9 +524,7 @@ class AbastecimientoService
                 $galonesPorHora = null;
 
                 if (
-                    ! is_null($diferenciaLectura)
-                    && $diferenciaLectura > 0
-                    && ! is_null($combustibleConsumido)
+                    ! is_null($combustibleConsumido)
                     && $combustibleConsumido > 0
                     && $combustibleAdicional <= 0
                 ) {
@@ -468,15 +537,17 @@ class AbastecimientoService
                             ],
                             true
                         )
+                        && ! is_null($diferenciaKilometraje)
+                        && $diferenciaKilometraje > 0
                     ) {
                         $galonesPorKilometro = round(
                             $combustibleConsumido
-                            / $diferenciaLectura,
+                            / $diferenciaKilometraje,
                             6
                         );
 
                         $kilometrosPorGalon = round(
-                            $diferenciaLectura
+                            $diferenciaKilometraje
                             / $combustibleConsumido,
                             6
                         );
@@ -485,10 +556,12 @@ class AbastecimientoService
                     if (
                         $modeloMedicion
                         === Abastecimiento::MODELO_GALONES_HORA
+                        && ! is_null($diferenciaHorometro)
+                        && $diferenciaHorometro > 0
                     ) {
                         $galonesPorHora = round(
                             $combustibleConsumido
-                            / $diferenciaLectura,
+                            / $diferenciaHorometro,
                             6
                         );
                     }
@@ -501,10 +574,11 @@ class AbastecimientoService
                     $modeloMedicion
                     === Abastecimiento::MODELO_GALONES_VIAJE
                     && ! is_null($kilometrosTeoricos)
+                    && ! is_null($diferenciaKilometraje)
                 ) {
                     $diferenciaKilometrosTeoricos =
                         round(
-                            (float) $diferenciaLectura
+                            (float) $diferenciaKilometraje
                             - $kilometrosTeoricos,
                             2
                         );
@@ -596,14 +670,36 @@ class AbastecimientoService
                         'modelo_medicion' =>
                             $modeloMedicion,
 
+                        /*
+                         * Compatibilidad temporal:
+                         * los campos lectura_* reflejan kilometraje.
+                         */
                         'lectura_actual' =>
-                            $lecturaActual,
+                            $kilometrajeActual,
 
                         'lectura_anterior' =>
-                            $lecturaAnterior,
+                            $kilometrajeAnterior,
 
                         'diferencia_lectura' =>
-                            $diferenciaLectura,
+                            $diferenciaKilometraje,
+
+                        'kilometraje_actual' =>
+                            $kilometrajeActual,
+
+                        'kilometraje_anterior' =>
+                            $kilometrajeAnterior,
+
+                        'diferencia_kilometraje' =>
+                            $diferenciaKilometraje,
+
+                        'horometro_actual' =>
+                            $horometroActual,
+
+                        'horometro_anterior' =>
+                            $horometroAnterior,
+
+                        'diferencia_horometro' =>
+                            $diferenciaHorometro,
 
                         'volumen_inicial' =>
                             $volumenInicial,

@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Abastecimiento;
+use App\Models\Unidad;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -10,7 +11,7 @@ class StoreAbastecimientoRequest extends FormRequest
 {
     /**
      * La autorización específica por empresa y operación
-     * se validará nuevamente en el controlador y el servicio.
+     * se valida nuevamente en el controlador y el servicio.
      */
     public function authorize(): bool
     {
@@ -61,12 +62,26 @@ class StoreAbastecimientoRequest extends FormRequest
 
             /*
             |--------------------------------------------------------------------------
-            | Lecturas y combustible
+            | Kilometraje, horómetro y combustible
             |--------------------------------------------------------------------------
             */
 
-            'lectura_actual' => [
+            'kilometraje_actual' => [
                 'required',
+                'numeric',
+                'gte:0',
+                'decimal:0,2',
+            ],
+
+            'horometro_actual' => [
+                'nullable',
+
+                Rule::requiredIf(
+                    fn (): bool =>
+                        $this->modeloUnidad()
+                        === Abastecimiento::MODELO_GALONES_HORA
+                ),
+
                 'numeric',
                 'gte:0',
                 'decimal:0,2',
@@ -87,6 +102,7 @@ class StoreAbastecimientoRequest extends FormRequest
 
             'tipo_origen' => [
                 'required',
+
                 Rule::in([
                     Abastecimiento::ORIGEN_INTERNO,
                     Abastecimiento::ORIGEN_EXTERNO,
@@ -175,6 +191,7 @@ class StoreAbastecimientoRequest extends FormRequest
 
             'rutas.*.tipo_recorrido' => [
                 'required_with:rutas',
+
                 Rule::in([
                     'ida',
                     'ida_vuelta',
@@ -215,6 +232,7 @@ class StoreAbastecimientoRequest extends FormRequest
 
             'return_to' => [
                 'nullable',
+
                 Rule::in([
                     'ventana',
                 ]),
@@ -251,17 +269,47 @@ class StoreAbastecimientoRequest extends FormRequest
             'ultimo_abastecimiento_id.exists' =>
                 'El abastecimiento anterior indicado ya no está disponible.',
 
-            'lectura_actual.required' =>
-                'Debe ingresar la lectura actual de la unidad.',
+            /*
+            |--------------------------------------------------------------------------
+            | Kilometraje
+            |--------------------------------------------------------------------------
+            */
 
-            'lectura_actual.numeric' =>
-                'La lectura actual debe ser numérica.',
+            'kilometraje_actual.required' =>
+                'Debe ingresar el kilometraje actual de la unidad.',
 
-            'lectura_actual.gte' =>
-                'La lectura actual no puede ser negativa.',
+            'kilometraje_actual.numeric' =>
+                'El kilometraje actual debe ser numérico.',
 
-            'lectura_actual.decimal' =>
-                'La lectura actual puede contener como máximo 2 decimales.',
+            'kilometraje_actual.gte' =>
+                'El kilometraje actual no puede ser negativo.',
+
+            'kilometraje_actual.decimal' =>
+                'El kilometraje actual puede contener como máximo 2 decimales.',
+
+            /*
+            |--------------------------------------------------------------------------
+            | Horómetro
+            |--------------------------------------------------------------------------
+            */
+
+            'horometro_actual.required' =>
+                'Debe ingresar la lectura actual del horómetro.',
+
+            'horometro_actual.numeric' =>
+                'La lectura del horómetro debe ser numérica.',
+
+            'horometro_actual.gte' =>
+                'La lectura del horómetro no puede ser negativa.',
+
+            'horometro_actual.decimal' =>
+                'La lectura del horómetro puede contener como máximo 2 decimales.',
+
+            /*
+            |--------------------------------------------------------------------------
+            | Combustible
+            |--------------------------------------------------------------------------
+            */
 
             'volumen_inicial.required' =>
                 'Debe ingresar el combustible existente antes de la carga.',
@@ -274,6 +322,12 @@ class StoreAbastecimientoRequest extends FormRequest
 
             'volumen_inicial.decimal' =>
                 'El combustible inicial puede contener como máximo 2 decimales.',
+
+            /*
+            |--------------------------------------------------------------------------
+            | Origen
+            |--------------------------------------------------------------------------
+            */
 
             'tipo_origen.required' =>
                 'Debe seleccionar el origen del combustible.',
@@ -344,6 +398,12 @@ class StoreAbastecimientoRequest extends FormRequest
             'precio_galon.decimal' =>
                 'El precio por galón puede contener como máximo 4 decimales.',
 
+            /*
+            |--------------------------------------------------------------------------
+            | Rutas
+            |--------------------------------------------------------------------------
+            */
+
             'rutas.array' =>
                 'La información de rutas no tiene el formato esperado.',
 
@@ -358,6 +418,12 @@ class StoreAbastecimientoRequest extends FormRequest
 
             'rutas.*.tipo_recorrido.in' =>
                 'El tipo de recorrido seleccionado no es válido.',
+
+            /*
+            |--------------------------------------------------------------------------
+            | Marchamos
+            |--------------------------------------------------------------------------
+            */
 
             'marchamos.required' =>
                 'Debe seleccionar al menos un tapón abierto.',
@@ -405,26 +471,67 @@ class StoreAbastecimientoRequest extends FormRequest
                     )
                 ),
 
-            'lectura_actual' =>
+            'kilometraje_actual' =>
                 $this->normalizarNumero(
-                    $this->input('lectura_actual')
+                    $this->input(
+                        'kilometraje_actual'
+                    )
+                ),
+
+            'horometro_actual' =>
+                $this->normalizarNumero(
+                    $this->input(
+                        'horometro_actual'
+                    )
                 ),
 
             'volumen_inicial' =>
                 $this->normalizarNumero(
-                    $this->input('volumen_inicial')
+                    $this->input(
+                        'volumen_inicial'
+                    )
                 ),
 
             'galones_externos' =>
                 $this->normalizarNumero(
-                    $this->input('galones_externos')
+                    $this->input(
+                        'galones_externos'
+                    )
                 ),
 
             'precio_galon' =>
                 $this->normalizarNumero(
-                    $this->input('precio_galon')
+                    $this->input(
+                        'precio_galon'
+                    )
                 ),
         ]);
+    }
+
+    /**
+     * Resolver el modelo de medición de la unidad.
+     */
+    private function modeloUnidad(): ?string
+    {
+        $unidadRuta = $this->route('unidad');
+
+        if ($unidadRuta instanceof Unidad) {
+            return $unidadRuta->modelo_medicion;
+        }
+
+        $unidadId = (int) (
+            $this->input('unidad_id')
+            ?: $unidadRuta
+            ?: 0
+        );
+
+        if ($unidadId <= 0) {
+            return null;
+        }
+
+        return Unidad::query()
+            ->whereKey($unidadId)
+            ->value('modelo_medicion');
     }
 
     /**

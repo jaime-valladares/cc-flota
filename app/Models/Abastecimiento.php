@@ -27,9 +27,41 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'estado',
     'modelo_medicion',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Campos históricos temporales
+    |--------------------------------------------------------------------------
+    */
+
     'lectura_actual',
     'lectura_anterior',
     'diferencia_lectura',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Kilometraje
+    |--------------------------------------------------------------------------
+    */
+
+    'kilometraje_actual',
+    'kilometraje_anterior',
+    'diferencia_kilometraje',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Horómetro
+    |--------------------------------------------------------------------------
+    */
+
+    'horometro_actual',
+    'horometro_anterior',
+    'diferencia_horometro',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Combustible
+    |--------------------------------------------------------------------------
+    */
 
     'volumen_inicial',
     'volumen_cargado',
@@ -40,6 +72,12 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'combustible_consumido_ciclo',
     'combustible_adicional_no_explicado',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Origen
+    |--------------------------------------------------------------------------
+    */
+
     'tipo_origen',
     'gasolinera_interna_id',
     'gasolinera_externa_id',
@@ -48,6 +86,12 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'precio_galon',
     'total_pagado',
     'moneda',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Rutas y rendimiento
+    |--------------------------------------------------------------------------
+    */
 
     'total_rutas',
     'kilometros_teoricos',
@@ -60,8 +104,20 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'diferencia_kilometros_teoricos',
     'diferencia_galones_teoricos',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Marchamos
+    |--------------------------------------------------------------------------
+    */
+
     'total_tapones_abiertos',
     'total_marchamos_reemplazados',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Anulación
+    |--------------------------------------------------------------------------
+    */
 
     'fecha_anulacion',
     'anulado_por',
@@ -218,9 +274,6 @@ class Abastecimiento extends Model
         )->orderBy('orden');
     }
 
-    /**
-     * Movimientos de inventario generados por un abastecimiento interno.
-     */
     public function movimientosInventario(): HasMany
     {
         return $this->hasMany(
@@ -229,10 +282,6 @@ class Abastecimiento extends Model
         )->orderBy('fecha_hora_movimiento');
     }
 
-    /**
-     * Evento de reemplazo de marchamos generado
-     * durante este abastecimiento.
-     */
     public function reemplazoMarchamoEvento(): HasOne
     {
         return $this->hasOne(
@@ -318,18 +367,19 @@ class Abastecimiento extends Model
         return $this->abastecimiento_anterior_id === null;
     }
 
+    /**
+     * Todas las unidades registran kilometraje,
+     * independientemente de su modelo de rendimiento.
+     */
     public function usaKilometraje(): bool
     {
-        return in_array(
-            $this->modelo_medicion,
-            [
-                self::MODELO_GALONES_KILOMETRO,
-                self::MODELO_GALONES_VIAJE,
-            ],
-            true
-        );
+        return true;
     }
 
+    /**
+     * Solo las unidades con modelo por horas
+     * requieren una lectura adicional de horómetro.
+     */
     public function usaHorometro(): bool
     {
         return $this->modelo_medicion
@@ -355,9 +405,41 @@ class Abastecimiento extends Model
             'fecha_hora_abastecimiento' => 'datetime',
             'fecha_anulacion' => 'datetime',
 
+            /*
+            |--------------------------------------------------------------------------
+            | Campos históricos temporales
+            |--------------------------------------------------------------------------
+            */
+
             'lectura_actual' => 'decimal:2',
             'lectura_anterior' => 'decimal:2',
             'diferencia_lectura' => 'decimal:2',
+
+            /*
+            |--------------------------------------------------------------------------
+            | Kilometraje
+            |--------------------------------------------------------------------------
+            */
+
+            'kilometraje_actual' => 'decimal:2',
+            'kilometraje_anterior' => 'decimal:2',
+            'diferencia_kilometraje' => 'decimal:2',
+
+            /*
+            |--------------------------------------------------------------------------
+            | Horómetro
+            |--------------------------------------------------------------------------
+            */
+
+            'horometro_actual' => 'decimal:2',
+            'horometro_anterior' => 'decimal:2',
+            'diferencia_horometro' => 'decimal:2',
+
+            /*
+            |--------------------------------------------------------------------------
+            | Combustible
+            |--------------------------------------------------------------------------
+            */
 
             'volumen_inicial' => 'decimal:2',
             'volumen_cargado' => 'decimal:2',
@@ -368,12 +450,30 @@ class Abastecimiento extends Model
             'combustible_consumido_ciclo' => 'decimal:2',
             'combustible_adicional_no_explicado' => 'decimal:2',
 
+            /*
+            |--------------------------------------------------------------------------
+            | Compra externa
+            |--------------------------------------------------------------------------
+            */
+
             'precio_galon' => 'decimal:4',
             'total_pagado' => 'decimal:2',
+
+            /*
+            |--------------------------------------------------------------------------
+            | Rutas
+            |--------------------------------------------------------------------------
+            */
 
             'total_rutas' => 'integer',
             'kilometros_teoricos' => 'decimal:2',
             'galones_teoricos' => 'decimal:2',
+
+            /*
+            |--------------------------------------------------------------------------
+            | Rendimiento
+            |--------------------------------------------------------------------------
+            */
 
             'galones_por_kilometro' => 'decimal:6',
             'kilometros_por_galon' => 'decimal:6',
@@ -381,6 +481,12 @@ class Abastecimiento extends Model
 
             'diferencia_kilometros_teoricos' => 'decimal:2',
             'diferencia_galones_teoricos' => 'decimal:2',
+
+            /*
+            |--------------------------------------------------------------------------
+            | Marchamos
+            |--------------------------------------------------------------------------
+            */
 
             'total_tapones_abiertos' => 'integer',
             'total_marchamos_reemplazados' => 'integer',
