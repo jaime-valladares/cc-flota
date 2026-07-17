@@ -1,4 +1,91 @@
-<x-app-layout>
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+    <meta charset="utf-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        Registrar abastecimiento · CC-Flota
+    </title>
+
+    @vite([
+        'resources/css/app.css',
+        'resources/js/app.js',
+    ])
+
+    <style>
+        html,
+        body {
+            min-width: 0;
+            min-height: 100%;
+        }
+
+        body {
+            margin: 0;
+            background: var(--cc-page-bg, #f5f7fa);
+        }
+
+        .cc-standalone-shell {
+            width: 100%;
+            min-width: 0;
+        }
+
+        .cc-standalone-shell .cc-page-wrapper {
+            width: 100%;
+            min-width: 0;
+        }
+
+        .cc-standalone-shell .cc-content-container {
+            width: min(100%, 82rem);
+            min-width: 0;
+            margin-inline: auto;
+        }
+
+        @media (max-width: 900px) {
+            .cc-standalone-shell .cc-card-header {
+                grid-template-columns: 1fr !important;
+            }
+
+            .cc-standalone-shell .cc-card-header > div:last-child {
+                justify-content: start !important;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .cc-standalone-shell .cc-page-wrapper {
+                padding-inline: .75rem;
+            }
+
+            .cc-standalone-shell .cc-card-header > div:last-child {
+                grid-template-columns: 1fr !important;
+                width: 100%;
+            }
+
+            .cc-standalone-shell .cc-card-header > div:last-child a {
+                width: 100% !important;
+            }
+
+            .cc-standalone-shell .cc-summary-strip {
+                grid-template-columns: 1fr;
+            }
+
+            .cc-standalone-shell .cc-form-actions {
+                align-items: stretch;
+                flex-direction: column-reverse;
+            }
+
+            .cc-standalone-shell .cc-form-actions > * {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="cc-standalone-shell">
     @php
         $empresaNombre = $unidad->empresa
             ? (
@@ -21,8 +108,8 @@
             ->filter()
             ->implode(' · ');
 
-        $rutaVolver = route(
-            'abastecimientos.index',
+        $parametrosNavegacion = array_merge(
+            request()->query(),
             [
                 'empresa_ids' => [
                     $unidad->empresa_id,
@@ -34,9 +121,19 @@
             ]
         );
 
-        $rutaVentana = route(
-            'abastecimientos.create.ventana',
-            $unidad
+        $rutaVolver = route(
+            'abastecimientos.index.ventana',
+            $parametrosNavegacion
+        );
+
+        $rutaSistema = route(
+            'abastecimientos.create',
+            array_merge(
+                [
+                    'unidad' => $unidad,
+                ],
+                request()->query()
+            )
         );
 
         $kilometrajeAnterior = $ultimoAbastecimiento
@@ -114,9 +211,7 @@
                         "
                     >
                         <a
-                            href="{{ $rutaVentana }}"
-                            target="_blank"
-                            rel="noopener noreferrer"
+                            href="{{ $rutaSistema }}"
                             class="cc-btn-secondary"
                             style="
                                 display: inline-flex;
@@ -127,7 +222,7 @@
                                 white-space: nowrap;
                             "
                         >
-                            Abrir en nueva pestaña
+                            Abrir en el sistema
                         </a>
 
                         <a
@@ -160,7 +255,7 @@
                         </div>
 
                         <ul class="mt-2 list-disc list-inside">
-                            @foreach (collect($errors->all())->unique()->values() as $error)
+                            @foreach ($errors->all() as $error)
                                 <li>
                                     {{ $error }}
                                 </li>
@@ -340,6 +435,30 @@
                     novalidate
                 >
                     @csrf
+
+                    <input
+                        type="hidden"
+                        name="return_to"
+                        value="ventana"
+                    >
+
+                    @foreach (request()->query() as $nombreParametro => $valorParametro)
+                        @if (is_array($valorParametro))
+                            @foreach ($valorParametro as $indiceParametro => $valorInterno)
+                                <input
+                                    type="hidden"
+                                    name="navegacion[{{ $nombreParametro }}][{{ $indiceParametro }}]"
+                                    value="{{ $valorInterno }}"
+                                >
+                            @endforeach
+                        @else
+                            <input
+                                type="hidden"
+                                name="navegacion[{{ $nombreParametro }}]"
+                                value="{{ $valorParametro }}"
+                            >
+                        @endif
+                    @endforeach
 
                     <input
                         type="hidden"
@@ -752,16 +871,6 @@
                                                             data-gasolinera-id="{{
                                                                 $gasolinera->id
                                                             }}"
-                                                            data-inventario-minimo="{{
-                                                                $tanque->volumen_minimo_alerta
-                                                            }}"
-                                                            class="{{
-                                                                (float) $tanque->volumen_actual
-                                                                <=
-                                                                (float) $tanque->volumen_minimo_alerta
-                                                                    ? 'bg-amber-50'
-                                                                    : ''
-                                                            }}"
                                                         >
                                                             <td>
                                                                 <input
@@ -806,19 +915,6 @@
                                                                     )
                                                                 }}
                                                                 gal
-
-                                                                @if (
-                                                                    (float) $tanque->volumen_actual
-                                                                    <=
-                                                                    (float) $tanque->volumen_minimo_alerta
-                                                                )
-                                                                    <div
-                                                                        class="cc-table-adaptive-muted mt-1"
-                                                                        style="color: #b45309; font-weight: 700;"
-                                                                    >
-                                                                        Bajo mínimo
-                                                                    </div>
-                                                                @endif
                                                             </td>
 
                                                             <td>
@@ -875,14 +971,6 @@
                                                                     }}
                                                                 </span>
                                                                 gal
-
-                                                                <div
-                                                                    class="cc-table-adaptive-muted mt-1 hidden"
-                                                                    style="color: #b45309; font-weight: 700;"
-                                                                    data-alerta-minimo
-                                                                >
-                                                                    Quedará bajo mínimo
-                                                                </div>
                                                             </td>
                                                         </tr>
                                                     @endforeach
@@ -1625,10 +1713,6 @@
                         '[data-saldo-tanque]'
                     );
 
-                    const alertaMinimo = fila.querySelector(
-                        '[data-alerta-minimo]'
-                    );
-
                     const seleccionado =
                         checkbox?.checked
                         && tipoOrigenSeleccionado()
@@ -1651,35 +1735,11 @@
                             inputGalones.dataset.inventario
                         );
 
-                        const minimo = numero(
-                            fila.dataset.inventarioMinimo
-                        );
-
-                        const saldoEstimado = Math.max(
+                        saldo.textContent = Math.max(
                             0,
                             inventario
                             - numero(inputGalones.value)
-                        );
-
-                        saldo.textContent =
-                            saldoEstimado.toFixed(2);
-
-                        if (alertaMinimo) {
-                            alertaMinimo.classList.toggle(
-                                'hidden',
-                                ! seleccionado
-                                || saldoEstimado > minimo
-                            );
-                        }
-
-                        fila.classList.toggle(
-                            'bg-amber-50',
-                            inventario <= minimo
-                            || (
-                                seleccionado
-                                && saldoEstimado <= minimo
-                            )
-                        );
+                        ).toFixed(2);
                     }
 
                     fila.classList.toggle(
@@ -2103,4 +2163,7 @@
             }
         );
     </script>
-</x-app-layout>
+
+    </main>
+</body>
+</html>
