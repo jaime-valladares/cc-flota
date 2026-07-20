@@ -39,7 +39,7 @@
         }
 
         .cc-standalone-shell .cc-content-container {
-            width: min(100%, 82rem);
+            width: min(100%, 80rem);
             min-width: 0;
             margin-inline: auto;
         }

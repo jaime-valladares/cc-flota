@@ -86,4 +86,12 @@ class Empresa extends Model
     {
         return $this->hasMany(Motorista::class, 'empresa_id');
     }
+
+    public function abastecimientos(): HasMany
+    {
+        return $this->hasMany(
+            Abastecimiento::class,
+            'empresa_id'
+        );
+    }
 }

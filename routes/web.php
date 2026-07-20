@@ -561,9 +561,16 @@ Route::middleware('auth')->group(function () {
     | Abastecimientos de unidades
     |--------------------------------------------------------------------------
     |
-    | Las rutas fijas deben declararse antes de las rutas que contienen
-    | parámetros dinámicos.
+    | Las rutas fijas deben permanecer antes de las rutas dinámicas para
+    | evitar que Laravel interprete palabras como "consulta" o "administrar"
+    | como identificadores de abastecimientos.
     |
+    */
+
+    /*
+    |--------------------------------------------------------------------------
+    | Registro de abastecimientos
+    |--------------------------------------------------------------------------
     */
 
     Route::get(
@@ -581,6 +588,56 @@ Route::middleware('auth')->group(function () {
             'indexVentana',
         ]
     )->name('abastecimientos.index.ventana');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Consulta histórica
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/abastecimientos/consulta',
+        [
+            AbastecimientoController::class,
+            'consulta',
+        ]
+    )->name('abastecimientos.consulta');
+
+    Route::get(
+        '/abastecimientos/consulta/ventana',
+        [
+            AbastecimientoController::class,
+            'consultaVentana',
+        ]
+    )->name('abastecimientos.consulta.ventana');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Administración
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/abastecimientos/administrar',
+        [
+            AbastecimientoController::class,
+            'administrar',
+        ]
+    )->name('abastecimientos.administrar');
+
+    Route::get(
+        '/abastecimientos/administrar/ventana',
+        [
+            AbastecimientoController::class,
+            'administrarVentana',
+        ]
+    )->name('abastecimientos.administrar.ventana');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Registro por unidad
+    |--------------------------------------------------------------------------
+    */
 
     Route::get(
         '/abastecimientos/unidades/{unidad}/crear',
@@ -605,6 +662,31 @@ Route::middleware('auth')->group(function () {
             'store',
         ]
     )->name('abastecimientos.store');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Ficha de abastecimiento
+    |--------------------------------------------------------------------------
+    |
+    | Estas rutas dinámicas deben permanecer al final del bloque.
+    |
+    */
+
+    Route::get(
+        '/abastecimientos/{abastecimiento}/ficha/ventana',
+        [
+            AbastecimientoController::class,
+            'showVentana',
+        ]
+    )->name('abastecimientos.show.ventana');
+
+    Route::get(
+        '/abastecimientos/{abastecimiento}/ficha',
+        [
+            AbastecimientoController::class,
+            'show',
+        ]
+    )->name('abastecimientos.show');
 
     /*
     |--------------------------------------------------------------------------

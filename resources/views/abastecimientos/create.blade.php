@@ -84,7 +84,7 @@
     <div class="cc-page-wrapper">
         <div
             class="cc-content-container"
-            style="max-width: 82rem;"
+            style="max-width: 80rem;"
         >
             <div class="cc-card">
 

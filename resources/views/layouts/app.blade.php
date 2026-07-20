@@ -57,6 +57,7 @@
             $puntosRutaActivo = request()->routeIs('puntos-ruta.*');
             $rutasActivo = request()->routeIs('rutas.*');
             $motoristasActivo = request()->routeIs('motoristas.*');
+            $abastecimientosActivo = request()->routeIs('abastecimientos.*');
             $analisisActivo = request()->routeIs('analisis.*');
         @endphp
 
@@ -351,9 +352,50 @@
                         Transacciones
                     </div>
 
-                    <span class="cc-sidebar-link cc-sidebar-link-disabled">
-                        Abastecimientos
-                    </span>
+                    <!-- Abastecimientos -->
+                    <div class="cc-sidebar-group">
+                        <div class="cc-sidebar-parent cc-sidebar-static-parent {{ $abastecimientosActivo ? 'cc-sidebar-parent-active' : '' }}">
+                            <span>Abastecimientos</span>
+                        </div>
+
+                        <div class="cc-sidebar-subnav">
+                            <a href="{{ route('abastecimientos.consulta') }}"
+                               class="cc-sidebar-sublink {{
+                                   request()->routeIs('abastecimientos.consulta*')
+                                   || (
+                                       request()->routeIs('abastecimientos.show*')
+                                       && request('origen_retorno') === 'consulta'
+                                   )
+                                       ? 'cc-sidebar-sublink-active'
+                                       : ''
+                               }}">
+                                Consultar abastecimientos
+                            </a>
+
+                            <a href="{{ route('abastecimientos.administrar') }}"
+                               class="cc-sidebar-sublink {{
+                                   request()->routeIs('abastecimientos.administrar*')
+                                   || (
+                                       request()->routeIs('abastecimientos.show*')
+                                       && request('origen_retorno') !== 'consulta'
+                                   )
+                                       ? 'cc-sidebar-sublink-active'
+                                       : ''
+                               }}">
+                                Administrar abastecimientos
+                            </a>
+
+                            <a href="{{ route('abastecimientos.index') }}"
+                               class="cc-sidebar-sublink {{
+                                   request()->routeIs('abastecimientos.index')
+                                   || request()->routeIs('abastecimientos.create')
+                                       ? 'cc-sidebar-sublink-active'
+                                       : ''
+                               }}">
+                                Registrar abastecimiento
+                            </a>
+                        </div>
+                    </div>
 
                     <span class="cc-sidebar-link cc-sidebar-link-disabled">
                         Reemplazos

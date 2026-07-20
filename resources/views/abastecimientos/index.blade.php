@@ -337,6 +337,8 @@
                                     align-items: center;
                                     justify-content: flex-end;
                                     white-space: nowrap;
+                                    grid-column: 1 / -1;
+                                    width: 100%;
                                 "
                             >
                                 <button
@@ -514,6 +516,8 @@
                                             display: flex;
                                             justify-content: flex-end;
                                             align-items: center;
+                                            grid-column: 1 / -1;
+                                            width: 100%;
                                             min-width: 0;
                                         "
                                     >
