@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreAbastecimientoRequest;
+use App\Http\Requests\UpdateAbastecimientoRequest;
 use App\Models\Abastecimiento;
 use App\Models\Empresa;
 use App\Models\Gasolinera;
@@ -217,6 +218,118 @@ class AbastecimientoController extends Controller
 
     /*
     |--------------------------------------------------------------------------
+    | Modificación
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Formulario normal de modificación.
+     */
+    public function edit(
+        Request $request,
+        Abastecimiento $abastecimiento,
+        AbastecimientoService $service
+    ): View {
+        $this->autorizarAccesoAbastecimiento(
+            $abastecimiento
+        );
+
+        return view(
+            'abastecimientos.edit',
+            $this->prepararFormularioEdicion(
+                $request,
+                $abastecimiento,
+                $service
+            )
+        );
+    }
+
+    /**
+     * Formulario de modificación en ventana independiente.
+     */
+    public function editVentana(
+        Request $request,
+        Abastecimiento $abastecimiento,
+        AbastecimientoService $service
+    ): View {
+        $this->autorizarAccesoAbastecimiento(
+            $abastecimiento
+        );
+
+        return view(
+            'abastecimientos.edit-ventana',
+            $this->prepararFormularioEdicion(
+                $request,
+                $abastecimiento,
+                $service
+            )
+        );
+    }
+
+    /**
+     * Actualiza de forma atómica el último abastecimiento vigente.
+     */
+    public function update(
+        UpdateAbastecimientoRequest $request,
+        Abastecimiento $abastecimiento,
+        AbastecimientoService $service
+    ): RedirectResponse {
+        $this->autorizarAccesoAbastecimiento(
+            $abastecimiento
+        );
+
+        $datos = $request->validated();
+
+        /*
+         * Empresa y unidad pertenecen al abastecimiento original.
+         * No se confía en valores manipulables enviados desde el formulario.
+         */
+        $datos['empresa_id'] =
+            (int) $abastecimiento->empresa_id;
+
+        $datos['unidad_id'] =
+            (int) $abastecimiento->unidad_id;
+
+        $abastecimientoActualizado =
+            $service->modificar(
+                $abastecimiento,
+                $datos,
+                (int) Auth::id()
+            );
+
+        $esVentana =
+            $request->input('return_to')
+            === 'ventana';
+
+        $parametrosRetorno =
+            $this->obtenerParametrosRetorno(
+                $request
+            );
+
+        return redirect()
+            ->route(
+                $esVentana
+                    ? 'abastecimientos.show.ventana'
+                    : 'abastecimientos.show',
+                array_merge(
+                    [
+                        'abastecimiento' =>
+                            $abastecimientoActualizado->id,
+
+                        'origen_retorno' =>
+                            'administrar',
+                    ],
+                    $parametrosRetorno
+                )
+            )
+            ->with(
+                'success',
+                'Abastecimiento actualizado correctamente.'
+            );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
     | Ficha
     |--------------------------------------------------------------------------
     */
@@ -271,9 +384,12 @@ class AbastecimientoController extends Controller
      * Prepara el listado de abastecimientos.
      *
      * Cuando $soloAdministrables es true:
-     * - limita a abastecimientos registrados;
-     * - limita a empresas activas;
-     * - calcula cuáles son el último registro vigente por unidad.
+     * - muestra únicamente el último abastecimiento registrado
+     *   de cada unidad;
+     * - limita el resultado a empresas activas;
+     * - exige que los tapones abiertos por la operación conserven
+     *   los marchamos instalados por ese abastecimiento;
+     * - excluye por completo los registros históricos o bloqueados.
      */
     private function prepararListadoAbastecimientos(
         Request $request,
@@ -521,19 +637,9 @@ class AbastecimientoController extends Controller
             ]);
 
         if ($soloAdministrables) {
-            $query
-                ->where(
-                    'estado',
-                    Abastecimiento::ESTADO_REGISTRADO
-                )
-                ->whereHas(
-                    'empresa',
-                    fn (Builder $empresaQuery) =>
-                        $empresaQuery->where(
-                            'estado',
-                            'activa'
-                        )
-                );
+            $this->aplicarSoloAbastecimientosAdministrables(
+                $query
+            );
         }
 
         if (! $esUsuarioDieselCop) {
@@ -802,6 +908,176 @@ class AbastecimientoController extends Controller
     }
 
     /**
+     * Limita una consulta a abastecimientos realmente administrables.
+     *
+     * Un abastecimiento es administrable únicamente cuando:
+     *
+     * - permanece registrado;
+     * - es el último registro vigente de su unidad;
+     * - su empresa está activa;
+     * - posee un evento vigente de marchamos originado por abastecimiento;
+     * - todos los tapones abiertos por esa operación conservan exactamente
+     *   el marchamo que fue instalado por ese mismo abastecimiento.
+     */
+    private function aplicarSoloAbastecimientosAdministrables(
+        Builder $query
+    ): void {
+        $query
+            ->where(
+                'abastecimientos.estado',
+                Abastecimiento::ESTADO_REGISTRADO
+            )
+            ->whereHas(
+                'empresa',
+                fn (Builder $empresaQuery) =>
+                    $empresaQuery->where(
+                        'estado',
+                        'activa'
+                    )
+            )
+            ->whereNotExists(
+                function ($subquery) {
+                    $subquery
+                        ->selectRaw('1')
+                        ->from(
+                            'abastecimientos as abastecimientos_mas_recientes'
+                        )
+                        ->whereColumn(
+                            'abastecimientos_mas_recientes.unidad_id',
+                            'abastecimientos.unidad_id'
+                        )
+                        ->where(
+                            'abastecimientos_mas_recientes.estado',
+                            Abastecimiento::ESTADO_REGISTRADO
+                        )
+                        ->where(
+                            function ($comparacion) {
+                                $comparacion
+                                    ->whereColumn(
+                                        'abastecimientos_mas_recientes.fecha_hora_abastecimiento',
+                                        '>',
+                                        'abastecimientos.fecha_hora_abastecimiento'
+                                    )
+                                    ->orWhere(
+                                        function ($empate) {
+                                            $empate
+                                                ->whereColumn(
+                                                    'abastecimientos_mas_recientes.fecha_hora_abastecimiento',
+                                                    '=',
+                                                    'abastecimientos.fecha_hora_abastecimiento'
+                                                )
+                                                ->whereColumn(
+                                                    'abastecimientos_mas_recientes.id',
+                                                    '>',
+                                                    'abastecimientos.id'
+                                                );
+                                        }
+                                    );
+                            }
+                        );
+                }
+            )
+            ->whereExists(
+                function ($subquery) {
+                    $subquery
+                        ->selectRaw('1')
+                        ->from(
+                            'reemplazo_marchamos_eventos as evento_marchamos'
+                        )
+                        ->join(
+                            'reemplazo_marchamos_detalle as detalle_marchamos',
+                            'detalle_marchamos.reemplazo_evento_id',
+                            '=',
+                            'evento_marchamos.id'
+                        )
+                        ->whereColumn(
+                            'evento_marchamos.abastecimiento_id',
+                            'abastecimientos.id'
+                        )
+                        ->where(
+                            'evento_marchamos.origen_evento',
+                            'abastecimiento'
+                        )
+                        ->where(
+                            'evento_marchamos.estado',
+                            'registrado'
+                        );
+                }
+            )
+            ->whereNotExists(
+                function ($subquery) {
+                    $subquery
+                        ->selectRaw('1')
+                        ->from(
+                            'reemplazo_marchamos_eventos as evento_validacion'
+                        )
+                        ->join(
+                            'reemplazo_marchamos_detalle as detalle_validacion',
+                            'detalle_validacion.reemplazo_evento_id',
+                            '=',
+                            'evento_validacion.id'
+                        )
+                        ->leftJoin(
+                            'puntos_seguridad_unidad as punto_validacion',
+                            'punto_validacion.id',
+                            '=',
+                            'detalle_validacion.punto_seguridad_id'
+                        )
+                        ->leftJoin(
+                            'marchamos as marchamo_validacion',
+                            'marchamo_validacion.id',
+                            '=',
+                            'detalle_validacion.marchamo_nuevo_id'
+                        )
+                        ->whereColumn(
+                            'evento_validacion.abastecimiento_id',
+                            'abastecimientos.id'
+                        )
+                        ->where(
+                            'evento_validacion.origen_evento',
+                            'abastecimiento'
+                        )
+                        ->where(
+                            'evento_validacion.estado',
+                            'registrado'
+                        )
+                        ->where(
+                            function ($invalido) {
+                                $invalido
+                                    ->whereNull(
+                                        'punto_validacion.id'
+                                    )
+                                    ->orWhereNull(
+                                        'marchamo_validacion.id'
+                                    )
+                                    ->orWhereNull(
+                                        'punto_validacion.marchamo_actual_id'
+                                    )
+                                    ->orWhereColumn(
+                                        'punto_validacion.marchamo_actual_id',
+                                        '!=',
+                                        'detalle_validacion.marchamo_nuevo_id'
+                                    )
+                                    ->orWhere(
+                                        'marchamo_validacion.estado',
+                                        '!=',
+                                        'activo'
+                                    )
+                                    ->orWhereNull(
+                                        'marchamo_validacion.activo_actual'
+                                    )
+                                    ->orWhere(
+                                        'marchamo_validacion.activo_actual',
+                                        '!=',
+                                        1
+                                    );
+                            }
+                        );
+                }
+            );
+    }
+
+    /**
      * Obtiene los identificadores del último abastecimiento
      * registrado de cada unidad presente en la página.
      */
@@ -868,19 +1144,9 @@ class AbastecimientoController extends Controller
         }
 
         if ($soloAdministrables) {
-            $base
-                ->where(
-                    'estado',
-                    Abastecimiento::ESTADO_REGISTRADO
-                )
-                ->whereHas(
-                    'empresa',
-                    fn (Builder $query) =>
-                        $query->where(
-                            'estado',
-                            'activa'
-                        )
-                );
+            $this->aplicarSoloAbastecimientosAdministrables(
+                $base
+            );
         }
 
         return [
@@ -954,7 +1220,17 @@ class AbastecimientoController extends Controller
                     )
             )
             ->whereHas(
-                'abastecimientos'
+                'abastecimientos',
+                function (Builder $query) use (
+                    $soloAdministrables
+                ) {
+                    if ($soloAdministrables) {
+                        $this
+                            ->aplicarSoloAbastecimientosAdministrables(
+                                $query
+                            );
+                    }
+                }
             )
             ->orderBy('nombre_comercial')
             ->orderBy('nombre_legal')
@@ -978,10 +1254,10 @@ class AbastecimientoController extends Controller
                     $soloAdministrables
                 ) {
                     if ($soloAdministrables) {
-                        $query->where(
-                            'estado',
-                            Abastecimiento::ESTADO_REGISTRADO
-                        );
+                        $this
+                            ->aplicarSoloAbastecimientosAdministrables(
+                                $query
+                            );
                     }
                 }
             )
@@ -1035,10 +1311,10 @@ class AbastecimientoController extends Controller
                     $soloAdministrables
                 ) {
                     if ($soloAdministrables) {
-                        $query->where(
-                            'estado',
-                            Abastecimiento::ESTADO_REGISTRADO
-                        );
+                        $this
+                            ->aplicarSoloAbastecimientosAdministrables(
+                                $query
+                            );
                     }
                 }
             )
@@ -1074,6 +1350,382 @@ class AbastecimientoController extends Controller
             ->orderBy('nombres')
             ->orderBy('apellidos')
             ->get();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Preparación de modificación
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Prepara el formulario para modificar el último abastecimiento vigente.
+     */
+    private function prepararFormularioEdicion(
+        Request $request,
+        Abastecimiento $abastecimiento,
+        AbastecimientoService $service
+    ): array {
+        $abastecimiento->load([
+            'empresa',
+            'unidad.empresa',
+            'unidad.licencia',
+            'motorista',
+            'abastecimientoAnterior',
+            'gasolineraInterna',
+            'gasolineraExterna',
+            'tanques.tanque',
+            'rutas.ruta.puntoOrigen',
+            'rutas.ruta.puntoDestino',
+            'reemplazoMarchamoEvento.detalles.puntoSeguridad',
+            'reemplazoMarchamoEvento.detalles.marchamoAnterior',
+            'reemplazoMarchamoEvento.detalles.marchamoNuevo',
+        ]);
+
+        $this->validarAbastecimientoEditable(
+            $abastecimiento
+        );
+
+        $unidad = $abastecimiento->unidad;
+
+        if (! $unidad) {
+            abort(
+                404,
+                'La unidad asociada al abastecimiento ya no está disponible.'
+            );
+        }
+
+        /*
+         * Solo se validan los puntos de seguridad que fueron abiertos
+         * específicamente por este abastecimiento.
+         */
+        $eventoMarchamos =
+            $abastecimiento->reemplazoMarchamoEvento;
+
+        if (
+            ! $eventoMarchamos
+            || $eventoMarchamos->estado
+                !== 'registrado'
+            || $eventoMarchamos->detalles->isEmpty()
+        ) {
+            abort(
+                403,
+                'El abastecimiento no posee un evento vigente de marchamos y no puede modificarse.'
+            );
+        }
+
+        foreach (
+            $eventoMarchamos->detalles
+            as $detalle
+        ) {
+            $punto =
+                $detalle->puntoSeguridad;
+
+            $marchamoInstalado =
+                $detalle->marchamoNuevo;
+
+            if (
+                ! $punto
+                || ! $marchamoInstalado
+                || (int) $punto->marchamo_actual_id
+                    !== (int) $marchamoInstalado->id
+                || $marchamoInstalado->estado
+                    !== 'activo'
+                || ! (bool) $marchamoInstalado
+                    ->activo_actual
+            ) {
+                abort(
+                    403,
+                    'Uno de los tapones abiertos por este abastecimiento fue intervenido posteriormente. La operación ya no puede modificarse.'
+                );
+            }
+        }
+
+        $motoristas = Motorista::query()
+            ->where(
+                'empresa_id',
+                $abastecimiento->empresa_id
+            )
+            ->where(
+                'estado',
+                'activo'
+            )
+            ->orderBy('nombres')
+            ->orderBy('apellidos')
+            ->get();
+
+        $gasolinerasInternas =
+            Gasolinera::query()
+                ->with([
+                    'tanques' =>
+                        function ($query) use (
+                            $abastecimiento
+                        ) {
+                            $tanquesOriginales =
+                                $abastecimiento
+                                    ->tanques
+                                    ->pluck('tanque_id')
+                                    ->map(
+                                        fn ($id): int =>
+                                            (int) $id
+                                    )
+                                    ->all();
+
+                            $query
+                                ->where(
+                                    function ($tanqueQuery) use (
+                                        $tanquesOriginales
+                                    ) {
+                                        $tanqueQuery
+                                            ->where(
+                                                'estado',
+                                                'activo'
+                                            )
+                                            ->where(
+                                                'volumen_actual',
+                                                '>',
+                                                0
+                                            );
+
+                                        if (
+                                            ! empty(
+                                                $tanquesOriginales
+                                            )
+                                        ) {
+                                            $tanqueQuery
+                                                ->orWhereIn(
+                                                    'id',
+                                                    $tanquesOriginales
+                                                );
+                                        }
+                                    }
+                                )
+                                ->orderBy('nombre');
+                        },
+                ])
+                ->where(
+                    'empresa_id',
+                    $abastecimiento->empresa_id
+                )
+                ->where(
+                    'estado',
+                    'activa'
+                )
+                ->whereHas(
+                    'tanques',
+                    function ($query) use (
+                        $abastecimiento
+                    ) {
+                        $tanquesOriginales =
+                            $abastecimiento
+                                ->tanques
+                                ->pluck('tanque_id')
+                                ->map(
+                                    fn ($id): int =>
+                                        (int) $id
+                                )
+                                ->all();
+
+                        $query->where(
+                            function ($tanqueQuery) use (
+                                $tanquesOriginales
+                            ) {
+                                $tanqueQuery
+                                    ->where(
+                                        function ($activos) {
+                                            $activos
+                                                ->where(
+                                                    'estado',
+                                                    'activo'
+                                                )
+                                                ->where(
+                                                    'volumen_actual',
+                                                    '>',
+                                                    0
+                                                );
+                                        }
+                                    );
+
+                                if (
+                                    ! empty(
+                                        $tanquesOriginales
+                                    )
+                                ) {
+                                    $tanqueQuery
+                                        ->orWhereIn(
+                                            'id',
+                                            $tanquesOriginales
+                                        );
+                                }
+                            }
+                        );
+                    }
+                )
+                ->orderBy('nombre')
+                ->get();
+
+        $gasolinerasExternas =
+            GasolineraExterna::query()
+                ->where(
+                    'empresa_id',
+                    $abastecimiento->empresa_id
+                )
+                ->where(
+                    'estado',
+                    'activa'
+                )
+                ->orderBy('compania')
+                ->get();
+
+        $rutas = collect();
+
+        if (
+            $abastecimiento->modelo_medicion
+            === Abastecimiento::MODELO_GALONES_VIAJE
+            && $abastecimiento
+                ->abastecimiento_anterior_id
+        ) {
+            $rutas = Ruta::query()
+                ->with([
+                    'puntoOrigen',
+                    'puntoDestino',
+                ])
+                ->where(
+                    'empresa_id',
+                    $abastecimiento->empresa_id
+                )
+                ->where(
+                    'estado',
+                    'activo'
+                )
+                ->whereHas(
+                    'puntoOrigen',
+                    fn (Builder $query) =>
+                        $query->where(
+                            'estado',
+                            'activo'
+                        )
+                )
+                ->whereHas(
+                    'puntoDestino',
+                    fn (Builder $query) =>
+                        $query->where(
+                            'estado',
+                            'activo'
+                        )
+                )
+                ->orderBy('ruta')
+                ->get();
+        }
+
+        $parametrosRetorno =
+            $this->obtenerParametrosRetorno(
+                $request
+            );
+
+        return [
+            'abastecimiento' =>
+                $abastecimiento,
+
+            'unidad' =>
+                $unidad,
+
+            'motoristas' =>
+                $motoristas,
+
+            'gasolinerasInternas' =>
+                $gasolinerasInternas,
+
+            'gasolinerasExternas' =>
+                $gasolinerasExternas,
+
+            'rutas' =>
+                $rutas,
+
+            'eventoMarchamos' =>
+                $eventoMarchamos,
+
+            'detallesMarchamos' =>
+                $eventoMarchamos
+                    ->detalles
+                    ->values(),
+
+            'requiereRutas' =>
+                $abastecimiento->modelo_medicion
+                === Abastecimiento::MODELO_GALONES_VIAJE
+                && ! is_null(
+                    $abastecimiento
+                        ->abastecimiento_anterior_id
+                ),
+
+            'tiposOrigen' => [
+                Abastecimiento::ORIGEN_INTERNO =>
+                    'Gasolinera interna',
+
+                Abastecimiento::ORIGEN_EXTERNO =>
+                    'Gasolinera externa',
+            ],
+
+            'abastecimientoVersion' =>
+                $service->versionAbastecimiento(
+                    $abastecimiento
+                ),
+
+            'parametrosRetorno' =>
+                $parametrosRetorno,
+        ];
+    }
+
+    /**
+     * Confirma que el abastecimiento todavía puede abrirse en edición.
+     */
+    private function validarAbastecimientoEditable(
+        Abastecimiento $abastecimiento
+    ): void {
+        if (! $abastecimiento->estaRegistrado()) {
+            abort(
+                403,
+                'El abastecimiento no se encuentra registrado y no puede modificarse.'
+            );
+        }
+
+        if (
+            ! $abastecimiento->empresa
+            || $abastecimiento->empresa->estado
+                !== 'activa'
+        ) {
+            abort(
+                403,
+                'La empresa del abastecimiento está inactiva.'
+            );
+        }
+
+        $ultimoAbastecimiento =
+            Abastecimiento::query()
+                ->where(
+                    'unidad_id',
+                    $abastecimiento->unidad_id
+                )
+                ->where(
+                    'estado',
+                    Abastecimiento::ESTADO_REGISTRADO
+                )
+                ->orderByDesc(
+                    'fecha_hora_abastecimiento'
+                )
+                ->orderByDesc('id')
+                ->first();
+
+        if (
+            ! $ultimoAbastecimiento
+            || (int) $ultimoAbastecimiento->id
+                !== (int) $abastecimiento->id
+        ) {
+            abort(
+                403,
+                'Solo el último abastecimiento vigente de la unidad puede modificarse.'
+            );
+        }
     }
 
     /*

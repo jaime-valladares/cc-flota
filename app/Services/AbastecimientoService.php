@@ -840,6 +840,1788 @@ class AbastecimientoService
         );
     }
 
+
+    /**
+     * Modifica de forma atómica el último abastecimiento registrado
+     * de una unidad.
+     *
+     * Reglas principales:
+     *
+     * - el abastecimiento debe continuar registrado;
+     * - debe seguir siendo el último registro vigente de la unidad;
+     * - la versión recibida debe coincidir con la versión almacenada;
+     * - únicamente se revisan los tapones abiertos por esta operación;
+     * - los marchamos instalados en esos tapones deben continuar siendo
+     *   los marchamos actuales;
+     * - los puntos de seguridad afectados no pueden cambiar;
+     * - los ajustes de inventario se aplican por diferencia sobre el
+     *   inventario actual de cada tanque.
+     */
+    public function modificar(
+        Abastecimiento $abastecimiento,
+        array $datos,
+        int $usuarioId
+    ): Abastecimiento {
+        return DB::transaction(
+            function () use (
+                $abastecimiento,
+                $datos,
+                $usuarioId
+            ): Abastecimiento {
+                $fechaOperacion = now();
+
+                /*
+                |--------------------------------------------------------------------------
+                | Bloqueo del abastecimiento y validación de concurrencia
+                |--------------------------------------------------------------------------
+                */
+
+                $abastecimientoBloqueado =
+                    Abastecimiento::query()
+                        ->whereKey(
+                            $abastecimiento->id
+                        )
+                        ->lockForUpdate()
+                        ->first();
+
+                if (! $abastecimientoBloqueado) {
+                    $this->fallar(
+                        'abastecimiento',
+                        'El abastecimiento seleccionado ya no existe.'
+                    );
+                }
+
+                if (
+                    $abastecimientoBloqueado->estado
+                    !== Abastecimiento::ESTADO_REGISTRADO
+                ) {
+                    $this->fallar(
+                        'abastecimiento',
+                        'El abastecimiento ya no se encuentra registrado y no puede modificarse.'
+                    );
+                }
+
+                $versionFormulario = trim(
+                    (string) (
+                        $datos['abastecimiento_version']
+                        ?? ''
+                    )
+                );
+
+                $versionReal =
+                    $this->versionAbastecimiento(
+                        $abastecimientoBloqueado
+                    );
+
+                if (
+                    $versionFormulario === ''
+                    || ! hash_equals(
+                        $versionReal,
+                        $versionFormulario
+                    )
+                ) {
+                    $this->fallar(
+                        'abastecimiento',
+                        'El abastecimiento fue modificado después de abrir el formulario. Actualice la página antes de continuar.'
+                    );
+                }
+
+                $ultimoAbastecimiento =
+                    Abastecimiento::query()
+                        ->where(
+                            'unidad_id',
+                            $abastecimientoBloqueado
+                                ->unidad_id
+                        )
+                        ->where(
+                            'estado',
+                            Abastecimiento::ESTADO_REGISTRADO
+                        )
+                        ->orderByDesc(
+                            'fecha_hora_abastecimiento'
+                        )
+                        ->orderByDesc('id')
+                        ->lockForUpdate()
+                        ->first();
+
+                if (
+                    ! $ultimoAbastecimiento
+                    || (int) $ultimoAbastecimiento->id
+                        !== (int) $abastecimientoBloqueado->id
+                ) {
+                    $this->fallar(
+                        'abastecimiento',
+                        'Este abastecimiento dejó de ser el último registro vigente de la unidad y ya no puede modificarse.'
+                    );
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Unidad y empresa
+                |--------------------------------------------------------------------------
+                */
+
+                $unidad = Unidad::query()
+                    ->with([
+                        'empresa',
+                        'licencia',
+                    ])
+                    ->whereKey(
+                        $abastecimientoBloqueado
+                            ->unidad_id
+                    )
+                    ->lockForUpdate()
+                    ->first();
+
+                if (! $unidad) {
+                    $this->fallar(
+                        'unidad_id',
+                        'La unidad asociada al abastecimiento ya no existe.'
+                    );
+                }
+
+                $empresaId = (int)
+                    $abastecimientoBloqueado
+                        ->empresa_id;
+
+                if (
+                    (int) ($datos['empresa_id'] ?? 0)
+                        !== $empresaId
+                    || (int) ($datos['unidad_id'] ?? 0)
+                        !== (int) $unidad->id
+                ) {
+                    $this->fallar(
+                        'unidad_id',
+                        'La empresa y la unidad del abastecimiento no pueden cambiarse.'
+                    );
+                }
+
+                if (
+                    ! $unidad->empresa
+                    || $unidad->empresa->estado
+                        !== 'activa'
+                ) {
+                    $this->fallar(
+                        'empresa_id',
+                        'La empresa de la unidad está inactiva.'
+                    );
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Motorista
+                |--------------------------------------------------------------------------
+                */
+
+                $motorista = Motorista::query()
+                    ->whereKey(
+                        (int) ($datos['motorista_id'] ?? 0)
+                    )
+                    ->where(
+                        'empresa_id',
+                        $empresaId
+                    )
+                    ->where(
+                        'estado',
+                        'activo'
+                    )
+                    ->lockForUpdate()
+                    ->first();
+
+                if (! $motorista) {
+                    $this->fallar(
+                        'motorista_id',
+                        'El motorista no está activo o no pertenece a la empresa de la unidad.'
+                    );
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Abastecimiento anterior y lecturas
+                |--------------------------------------------------------------------------
+                */
+
+                $abastecimientoAnterior = null;
+
+                if (
+                    $abastecimientoBloqueado
+                        ->abastecimiento_anterior_id
+                ) {
+                    $abastecimientoAnterior =
+                        Abastecimiento::query()
+                            ->whereKey(
+                                $abastecimientoBloqueado
+                                    ->abastecimiento_anterior_id
+                            )
+                            ->lockForUpdate()
+                            ->first();
+                }
+
+                $modeloMedicion =
+                    (string)
+                    $abastecimientoBloqueado
+                        ->modelo_medicion;
+
+                if (
+                    ! in_array(
+                        $modeloMedicion,
+                        [
+                            Abastecimiento::MODELO_GALONES_KILOMETRO,
+                            Abastecimiento::MODELO_GALONES_HORA,
+                            Abastecimiento::MODELO_GALONES_VIAJE,
+                        ],
+                        true
+                    )
+                ) {
+                    $this->fallar(
+                        'unidad_id',
+                        'El abastecimiento no posee un modelo de medición válido.'
+                    );
+                }
+
+                $kilometrajeActual = $this->numero(
+                    $datos['kilometraje_actual']
+                        ?? null,
+                    'kilometraje_actual',
+                    'Debe ingresar el kilometraje actual de la unidad.'
+                );
+
+                $horometroActual = null;
+
+                if (
+                    $modeloMedicion
+                    === Abastecimiento::MODELO_GALONES_HORA
+                ) {
+                    $horometroActual = $this->numero(
+                        $datos['horometro_actual']
+                            ?? null,
+                        'horometro_actual',
+                        'Debe ingresar la lectura actual del horómetro.'
+                    );
+                }
+
+                $volumenInicial = $this->numero(
+                    $datos['volumen_inicial']
+                        ?? null,
+                    'volumen_inicial',
+                    'Debe ingresar el combustible existente antes de la carga.'
+                );
+
+                if ($kilometrajeActual < 0) {
+                    $this->fallar(
+                        'kilometraje_actual',
+                        'El kilometraje actual no puede ser negativo.'
+                    );
+                }
+
+                if (
+                    ! is_null($horometroActual)
+                    && $horometroActual < 0
+                ) {
+                    $this->fallar(
+                        'horometro_actual',
+                        'La lectura del horómetro no puede ser negativa.'
+                    );
+                }
+
+                if ($volumenInicial < 0) {
+                    $this->fallar(
+                        'volumen_inicial',
+                        'El combustible inicial no puede ser negativo.'
+                    );
+                }
+
+                $kilometrajeAnterior =
+                    $abastecimientoAnterior
+                        ? (float) (
+                            $abastecimientoAnterior
+                                ->kilometraje_actual
+                            ?? $abastecimientoAnterior
+                                ->lectura_actual
+                        )
+                        : null;
+
+                $diferenciaKilometraje = null;
+
+                if (! is_null($kilometrajeAnterior)) {
+                    if (
+                        $kilometrajeActual
+                        < $kilometrajeAnterior
+                    ) {
+                        $this->fallar(
+                            'kilometraje_actual',
+                            'El kilometraje actual no puede ser menor que el kilometraje del abastecimiento anterior.'
+                        );
+                    }
+
+                    $diferenciaKilometraje = round(
+                        $kilometrajeActual
+                        - $kilometrajeAnterior,
+                        2
+                    );
+                }
+
+                $horometroAnterior = null;
+                $diferenciaHorometro = null;
+
+                if (
+                    $modeloMedicion
+                    === Abastecimiento::MODELO_GALONES_HORA
+                    && $abastecimientoAnterior
+                ) {
+                    $horometroAnterior = filled(
+                        $abastecimientoAnterior
+                            ->horometro_actual
+                    )
+                        ? (float)
+                            $abastecimientoAnterior
+                                ->horometro_actual
+                        : null;
+
+                    if (is_null($horometroAnterior)) {
+                        $this->fallar(
+                            'horometro_actual',
+                            'El abastecimiento anterior no posee una lectura de horómetro válida.'
+                        );
+                    }
+
+                    if (
+                        $horometroActual
+                        < $horometroAnterior
+                    ) {
+                        $this->fallar(
+                            'horometro_actual',
+                            'La lectura actual del horómetro no puede ser menor que la lectura anterior.'
+                        );
+                    }
+
+                    $diferenciaHorometro = round(
+                        $horometroActual
+                        - $horometroAnterior,
+                        2
+                    );
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Marchamos de los tapones abiertos por esta operación
+                |--------------------------------------------------------------------------
+                */
+
+                $marchamosProcesados =
+                    $this->prepararMarchamosModificacion(
+                        $datos,
+                        $abastecimientoBloqueado,
+                        $unidad,
+                        $empresaId
+                    );
+
+                /*
+                |--------------------------------------------------------------------------
+                | Origen y ajuste de inventario
+                |--------------------------------------------------------------------------
+                */
+
+                $tipoOrigen = (string) (
+                    $datos['tipo_origen']
+                    ?? ''
+                );
+
+                if (
+                    ! in_array(
+                        $tipoOrigen,
+                        [
+                            Abastecimiento::ORIGEN_INTERNO,
+                            Abastecimiento::ORIGEN_EXTERNO,
+                        ],
+                        true
+                    )
+                ) {
+                    $this->fallar(
+                        'tipo_origen',
+                        'Debe seleccionar un origen de combustible válido.'
+                    );
+                }
+
+                $gasolineraInterna = null;
+                $gasolineraExterna = null;
+                $tanquesProcesados = collect();
+                $ajustesInventario = collect();
+                $precioGalon = null;
+                $totalPagado = null;
+                $moneda = null;
+
+                if (
+                    $tipoOrigen
+                    === Abastecimiento::ORIGEN_INTERNO
+                ) {
+                    [
+                        $gasolineraInterna,
+                        $tanquesProcesados,
+                        $ajustesInventario,
+                        $volumenCargado,
+                    ] = $this
+                        ->prepararOrigenInternoModificacion(
+                            $datos,
+                            $abastecimientoBloqueado,
+                            $empresaId
+                        );
+
+                    $origenNombre =
+                        $gasolineraInterna->nombre;
+                } else {
+                    [
+                        $gasolineraExterna,
+                        $volumenCargado,
+                        $precioGalon,
+                        $totalPagado,
+                    ] = $this->prepararOrigenExterno(
+                        $datos,
+                        $empresaId
+                    );
+
+                    [
+                        $tanquesProcesados,
+                        $ajustesInventario,
+                    ] = $this
+                        ->prepararRetiroOrigenInternoAnterior(
+                            $abastecimientoBloqueado
+                        );
+
+                    $moneda = 'USD';
+
+                    $origenNombre = trim(
+                        $gasolineraExterna->compania
+                        . ' — '
+                        . $gasolineraExterna->direccion
+                    );
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Capacidad y cierre de ciclo
+                |--------------------------------------------------------------------------
+                */
+
+                $capacidadCubierta = round(
+                    (float)
+                    $abastecimientoBloqueado
+                        ->capacidad_cubierta_snapshot,
+                    2
+                );
+
+                if ($capacidadCubierta <= 0) {
+                    $capacidadCubierta = round(
+                        (float)
+                        $unidad->capacidad_cubierta,
+                        2
+                    );
+                }
+
+                if ($capacidadCubierta <= 0) {
+                    $this->fallar(
+                        'unidad_id',
+                        'La unidad no posee una capacidad cubierta válida.'
+                    );
+                }
+
+                $volumenFinal = round(
+                    $volumenInicial
+                    + $volumenCargado,
+                    2
+                );
+
+                if (
+                    $volumenFinal
+                    > $capacidadCubierta
+                ) {
+                    $this->fallar(
+                        'volumen_inicial',
+                        'El combustible inicial más la carga excede la capacidad cubierta de la unidad.'
+                    );
+                }
+
+                $volumenFinalAnterior = null;
+                $combustibleConsumido = null;
+                $combustibleAdicional = 0.0;
+
+                if ($abastecimientoAnterior) {
+                    $volumenFinalAnterior = round(
+                        (float)
+                        $abastecimientoAnterior
+                            ->volumen_final,
+                        2
+                    );
+
+                    if (
+                        $volumenInicial
+                        <= $volumenFinalAnterior
+                    ) {
+                        $combustibleConsumido = round(
+                            $volumenFinalAnterior
+                            - $volumenInicial,
+                            2
+                        );
+                    } else {
+                        $combustibleAdicional = round(
+                            $volumenInicial
+                            - $volumenFinalAnterior,
+                            2
+                        );
+                    }
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Rutas y rendimiento
+                |--------------------------------------------------------------------------
+                */
+
+                $rutasProcesadas =
+                    $this->prepararRutas(
+                        $datos,
+                        $unidad,
+                        $empresaId,
+                        $abastecimientoAnterior
+                    );
+
+                $totalRutas =
+                    $rutasProcesadas->count();
+
+                $kilometrosTeoricos =
+                    $totalRutas > 0
+                        ? round(
+                            $rutasProcesadas->sum(
+                                'kilometros_aplicados'
+                            ),
+                            2
+                        )
+                        : null;
+
+                $galonesTeoricos =
+                    $totalRutas > 0
+                        ? round(
+                            $rutasProcesadas->sum(
+                                'galones_aplicados'
+                            ),
+                            2
+                        )
+                        : null;
+
+                $galonesPorKilometro = null;
+                $kilometrosPorGalon = null;
+                $galonesPorHora = null;
+
+                if (
+                    ! is_null($combustibleConsumido)
+                    && $combustibleConsumido > 0
+                    && $combustibleAdicional <= 0
+                ) {
+                    if (
+                        in_array(
+                            $modeloMedicion,
+                            [
+                                Abastecimiento::MODELO_GALONES_KILOMETRO,
+                                Abastecimiento::MODELO_GALONES_VIAJE,
+                            ],
+                            true
+                        )
+                        && ! is_null($diferenciaKilometraje)
+                        && $diferenciaKilometraje > 0
+                    ) {
+                        $galonesPorKilometro = round(
+                            $combustibleConsumido
+                            / $diferenciaKilometraje,
+                            6
+                        );
+
+                        $kilometrosPorGalon = round(
+                            $diferenciaKilometraje
+                            / $combustibleConsumido,
+                            6
+                        );
+                    }
+
+                    if (
+                        $modeloMedicion
+                        === Abastecimiento::MODELO_GALONES_HORA
+                        && ! is_null($diferenciaHorometro)
+                        && $diferenciaHorometro > 0
+                    ) {
+                        $galonesPorHora = round(
+                            $combustibleConsumido
+                            / $diferenciaHorometro,
+                            6
+                        );
+                    }
+                }
+
+                $diferenciaKilometrosTeoricos = null;
+                $diferenciaGalonesTeoricos = null;
+
+                if (
+                    $modeloMedicion
+                    === Abastecimiento::MODELO_GALONES_VIAJE
+                    && ! is_null($kilometrosTeoricos)
+                    && ! is_null($diferenciaKilometraje)
+                ) {
+                    $diferenciaKilometrosTeoricos =
+                        round(
+                            $diferenciaKilometraje
+                            - $kilometrosTeoricos,
+                            2
+                        );
+
+                    if (
+                        ! is_null($combustibleConsumido)
+                        && ! is_null($galonesTeoricos)
+                    ) {
+                        $diferenciaGalonesTeoricos =
+                            round(
+                                $combustibleConsumido
+                                - $galonesTeoricos,
+                                2
+                            );
+                    }
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Aplicar ajustes de inventario
+                |--------------------------------------------------------------------------
+                */
+
+                $this->aplicarAjustesInventarioModificacion(
+                    $abastecimientoBloqueado,
+                    $ajustesInventario,
+                    $fechaOperacion,
+                    $usuarioId
+                );
+
+                /*
+                |--------------------------------------------------------------------------
+                | Reemplazar detalles de tanques y rutas
+                |--------------------------------------------------------------------------
+                */
+
+                AbastecimientoTanque::query()
+                    ->where(
+                        'abastecimiento_id',
+                        $abastecimientoBloqueado->id
+                    )
+                    ->delete();
+
+                if (
+                    $tipoOrigen
+                    === Abastecimiento::ORIGEN_INTERNO
+                ) {
+                    foreach (
+                        $tanquesProcesados
+                        as $procesado
+                    ) {
+                        /** @var Tanque $tanque */
+                        $tanque = $procesado['tanque'];
+
+                        AbastecimientoTanque::create([
+                            'abastecimiento_id' =>
+                                $abastecimientoBloqueado->id,
+
+                            'tanque_id' =>
+                                $tanque->id,
+
+                            'orden' =>
+                                $procesado['orden'],
+
+                            'tanque_nombre_snapshot' =>
+                                $tanque->nombre,
+
+                            'capacidad_total_snapshot' =>
+                                $tanque->capacidad_total,
+
+                            'volumen_minimo_alerta_snapshot' =>
+                                $tanque->volumen_minimo_alerta,
+
+                            'inventario_anterior' =>
+                                $procesado[
+                                    'inventario_anterior_snapshot'
+                                ],
+
+                            'galones_retirados' =>
+                                $procesado[
+                                    'galones_retirados'
+                                ],
+
+                            'inventario_resultante' =>
+                                $procesado[
+                                    'inventario_resultante_snapshot'
+                                ],
+
+                            'quedo_bajo_minimo' =>
+                                $procesado[
+                                    'quedo_bajo_minimo'
+                                ],
+                        ]);
+                    }
+                }
+
+                AbastecimientoRuta::query()
+                    ->where(
+                        'abastecimiento_id',
+                        $abastecimientoBloqueado->id
+                    )
+                    ->delete();
+
+                foreach (
+                    $rutasProcesadas
+                    as $rutaProcesada
+                ) {
+                    AbastecimientoRuta::create(
+                        array_merge(
+                            [
+                                'abastecimiento_id' =>
+                                    $abastecimientoBloqueado->id,
+                            ],
+                            $rutaProcesada
+                        )
+                    );
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Actualizar códigos de marchamo
+                |--------------------------------------------------------------------------
+                */
+
+                foreach (
+                    $marchamosProcesados
+                    as $procesado
+                ) {
+                    /** @var Marchamo $marchamoActual */
+                    $marchamoActual =
+                        $procesado['marchamo_actual'];
+
+                    $marchamoActual->update([
+                        'codigo_marchamo' =>
+                            $procesado[
+                                'nuevo_codigo_marchamo'
+                            ],
+
+                        'actualizado_por' =>
+                            $usuarioId,
+                    ]);
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Actualizar cabecera
+                |--------------------------------------------------------------------------
+                */
+
+                $empresaNombre =
+                    $unidad->empresa?->nombre_comercial
+                    ?: $unidad->empresa?->nombre_legal
+                    ?: $abastecimientoBloqueado
+                        ->empresa_nombre_snapshot;
+
+                $motoristaNombre = trim(
+                    $motorista->nombres
+                    . ' '
+                    . $motorista->apellidos
+                );
+
+                $abastecimientoBloqueado->update([
+                    'motorista_id' =>
+                        $motorista->id,
+
+                    'empresa_nombre_snapshot' =>
+                        $empresaNombre,
+
+                    'unidad_placa_snapshot' =>
+                        $unidad->placa,
+
+                    'unidad_marca_snapshot' =>
+                        $unidad->marca,
+
+                    'motorista_nombre_snapshot' =>
+                        $motoristaNombre,
+
+                    'motorista_licencia_snapshot' =>
+                        $motorista->licencia,
+
+                    /*
+                     * La fecha_hora_abastecimiento no cambia.
+                     */
+
+                    'lectura_actual' =>
+                        $kilometrajeActual,
+
+                    'lectura_anterior' =>
+                        $kilometrajeAnterior,
+
+                    'diferencia_lectura' =>
+                        $diferenciaKilometraje,
+
+                    'kilometraje_actual' =>
+                        $kilometrajeActual,
+
+                    'kilometraje_anterior' =>
+                        $kilometrajeAnterior,
+
+                    'diferencia_kilometraje' =>
+                        $diferenciaKilometraje,
+
+                    'horometro_actual' =>
+                        $horometroActual,
+
+                    'horometro_anterior' =>
+                        $horometroAnterior,
+
+                    'diferencia_horometro' =>
+                        $diferenciaHorometro,
+
+                    'volumen_inicial' =>
+                        $volumenInicial,
+
+                    'volumen_cargado' =>
+                        $volumenCargado,
+
+                    'volumen_final' =>
+                        $volumenFinal,
+
+                    'capacidad_cubierta_snapshot' =>
+                        $capacidadCubierta,
+
+                    'volumen_final_anterior' =>
+                        $volumenFinalAnterior,
+
+                    'combustible_consumido_ciclo' =>
+                        $combustibleConsumido,
+
+                    'combustible_adicional_no_explicado' =>
+                        $combustibleAdicional,
+
+                    'tipo_origen' =>
+                        $tipoOrigen,
+
+                    'gasolinera_interna_id' =>
+                        $gasolineraInterna?->id,
+
+                    'gasolinera_externa_id' =>
+                        $gasolineraExterna?->id,
+
+                    'origen_nombre_snapshot' =>
+                        $origenNombre,
+
+                    'precio_galon' =>
+                        $precioGalon,
+
+                    'total_pagado' =>
+                        $totalPagado,
+
+                    'moneda' =>
+                        $moneda,
+
+                    'total_rutas' =>
+                        $totalRutas,
+
+                    'kilometros_teoricos' =>
+                        $kilometrosTeoricos,
+
+                    'galones_teoricos' =>
+                        $galonesTeoricos,
+
+                    'galones_por_kilometro' =>
+                        $galonesPorKilometro,
+
+                    'kilometros_por_galon' =>
+                        $kilometrosPorGalon,
+
+                    'galones_por_hora' =>
+                        $galonesPorHora,
+
+                    'diferencia_kilometros_teoricos' =>
+                        $diferenciaKilometrosTeoricos,
+
+                    'diferencia_galones_teoricos' =>
+                        $diferenciaGalonesTeoricos,
+
+                    'total_tapones_abiertos' =>
+                        $marchamosProcesados->count(),
+
+                    'total_marchamos_reemplazados' =>
+                        $marchamosProcesados->count(),
+                ]);
+
+                return $abastecimientoBloqueado->fresh([
+                    'empresa',
+                    'unidad',
+                    'motorista',
+                    'tanques',
+                    'rutas',
+                    'movimientosInventario',
+                    'reemplazoMarchamoEvento.detalles',
+                ]);
+            },
+            3
+        );
+    }
+
+    /**
+     * Genera la versión utilizada para controlar concurrencia.
+     */
+    public function versionAbastecimiento(
+        Abastecimiento $abastecimiento
+    ): string {
+        return hash(
+            'sha256',
+            implode(
+                '|',
+                [
+                    (string) $abastecimiento->id,
+                    (string) $abastecimiento->estado,
+                    optional(
+                        $abastecimiento->updated_at
+                    )?->format('Y-m-d H:i:s.u')
+                        ?? 'sin-version',
+                ]
+            )
+        );
+    }
+
+    /**
+     * Verifica y prepara únicamente los marchamos de los tapones
+     * abiertos por el abastecimiento original.
+     */
+    private function prepararMarchamosModificacion(
+        array $datos,
+        Abastecimiento $abastecimiento,
+        Unidad $unidad,
+        int $empresaId
+    ): Collection {
+        $evento = ReemplazoMarchamoEvento::query()
+            ->where(
+                'abastecimiento_id',
+                $abastecimiento->id
+            )
+            ->where(
+                'origen_evento',
+                ReemplazoMarchamoEvento::
+                    ORIGEN_ABASTECIMIENTO
+            )
+            ->where(
+                'estado',
+                'registrado'
+            )
+            ->lockForUpdate()
+            ->first();
+
+        if (! $evento) {
+            $this->fallar(
+                'marchamos',
+                'El abastecimiento no posee un evento vigente de reemplazo de marchamos.'
+            );
+        }
+
+        $detalles = ReemplazoMarchamoDetalle::query()
+            ->where(
+                'reemplazo_evento_id',
+                $evento->id
+            )
+            ->lockForUpdate()
+            ->get()
+            ->keyBy('punto_seguridad_id');
+
+        if ($detalles->isEmpty()) {
+            $this->fallar(
+                'marchamos',
+                'El abastecimiento no posee tapones registrados para validar.'
+            );
+        }
+
+        $lineas = collect(
+            $datos['marchamos'] ?? []
+        )
+            ->map(
+                function ($linea): array {
+                    return [
+                        'punto_seguridad_id' =>
+                            (int) (
+                                $linea[
+                                    'punto_seguridad_id'
+                                ]
+                                ?? 0
+                            ),
+
+                        'marchamo_actual_id' =>
+                            (int) (
+                                $linea[
+                                    'marchamo_actual_id'
+                                ]
+                                ?? 0
+                            ),
+
+                        'nuevo_codigo_marchamo' =>
+                            trim(
+                                (string) (
+                                    $linea[
+                                        'nuevo_codigo_marchamo'
+                                    ]
+                                    ?? ''
+                                )
+                            ),
+                    ];
+                }
+            )
+            ->values();
+
+        $puntosOriginales = $detalles
+            ->keys()
+            ->map(
+                fn ($id): int => (int) $id
+            )
+            ->sort()
+            ->values();
+
+        $puntosFormulario = $lineas
+            ->pluck('punto_seguridad_id')
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
+
+        if (
+            $puntosFormulario->all()
+            !== $puntosOriginales->all()
+        ) {
+            $this->fallar(
+                'marchamos',
+                'Los tapones abiertos por el abastecimiento original no pueden agregarse, eliminarse ni sustituirse durante la edición.'
+            );
+        }
+
+        $puntos = PuntoSeguridadUnidad::query()
+            ->where(
+                'unidad_id',
+                $unidad->id
+            )
+            ->whereIn(
+                'id',
+                $puntosOriginales
+            )
+            ->lockForUpdate()
+            ->get()
+            ->keyBy('id');
+
+        if (
+            $puntos->count()
+            !== $puntosOriginales->count()
+        ) {
+            $this->fallar(
+                'marchamos',
+                'Uno de los tapones afectados por el abastecimiento ya no está disponible.'
+            );
+        }
+
+        $marchamoIdsOriginales = $detalles
+            ->pluck('marchamo_nuevo_id')
+            ->map(
+                fn ($id): int => (int) $id
+            )
+            ->values();
+
+        $marchamosActuales = Marchamo::query()
+            ->whereIn(
+                'id',
+                $marchamoIdsOriginales
+            )
+            ->lockForUpdate()
+            ->get()
+            ->keyBy('id');
+
+        if (
+            $marchamosActuales->count()
+            !== $marchamoIdsOriginales
+                ->unique()
+                ->count()
+        ) {
+            $this->fallar(
+                'marchamos',
+                'Uno de los marchamos instalados por el abastecimiento ya no existe.'
+            );
+        }
+
+        $procesados = $lineas->map(
+            function (
+                array $linea
+            ) use (
+                $detalles,
+                $puntos,
+                $marchamosActuales,
+                $empresaId,
+                $unidad
+            ): array {
+                $detalle = $detalles->get(
+                    $linea['punto_seguridad_id']
+                );
+
+                $punto = $puntos->get(
+                    $linea['punto_seguridad_id']
+                );
+
+                $marchamoActual =
+                    $marchamosActuales->get(
+                        (int) $detalle
+                            ->marchamo_nuevo_id
+                    );
+
+                if (
+                    ! $detalle
+                    || ! $punto
+                    || ! $marchamoActual
+                ) {
+                    $this->fallar(
+                        'marchamos',
+                        'No fue posible validar uno de los tapones afectados.'
+                    );
+                }
+
+                if (
+                    (int) $punto->marchamo_actual_id
+                        !== (int) $marchamoActual->id
+                    || (int) $linea['marchamo_actual_id']
+                        !== (int) $marchamoActual->id
+                    || $marchamoActual->estado
+                        !== 'activo'
+                    || ! (bool) $marchamoActual
+                        ->activo_actual
+                ) {
+                    $this->fallar(
+                        'marchamos',
+                        "El punto {$punto->nombre_punto} fue intervenido después del abastecimiento. La operación ya no puede modificarse."
+                    );
+                }
+
+                if (
+                    (int) $marchamoActual->empresa_id
+                        !== $empresaId
+                    || (int) $marchamoActual->unidad_id
+                        !== (int) $unidad->id
+                    || (int) $marchamoActual
+                        ->punto_seguridad_id
+                        !== (int) $punto->id
+                ) {
+                    $this->fallar(
+                        'marchamos',
+                        'Uno de los marchamos actuales no corresponde a la unidad o al punto esperado.'
+                    );
+                }
+
+                if (
+                    ! preg_match(
+                        '/^\d{7}$/',
+                        $linea[
+                            'nuevo_codigo_marchamo'
+                        ]
+                    )
+                ) {
+                    $this->fallar(
+                        'marchamos',
+                        'Cada código de marchamo debe contener exactamente 7 dígitos.'
+                    );
+                }
+
+                return [
+                    'punto' =>
+                        $punto,
+
+                    'detalle' =>
+                        $detalle,
+
+                    'marchamo_actual' =>
+                        $marchamoActual,
+
+                    'nuevo_codigo_marchamo' =>
+                        $linea[
+                            'nuevo_codigo_marchamo'
+                        ],
+                ];
+            }
+        );
+
+        $codigos = $procesados->pluck(
+            'nuevo_codigo_marchamo'
+        );
+
+        if (
+            $codigos->count()
+            !== $codigos->unique()->count()
+        ) {
+            $this->fallar(
+                'marchamos',
+                'No puede repetir un código de marchamo dentro de la operación.'
+            );
+        }
+
+        $idsEditados = $procesados
+            ->pluck('marchamo_actual.id')
+            ->map(
+                fn ($id): int => (int) $id
+            )
+            ->all();
+
+        $codigosExistentes = Marchamo::query()
+            ->whereIn(
+                'codigo_marchamo',
+                $codigos
+            )
+            ->whereNotIn(
+                'id',
+                $idsEditados
+            )
+            ->lockForUpdate()
+            ->pluck('codigo_marchamo');
+
+        if ($codigosExistentes->isNotEmpty()) {
+            $this->fallar(
+                'marchamos',
+                'Los siguientes códigos ya existen en el sistema: '
+                . $codigosExistentes
+                    ->unique()
+                    ->implode(', ')
+            );
+        }
+
+        return $procesados;
+    }
+
+    /**
+     * Prepara un origen interno modificado y calcula el ajuste neto
+     * que debe aplicarse sobre el inventario actual.
+     */
+    private function prepararOrigenInternoModificacion(
+        array $datos,
+        Abastecimiento $abastecimiento,
+        int $empresaId
+    ): array {
+        $gasolinera = Gasolinera::query()
+            ->with('empresa')
+            ->whereKey(
+                (int) (
+                    $datos['gasolinera_interna_id']
+                    ?? 0
+                )
+            )
+            ->where(
+                'empresa_id',
+                $empresaId
+            )
+            ->where(
+                'estado',
+                'activa'
+            )
+            ->lockForUpdate()
+            ->first();
+
+        if (
+            ! $gasolinera
+            || ! $gasolinera->empresa
+            || $gasolinera->empresa->estado
+                !== 'activa'
+        ) {
+            $this->fallar(
+                'gasolinera_interna_id',
+                'La gasolinera interna no está disponible.'
+            );
+        }
+
+        $lineas = collect(
+            $datos['tanques'] ?? []
+        )
+            ->map(
+                function ($linea): array {
+                    return [
+                        'tanque_id' =>
+                            (int) (
+                                $linea['tanque_id']
+                                ?? 0
+                            ),
+
+                        'galones' =>
+                            round(
+                                (float) (
+                                    $linea['galones']
+                                    ?? 0
+                                ),
+                                2
+                            ),
+                    ];
+                }
+            )
+            ->filter(
+                fn (array $linea): bool =>
+                    $linea['tanque_id'] > 0
+                    && $linea['galones'] > 0
+            )
+            ->values();
+
+        if ($lineas->isEmpty()) {
+            $this->fallar(
+                'tanques',
+                'Debe indicar al menos un tanque con una cantidad mayor que cero.'
+            );
+        }
+
+        if (
+            $lineas->pluck('tanque_id')->count()
+            !== $lineas
+                ->pluck('tanque_id')
+                ->unique()
+                ->count()
+        ) {
+            $this->fallar(
+                'tanques',
+                'No puede repetir el mismo tanque dentro del abastecimiento.'
+            );
+        }
+
+        $detallesAnteriores =
+            AbastecimientoTanque::query()
+                ->where(
+                    'abastecimiento_id',
+                    $abastecimiento->id
+                )
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('tanque_id');
+
+        $idsTanques = $detallesAnteriores
+            ->keys()
+            ->merge(
+                $lineas->pluck('tanque_id')
+            )
+            ->map(
+                fn ($id): int => (int) $id
+            )
+            ->unique()
+            ->sort()
+            ->values();
+
+        $tanques = Tanque::query()
+            ->whereIn(
+                'id',
+                $idsTanques
+            )
+            ->lockForUpdate()
+            ->get()
+            ->keyBy('id');
+
+        if (
+            $tanques->count()
+            !== $idsTanques->count()
+        ) {
+            $this->fallar(
+                'tanques',
+                'Uno o más tanques relacionados con la modificación ya no existen.'
+            );
+        }
+
+        foreach (
+            $lineas
+            as $indice => $linea
+        ) {
+            $tanque = $tanques->get(
+                $linea['tanque_id']
+            );
+
+            if (
+                (int) $tanque->gasolinera_id
+                    !== (int) $gasolinera->id
+                || $tanque->estado !== 'activo'
+            ) {
+                $this->fallar(
+                    "tanques.{$indice}.tanque_id",
+                    'Uno de los tanques seleccionados no está activo o no pertenece a la gasolinera indicada.'
+                );
+            }
+        }
+
+        $nuevosPorTanque = $lineas
+            ->keyBy('tanque_id');
+
+        $procesados = collect();
+        $ajustes = collect();
+
+        foreach (
+            $idsTanques
+            as $tanqueId
+        ) {
+            /** @var Tanque $tanque */
+            $tanque = $tanques->get(
+                $tanqueId
+            );
+
+            $detalleAnterior =
+                $detallesAnteriores->get(
+                    $tanqueId
+                );
+
+            $galonesAnteriores =
+                $detalleAnterior
+                    ? round(
+                        (float)
+                        $detalleAnterior
+                            ->galones_retirados,
+                        2
+                    )
+                    : 0.0;
+
+            $lineaNueva =
+                $nuevosPorTanque->get(
+                    $tanqueId
+                );
+
+            $galonesNuevos =
+                $lineaNueva
+                    ? round(
+                        (float)
+                        $lineaNueva['galones'],
+                        2
+                    )
+                    : 0.0;
+
+            $inventarioActual = round(
+                (float) $tanque->volumen_actual,
+                2
+            );
+
+            $diferenciaInventario = round(
+                $galonesAnteriores
+                - $galonesNuevos,
+                2
+            );
+
+            $inventarioResultanteActual = round(
+                $inventarioActual
+                + $diferenciaInventario,
+                2
+            );
+
+            if ($inventarioResultanteActual < 0) {
+                $this->fallar(
+                    'tanques',
+                    "El tanque {$tanque->nombre} no posee inventario suficiente para aplicar la corrección."
+                );
+            }
+
+            if (
+                $inventarioResultanteActual
+                > round(
+                    (float) $tanque
+                        ->capacidad_total,
+                    2
+                )
+            ) {
+                $this->fallar(
+                    'tanques',
+                    "La corrección excedería la capacidad total del tanque {$tanque->nombre}. Existen movimientos posteriores que impiden modificar esta distribución."
+                );
+            }
+
+            if (
+                abs($diferenciaInventario)
+                >= 0.005
+            ) {
+                $ajustes->push([
+                    'tanque' =>
+                        $tanque,
+
+                    'inventario_anterior' =>
+                        $inventarioActual,
+
+                    'diferencia_inventario' =>
+                        $diferenciaInventario,
+
+                    'inventario_resultante' =>
+                        $inventarioResultanteActual,
+                ]);
+            }
+
+            if ($lineaNueva) {
+                $inventarioAnteriorSnapshot =
+                    $detalleAnterior
+                        ? round(
+                            (float)
+                            $detalleAnterior
+                                ->inventario_anterior,
+                            2
+                        )
+                        : round(
+                            $inventarioActual
+                            + $galonesNuevos,
+                            2
+                        );
+
+                $inventarioResultanteSnapshot =
+                    round(
+                        $inventarioAnteriorSnapshot
+                        - $galonesNuevos,
+                        2
+                    );
+
+                $procesados->push([
+                    'tanque' =>
+                        $tanque,
+
+                    'orden' =>
+                        $lineas->search(
+                            fn (array $linea): bool =>
+                                (int) $linea['tanque_id']
+                                === (int) $tanqueId
+                        ) + 1,
+
+                    'inventario_anterior_snapshot' =>
+                        $inventarioAnteriorSnapshot,
+
+                    'galones_retirados' =>
+                        $galonesNuevos,
+
+                    'inventario_resultante_snapshot' =>
+                        $inventarioResultanteSnapshot,
+
+                    'quedo_bajo_minimo' =>
+                        $inventarioResultanteSnapshot
+                        <= (float) $tanque
+                            ->volumen_minimo_alerta,
+                ]);
+            }
+        }
+
+        return [
+            $gasolinera,
+            $procesados->sortBy('orden')->values(),
+            $ajustes,
+            round(
+                $lineas->sum('galones'),
+                2
+            ),
+        ];
+    }
+
+    /**
+     * Prepara la devolución completa del retiro interno anterior cuando
+     * el abastecimiento cambia a un origen externo.
+     */
+    private function prepararRetiroOrigenInternoAnterior(
+        Abastecimiento $abastecimiento
+    ): array {
+        $detallesAnteriores =
+            AbastecimientoTanque::query()
+                ->where(
+                    'abastecimiento_id',
+                    $abastecimiento->id
+                )
+                ->lockForUpdate()
+                ->get();
+
+        if ($detallesAnteriores->isEmpty()) {
+            return [
+                collect(),
+                collect(),
+            ];
+        }
+
+        $tanqueIds = $detallesAnteriores
+            ->pluck('tanque_id')
+            ->map(
+                fn ($id): int => (int) $id
+            )
+            ->unique()
+            ->sort()
+            ->values();
+
+        $tanques = Tanque::query()
+            ->whereIn(
+                'id',
+                $tanqueIds
+            )
+            ->lockForUpdate()
+            ->get()
+            ->keyBy('id');
+
+        if (
+            $tanques->count()
+            !== $tanqueIds->count()
+        ) {
+            $this->fallar(
+                'tanques',
+                'Uno de los tanques utilizados originalmente ya no existe.'
+            );
+        }
+
+        $ajustes = collect();
+
+        foreach (
+            $detallesAnteriores
+            as $detalle
+        ) {
+            /** @var Tanque $tanque */
+            $tanque = $tanques->get(
+                (int) $detalle->tanque_id
+            );
+
+            $inventarioActual = round(
+                (float) $tanque->volumen_actual,
+                2
+            );
+
+            $diferenciaInventario = round(
+                (float) $detalle
+                    ->galones_retirados,
+                2
+            );
+
+            $inventarioResultante = round(
+                $inventarioActual
+                + $diferenciaInventario,
+                2
+            );
+
+            if (
+                $inventarioResultante
+                > round(
+                    (float) $tanque
+                        ->capacidad_total,
+                    2
+                )
+            ) {
+                $this->fallar(
+                    'tanques',
+                    "La corrección excedería la capacidad total del tanque {$tanque->nombre}. Existen movimientos posteriores que impiden cambiar el origen a externo."
+                );
+            }
+
+            $ajustes->push([
+                'tanque' =>
+                    $tanque,
+
+                'inventario_anterior' =>
+                    $inventarioActual,
+
+                'diferencia_inventario' =>
+                    $diferenciaInventario,
+
+                'inventario_resultante' =>
+                    $inventarioResultante,
+            ]);
+        }
+
+        return [
+            collect(),
+            $ajustes,
+        ];
+    }
+
+    /**
+     * Aplica los ajustes netos de inventario y conserva una trazabilidad
+     * independiente por cada tanque afectado.
+     */
+    private function aplicarAjustesInventarioModificacion(
+        Abastecimiento $abastecimiento,
+        Collection $ajustes,
+        $fechaOperacion,
+        int $usuarioId
+    ): void {
+        foreach (
+            $ajustes
+            as $ajuste
+        ) {
+            /** @var Tanque $tanque */
+            $tanque = $ajuste['tanque'];
+
+            $diferencia = round(
+                (float)
+                $ajuste[
+                    'diferencia_inventario'
+                ],
+                2
+            );
+
+            if (abs($diferencia) < 0.005) {
+                continue;
+            }
+
+            $sentido =
+                $diferencia > 0
+                    ? 'entrada'
+                    : 'salida';
+
+            $tanque->update([
+                'volumen_actual' =>
+                    $ajuste[
+                        'inventario_resultante'
+                    ],
+
+                'fecha_actualizacion' =>
+                    $fechaOperacion,
+
+                'actualizado_por' =>
+                    $usuarioId,
+            ]);
+
+            MovimientoInventarioCombustible::create([
+                'empresa_id' =>
+                    $abastecimiento->empresa_id,
+
+                'tanque_id' =>
+                    $tanque->id,
+
+                'abastecimiento_id' =>
+                    $abastecimiento->id,
+
+                'recarga_combustible_id' =>
+                    null,
+
+                'tipo_movimiento' =>
+                    'ajuste_modificacion_abastecimiento',
+
+                'volumen_anterior' =>
+                    $ajuste[
+                        'inventario_anterior'
+                    ],
+
+                'sentido_movimiento' =>
+                    $sentido,
+
+                'volumen_movimiento' =>
+                    abs($diferencia),
+
+                'volumen_resultante' =>
+                    $ajuste[
+                        'inventario_resultante'
+                    ],
+
+                'subtotal_compra' =>
+                    null,
+
+                'fecha_hora_movimiento' =>
+                    $fechaOperacion,
+
+                'observaciones' =>
+                    'Ajuste generado por modificación del abastecimiento #'
+                    . $abastecimiento->id,
+
+                'usuario_registra_id' =>
+                    $usuarioId,
+
+                'estado' =>
+                    'registrado',
+
+                'fecha_creacion' =>
+                    $fechaOperacion,
+            ]);
+        }
+    }
+
     /**
      * Validar disponibilidad total de la unidad.
      */

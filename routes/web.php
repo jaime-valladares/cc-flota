@@ -665,6 +665,41 @@ Route::middleware('auth')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
+    | Modificación de abastecimientos
+    |--------------------------------------------------------------------------
+    |
+    | Solo el último abastecimiento registrado de cada unidad puede abrir
+    | estas rutas. La validación definitiva se ejecuta nuevamente en el
+    | controlador y dentro de la transacción del servicio.
+    |
+    */
+
+    Route::get(
+        '/abastecimientos/{abastecimiento}/editar',
+        [
+            AbastecimientoController::class,
+            'edit',
+        ]
+    )->name('abastecimientos.edit');
+
+    Route::get(
+        '/abastecimientos/{abastecimiento}/editar/ventana',
+        [
+            AbastecimientoController::class,
+            'editVentana',
+        ]
+    )->name('abastecimientos.edit.ventana');
+
+    Route::put(
+        '/abastecimientos/{abastecimiento}',
+        [
+            AbastecimientoController::class,
+            'update',
+        ]
+    )->name('abastecimientos.update');
+
+    /*
+    |--------------------------------------------------------------------------
     | Ficha de abastecimiento
     |--------------------------------------------------------------------------
     |

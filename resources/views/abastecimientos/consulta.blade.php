@@ -37,10 +37,6 @@
                             Consulta de abastecimientos
                         </h3>
 
-                        <p class="cc-subtitle cc-subtitle-compact">
-                            Consulte el historial completo de abastecimientos,
-                            incluyendo operaciones registradas y anuladas.
-                        </p>
                     </div>
 
                     <div class="flex flex-wrap items-center gap-3">

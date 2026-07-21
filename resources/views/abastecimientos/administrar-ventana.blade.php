@@ -14,7 +14,7 @@
     >
 
     <title>
-        Consulta de abastecimientos · CC-Flota
+        Administrar abastecimientos vigentes · CC-Flota
     </title>
 
     @include('layouts.partials.favicon')
@@ -39,13 +39,52 @@
         'resources/css/app.css',
         'resources/js/app.js',
     ])
+
+    <style>
+        html,
+        body {
+            min-width: 0;
+            min-height: 100%;
+        }
+
+        body {
+            margin: 0;
+            background: var(--cc-bg-main);
+        }
+
+        .cc-abastecimientos-administrar-ventana {
+            width: 100%;
+            min-width: 0;
+        }
+
+        .cc-abastecimientos-administrar-ventana
+        .cc-page-wrapper {
+            width: 100%;
+            min-width: 0;
+        }
+
+        @media (max-width: 760px) {
+            .cc-abastecimientos-administrar-ventana
+            .cc-card-header {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .cc-abastecimientos-administrar-ventana
+            .cc-card-header > div:last-child {
+                width: 100%;
+            }
+
+            .cc-abastecimientos-administrar-ventana
+            .cc-card-header > div:last-child > a {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 
 <body class="antialiased">
-    <main
-        class="min-h-screen"
-        style="background: var(--cc-bg-main);"
-    >
+    <main class="cc-abastecimientos-administrar-ventana">
     @php
         $queryParams = array_merge(
             request()->query(),
@@ -71,17 +110,17 @@
         ];
     @endphp
 
-    <div class="cc-page-wrapper">
-        <div
-            class="cc-window-container"
-            style="width: 100%; max-width: 80rem;"
-        >
+        <div class="cc-page-wrapper">
+            <div
+                class="cc-window-container"
+                style="width: 100%; max-width: 80rem;"
+            >
             <div class="cc-card">
 
                 <div class="cc-card-header cc-card-header-compact">
                     <div>
                         <h3 class="cc-title cc-title-compact">
-                            Consulta de abastecimientos
+                            Administrar abastecimientos vigentes
                         </h3>
 
                     </div>
@@ -89,12 +128,12 @@
                     <div class="flex flex-wrap items-center gap-3">
                         <a
                             href="{{ route(
-                                'abastecimientos.consulta',
+                                'abastecimientos.administrar',
                                 $queryParams
                             ) }}"
                             class="cc-btn-secondary cc-btn-wide"
                         >
-                            Volver al sistema
+                            Volver al Sistema
                         </a>
                     </div>
                 </div>
@@ -108,7 +147,7 @@
                 @if ($errors->any())
                     <div class="cc-alert cc-alert-danger">
                         <div class="font-bold">
-                            No fue posible completar la consulta.
+                            No fue posible completar la administración.
                         </div>
 
                         <ul class="cc-alert-list">
@@ -124,7 +163,7 @@
                 <div class="cc-summary-strip">
                     <div class="cc-summary-strip-item">
                         <span class="cc-summary-strip-label">
-                            {{ $hayFiltros ? 'Resultados' : 'Total' }}
+                            {{ $hayFiltros ? 'Resultados' : 'Administrables' }}
                         </span>
 
                         <span class="cc-summary-strip-value">
@@ -138,7 +177,7 @@
 
                     <div class="cc-summary-strip-item">
                         <span class="cc-summary-strip-label">
-                            Registrados
+                            Administrables
                         </span>
 
                         <span
@@ -185,7 +224,7 @@
 
                 <form
                     method="GET"
-                    action="{{ route('abastecimientos.consulta.ventana') }}"
+                    action="{{ route('abastecimientos.administrar.ventana') }}"
                     class="mb-5"
                 >
                     <input
@@ -205,7 +244,7 @@
                             style="margin-top: 0;"
                         >
                             <div class="cc-form-section-title">
-                                Filtros de consulta
+                                Filtros de Consulta
                             </div>
                         </div>
 
@@ -710,7 +749,7 @@
 
                                 <a
                                     href="{{ route(
-                                        'abastecimientos.consulta.ventana'
+                                        'abastecimientos.administrar.ventana'
                                     ) }}"
                                     class="cc-btn-secondary"
                                 >
@@ -720,6 +759,23 @@
                         </div>
                     </div>
                 </form>
+
+                <div class="cc-callout cc-callout-info mb-5">
+                    <span class="cc-callout-marker"></span>
+
+                    <div>
+                        <div class="cc-callout-title">
+                            Alcance de administración
+                        </div>
+
+                        <div class="cc-callout-text">
+                            Esta pantalla muestra como máximo un abastecimiento
+                            por unidad: el último registro vigente. Los
+                            abastecimientos anteriores permanecen disponibles
+                            únicamente en Consulta.
+                        </div>
+                    </div>
+                </div>
 
                 @if (
                     $hayFiltros
@@ -764,12 +820,12 @@
                                cc-empty-panel-compact"
                     >
                         <h5>
-                            Consulta pendiente
+                            Administración pendiente
                         </h5>
 
                         <p>
                             Los resultados permanecerán vacíos hasta que
-                            realice una búsqueda.
+                            realice una búsqueda de abastecimientos vigentes.
                         </p>
                     </div>
                 @elseif ($abastecimientos->isEmpty())
@@ -782,8 +838,8 @@
                         </h5>
 
                         <p>
-                            No hay abastecimientos que coincidan con los
-                            criterios seleccionados.
+                            No hay abastecimientos vigentes administrables que
+                            coincidan con los criterios seleccionados.
                         </p>
                     </div>
                 @else
@@ -823,7 +879,7 @@
                                     </th>
 
                                     <th>
-                                        Estado
+                                        Condición
                                     </th>
 
                                     <th>
@@ -900,7 +956,7 @@
                                                     'abastecimiento' =>
                                                         $abastecimiento,
                                                     'origen_retorno' =>
-                                                        'consulta',
+                                                        'administrar',
                                                 ]
                                             )
                                         );
@@ -1106,25 +1162,12 @@
                                         <td
                                             class="cc-table-adaptive-nowrap"
                                         >
-                                            @if (
-                                                $abastecimiento
-                                                    ->estado
-                                                === 'registrado'
-                                            )
-                                                <span
-                                                    class="cc-badge
-                                                           cc-badge-active"
-                                                >
-                                                    Registrado
-                                                </span>
-                                            @else
-                                                <span
-                                                    class="cc-badge
-                                                           cc-badge-inactive"
-                                                >
-                                                    Anulado
-                                                </span>
-                                            @endif
+                                            <span
+                                                class="cc-badge
+                                                       cc-badge-active"
+                                            >
+                                                Último vigente
+                                            </span>
                                         </td>
 
                                         <td
@@ -1554,6 +1597,8 @@
             }
         );
     </script>
+            </div>
+        </div>
     </main>
 </body>
 </html>
