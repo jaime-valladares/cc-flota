@@ -61,6 +61,20 @@ class AnalisisRendimientoController extends Controller
                 'fecha_desde' => ['nullable', 'date_format:Y-m-d'],
                 'fecha_hasta' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:fecha_desde'],
                 'busqueda' => ['nullable', 'string', 'max:150'],
+                'sort' => [
+                    'nullable',
+                    Rule::in([
+                        'numero_ciclo',
+                        'fecha_ciclo',
+                        'unidad',
+                        'motorista',
+                        'kilometros_recorridos',
+                        'galones_abastecidos',
+                        'galones_utilizados',
+                        'kilometros_por_galon',
+                    ]),
+                ],
+                'direction' => ['nullable', Rule::in(['asc', 'desc'])],
                 'empresa_id' => ['nullable', 'integer', 'exists:empresas,id'],
                 'unidad_id' => ['nullable', 'integer', 'exists:unidades,id'],
                 'motorista_id' => ['nullable', 'integer', 'exists:motoristas,id'],
@@ -113,6 +127,8 @@ class AnalisisRendimientoController extends Controller
         $fechaDesde = $validated['fecha_desde'] ?? null;
         $fechaHasta = $validated['fecha_hasta'] ?? null;
         $busqueda = trim((string) ($validated['busqueda'] ?? ''));
+        $sort = (string) ($validated['sort'] ?? 'fecha_ciclo');
+        $direction = (string) ($validated['direction'] ?? 'desc');
 
         $hayFiltros = ! $esUsuarioDieselCop
             || $request->hasAny([
@@ -151,20 +167,88 @@ class AnalisisRendimientoController extends Controller
             );
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | Tabla analítica: una fila por ciclo completado
+        |--------------------------------------------------------------------------
+        |
+        | El abastecimiento actual cierra el ciclo formado con su
+        | abastecimiento anterior. Las líneas base no se presentan como filas.
+        |
+        */
+
         $queryResultados = clone $consultaBase;
 
-        $queryResultados->with([
-            'empresa',
-            'unidad',
-            'motorista',
-            'gasolineraInterna',
-            'gasolineraExterna',
-            'rutas' => fn ($query) => $query->orderBy('orden'),
-        ]);
+        $queryResultados
+            ->whereNotNull('abastecimiento_anterior_id')
+            ->select('abastecimientos.*')
+            ->selectSub(
+                function ($subquery): void {
+                    $subquery
+                        ->from('abastecimientos as ciclo_historico')
+                        ->selectRaw('COUNT(*)')
+                        ->whereColumn(
+                            'ciclo_historico.unidad_id',
+                            'abastecimientos.unidad_id'
+                        )
+                        ->where(
+                            'ciclo_historico.estado',
+                            Abastecimiento::ESTADO_REGISTRADO
+                        )
+                        ->whereNotNull(
+                            'ciclo_historico.abastecimiento_anterior_id'
+                        )
+                        ->where(function ($secuencia): void {
+                            $secuencia
+                                ->whereColumn(
+                                    'ciclo_historico.fecha_hora_abastecimiento',
+                                    '<',
+                                    'abastecimientos.fecha_hora_abastecimiento'
+                                )
+                                ->orWhere(function ($empate): void {
+                                    $empate
+                                        ->whereColumn(
+                                            'ciclo_historico.fecha_hora_abastecimiento',
+                                            '=',
+                                            'abastecimientos.fecha_hora_abastecimiento'
+                                        )
+                                        ->whereColumn(
+                                            'ciclo_historico.id',
+                                            '<=',
+                                            'abastecimientos.id'
+                                        );
+                                });
+                        });
+                },
+                'numero_ciclo_historico'
+            )
+            ->selectSub(
+                function ($subquery): void {
+                    $subquery
+                        ->from('abastecimientos as abastecimiento_apertura')
+                        ->select('abastecimiento_apertura.volumen_cargado')
+                        ->whereColumn(
+                            'abastecimiento_apertura.id',
+                            'abastecimientos.abastecimiento_anterior_id'
+                        )
+                        ->limit(1);
+                },
+                'galones_abastecidos_ciclo'
+            )
+            ->with([
+                'empresa',
+                'unidad',
+                'motorista',
+                'abastecimientoAnterior',
+            ]);
+
+        $this->aplicarOrdenAnalitico(
+            $queryResultados,
+            $sort,
+            $direction
+        );
 
         $abastecimientos = $queryResultados
-            ->orderByDesc('fecha_hora_abastecimiento')
-            ->orderByDesc('id')
             ->paginate(20)
             ->withQueryString();
 
@@ -202,6 +286,12 @@ class AnalisisRendimientoController extends Controller
 
         $resumen = $this->obtenerResumenAnalitico(clone $consultaBase);
 
+        $graficos = $this->obtenerDatosGraficos(
+            clone $consultaBase,
+            $unidadIds,
+            $unidadesSelector
+        );
+
         return [
             'abastecimientos' => $abastecimientos,
             'empresasSelector' => $empresasSelector,
@@ -214,10 +304,13 @@ class AnalisisRendimientoController extends Controller
             'fechaDesde' => $fechaDesde,
             'fechaHasta' => $fechaHasta,
             'busqueda' => $busqueda,
+            'sort' => $sort,
+            'direction' => $direction,
             'hayFiltros' => $hayFiltros,
             'esUsuarioDieselCop' => $esUsuarioDieselCop,
             'empresaUsuario' => $empresaUsuario,
             'resumen' => $resumen,
+            'graficos' => $graficos,
             'tipoResumen' => $this->determinarTipoResumen($modelosMedicion),
             'opcionesModelos' => [
                 Abastecimiento::MODELO_GALONES_VIAJE => 'Galones por viaje',
@@ -301,207 +394,421 @@ class AnalisisRendimientoController extends Controller
     private function prepararFilaAnalitica(
         Abastecimiento $abastecimiento
     ): Abastecimiento {
-        $esLineaBase = is_null($abastecimiento->abastecimiento_anterior_id);
+        $placa = $abastecimiento->unidad_placa_snapshot
+            ?: ($abastecimiento->unidad?->placa ?: 'No disponible');
+
+        $marca = $abastecimiento->unidad_marca_snapshot
+            ?: ($abastecimiento->unidad?->marca ?: null);
 
         $abastecimiento->setAttribute(
-            'es_linea_base_analitica',
-            $esLineaBase
-        );
-
-        $abastecimiento->setAttribute(
-            'empresa_texto_analitico',
-            $abastecimiento->empresa_nombre_snapshot
-                ?: ($abastecimiento->empresa
-                    ? ($abastecimiento->empresa->nombre_comercial
-                        ?: $abastecimiento->empresa->nombre_legal)
-                    : 'No disponible')
+            'numero_ciclo_analitico',
+            (int) $abastecimiento->numero_ciclo_historico
         );
 
         $abastecimiento->setAttribute(
             'unidad_texto_analitico',
-            $abastecimiento->unidad_placa_snapshot
-                ?: ($abastecimiento->unidad
-                    ? $abastecimiento->unidad->placa
-                    : 'No disponible')
+            collect([$placa, $marca])
+                ->filter()
+                ->implode(' · ')
         );
 
         $abastecimiento->setAttribute(
             'motorista_texto_analitico',
             $abastecimiento->motorista_nombre_snapshot
-                ?: ($abastecimiento->motorista
-                    ? trim(
-                        $abastecimiento->motorista->nombres
-                        . ' '
-                        . $abastecimiento->motorista->apellidos
-                    )
-                    : 'No disponible')
-        );
-
-        $abastecimiento->setAttribute(
-            'origen_texto_analitico',
-            $abastecimiento->origen_nombre_snapshot ?: 'No disponible'
-        );
-
-        $abastecimiento->setAttribute(
-            'recorrido_resumen_analitico',
-            $abastecimiento->rutas
-                ->map(fn ($ruta): string => $ruta->recorrido_texto)
-                ->filter()
-                ->implode(' | ')
-        );
-
-        $variacionGalones = null;
-
-        if (
-            ! $esLineaBase
-            && $abastecimiento->modelo_medicion === Abastecimiento::MODELO_GALONES_VIAJE
-            && (float) $abastecimiento->galones_teoricos > 0
-            && ! is_null($abastecimiento->combustible_consumido_ciclo)
-        ) {
-            $variacionGalones = (
-                (
-                    (float) $abastecimiento->combustible_consumido_ciclo
-                    - (float) $abastecimiento->galones_teoricos
+                ?: (
+                    $abastecimiento->motorista
+                        ? trim(
+                            $abastecimiento->motorista->nombres
+                            . ' '
+                            . $abastecimiento->motorista->apellidos
+                        )
+                        : 'No disponible'
                 )
-                / (float) $abastecimiento->galones_teoricos
-            ) * 100;
-        }
-
-        $abastecimiento->setAttribute(
-            'variacion_galones_porcentaje',
-            is_null($variacionGalones)
-                ? null
-                : round($variacionGalones, 2)
         );
 
         $abastecimiento->setAttribute(
-            'estado_analitico',
-            $this->determinarEstadoAnalitico(
-                $abastecimiento,
-                $esLineaBase
-            )
+            'kilometraje_anterior_analitico',
+            is_null($abastecimiento->kilometraje_anterior)
+                ? null
+                : (float) $abastecimiento->kilometraje_anterior
+        );
+
+        $abastecimiento->setAttribute(
+            'kilometraje_actual_analitico',
+            is_null($abastecimiento->kilometraje_actual)
+                ? null
+                : (float) $abastecimiento->kilometraje_actual
+        );
+
+        $kilometrosRecorridos = is_null(
+            $abastecimiento->diferencia_kilometraje
+        )
+            ? null
+            : (float) $abastecimiento->diferencia_kilometraje;
+
+        $galonesAbastecidos = ! is_null(
+            $abastecimiento->galones_abastecidos_ciclo
+        )
+            ? (float) $abastecimiento->galones_abastecidos_ciclo
+            : (
+                ! is_null(
+                    $abastecimiento
+                        ->abastecimientoAnterior
+                        ?->volumen_cargado
+                )
+                    ? (float) $abastecimiento
+                        ->abastecimientoAnterior
+                        ->volumen_cargado
+                    : null
+            );
+
+        $galonesUtilizados = is_null(
+            $abastecimiento->combustible_consumido_ciclo
+        )
+            ? null
+            : (float) $abastecimiento->combustible_consumido_ciclo;
+
+        $kilometrosPorGalon = (
+            ! is_null($kilometrosRecorridos)
+            && ! is_null($galonesUtilizados)
+            && $galonesUtilizados > 0
+        )
+            ? $kilometrosRecorridos / $galonesUtilizados
+            : null;
+
+        $abastecimiento->setAttribute(
+            'kilometros_recorridos_analitico',
+            $kilometrosRecorridos
+        );
+
+        $abastecimiento->setAttribute(
+            'galones_abastecidos_analitico',
+            $galonesAbastecidos
+        );
+
+        $abastecimiento->setAttribute(
+            'galones_utilizados_analitico',
+            $galonesUtilizados
+        );
+
+        $abastecimiento->setAttribute(
+            'kilometros_por_galon_analitico',
+            is_null($kilometrosPorGalon)
+                ? null
+                : round($kilometrosPorGalon, 2)
         );
 
         return $abastecimiento;
     }
 
-    private function determinarEstadoAnalitico(
-        Abastecimiento $abastecimiento,
-        bool $esLineaBase
-    ): string {
-        if ($esLineaBase) {
-            return 'Línea base';
-        }
+    private function aplicarOrdenAnalitico(
+        Builder $query,
+        string $sort,
+        string $direction
+    ): void {
+        $direction = $direction === 'asc' ? 'asc' : 'desc';
 
-        if (
-            is_null($abastecimiento->combustible_consumido_ciclo)
-            || (float) $abastecimiento->combustible_consumido_ciclo <= 0
-        ) {
-            return 'Información incompleta';
-        }
+        match ($sort) {
+            'numero_ciclo' => $query
+                ->orderBy('numero_ciclo_historico', $direction)
+                ->orderBy('unidad_placa_snapshot')
+                ->orderBy('id'),
 
-        if ($abastecimiento->modelo_medicion !== Abastecimiento::MODELO_GALONES_VIAJE) {
-            return 'Resultado real';
-        }
+            'unidad' => $query
+                ->orderByRaw(
+                    'COALESCE(unidad_placa_snapshot, "") '
+                    . $direction
+                )
+                ->orderByRaw(
+                    'COALESCE(unidad_marca_snapshot, "") '
+                    . $direction
+                )
+                ->orderByDesc('fecha_hora_abastecimiento')
+                ->orderByDesc('id'),
 
-        if (
-            is_null($abastecimiento->galones_teoricos)
-            || (float) $abastecimiento->galones_teoricos <= 0
-        ) {
-            return 'Sin base teórica';
-        }
+            'motorista' => $query
+                ->orderByRaw(
+                    'COALESCE(motorista_nombre_snapshot, "") '
+                    . $direction
+                )
+                ->orderByDesc('fecha_hora_abastecimiento')
+                ->orderByDesc('id'),
 
-        $diferencia = (float) $abastecimiento->combustible_consumido_ciclo
-            - (float) $abastecimiento->galones_teoricos;
+            'kilometros_recorridos' => $query
+                ->orderBy('diferencia_kilometraje', $direction)
+                ->orderByDesc('fecha_hora_abastecimiento')
+                ->orderByDesc('id'),
 
-        if (abs($diferencia) < 0.01) {
-            return 'Dentro de lo esperado';
-        }
+            'galones_abastecidos' => $query
+                ->orderBy('galones_abastecidos_ciclo', $direction)
+                ->orderByDesc('fecha_hora_abastecimiento')
+                ->orderByDesc('id'),
 
-        return $diferencia > 0
-            ? 'Consumo superior a lo esperado'
-            : 'Consumo inferior a lo esperado';
+            'galones_utilizados' => $query
+                ->orderBy('combustible_consumido_ciclo', $direction)
+                ->orderByDesc('fecha_hora_abastecimiento')
+                ->orderByDesc('id'),
+
+            'kilometros_por_galon' => $query
+                ->orderByRaw(
+                    'CASE '
+                    . 'WHEN combustible_consumido_ciclo IS NULL '
+                    . 'OR combustible_consumido_ciclo <= 0 '
+                    . 'THEN NULL '
+                    . 'ELSE diferencia_kilometraje '
+                    . '/ combustible_consumido_ciclo '
+                    . 'END '
+                    . $direction
+                )
+                ->orderByDesc('fecha_hora_abastecimiento')
+                ->orderByDesc('id'),
+
+            default => $query
+                ->orderBy('fecha_hora_abastecimiento', $direction)
+                ->orderBy('id', $direction),
+        };
     }
 
     private function obtenerResumenAnalitico(Builder $base): array
     {
-        $lineasBase = (clone $base)
-            ->whereNull('abastecimiento_anterior_id')
-            ->count();
-
         $ciclos = (clone $base)
             ->whereNotNull('abastecimiento_anterior_id');
 
-        $comun = [
-            'registros' => (clone $base)->count(),
-            'ciclos' => (clone $ciclos)->count(),
-            'lineas_base' => $lineasBase,
-            'unidades' => (clone $base)->distinct()->count('unidad_id'),
-            'motoristas' => (clone $base)->distinct()->count('motorista_id'),
-            'galones_consumidos' => (float) ((clone $ciclos)
-                ->sum('combustible_consumido_ciclo') ?? 0),
-            'ciclos_incompletos' => (clone $ciclos)
-                ->where(function (Builder $query): void {
-                    $query
-                        ->whereNull('combustible_consumido_ciclo')
-                        ->orWhere('combustible_consumido_ciclo', '<=', 0);
-                })
-                ->count(),
-        ];
+        $abastecimientos = (clone $base)->count();
+        $ciclosCompletados = (clone $ciclos)->count();
+        $galonesAbastecidos = (float) (
+            (clone $base)->sum('volumen_cargado') ?? 0
+        );
+        $kilometrosRecorridos = (float) (
+            (clone $ciclos)->sum('diferencia_kilometraje') ?? 0
+        );
+        $galonesConsumidos = (float) (
+            (clone $ciclos)->sum('combustible_consumido_ciclo') ?? 0
+        );
 
-        $viajes = (clone $ciclos)
-            ->where('modelo_medicion', Abastecimiento::MODELO_GALONES_VIAJE);
-
-        $kilometros = (clone $ciclos)
-            ->where('modelo_medicion', Abastecimiento::MODELO_GALONES_KILOMETRO);
-
-        $horas = (clone $ciclos)
-            ->where('modelo_medicion', Abastecimiento::MODELO_GALONES_HORA);
+        $kilometrosPorGalon = $galonesConsumidos > 0
+            ? $kilometrosRecorridos / $galonesConsumidos
+            : null;
 
         return [
-            'comun' => $comun,
-            'viaje' => [
-                'ciclos' => (clone $viajes)->count(),
-                'kilometros_teoricos' => (float) ((clone $viajes)->sum('kilometros_teoricos') ?? 0),
-                'galones_teoricos' => (float) ((clone $viajes)->sum('galones_teoricos') ?? 0),
-                'galones_reales' => (float) ((clone $viajes)->sum('combustible_consumido_ciclo') ?? 0),
-                'diferencia_total' => (float) ((clone $viajes)
-                    ->selectRaw(
-                        'SUM(COALESCE(combustible_consumido_ciclo, 0) '
-                        . '- COALESCE(galones_teoricos, 0)) as diferencia'
-                    )
-                    ->value('diferencia') ?? 0),
-                'variacion_promedio' => (float) ((clone $viajes)
-                    ->where('galones_teoricos', '>', 0)
-                    ->selectRaw(
-                        'AVG((combustible_consumido_ciclo - galones_teoricos) '
-                        . '/ galones_teoricos * 100) as promedio'
-                    )
-                    ->value('promedio') ?? 0),
-                'sobre_esperado' => (clone $viajes)
-                    ->whereColumn(
-                        'combustible_consumido_ciclo',
-                        '>',
-                        'galones_teoricos'
-                    )
+            'abastecimientos' => $abastecimientos,
+            'ciclos_completados' => $ciclosCompletados,
+            'galones_abastecidos' => $galonesAbastecidos,
+            'kilometros_recorridos' => $kilometrosRecorridos,
+            'galones_consumidos' => $galonesConsumidos,
+            'kilometros_por_galon' => is_null($kilometrosPorGalon)
+                ? null
+                : round($kilometrosPorGalon, 2),
+
+            /* Compatibilidad temporal con la vista anterior. */
+            'comun' => [
+                'registros' => $abastecimientos,
+                'ciclos' => $ciclosCompletados,
+                'lineas_base' => (clone $base)
+                    ->whereNull('abastecimiento_anterior_id')
+                    ->count(),
+                'unidades' => (clone $base)
+                    ->distinct()
+                    ->count('unidad_id'),
+                'motoristas' => (clone $base)
+                    ->distinct()
+                    ->count('motorista_id'),
+                'galones_consumidos' => $galonesConsumidos,
+                'ciclos_incompletos' => (clone $ciclos)
+                    ->where(function (Builder $query): void {
+                        $query
+                            ->whereNull('combustible_consumido_ciclo')
+                            ->orWhere(
+                                'combustible_consumido_ciclo',
+                                '<=',
+                                0
+                            );
+                    })
                     ->count(),
             ],
-            'kilometro' => [
-                'ciclos' => (clone $kilometros)->count(),
-                'kilometros_recorridos' => (float) ((clone $kilometros)->sum('diferencia_kilometraje') ?? 0),
-                'galones_consumidos' => (float) ((clone $kilometros)->sum('combustible_consumido_ciclo') ?? 0),
-                'rendimiento_promedio' => (float) ((clone $kilometros)->whereNotNull('kilometros_por_galon')->avg('kilometros_por_galon') ?? 0),
-                'mejor_rendimiento' => (float) ((clone $kilometros)->max('kilometros_por_galon') ?? 0),
-                'menor_rendimiento' => (float) ((clone $kilometros)->where('kilometros_por_galon', '>', 0)->min('kilometros_por_galon') ?? 0),
+            'viaje' => [],
+            'kilometro' => [],
+            'hora' => [],
+        ];
+    }
+
+
+    private function obtenerDatosGraficos(
+        Builder $base,
+        array $unidadIds,
+        Collection $unidadesSelector
+    ): array {
+        $ciclos = (clone $base)
+            ->whereNotNull('abastecimiento_anterior_id')
+            ->whereNotNull('diferencia_kilometraje')
+            ->where('combustible_consumido_ciclo', '>', 0)
+            ->orderBy('fecha_hora_abastecimiento')
+            ->orderBy('id')
+            ->get([
+                'id',
+                'unidad_id',
+                'fecha_hora_abastecimiento',
+                'diferencia_kilometraje',
+                'combustible_consumido_ciclo',
+            ]);
+
+        if ($ciclos->isEmpty()) {
+            return [
+                'tiempo' => [
+                    'agrupacion' => 'Sin datos',
+                    'puntos' => [],
+                ],
+                'ciclos' => [
+                    'disponible' => false,
+                    'unidad' => null,
+                    'mensaje' => 'No hay ciclos con información suficiente para graficar.',
+                    'puntos' => [],
+                ],
+            ];
+        }
+
+        $primeraFecha = Carbon::parse(
+            $ciclos->first()->fecha_hora_abastecimiento
+        )->startOfDay();
+
+        $ultimaFecha = Carbon::parse(
+            $ciclos->last()->fecha_hora_abastecimiento
+        )->startOfDay();
+
+        $dias = $primeraFecha->diffInDays($ultimaFecha);
+
+        $agrupacion = match (true) {
+            $dias <= 45 => 'Día',
+            $dias <= 180 => 'Semana',
+            default => 'Mes',
+        };
+
+        $puntosTiempo = $ciclos
+            ->groupBy(function (Abastecimiento $ciclo) use ($agrupacion): string {
+                $fecha = Carbon::parse(
+                    $ciclo->fecha_hora_abastecimiento
+                );
+
+                return match ($agrupacion) {
+                    'Día' => $fecha->format('Y-m-d'),
+                    'Semana' => $fecha
+                        ->copy()
+                        ->startOfWeek(Carbon::MONDAY)
+                        ->format('Y-m-d'),
+                    default => $fecha->format('Y-m-01'),
+                };
+            })
+            ->sortKeys()
+            ->map(function (Collection $grupo, string $clave) use ($agrupacion): array {
+                $kilometros = (float) $grupo->sum('diferencia_kilometraje');
+                $galones = (float) $grupo->sum('combustible_consumido_ciclo');
+                $fecha = Carbon::parse($clave);
+
+                $etiqueta = match ($agrupacion) {
+                    'Día' => $fecha->format('d/m/Y'),
+                    'Semana' => 'Sem. ' . $fecha->format('d/m/Y'),
+                    default => $fecha->format('m/Y'),
+                };
+
+                return [
+                    'etiqueta' => $etiqueta,
+                    'valor' => $galones > 0
+                        ? round($kilometros / $galones, 2)
+                        : null,
+                    'detalle' => number_format($kilometros, 1)
+                        . ' km · '
+                        . number_format($galones, 2)
+                        . ' gal',
+                ];
+            })
+            ->filter(
+                fn (array $punto): bool => ! is_null($punto['valor'])
+            )
+            ->values()
+            ->all();
+
+        $graficoCiclos = [
+            'disponible' => false,
+            'unidad' => null,
+            'mensaje' => 'Seleccione una sola unidad para visualizar su progreso por ciclo.',
+            'puntos' => [],
+        ];
+
+        if (count($unidadIds) === 1) {
+            $unidadId = (int) $unidadIds[0];
+
+            $unidad = $unidadesSelector->first(
+                fn (Unidad $unidad): bool =>
+                    (int) $unidad->id === $unidadId
+            );
+
+            $secuenciaHistorica = Abastecimiento::query()
+                ->registrados()
+                ->where('unidad_id', $unidadId)
+                ->whereNotNull('abastecimiento_anterior_id')
+                ->orderBy('fecha_hora_abastecimiento')
+                ->orderBy('id')
+                ->pluck('id')
+                ->values();
+
+            $numeroPorId = $secuenciaHistorica
+                ->flip()
+                ->map(
+                    fn (int $indice): int => $indice + 1
+                );
+
+            $puntosCiclo = $ciclos
+                ->where('unidad_id', $unidadId)
+                ->map(function (Abastecimiento $ciclo) use ($numeroPorId): array {
+                    $galones = (float) $ciclo->combustible_consumido_ciclo;
+                    $kilometros = (float) $ciclo->diferencia_kilometraje;
+                    $numero = $numeroPorId->get($ciclo->id);
+
+                    return [
+                        'etiqueta' => is_null($numero)
+                            ? 'Ciclo'
+                            : 'Ciclo ' . $numero,
+                        'valor' => $galones > 0
+                            ? round($kilometros / $galones, 2)
+                            : null,
+                        'detalle' => Carbon::parse(
+                            $ciclo->fecha_hora_abastecimiento
+                        )->format('d/m/Y')
+                            . ' · '
+                            . number_format($kilometros, 1)
+                            . ' km · '
+                            . number_format($galones, 2)
+                            . ' gal',
+                    ];
+                })
+                ->filter(
+                    fn (array $punto): bool => ! is_null($punto['valor'])
+                )
+                ->values()
+                ->all();
+
+            $nombreUnidad = $unidad
+                ? collect([$unidad->placa, $unidad->marca])
+                    ->filter()
+                    ->implode(' · ')
+                : 'Unidad seleccionada';
+
+            $graficoCiclos = [
+                'disponible' => true,
+                'unidad' => $nombreUnidad,
+                'mensaje' => $puntosCiclo === []
+                    ? 'La unidad seleccionada no tiene ciclos con información suficiente.'
+                    : null,
+                'puntos' => $puntosCiclo,
+            ];
+        }
+
+        return [
+            'tiempo' => [
+                'agrupacion' => $agrupacion,
+                'puntos' => $puntosTiempo,
             ],
-            'hora' => [
-                'ciclos' => (clone $horas)->count(),
-                'horas_operadas' => (float) ((clone $horas)->sum('diferencia_horometro') ?? 0),
-                'galones_consumidos' => (float) ((clone $horas)->sum('combustible_consumido_ciclo') ?? 0),
-                'consumo_promedio' => (float) ((clone $horas)->whereNotNull('galones_por_hora')->avg('galones_por_hora') ?? 0),
-                'menor_consumo' => (float) ((clone $horas)->where('galones_por_hora', '>', 0)->min('galones_por_hora') ?? 0),
-                'mayor_consumo' => (float) ((clone $horas)->max('galones_por_hora') ?? 0),
-            ],
+            'ciclos' => $graficoCiclos,
         ];
     }
 

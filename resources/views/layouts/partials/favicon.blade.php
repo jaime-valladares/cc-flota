@@ -1,17 +1,19 @@
 <link
     rel="icon"
     type="image/png"
-    sizes="32x32"
-    href="{{ asset('images/cc-flota/favicon-truck.png') }}?v=2"
+    sizes="16x16"
+    href="{{ asset('images/cc-flota/favicon-truck.png') }}?v=3"
 >
 
 <link
-    rel="shortcut icon"
+    rel="icon"
     type="image/png"
-    href="{{ asset('images/cc-flota/favicon-truck.png') }}?v=2"
+    sizes="32x32"
+    href="{{ asset('images/cc-flota/favicon-truck.png') }}?v=3"
 >
 
 <link
     rel="apple-touch-icon"
-    href="{{ asset('images/cc-flota/favicon-truck.png') }}?v=2"
+    sizes="180x180"
+    href="{{ asset('images/cc-flota/favicon-truck.png') }}?v=3"
 >

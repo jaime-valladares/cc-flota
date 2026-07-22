@@ -5,7 +5,7 @@
             style="max-width: 80rem;"
         >
             @include(
-                'analisis-rendimientos.partials.contenido',
+                'auditoria-marchamos.partials.contenido',
                 [
                     'esVentana' => false,
                 ]

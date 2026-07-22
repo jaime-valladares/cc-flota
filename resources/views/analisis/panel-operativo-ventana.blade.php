@@ -14,7 +14,7 @@
     >
 
     <title>
-        Análisis de rendimientos · CC-Flota
+        Control Operativo de Flota · CC-Flota
     </title>
 
     @include('layouts.partials.favicon')
@@ -39,7 +39,6 @@
         'resources/css/app.css',
         'resources/js/app.js',
     ])
-
 </head>
 
 <body class="antialiased">
@@ -53,7 +52,7 @@
                 style="max-width: 80rem;"
             >
                 @include(
-                    'analisis-rendimientos.partials.contenido',
+                    'analisis.partials.panel-operativo-contenido',
                     [
                         'esVentana' => true,
                     ]

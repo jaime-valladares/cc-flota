@@ -15,6 +15,14 @@ class AnalisisOperativoController extends Controller
 {
     public function panelOperativo(Request $request)
     {
+        $esVentana = $request->routeIs(
+            'analisis.panel-operativo.ventana'
+        );
+
+        $vista = $esVentana
+            ? 'analisis.panel-operativo-ventana'
+            : 'analisis.panel-operativo';
+
         $user = Auth::user();
 
         $esUsuarioDieselCop = is_null($user->empresa_id);
@@ -38,6 +46,30 @@ class AnalisisOperativoController extends Controller
 
             'total_tanques' => ['nullable', 'array'],
             'total_tanques.*' => ['integer', 'min:1', 'max:3'],
+
+            'busqueda' => ['nullable', 'string', 'max:150'],
+
+            'empresa_sort' => [
+                'nullable',
+                'string',
+                'in:empresa,total_unidades,operativas,no_operativas,cobertura_completa,cobertura_porcentaje,alertas',
+            ],
+            'empresa_direction' => [
+                'nullable',
+                'string',
+                'in:asc,desc',
+            ],
+
+            'unidad_sort' => [
+                'nullable',
+                'string',
+                'in:unidad,empresa,disponibilidad,licencia,cobertura,marchamos,diagnostico,prioridad',
+            ],
+            'unidad_direction' => [
+                'nullable',
+                'string',
+                'in:asc,desc',
+            ],
         ], [
             'empresa_ids.*.exists' => 'Una de las empresas seleccionadas no es válida.',
             'unidad_ids.*.exists' => 'Una de las unidades seleccionadas no es válida.',
@@ -67,6 +99,14 @@ class AnalisisOperativoController extends Controller
             ->filter()
             ->unique()
             ->values();
+
+        $busqueda = trim((string) ($validated['busqueda'] ?? ''));
+
+        $empresaSort = $validated['empresa_sort'] ?? 'alertas';
+        $empresaDirection = $validated['empresa_direction'] ?? 'desc';
+
+        $unidadSort = $validated['unidad_sort'] ?? 'prioridad';
+        $unidadDirection = $validated['unidad_direction'] ?? 'asc';
 
         $empresasAccesiblesQuery = Empresa::query();
 
@@ -126,21 +166,74 @@ class AnalisisOperativoController extends Controller
             $unidadesBase->whereIn('total_tanques', $tanquesSeleccionados);
         }
 
-        $unidadIds = (clone $unidadesBase)
+        $unidadIdsIniciales = (clone $unidadesBase)
             ->pluck('id')
             ->map(fn ($id) => (int) $id)
             ->values();
 
-        $empresaIdsResultado = (clone $unidadesBase)
-            ->select('empresa_id')
-            ->distinct()
-            ->pluck('empresa_id')
+        $conteoPuntosInicial = $this->obtenerConteoPuntosPorUnidad(
+            $unidadIdsIniciales
+        );
+
+        $marchamosActivosInicial = $this->obtenerMarchamosActivosPorUnidad(
+            $unidadIdsIniciales
+        );
+
+        $unidadesAnaliticasColeccion = $this->prepararUnidadesAnaliticas(
+            $unidadIdsIniciales,
+            $conteoPuntosInicial,
+            $marchamosActivosInicial
+        );
+
+        if ($busqueda !== '') {
+            $termino = mb_strtolower($busqueda);
+
+            $unidadesAnaliticasColeccion = $unidadesAnaliticasColeccion
+                ->filter(function (array $item) use ($termino) {
+                    $empresa = $item['empresa'];
+                    $unidad = $item['unidad'];
+
+                    $textoBusqueda = collect([
+                        $empresa?->nombre_legal,
+                        $empresa?->nombre_comercial,
+                        $empresa?->estado,
+                        $unidad?->placa,
+                        $unidad?->marca,
+                        $unidad?->modelo,
+                        $unidad?->estado,
+                        $item['modelo_medicion'],
+                        $item['total_tanques'],
+                        $item['licencia_texto'],
+                        $item['marchamos_activos'],
+                        $item['situacion'],
+                        $item['accion_sugerida'],
+                        $item['porcentaje_cobertura'] . ' %',
+                    ])
+                        ->filter(fn ($valor) => ! is_null($valor))
+                        ->implode(' ');
+
+                    return str_contains(
+                        mb_strtolower($textoBusqueda),
+                        $termino
+                    );
+                })
+                ->values();
+        }
+
+        $unidadIds = $unidadesAnaliticasColeccion
+            ->pluck('unidad.id')
             ->map(fn ($id) => (int) $id)
             ->values();
 
-        if ($empresaIdsResultado->isEmpty()) {
-            $empresaIdsResultado = $empresaIdsBase;
-        }
+        $unidadesBase = Unidad::query()
+            ->whereIn('id', $unidadIds);
+
+        $empresaIdsResultado = $unidadesAnaliticasColeccion
+            ->pluck('empresa.id')
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
 
         $empresasResultado = Empresa::query()
             ->whereIn('id', $empresaIdsResultado)
@@ -148,10 +241,21 @@ class AnalisisOperativoController extends Controller
             ->orderBy('nombre_comercial')
             ->get();
 
-        $conteoPuntosPorUnidad = $this->obtenerConteoPuntosPorUnidad($unidadIds);
-        $marchamosActivosPorUnidad = $this->obtenerMarchamosActivosPorUnidad($unidadIds);
+        $conteoPuntosPorUnidad = $conteoPuntosInicial
+            ->filter(
+                fn ($registro, $unidadId) =>
+                    $unidadIds->contains((int) $unidadId)
+            );
 
-        $cobertura = $this->calcularCoberturaGlobal($conteoPuntosPorUnidad);
+        $marchamosActivosPorUnidad = $marchamosActivosInicial
+            ->filter(
+                fn ($registro, $unidadId) =>
+                    $unidadIds->contains((int) $unidadId)
+            );
+
+        $cobertura = $this->calcularCoberturaGlobal(
+            $conteoPuntosPorUnidad
+        );
 
         $unidadesSinLicenciaActiva = (clone $unidadesBase)
             ->whereDoesntHave('licencia', function ($query) {
@@ -198,16 +302,15 @@ class AnalisisOperativoController extends Controller
                 ->count(),
         ];
 
-        $saludOperativa = $this->prepararSaludOperativa($empresasResultado, $kpis);
+        $saludOperativa = $this->prepararSaludOperativa(
+            $empresasResultado,
+            $kpis
+        );
 
-
-
-
-
-        $unidadesAnaliticasColeccion = $this->prepararUnidadesAnaliticas(
-            $unidadIds,
-            $conteoPuntosPorUnidad,
-            $marchamosActivosPorUnidad
+        $unidadesAnaliticasColeccion = $this->ordenarUnidadesAnaliticas(
+            $unidadesAnaliticasColeccion,
+            $unidadSort,
+            $unidadDirection
         );
 
         $paginaUnidades = max((int) $request->input('unidad_page', 1), 1);
@@ -229,6 +332,12 @@ class AnalisisOperativoController extends Controller
             $empresasResultado,
             $unidadesBase,
             $conteoPuntosPorUnidad
+        );
+
+        $resumenConsolidadoColeccion = $this->ordenarResumenEmpresas(
+            $resumenConsolidadoColeccion,
+            $empresaSort,
+            $empresaDirection
         );
 
         $paginaEmpresas = max((int) $request->input('empresa_page', 1), 1);
@@ -262,7 +371,8 @@ class AnalisisOperativoController extends Controller
         $resumenEmpresas = $resumenConsolidado;
         $unidadesAtencion = $unidadesAnaliticas;
 
-        return view('analisis.panel-operativo', [
+        return view($vista, [
+            'esVentana' => $esVentana,
             'esUsuarioDieselCop' => $esUsuarioDieselCop,
             'empresaUsuario' => $empresaUsuario,
 
@@ -275,6 +385,12 @@ class AnalisisOperativoController extends Controller
             'unidadesSeleccionadas' => $unidadesSeleccionadas,
             'modelosSeleccionados' => $modelosSeleccionados,
             'tanquesSeleccionados' => $tanquesSeleccionados,
+            'busqueda' => $busqueda,
+
+            'empresaSort' => $empresaSort,
+            'empresaDirection' => $empresaDirection,
+            'unidadSort' => $unidadSort,
+            'unidadDirection' => $unidadDirection,
 
             'kpis' => $kpis,
             'saludOperativa' => $saludOperativa,
@@ -289,6 +405,91 @@ class AnalisisOperativoController extends Controller
             'resumenEmpresas' => $resumenEmpresas,
             'unidadesAtencion' => $unidadesAtencion,
         ]);
+    }
+
+    private function ordenarResumenEmpresas(
+        $coleccion,
+        string $campo,
+        string $direccion
+    ) {
+        $descendente = $direccion === 'desc';
+
+        return $coleccion
+            ->sortBy(
+                function (array $item) use ($campo) {
+                    $total = (int) $item['total_unidades'];
+                    $operativas = (int) $item['cobertura_completa'];
+                    $noOperativas = max(0, $total - $operativas);
+                    $porcentaje = $total > 0
+                        ? ($operativas / $total) * 100
+                        : 0;
+
+                    return match ($campo) {
+                        'empresa' => mb_strtolower(
+                            (string) (
+                                $item['empresa']->nombre_legal
+                                ?: $item['empresa']->nombre_comercial
+                            )
+                        ),
+                        'total_unidades' => $total,
+                        'operativas' => $operativas,
+                        'no_operativas' => $noOperativas,
+                        'cobertura_completa' => $operativas,
+                        'cobertura_porcentaje' => $porcentaje,
+                        'alertas' => (int) $item['cobertura_incompleta'],
+                        default => (int) $item['cobertura_incompleta'],
+                    };
+                },
+                SORT_NATURAL | SORT_FLAG_CASE,
+                $descendente
+            )
+            ->values();
+    }
+
+    private function ordenarUnidadesAnaliticas(
+        $coleccion,
+        string $campo,
+        string $direccion
+    ) {
+        $descendente = $direccion === 'desc';
+
+        return $coleccion
+            ->sortBy(
+                function (array $item) use ($campo) {
+                    $unidadOperativa = (
+                        $item['unidad']->estado === 'activa'
+                        && $item['porcentaje_cobertura'] >= 100
+                        && $item['licencia']
+                        && $item['licencia']->estado === 'activa'
+                    );
+
+                    return match ($campo) {
+                        'unidad' => mb_strtolower(
+                            (string) $item['unidad']->placa
+                        ),
+                        'empresa' => mb_strtolower(
+                            (string) (
+                                $item['empresa']->nombre_legal
+                                ?: $item['empresa']->nombre_comercial
+                            )
+                        ),
+                        'disponibilidad' => $unidadOperativa ? 1 : 0,
+                        'licencia' => mb_strtolower(
+                            (string) $item['licencia_texto']
+                        ),
+                        'cobertura' => (float) $item['porcentaje_cobertura'],
+                        'marchamos' => (int) $item['marchamos_activos'],
+                        'diagnostico' => mb_strtolower(
+                            (string) $item['situacion']
+                        ),
+                        'prioridad' => (int) $item['orden_situacion'],
+                        default => (int) $item['orden_situacion'],
+                    };
+                },
+                SORT_NATURAL | SORT_FLAG_CASE,
+                $descendente
+            )
+            ->values();
     }
 
     private function obtenerConteoPuntosPorUnidad($unidadIds)

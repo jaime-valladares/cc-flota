@@ -14,16 +14,12 @@
     >
 
     <title>
-        Análisis de rendimientos · CC-Flota
+        Análisis Operativo de Rutas · CC-Flota
     </title>
 
     @include('layouts.partials.favicon')
 
-    <link
-        rel="preconnect"
-        href="https://fonts.googleapis.com"
-    >
-
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link
         rel="preconnect"
         href="https://fonts.gstatic.com"
@@ -53,7 +49,7 @@
                 style="max-width: 80rem;"
             >
                 @include(
-                    'analisis-rendimientos.partials.contenido',
+                    'analisis-rutas.partials.contenido',
                     [
                         'esVentana' => true,
                     ]
