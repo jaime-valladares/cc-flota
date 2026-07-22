@@ -9,6 +9,7 @@ use App\Http\Controllers\LicenciaController;
 use App\Http\Controllers\RecargaTanqueController;
 use App\Http\Controllers\AbastecimientoController;
 use App\Http\Controllers\AnalisisOperativoController;
+use App\Http\Controllers\AnalisisRendimientoController;
 use App\Http\Controllers\MarchamoAsignacionInicialController;
 use App\Http\Controllers\MarchamoController;
 use App\Http\Controllers\MarchamoReemplazoController;
@@ -757,12 +758,45 @@ Route::middleware('auth')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Análisis operativo
+    | Capa analítica
     |--------------------------------------------------------------------------
     */
 
-    Route::get('/analisis/panel-operativo', [AnalisisOperativoController::class, 'panelOperativo'])
-        ->name('analisis.panel-operativo');
+    /*
+    |--------------------------------------------------------------------------
+    | Panel operativo
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/analisis/panel-operativo',
+        [
+            AnalisisOperativoController::class,
+            'panelOperativo',
+        ]
+    )->name('analisis.panel-operativo');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Análisis de rendimientos
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/analisis/rendimientos',
+        [
+            AnalisisRendimientoController::class,
+            'index',
+        ]
+    )->name('analisis.rendimientos.index');
+
+    Route::get(
+        '/analisis/rendimientos/ventana',
+        [
+            AnalisisRendimientoController::class,
+            'indexVentana',
+        ]
+)->name('analisis.rendimientos.index.ventana');
 });
 
 require __DIR__.'/auth.php';
