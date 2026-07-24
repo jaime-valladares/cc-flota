@@ -662,11 +662,18 @@ class MarchamoReemplazoController extends Controller
             'consultar'
         );
 
+        /*
+         * La empresa obligatoria del usuario empresarial limita el alcance,
+         * pero no ejecuta automáticamente la búsqueda.
+         */
         $hayFiltros = $consultaEjecutada
             || filled($busquedaEmpresa)
             || filled($busquedaPlaca)
-            || $empresaIds->isNotEmpty()
-            || $placas->isNotEmpty();
+            || $placas->isNotEmpty()
+            || (
+                $esUsuarioDieselCop
+                && $empresaIds->isNotEmpty()
+            );
 
         $hoy = Carbon::today()->toDateString();
 

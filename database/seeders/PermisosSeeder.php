@@ -298,11 +298,29 @@ class PermisosSeeder extends Seeder
             // Marchamos
             // -------------------------------------------------------------
             [
-                'codigo' => 'marchamos.ver',
+                'codigo' => 'marchamos.consultar',
                 'modulo' => 'marchamos',
-                'accion' => 'ver',
-                'nombre' => 'Ver marchamos',
-                'descripcion' => 'Permite visualizar marchamos según el alcance autorizado del rol.',
+                'accion' => 'consultar',
+                'nombre' => 'Consultar marchamos',
+                'descripcion' => 'Permite consultar cobertura e historial de marchamos según el alcance autorizado.',
+                'alcance' => 'ambos',
+                'estado' => 'activo',
+            ],
+            [
+                'codigo' => 'marchamos.administrar',
+                'modulo' => 'marchamos',
+                'accion' => 'administrar',
+                'nombre' => 'Administrar marchamos',
+                'descripcion' => 'Permite acceder al listado administrativo y al formulario de reemplazos.',
+                'alcance' => 'ambos',
+                'estado' => 'activo',
+            ],
+            [
+                'codigo' => 'marchamos.reemplazar',
+                'modulo' => 'marchamos',
+                'accion' => 'reemplazar',
+                'nombre' => 'Reemplazar marchamos',
+                'descripcion' => 'Permite registrar uno o varios reemplazos conservando el historial completo.',
                 'alcance' => 'ambos',
                 'estado' => 'activo',
             ],
@@ -310,36 +328,9 @@ class PermisosSeeder extends Seeder
                 'codigo' => 'marchamos.asignar_inicial',
                 'modulo' => 'marchamos',
                 'accion' => 'asignar_inicial',
-                'nombre' => 'Asignar marchamos iniciales',
-                'descripcion' => 'Permite registrar la asignación inicial de marchamos por parte de Diesel Cop.',
+                'nombre' => 'Realizar asignación inicial de marchamos',
+                'descripcion' => 'Permite guardar avances y finalizar la asignación inicial de marchamos.',
                 'alcance' => 'diesel_cop',
-                'estado' => 'activo',
-            ],
-            [
-                'codigo' => 'marchamos.reemplazar_abastecimiento',
-                'modulo' => 'marchamos',
-                'accion' => 'reemplazar_abastecimiento',
-                'nombre' => 'Reemplazar marchamos por abastecimiento',
-                'descripcion' => 'Permite registrar reemplazos de marchamos durante abastecimientos.',
-                'alcance' => 'empresa',
-                'estado' => 'activo',
-            ],
-            [
-                'codigo' => 'marchamos.reemplazar_dano_desgaste',
-                'modulo' => 'marchamos',
-                'accion' => 'reemplazar_dano_desgaste',
-                'nombre' => 'Reemplazar marchamos por daño o desgaste',
-                'descripcion' => 'Permite registrar reemplazos de marchamos por daño, desgaste u otro motivo operativo.',
-                'alcance' => 'ambos',
-                'estado' => 'activo',
-            ],
-            [
-                'codigo' => 'marchamos.ver_historial',
-                'modulo' => 'marchamos',
-                'accion' => 'ver_historial',
-                'nombre' => 'Ver historial de marchamos',
-                'descripcion' => 'Permite consultar el historial de marchamos instalados y reemplazados.',
-                'alcance' => 'ambos',
                 'estado' => 'activo',
             ],
 
@@ -713,6 +704,10 @@ class PermisosSeeder extends Seeder
                 'licencias.provisionar',
                 'licencias.asignar',
                 'licencias.suspender',
+                'marchamos.ver',
+                'marchamos.ver_historial',
+                'marchamos.reemplazar_abastecimiento',
+                'marchamos.reemplazar_dano_desgaste',
             ])
             ->get();
 
@@ -721,7 +716,7 @@ class PermisosSeeder extends Seeder
                 'estado' => 'inactivo',
                 'fecha_actualizacion' => now(),
                 'fecha_inactivacion' => now(),
-                'motivo_inactivacion' => 'Permiso reemplazado por el mapeo funcional definitivo de los módulos Empresas, Usuarios, Unidades y Licencias.',
+                'motivo_inactivacion' => 'Permiso reemplazado por el mapeo funcional definitivo de los módulos Empresas, Usuarios, Unidades, Licencias y Marchamos.',
             ]);
         }
     }

@@ -18,6 +18,10 @@ class RolPermisosSeeder extends Seeder
             'DIESEL_SUPER_ADMIN' => 'ALL',
 
             'DIESEL_ADMIN' => [
+                'marchamos.consultar',
+                'marchamos.administrar',
+                'marchamos.reemplazar',
+
                 'licencias.consultar',
                 'licencias.administrar',
                 'licencias.editar',
@@ -51,11 +55,6 @@ class RolPermisosSeeder extends Seeder
                 'puntos_seguridad.inactivar',
                 'puntos_seguridad.reactivar',
 
-                'marchamos.ver',
-                'marchamos.asignar_inicial',
-                'marchamos.reemplazar_abastecimiento',
-                'marchamos.reemplazar_dano_desgaste',
-                'marchamos.ver_historial',
 
                 'gasolineras.ver',
                 'gasolineras.crear',
@@ -96,6 +95,10 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'DIESEL_TECNICO' => [
+                'marchamos.consultar',
+                'marchamos.administrar',
+                'marchamos.reemplazar',
+
                 'unidades.consultar',
 
                 'empresas.consultar',
@@ -105,10 +108,6 @@ class RolPermisosSeeder extends Seeder
                 'puntos_seguridad.crear',
                 'puntos_seguridad.actualizar',
 
-                'marchamos.ver',
-                'marchamos.asignar_inicial',
-                'marchamos.reemplazar_dano_desgaste',
-                'marchamos.ver_historial',
 
                 'reemplazos.ver',
                 'reemplazos.crear',
@@ -125,6 +124,8 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'DIESEL_AUDITOR' => [
+                'marchamos.consultar',
+
                 'licencias.consultar',
 
                 'unidades.consultar',
@@ -133,8 +134,6 @@ class RolPermisosSeeder extends Seeder
 
                 'empresas.consultar',
 
-                'marchamos.ver',
-                'marchamos.ver_historial',
                 'gasolineras.ver',
                 'gasolineras_externas.ver',
                 'puntos_ruta.ver',
@@ -150,6 +149,10 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_ADMIN' => [
+                'marchamos.consultar',
+                'marchamos.administrar',
+                'marchamos.reemplazar',
+
                 'licencias.consultar',
 
                 'unidades.consultar',
@@ -166,10 +169,6 @@ class RolPermisosSeeder extends Seeder
                 'usuarios.reactivar',
 
 
-                'marchamos.ver',
-                'marchamos.reemplazar_abastecimiento',
-                'marchamos.reemplazar_dano_desgaste',
-                'marchamos.ver_historial',
 
                 'gasolineras.ver',
                 'gasolineras.crear',
@@ -209,6 +208,10 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_SUPERVISOR' => [
+                'marchamos.consultar',
+                'marchamos.administrar',
+                'marchamos.reemplazar',
+
                 'licencias.consultar',
 
                 'unidades.consultar',
@@ -224,10 +227,6 @@ class RolPermisosSeeder extends Seeder
                 'usuarios.reactivar',
 
 
-                'marchamos.ver',
-                'marchamos.reemplazar_abastecimiento',
-                'marchamos.reemplazar_dano_desgaste',
-                'marchamos.ver_historial',
 
                 'gasolineras.ver',
                 'tanques.ver',
@@ -249,12 +248,12 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_OPERADOR' => [
+                'marchamos.consultar',
+                'marchamos.administrar',
+                'marchamos.reemplazar',
+
                 'unidades.consultar',
 
-                'marchamos.ver',
-                'marchamos.reemplazar_abastecimiento',
-                'marchamos.reemplazar_dano_desgaste',
-                'marchamos.ver_historial',
 
                 'gasolineras.ver',
                 'tanques.ver',
@@ -275,14 +274,14 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_AUDITOR' => [
+                'marchamos.consultar',
+
                 'licencias.consultar',
 
                 'unidades.consultar',
 
                 'usuarios.consultar',
 
-                'marchamos.ver',
-                'marchamos.ver_historial',
                 'gasolineras.ver',
                 'gasolineras_externas.ver',
                 'puntos_ruta.ver',

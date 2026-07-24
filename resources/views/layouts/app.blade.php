@@ -622,36 +622,48 @@
                     @endif
 
                     <!-- Marchamos -->
-                    <div class="cc-sidebar-group">
-                        <div
-                            id="ccMarchamosToggle"
-                            class="cc-sidebar-parent cc-sidebar-collapsible-parent {{ $marchamosActivo ? 'cc-sidebar-parent-active' : '' }}"
-                            role="button"
-                            tabindex="0"
-                            aria-expanded="false"
-                            aria-controls="ccMarchamosSubnav"
-                        >
-                            <span>Marchamos</span>
-                            <span class="cc-sidebar-collapse-icon" aria-hidden="true">▼</span>
+                    @if ($usuarioAutenticado->tieneAlgunPermiso([
+                        'marchamos.consultar',
+                        'marchamos.administrar',
+                        'marchamos.asignar_inicial',
+                    ]))
+                        <div class="cc-sidebar-group">
+                            <div
+                                id="ccMarchamosToggle"
+                                class="cc-sidebar-parent cc-sidebar-collapsible-parent {{ $marchamosActivo ? 'cc-sidebar-parent-active' : '' }}"
+                                role="button"
+                                tabindex="0"
+                                aria-expanded="false"
+                                aria-controls="ccMarchamosSubnav"
+                            >
+                                <span>Marchamos</span>
+                                <span class="cc-sidebar-collapse-icon" aria-hidden="true">▼</span>
+                            </div>
+
+                            <div id="ccMarchamosSubnav" class="cc-sidebar-subnav cc-sidebar-subnav-collapsed">
+                                @if ($usuarioAutenticado->tienePermiso('marchamos.consultar'))
+                                    <a href="{{ route('marchamos.index') }}"
+                                       class="cc-sidebar-sublink {{ request()->routeIs('marchamos.index') || request()->routeIs('marchamos.detalle-unidad') ? 'cc-sidebar-sublink-active' : '' }}">
+                                        Consulta de marchamos
+                                    </a>
+                                @endif
+
+                                @if ($usuarioAutenticado->tienePermiso('marchamos.administrar'))
+                                    <a href="{{ route('marchamos.reemplazos.index') }}"
+                                       class="cc-sidebar-sublink {{ request()->routeIs('marchamos.reemplazos.*') ? 'cc-sidebar-sublink-active' : '' }}">
+                                        Administración de marchamos
+                                    </a>
+                                @endif
+
+                                @if ($usuarioAutenticado->tienePermiso('marchamos.asignar_inicial'))
+                                    <a href="{{ route('marchamos.asignacion-inicial.index') }}"
+                                       class="cc-sidebar-sublink {{ request()->routeIs('marchamos.asignacion-inicial.*') ? 'cc-sidebar-sublink-active' : '' }}">
+                                        Asignación inicial
+                                    </a>
+                                @endif
+                            </div>
                         </div>
-
-                        <div id="ccMarchamosSubnav" class="cc-sidebar-subnav cc-sidebar-subnav-collapsed">
-                            <a href="{{ route('marchamos.index') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('marchamos.index') || request()->routeIs('marchamos.detalle-unidad') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Consulta de marchamos
-                            </a>
-
-                            <a href="{{ route('marchamos.reemplazos.index') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('marchamos.reemplazos.*') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Administración de marchamos
-                            </a>
-
-                            <a href="{{ route('marchamos.asignacion-inicial.index') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('marchamos.asignacion-inicial.*') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Asignación inicial
-                            </a>
-                        </div>
-                    </div>
+                    @endif
 
                     <div class="cc-sidebar-section">
                         Operación cliente

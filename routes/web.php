@@ -634,50 +634,106 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::get('/marchamos', [MarchamoController::class, 'index'])
-        ->name('marchamos.index');
+    /*
+    |--------------------------------------------------------------------------
+    | Consulta histórica
+    |--------------------------------------------------------------------------
+    */
 
-    Route::get('/marchamos/consulta/ventana', [MarchamoController::class, 'consultaVentana'])
-        ->name('marchamos.consulta.ventana');
+    Route::middleware('permiso:marchamos.consultar')->group(function () {
+        Route::get(
+            '/marchamos',
+            [MarchamoController::class, 'index']
+        )->name('marchamos.index');
 
-    Route::get('/marchamos/consulta/ventana/unidades/{unidad}', [MarchamoController::class, 'detalleUnidadVentana'])
-        ->name('marchamos.detalle-unidad.ventana');
+        Route::get(
+            '/marchamos/consulta/ventana',
+            [MarchamoController::class, 'consultaVentana']
+        )->name('marchamos.consulta.ventana');
 
-    Route::get('/marchamos/unidades/{unidad}', [MarchamoController::class, 'detalleUnidad'])
-        ->name('marchamos.detalle-unidad');
+        Route::get(
+            '/marchamos/consulta/ventana/unidades/{unidad}',
+            [MarchamoController::class, 'detalleUnidadVentana']
+        )->name('marchamos.detalle-unidad.ventana');
 
-    Route::get('/marchamos/asignacion-inicial', [MarchamoAsignacionInicialController::class, 'index'])
-        ->name('marchamos.asignacion-inicial.index');
+        Route::get(
+            '/marchamos/unidades/{unidad}',
+            [MarchamoController::class, 'detalleUnidad']
+        )->name('marchamos.detalle-unidad');
+    });
 
-    Route::get('/marchamos/asignacion-inicial/ventana', [MarchamoAsignacionInicialController::class, 'indexVentana'])
-        ->name('marchamos.asignacion-inicial.index.ventana');
+    /*
+    |--------------------------------------------------------------------------
+    | Administración y reemplazos
+    |--------------------------------------------------------------------------
+    */
 
-    Route::get('/unidades/{unidad}/marchamos/asignacion-inicial', [MarchamoAsignacionInicialController::class, 'show'])
-        ->name('marchamos.asignacion-inicial.show');
+    Route::middleware('permiso:marchamos.administrar')->group(function () {
+        Route::get(
+            '/marchamos/reemplazos',
+            [MarchamoReemplazoController::class, 'index']
+        )->name('marchamos.reemplazos.index');
 
-    Route::get('/unidades/{unidad}/marchamos/asignacion-inicial/ventana', [MarchamoAsignacionInicialController::class, 'showVentana'])
-        ->name('marchamos.asignacion-inicial.show.ventana');
+        Route::get(
+            '/marchamos/reemplazos/ventana',
+            [MarchamoReemplazoController::class, 'indexVentana']
+        )->name('marchamos.reemplazos.index.ventana');
 
-    Route::post('/unidades/{unidad}/marchamos/asignacion-inicial', [MarchamoAsignacionInicialController::class, 'guardarAvance'])
-        ->name('marchamos.asignacion-inicial.guardar-avance');
+        Route::get(
+            '/marchamos/reemplazos/unidades/{unidad}',
+            [MarchamoReemplazoController::class, 'show']
+        )->name('marchamos.reemplazos.show');
 
-    Route::post('/unidades/{unidad}/marchamos/finalizar-asignacion-inicial', [MarchamoAsignacionInicialController::class, 'finalizar'])
-        ->name('marchamos.asignacion-inicial.finalizar');
+        Route::get(
+            '/marchamos/reemplazos/unidades/{unidad}/ventana',
+            [MarchamoReemplazoController::class, 'showVentana']
+        )->name('marchamos.reemplazos.show.ventana');
+    });
 
-    Route::get('/marchamos/reemplazos', [MarchamoReemplazoController::class, 'index'])
-        ->name('marchamos.reemplazos.index');
-
-    Route::get('/marchamos/reemplazos/ventana', [MarchamoReemplazoController::class, 'indexVentana'])
-        ->name('marchamos.reemplazos.index.ventana');
-
-    Route::get('/marchamos/reemplazos/unidades/{unidad}', [MarchamoReemplazoController::class, 'show'])
-        ->name('marchamos.reemplazos.show');
-
-    Route::get('/marchamos/reemplazos/unidades/{unidad}/ventana', [MarchamoReemplazoController::class, 'showVentana'])
-        ->name('marchamos.reemplazos.show.ventana');
-
-    Route::post('/marchamos/reemplazos/unidades/{unidad}', [MarchamoReemplazoController::class, 'store'])
+    Route::post(
+        '/marchamos/reemplazos/unidades/{unidad}',
+        [MarchamoReemplazoController::class, 'store']
+    )
+        ->middleware('permiso:marchamos.reemplazar')
         ->name('marchamos.reemplazos.store');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Asignación inicial
+    |--------------------------------------------------------------------------
+    */
+
+    Route::middleware('permiso:marchamos.asignar_inicial')->group(function () {
+        Route::get(
+            '/marchamos/asignacion-inicial',
+            [MarchamoAsignacionInicialController::class, 'index']
+        )->name('marchamos.asignacion-inicial.index');
+
+        Route::get(
+            '/marchamos/asignacion-inicial/ventana',
+            [MarchamoAsignacionInicialController::class, 'indexVentana']
+        )->name('marchamos.asignacion-inicial.index.ventana');
+
+        Route::get(
+            '/unidades/{unidad}/marchamos/asignacion-inicial',
+            [MarchamoAsignacionInicialController::class, 'show']
+        )->name('marchamos.asignacion-inicial.show');
+
+        Route::get(
+            '/unidades/{unidad}/marchamos/asignacion-inicial/ventana',
+            [MarchamoAsignacionInicialController::class, 'showVentana']
+        )->name('marchamos.asignacion-inicial.show.ventana');
+
+        Route::post(
+            '/unidades/{unidad}/marchamos/asignacion-inicial',
+            [MarchamoAsignacionInicialController::class, 'guardarAvance']
+        )->name('marchamos.asignacion-inicial.guardar-avance');
+
+        Route::post(
+            '/unidades/{unidad}/marchamos/finalizar-asignacion-inicial',
+            [MarchamoAsignacionInicialController::class, 'finalizar']
+        )->name('marchamos.asignacion-inicial.finalizar');
+    });
 
     /*
     |--------------------------------------------------------------------------

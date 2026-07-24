@@ -165,12 +165,19 @@ class MarchamoController extends Controller
             'consultar'
         );
 
+        /*
+         * La empresa obligatoria del usuario empresarial limita el alcance,
+         * pero no ejecuta automáticamente la consulta.
+         */
         $hayFiltros = $consultaEjecutada
             || filled($busquedaEmpresa)
             || filled($busquedaPlaca)
-            || count($empresaIds) > 0
             || count($placas) > 0
-            || filled($unidadId);
+            || filled($unidadId)
+            || (
+                $esUsuarioDieselCop
+                && count($empresaIds) > 0
+            );
 
         /*
          * En Consulta se muestran empresas activas e inactivas.
