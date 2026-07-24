@@ -28,6 +28,7 @@ use Illuminate\Notifications\Notifiable;
     'fecha_inactivacion',
     'inactivado_por',
     'motivo_inactivacion',
+    'es_cuenta_recuperacion',
 ])]
 
 #[Hidden(['password', 'remember_token'])]
@@ -88,6 +89,11 @@ class User extends Authenticatable
             $rolesPermitidos,
             true
         );
+    }
+
+    public function esCuentaRecuperacion(): bool
+    {
+        return (bool) $this->es_cuenta_recuperacion;
     }
 
     public function esDieselCop(): bool
@@ -214,6 +220,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'ultimo_acceso' => 'datetime',
             'fecha_inactivacion' => 'datetime',
+            'es_cuenta_recuperacion' => 'boolean',
             'password' => 'hashed',
         ];
     }

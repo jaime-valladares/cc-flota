@@ -202,6 +202,7 @@ class UsuarioController extends Controller
             ->get();
 
         $query = User::query()
+            ->where('es_cuenta_recuperacion', false)
             ->with(['empresa', 'role']);
 
         $this->aplicarAlcanceUsuario(
@@ -236,7 +237,8 @@ class UsuarioController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        $baseResumen = User::query();
+        $baseResumen = User::query()
+            ->where('es_cuenta_recuperacion', false);
 
         $this->aplicarAlcanceUsuario(
             $baseResumen,
@@ -971,6 +973,15 @@ class UsuarioController extends Controller
     private function autorizarAdministracionUsuario(
         User $usuario
     ): void {
+        /*
+         * Las cuentas de recuperación no forman parte de la administración
+         * ordinaria. Se responde 404 para no revelar su existencia mediante
+         * enumeración directa de identificadores.
+         */
+        if ($usuario->esCuentaRecuperacion()) {
+            abort(404);
+        }
+
         $usuario->loadMissing('role');
 
         /** @var User $usuarioAutenticado */
