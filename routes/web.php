@@ -152,48 +152,99 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     | Unidades
     |--------------------------------------------------------------------------
+    |
+    | Las rutas fijas deben declararse antes de /unidades/{unidad}.
+    |
     */
 
-    Route::get('/unidades', [UnidadController::class, 'index'])
-        ->name('unidades.index');
+    Route::middleware('permiso:unidades.consultar')->group(function () {
+        Route::get(
+            '/unidades',
+            [UnidadController::class, 'index']
+        )->name('unidades.index');
 
-    Route::get('/unidades/consulta/ventana', [UnidadController::class, 'consultaVentana'])
-        ->name('unidades.consulta.ventana');
+        Route::get(
+            '/unidades/consulta/ventana',
+            [UnidadController::class, 'consultaVentana']
+        )->name('unidades.consulta.ventana');
+    });
 
-    Route::get('/unidades/administrar', [UnidadController::class, 'administrar'])
-        ->name('unidades.administrar');
+    Route::middleware('permiso:unidades.crear')->group(function () {
+        Route::get(
+            '/unidades/nueva',
+            [UnidadController::class, 'create']
+        )->name('unidades.create');
 
-    Route::get('/unidades/administrar/ventana', [UnidadController::class, 'administrarVentana'])
-        ->name('unidades.administrar.ventana');
+        Route::get(
+            '/unidades/nueva/ventana',
+            [UnidadController::class, 'createVentana']
+        )->name('unidades.create.ventana');
 
-    Route::get('/unidades/nueva', [UnidadController::class, 'create'])
-        ->name('unidades.create');
+        Route::post(
+            '/unidades',
+            [UnidadController::class, 'store']
+        )->name('unidades.store');
+    });
 
-    Route::get('/unidades/nueva/ventana', [UnidadController::class, 'createVentana'])
-        ->name('unidades.create.ventana');
+    Route::middleware('permiso:unidades.administrar')->group(function () {
+        Route::get(
+            '/unidades/administrar',
+            [UnidadController::class, 'administrar']
+        )->name('unidades.administrar');
 
-    Route::post('/unidades', [UnidadController::class, 'store'])
-        ->name('unidades.store');
+        Route::get(
+            '/unidades/administrar/ventana',
+            [UnidadController::class, 'administrarVentana']
+        )->name('unidades.administrar.ventana');
+    });
 
-    Route::get('/unidades/{unidad}/ficha/ventana', [UnidadController::class, 'showVentana'])
-        ->name('unidades.show.ventana');
+    /*
+    |--------------------------------------------------------------------------
+    | Unidades - Rutas dinámicas
+    |--------------------------------------------------------------------------
+    */
 
-    Route::get('/unidades/{unidad}/editar/ventana', [UnidadController::class, 'editVentana'])
-        ->name('unidades.edit.ventana');
+    Route::middleware('permiso:unidades.administrar')->group(function () {
+        Route::get(
+            '/unidades/{unidad}/ficha/ventana',
+            [UnidadController::class, 'showVentana']
+        )->name('unidades.show.ventana');
 
-    Route::get('/unidades/{unidad}', [UnidadController::class, 'show'])
-        ->name('unidades.show');
+        Route::get(
+            '/unidades/{unidad}',
+            [UnidadController::class, 'show']
+        )->name('unidades.show');
+    });
 
-    Route::get('/unidades/{unidad}/editar', [UnidadController::class, 'edit'])
-        ->name('unidades.edit');
+    Route::middleware('permiso:unidades.editar')->group(function () {
+        Route::get(
+            '/unidades/{unidad}/editar/ventana',
+            [UnidadController::class, 'editVentana']
+        )->name('unidades.edit.ventana');
 
-    Route::put('/unidades/{unidad}', [UnidadController::class, 'update'])
-        ->name('unidades.update');
+        Route::get(
+            '/unidades/{unidad}/editar',
+            [UnidadController::class, 'edit']
+        )->name('unidades.edit');
 
-    Route::patch('/unidades/{unidad}/inactivar', [UnidadController::class, 'inactivar'])
+        Route::put(
+            '/unidades/{unidad}',
+            [UnidadController::class, 'update']
+        )->name('unidades.update');
+    });
+
+    Route::patch(
+        '/unidades/{unidad}/inactivar',
+        [UnidadController::class, 'inactivar']
+    )
+        ->middleware('permiso:unidades.inactivar')
         ->name('unidades.inactivar');
 
-    Route::patch('/unidades/{unidad}/reactivar', [UnidadController::class, 'reactivar'])
+    Route::patch(
+        '/unidades/{unidad}/reactivar',
+        [UnidadController::class, 'reactivar']
+    )
+        ->middleware('permiso:unidades.reactivar')
         ->name('unidades.reactivar');
 
     /*

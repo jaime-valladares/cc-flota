@@ -133,11 +133,20 @@ class PermisosSeeder extends Seeder
             // Unidades
             // -------------------------------------------------------------
             [
-                'codigo' => 'unidades.ver',
+                'codigo' => 'unidades.consultar',
                 'modulo' => 'unidades',
-                'accion' => 'ver',
-                'nombre' => 'Ver unidades',
-                'descripcion' => 'Permite visualizar unidades según el alcance autorizado del rol.',
+                'accion' => 'consultar',
+                'nombre' => 'Consultar unidades',
+                'descripcion' => 'Permite acceder a la consulta informativa de unidades según el alcance autorizado.',
+                'alcance' => 'ambos',
+                'estado' => 'activo',
+            ],
+            [
+                'codigo' => 'unidades.administrar',
+                'modulo' => 'unidades',
+                'accion' => 'administrar',
+                'nombre' => 'Administrar unidades',
+                'descripcion' => 'Permite acceder al listado administrativo y a la ficha administrativa de unidades.',
                 'alcance' => 'ambos',
                 'estado' => 'activo',
             ],
@@ -146,17 +155,17 @@ class PermisosSeeder extends Seeder
                 'modulo' => 'unidades',
                 'accion' => 'crear',
                 'nombre' => 'Crear unidades',
-                'descripcion' => 'Permite registrar unidades para empresas cliente.',
+                'descripcion' => 'Permite registrar nuevas unidades dentro del alcance autorizado.',
                 'alcance' => 'diesel_cop',
                 'estado' => 'activo',
             ],
             [
-                'codigo' => 'unidades.actualizar',
+                'codigo' => 'unidades.editar',
                 'modulo' => 'unidades',
-                'accion' => 'actualizar',
-                'nombre' => 'Actualizar unidades',
-                'descripcion' => 'Permite actualizar información de unidades registradas.',
-                'alcance' => 'diesel_cop',
+                'accion' => 'editar',
+                'nombre' => 'Editar unidades',
+                'descripcion' => 'Permite modificar unidades que cumplen las condiciones administrativas y operativas.',
+                'alcance' => 'ambos',
                 'estado' => 'activo',
             ],
             [
@@ -164,8 +173,8 @@ class PermisosSeeder extends Seeder
                 'modulo' => 'unidades',
                 'accion' => 'inactivar',
                 'nombre' => 'Inactivar unidades',
-                'descripcion' => 'Permite inactivar unidades sin eliminarlas físicamente.',
-                'alcance' => 'diesel_cop',
+                'descripcion' => 'Permite inactivar unidades administrables sin eliminarlas físicamente.',
+                'alcance' => 'ambos',
                 'estado' => 'activo',
             ],
             [
@@ -173,8 +182,8 @@ class PermisosSeeder extends Seeder
                 'modulo' => 'unidades',
                 'accion' => 'reactivar',
                 'nombre' => 'Reactivar unidades',
-                'descripcion' => 'Permite reactivar unidades previamente inactivas.',
-                'alcance' => 'diesel_cop',
+                'descripcion' => 'Permite reactivar unidades administrables previamente inactivas.',
+                'alcance' => 'ambos',
                 'estado' => 'activo',
             ],
 
@@ -689,6 +698,8 @@ class PermisosSeeder extends Seeder
                 'usuarios.ver',
                 'usuarios.actualizar',
                 'usuarios.cambiar_rol',
+                'unidades.ver',
+                'unidades.actualizar',
             ])
             ->get();
 
@@ -697,7 +708,7 @@ class PermisosSeeder extends Seeder
                 'estado' => 'inactivo',
                 'fecha_actualizacion' => now(),
                 'fecha_inactivacion' => now(),
-                'motivo_inactivacion' => 'Permiso reemplazado por el mapeo funcional definitivo de los módulos Empresas y Usuarios.',
+                'motivo_inactivacion' => 'Permiso reemplazado por el mapeo funcional definitivo de los módulos Empresas, Usuarios y Unidades.',
             ]);
         }
     }

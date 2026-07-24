@@ -38,7 +38,10 @@ class UnidadController extends Controller
      */
     public function administrar(Request $request): View
     {
-        $data = $this->prepararConsultaUnidades($request);
+        $data = $this->prepararConsultaUnidades(
+            $request,
+            true
+        );
 
         return view('unidades.administrar', $data);
     }
@@ -48,7 +51,10 @@ class UnidadController extends Controller
      */
     public function administrarVentana(Request $request): View
     {
-        $data = $this->prepararConsultaUnidades($request);
+        $data = $this->prepararConsultaUnidades(
+            $request,
+            true
+        );
 
         return view('unidades.administrar-ventana', $data);
     }
@@ -63,7 +69,10 @@ class UnidadController extends Controller
      * - condición de la licencia;
      * - asignación inicial de marchamos.
      */
-    private function prepararConsultaUnidades(Request $request): array
+    private function prepararConsultaUnidades(
+        Request $request,
+        bool $modoAdministracion = false
+    ): array
     {
         $user = Auth::user();
 
@@ -260,15 +269,22 @@ class UnidadController extends Controller
 
         $empresaId = $empresaIds[0] ?? null;
 
+        /*
+         * La empresa obligatoria del usuario empresarial define alcance,
+         * pero no debe ejecutar automáticamente la consulta.
+         */
         $hayFiltros = $request->boolean('consultar')
             || $busqueda !== ''
-            || count($empresaIds) > 0
             || count($placas) > 0
             || count($modelosMedicionSeleccionados) > 0
             || in_array(
                 $estado,
                 array_keys($this->estadosUnidad()),
                 true
+            )
+            || (
+                $esUsuarioDieselCop
+                && count($empresaIds) > 0
             );
 
         /*
@@ -278,7 +294,11 @@ class UnidadController extends Controller
         */
 
         $empresas = Empresa::query()
-            ->where('estado', 'activa')
+            ->when(
+                $modoAdministracion,
+                fn (Builder $query) =>
+                    $query->where('estado', 'activa')
+            )
             ->when(
                 ! $esUsuarioDieselCop,
                 function (Builder $query) use ($user) {
@@ -308,12 +328,17 @@ class UnidadController extends Controller
                 'licencia',
                 'puntosSeguridad',
             ])
-            ->whereHas(
-                'empresa',
-                function (Builder $empresaQuery) {
-                    $empresaQuery->where(
-                        'estado',
-                        'activa'
+            ->when(
+                $modoAdministracion,
+                function (Builder $query) {
+                    $query->whereHas(
+                        'empresa',
+                        function (Builder $empresaQuery) {
+                            $empresaQuery->where(
+                                'estado',
+                                'activa'
+                            );
+                        }
                     );
                 }
             )

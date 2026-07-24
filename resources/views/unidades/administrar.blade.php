@@ -501,7 +501,8 @@
                                     && $licencia->esta_vigente;
 
                                 $puedeEditar =
-                                    $unidad->estado !== 'inactiva'
+                                    Auth::user()->tienePermiso('unidades.editar')
+                                    && $unidad->estado !== 'inactiva'
                                     && (
                                         $unidadRegistradaSinLicencia
                                         || $licenciaVigente

@@ -16,14 +16,16 @@
      * actualmente por UnidadController.
      */
     $puedeEditar =
-        $unidad->estado !== 'inactiva'
+        Auth::user()->tienePermiso('unidades.editar')
+        && $unidad->estado !== 'inactiva'
         && (
             $unidadRegistradaSinLicencia
             || $licenciaVigente
         );
 
     $puedeInactivar =
-        $unidad->estado !== 'inactiva'
+        Auth::user()->tienePermiso('unidades.inactivar')
+        && $unidad->estado !== 'inactiva'
         && (
             $unidadRegistradaSinLicencia
             || $licenciaVigente
@@ -812,7 +814,11 @@
                     </section>
                 @endif
 
-                <section class="cc-danger-zone">
+                @if (
+                    Auth::user()->tienePermiso('unidades.inactivar')
+                    || Auth::user()->tienePermiso('unidades.reactivar')
+                )
+                    <section class="cc-danger-zone">
                     <div class="cc-danger-zone-header">
                         <div>
                             <h5>
@@ -827,7 +833,10 @@
                         </div>
                     </div>
 
-                    @if ($unidad->estado === 'inactiva')
+                    @if (
+                        $unidad->estado === 'inactiva'
+                        && Auth::user()->tienePermiso('unidades.reactivar')
+                    )
                         <form
                             method="POST"
                             action="{{ route(
@@ -1008,7 +1017,8 @@
                             </div>
                         </div>
                     @endif
-                </section>
+                    </section>
+                @endif
 
             </div>
         </div>

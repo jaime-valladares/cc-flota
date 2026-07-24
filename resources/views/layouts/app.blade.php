@@ -534,36 +534,48 @@
                     </div>
 
                     <!-- Unidades -->
-                    <div class="cc-sidebar-group">
-                        <div
-                            id="ccUnidadesToggle"
-                            class="cc-sidebar-parent cc-sidebar-collapsible-parent {{ $unidadesActivo ? 'cc-sidebar-parent-active' : '' }}"
-                            role="button"
-                            tabindex="0"
-                            aria-expanded="false"
-                            aria-controls="ccUnidadesSubnav"
-                        >
-                            <span>Unidades</span>
-                            <span class="cc-sidebar-collapse-icon" aria-hidden="true">▼</span>
+                    @if ($usuarioAutenticado->tieneAlgunPermiso([
+                        'unidades.consultar',
+                        'unidades.administrar',
+                        'unidades.crear',
+                    ]))
+                        <div class="cc-sidebar-group">
+                            <div
+                                id="ccUnidadesToggle"
+                                class="cc-sidebar-parent cc-sidebar-collapsible-parent {{ $unidadesActivo ? 'cc-sidebar-parent-active' : '' }}"
+                                role="button"
+                                tabindex="0"
+                                aria-expanded="false"
+                                aria-controls="ccUnidadesSubnav"
+                            >
+                                <span>Unidades</span>
+                                <span class="cc-sidebar-collapse-icon" aria-hidden="true">▼</span>
+                            </div>
+
+                            <div id="ccUnidadesSubnav" class="cc-sidebar-subnav cc-sidebar-subnav-collapsed">
+                                @if ($usuarioAutenticado->tienePermiso('unidades.consultar'))
+                                    <a href="{{ route('unidades.index') }}"
+                                       class="cc-sidebar-sublink {{ request()->routeIs('unidades.index') ? 'cc-sidebar-sublink-active' : '' }}">
+                                        Consulta unidades
+                                    </a>
+                                @endif
+
+                                @if ($usuarioAutenticado->tienePermiso('unidades.administrar'))
+                                    <a href="{{ route('unidades.administrar') }}"
+                                       class="cc-sidebar-sublink {{ request()->routeIs('unidades.administrar') || request()->routeIs('unidades.show') || request()->routeIs('unidades.edit') ? 'cc-sidebar-sublink-active' : '' }}">
+                                        Administrar unidad
+                                    </a>
+                                @endif
+
+                                @if ($usuarioAutenticado->tienePermiso('unidades.crear'))
+                                    <a href="{{ route('unidades.create') }}"
+                                       class="cc-sidebar-sublink {{ request()->routeIs('unidades.create') ? 'cc-sidebar-sublink-active' : '' }}">
+                                        Nueva unidad
+                                    </a>
+                                @endif
+                            </div>
                         </div>
-
-                        <div id="ccUnidadesSubnav" class="cc-sidebar-subnav cc-sidebar-subnav-collapsed">
-                            <a href="{{ route('unidades.index') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('unidades.index') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Consulta unidades
-                            </a>
-
-                            <a href="{{ route('unidades.administrar') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('unidades.administrar') || request()->routeIs('unidades.show') || request()->routeIs('unidades.edit') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Administrar unidad
-                            </a>
-
-                            <a href="{{ route('unidades.create') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('unidades.create') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Nueva unidad
-                            </a>
-                        </div>
-                    </div>
+                    @endif
 
                     <!-- Licencias -->
                     <div class="cc-sidebar-group">

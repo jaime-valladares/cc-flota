@@ -18,6 +18,12 @@ class RolPermisosSeeder extends Seeder
             'DIESEL_SUPER_ADMIN' => 'ALL',
 
             'DIESEL_ADMIN' => [
+                'unidades.consultar',
+                'unidades.administrar',
+                'unidades.editar',
+                'unidades.inactivar',
+                'unidades.reactivar',
+
                 'usuarios.consultar',
                 'usuarios.administrar',
                 'usuarios.editar',
@@ -31,11 +37,6 @@ class RolPermisosSeeder extends Seeder
                 'empresas.reactivar',
 
 
-                'unidades.ver',
-                'unidades.crear',
-                'unidades.actualizar',
-                'unidades.inactivar',
-                'unidades.reactivar',
 
                 'licencias.ver',
                 'licencias.provisionar',
@@ -94,11 +95,10 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'DIESEL_TECNICO' => [
+                'unidades.consultar',
+
                 'empresas.consultar',
 
-                'unidades.ver',
-                'unidades.crear',
-                'unidades.actualizar',
 
                 'puntos_seguridad.ver',
                 'puntos_seguridad.crear',
@@ -124,11 +124,12 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'DIESEL_AUDITOR' => [
+                'unidades.consultar',
+
                 'usuarios.consultar',
 
                 'empresas.consultar',
 
-                'unidades.ver',
                 'licencias.ver',
                 'marchamos.ver',
                 'marchamos.ver_historial',
@@ -147,6 +148,12 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_ADMIN' => [
+                'unidades.consultar',
+                'unidades.administrar',
+                'unidades.editar',
+                'unidades.inactivar',
+                'unidades.reactivar',
+
                 'usuarios.consultar',
                 'usuarios.administrar',
                 'usuarios.crear',
@@ -154,7 +161,6 @@ class RolPermisosSeeder extends Seeder
                 'usuarios.inactivar',
                 'usuarios.reactivar',
 
-                'unidades.ver',
 
                 'marchamos.ver',
                 'marchamos.reemplazar_abastecimiento',
@@ -199,13 +205,18 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_SUPERVISOR' => [
+                'unidades.consultar',
+                'unidades.administrar',
+                'unidades.editar',
+                'unidades.inactivar',
+                'unidades.reactivar',
+
                 'usuarios.consultar',
                 'usuarios.administrar',
                 'usuarios.editar',
                 'usuarios.inactivar',
                 'usuarios.reactivar',
 
-                'unidades.ver',
 
                 'marchamos.ver',
                 'marchamos.reemplazar_abastecimiento',
@@ -232,7 +243,7 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_OPERADOR' => [
-                'unidades.ver',
+                'unidades.consultar',
 
                 'marchamos.ver',
                 'marchamos.reemplazar_abastecimiento',
@@ -258,9 +269,10 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_AUDITOR' => [
+                'unidades.consultar',
+
                 'usuarios.consultar',
 
-                'unidades.ver',
                 'licencias.ver',
                 'marchamos.ver',
                 'marchamos.ver_historial',
