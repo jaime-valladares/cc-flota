@@ -130,21 +130,23 @@ class AnalisisRendimientoController extends Controller
         $sort = (string) ($validated['sort'] ?? 'fecha_ciclo');
         $direction = (string) ($validated['direction'] ?? 'desc');
 
-        $hayFiltros = ! $esUsuarioDieselCop
-            || $request->hasAny([
-                'empresa_ids',
-                'empresa_id',
-                'unidad_ids',
-                'unidad_id',
-                'motorista_ids',
-                'motorista_id',
-                'modelos_medicion',
-                'modelo_medicion',
-                'fecha_desde',
-                'fecha_hasta',
-                'busqueda',
-                'consultar',
-            ]);
+        $consultaEjecutada = $request->boolean('consultar');
+
+        /*
+         * La empresa obligatoria restringe el alcance empresarial,
+         * pero no ejecuta automáticamente el análisis.
+         */
+        $hayFiltros = $consultaEjecutada
+            || $unidadIds !== []
+            || $motoristaIds !== []
+            || $modelosMedicion !== []
+            || filled($fechaDesde)
+            || filled($fechaHasta)
+            || $busqueda !== ''
+            || (
+                $esUsuarioDieselCop
+                && $empresaIds !== []
+            );
 
         $consultaBase = Abastecimiento::query()->registrados();
 

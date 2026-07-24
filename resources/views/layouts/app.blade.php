@@ -975,68 +975,72 @@
                     </div>
 
                     <!-- Auditoría -->
-                    <div class="cc-sidebar-group">
-                        <div
-                            id="ccAuditoriaToggle"
-                            class="cc-sidebar-parent cc-sidebar-collapsible-parent {{ $auditoriaActivo ? 'cc-sidebar-parent-active' : '' }}"
-                            role="button"
-                            tabindex="0"
-                            aria-expanded="false"
-                            aria-controls="ccAuditoriaSubnav"
-                        >
-                            <span>Auditoría</span>
-                            <span class="cc-sidebar-collapse-icon" aria-hidden="true">▼</span>
+                    @if ($usuarioAutenticado->tienePermiso('auditoria.consultar'))
+                        <div class="cc-sidebar-group">
+                            <div
+                                id="ccAuditoriaToggle"
+                                class="cc-sidebar-parent cc-sidebar-collapsible-parent {{ $auditoriaActivo ? 'cc-sidebar-parent-active' : '' }}"
+                                role="button"
+                                tabindex="0"
+                                aria-expanded="false"
+                                aria-controls="ccAuditoriaSubnav"
+                            >
+                                <span>Auditoría</span>
+                                <span class="cc-sidebar-collapse-icon" aria-hidden="true">▼</span>
+                            </div>
+
+                            <div id="ccAuditoriaSubnav" class="cc-sidebar-subnav cc-sidebar-subnav-collapsed">
+                                <a href="{{ route('analisis.panel-operativo') }}"
+                                   class="cc-sidebar-sublink {{ request()->routeIs('analisis.panel-operativo*') ? 'cc-sidebar-sublink-active' : '' }}">
+                                    Control operativo de flota
+                                </a>
+
+                                <a href="{{ route('auditoria.abastecimientos.index') }}"
+                                   class="cc-sidebar-sublink {{ request()->routeIs('auditoria.abastecimientos.*') ? 'cc-sidebar-sublink-active' : '' }}">
+                                    Auditoría de Abastecimientos
+                                </a>
+
+                                <a href="{{ route('auditoria.marchamos.index') }}"
+                                   class="cc-sidebar-sublink {{ request()->routeIs('auditoria.marchamos.*') ? 'cc-sidebar-sublink-active' : '' }}">
+                                    Auditoría de Marchamos
+                                </a>
+                            </div>
                         </div>
-
-                        <div id="ccAuditoriaSubnav" class="cc-sidebar-subnav cc-sidebar-subnav-collapsed">
-                            <a href="{{ route('analisis.panel-operativo') }}"
-                            class="cc-sidebar-sublink {{ request()->routeIs('analisis.panel-operativo') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Control operativo de flota
-                            </a>
-
-                            <a href="{{ route('auditoria.abastecimientos.index') }}"
-                            class="cc-sidebar-sublink {{ request()->routeIs('auditoria.abastecimientos.*') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Auditoría de Abastecimientos
-                            </a>
-
-                            <a href="{{ route('auditoria.marchamos.index') }}"
-                            class="cc-sidebar-sublink {{ request()->routeIs('auditoria.marchamos.*') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Auditoría de Marchamos
-                            </a>
-                        </div>
-                    </div>
+                    @endif
 
                     <!-- Análisis -->
-                    <div class="cc-sidebar-group">
-                        <div
-                            id="ccAnalisisToggle"
-                            class="cc-sidebar-parent cc-sidebar-collapsible-parent {{ $analisisActivo ? 'cc-sidebar-parent-active' : '' }}"
-                            role="button"
-                            tabindex="0"
-                            aria-expanded="false"
-                            aria-controls="ccAnalisisSubnav"
-                        >
-                            <span>Análisis</span>
-                            <span class="cc-sidebar-collapse-icon" aria-hidden="true">▼</span>
+                    @if ($usuarioAutenticado->tienePermiso('analisis.consultar'))
+                        <div class="cc-sidebar-group">
+                            <div
+                                id="ccAnalisisToggle"
+                                class="cc-sidebar-parent cc-sidebar-collapsible-parent {{ $analisisActivo ? 'cc-sidebar-parent-active' : '' }}"
+                                role="button"
+                                tabindex="0"
+                                aria-expanded="false"
+                                aria-controls="ccAnalisisSubnav"
+                            >
+                                <span>Análisis</span>
+                                <span class="cc-sidebar-collapse-icon" aria-hidden="true">▼</span>
+                            </div>
+
+                            <div id="ccAnalisisSubnav" class="cc-sidebar-subnav cc-sidebar-subnav-collapsed">
+                                <a href="{{ route('analisis.rendimientos.index') }}"
+                                   class="cc-sidebar-sublink {{ request()->routeIs('analisis.rendimientos.*') ? 'cc-sidebar-sublink-active' : '' }}">
+                                    Análisis de Kilometraje
+                                </a>
+
+                                <a href="{{ route('analisis.consumo-unidades.index') }}"
+                                   class="cc-sidebar-sublink {{ request()->routeIs('analisis.consumo-unidades.*') ? 'cc-sidebar-sublink-active' : '' }}">
+                                    Consumo por Unidad
+                                </a>
+
+                                <a href="{{ route('analisis.rutas.index') }}"
+                                   class="cc-sidebar-sublink {{ request()->routeIs('analisis.rutas.*') ? 'cc-sidebar-sublink-active' : '' }}">
+                                    Análisis de Rutas
+                                </a>
+                            </div>
                         </div>
-
-                        <div id="ccAnalisisSubnav" class="cc-sidebar-subnav cc-sidebar-subnav-collapsed">
-                            <a href="{{ route('analisis.rendimientos.index') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('analisis.rendimientos.*') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Análisis de Kilometraje
-                            </a>
-
-                            <a href="{{ route('analisis.consumo-unidades.index') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('analisis.consumo-unidades.*') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Consumo por Unidad
-                            </a>
-
-                            <a href="{{ route('analisis.rutas.index') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('analisis.rutas.*') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Análisis de Rutas
-                            </a>
-                        </div>
-                    </div>
+                    @endif
                 </nav>
             </aside>
 

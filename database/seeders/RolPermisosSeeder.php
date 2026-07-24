@@ -18,6 +18,9 @@ class RolPermisosSeeder extends Seeder
             'DIESEL_SUPER_ADMIN' => 'ALL',
 
             'DIESEL_ADMIN' => [
+                'auditoria.consultar',
+                'analisis.consultar',
+
                 'abastecimientos.consultar',
                 'abastecimientos.administrar',
                 'abastecimientos.modificar',
@@ -109,12 +112,6 @@ class RolPermisosSeeder extends Seeder
                 'inventario.ver',
                 'inventario.ajustar',
 
-                'auditoria.panel_operativo.ver',
-                'auditoria.abastecimientos.ver',
-                'auditoria.marchamos.ver',
-                'analisis.kilometraje.ver',
-                'analisis.consumo_unidad.ver',
-                'analisis.rutas.ver',
             ],
 
             'DIESEL_TECNICO' => [
@@ -152,12 +149,12 @@ class RolPermisosSeeder extends Seeder
 
 
 
-                'analisis.kilometraje.ver',
-                'analisis.consumo_unidad.ver',
-                'analisis.rutas.ver',
             ],
 
             'DIESEL_AUDITOR' => [
+                'auditoria.consultar',
+                'analisis.consultar',
+
                 'abastecimientos.consultar',
 
                 'motoristas.consultar',
@@ -180,15 +177,12 @@ class RolPermisosSeeder extends Seeder
 
                 'empresas.consultar',
 
-                'auditoria.panel_operativo.ver',
-                'auditoria.abastecimientos.ver',
-                'auditoria.marchamos.ver',
-                'analisis.kilometraje.ver',
-                'analisis.consumo_unidad.ver',
-                'analisis.rutas.ver',
             ],
 
             'EMPRESA_ADMIN' => [
+                'auditoria.consultar',
+                'analisis.consultar',
+
                 'abastecimientos.consultar',
                 'abastecimientos.administrar',
                 'abastecimientos.registrar',
@@ -270,12 +264,12 @@ class RolPermisosSeeder extends Seeder
                 'inventario.ajustar',
 
 
-                'analisis.kilometraje.ver',
-                'analisis.consumo_unidad.ver',
-                'analisis.rutas.ver',
             ],
 
             'EMPRESA_SUPERVISOR' => [
+                'auditoria.consultar',
+                'analisis.consultar',
+
                 'abastecimientos.consultar',
                 'abastecimientos.administrar',
                 'abastecimientos.modificar',
@@ -345,9 +339,6 @@ class RolPermisosSeeder extends Seeder
                 'inventario.ver',
 
 
-                'analisis.kilometraje.ver',
-                'analisis.consumo_unidad.ver',
-                'analisis.rutas.ver',
             ],
 
             'EMPRESA_OPERADOR' => [
@@ -381,12 +372,12 @@ class RolPermisosSeeder extends Seeder
                 'inventario.ver',
 
 
-                'analisis.kilometraje.ver',
-                'analisis.consumo_unidad.ver',
-                'analisis.rutas.ver',
             ],
 
             'EMPRESA_AUDITOR' => [
+                'auditoria.consultar',
+                'analisis.consultar',
+
                 'abastecimientos.consultar',
 
                 'motoristas.consultar',
@@ -407,12 +398,6 @@ class RolPermisosSeeder extends Seeder
 
                 'usuarios.consultar',
 
-                'auditoria.panel_operativo.ver',
-                'auditoria.abastecimientos.ver',
-                'auditoria.marchamos.ver',
-                'analisis.kilometraje.ver',
-                'analisis.consumo_unidad.ver',
-                'analisis.rutas.ver',
             ],
         ];
 

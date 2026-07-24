@@ -137,16 +137,22 @@ class AnalisisConsumoUnidadController extends Controller
             $validated['direction'] ?? 'asc'
         );
 
-        $hayFiltros = ! $esUsuarioDieselCop
-            || $request->hasAny([
-                'empresa_ids',
-                'unidad_ids',
-                'modelos_medicion',
-                'fecha_desde',
-                'fecha_hasta',
-                'busqueda',
-                'consultar',
-            ]);
+        $consultaEjecutada = $request->boolean('consultar');
+
+        /*
+         * La empresa obligatoria restringe el alcance empresarial,
+         * pero no ejecuta automáticamente el análisis.
+         */
+        $hayFiltros = $consultaEjecutada
+            || $unidadIds !== []
+            || $modelosMedicion !== []
+            || filled($fechaDesde)
+            || filled($fechaHasta)
+            || $busqueda !== ''
+            || (
+                $esUsuarioDieselCop
+                && $empresaIds !== []
+            );
 
         $empresasSelector = $this->obtenerEmpresasSelector(
             $esUsuarioDieselCop,

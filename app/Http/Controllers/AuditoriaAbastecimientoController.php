@@ -90,17 +90,24 @@ class AuditoriaAbastecimientoController extends Controller
         $sort = (string) ($validated['sort'] ?? 'fecha');
         $direction = (string) ($validated['direction'] ?? 'desc');
 
-        $hayFiltros = ! $esUsuarioDieselCop || $request->hasAny([
-            'empresa_ids',
-            'unidad_ids',
-            'motorista_ids',
-            'tipo_origen',
-            'estado',
-            'fecha_desde',
-            'fecha_hasta',
-            'busqueda',
-            'consultar',
-        ]);
+        $consultaEjecutada = $request->boolean('consultar');
+
+        /*
+         * La empresa obligatoria restringe el alcance empresarial,
+         * pero no ejecuta automáticamente la auditoría.
+         */
+        $hayFiltros = $consultaEjecutada
+            || $unidadIds !== []
+            || $motoristaIds !== []
+            || filled($tipoOrigen)
+            || filled($estado)
+            || filled($fechaDesde)
+            || filled($fechaHasta)
+            || $busqueda !== ''
+            || (
+                $esUsuarioDieselCop
+                && $empresaIds !== []
+            );
 
         $empresasSelector = $this->obtenerEmpresasSelector(
             $esUsuarioDieselCop,

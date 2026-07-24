@@ -108,6 +108,21 @@ class AnalisisOperativoController extends Controller
         $unidadSort = $validated['unidad_sort'] ?? 'prioridad';
         $unidadDirection = $validated['unidad_direction'] ?? 'asc';
 
+        /*
+         * La empresa obligatoria limita el alcance empresarial, pero no
+         * ejecuta automáticamente el análisis. Los parámetros de orden y
+         * paginación preservan una consulta que ya fue ejecutada.
+         */
+        $consultaEjecutada = $request->boolean('consultar')
+            || $request->hasAny([
+                'empresa_sort',
+                'empresa_direction',
+                'unidad_sort',
+                'unidad_direction',
+                'empresa_page',
+                'unidad_page',
+            ]);
+
         $empresasAccesiblesQuery = Empresa::query();
 
         if (! $esUsuarioDieselCop) {
@@ -150,6 +165,83 @@ class AnalisisOperativoController extends Controller
             ->pluck('total_tanques')
             ->map(fn ($valor) => (int) $valor)
             ->values();
+
+        if (! $consultaEjecutada) {
+            $kpis = [
+                'empresas_activas' => 0,
+                'empresas_inactivas' => 0,
+                'unidades_activas' => 0,
+                'unidades_registradas' => 0,
+                'unidades_inactivas' => 0,
+                'unidades_cobertura_completa' => 0,
+                'unidades_cobertura_incompleta' => 0,
+                'unidades_sin_licencia_activa' => 0,
+                'marchamos_activos' => 0,
+                'marchamos_reemplazados' => 0,
+            ];
+
+            $unidadesAnaliticas = new LengthAwarePaginator(
+                collect(),
+                0,
+                20,
+                1,
+                [
+                    'path' => $request->url(),
+                    'query' => $request->query(),
+                    'pageName' => 'unidad_page',
+                ]
+            );
+
+            $resumenConsolidado = new LengthAwarePaginator(
+                collect(),
+                0,
+                10,
+                1,
+                [
+                    'path' => $request->url(),
+                    'query' => $request->query(),
+                    'pageName' => 'empresa_page',
+                ]
+            );
+
+            return view($vista, [
+                'esVentana' => $esVentana,
+                'esUsuarioDieselCop' => $esUsuarioDieselCop,
+                'empresaUsuario' => $empresaUsuario,
+
+                'empresasFiltro' => $empresasFiltro,
+                'unidadesFiltro' => $unidadesFiltro,
+                'modelosFiltro' => $modelosFiltro,
+                'tanquesFiltro' => $tanquesFiltro,
+
+                'empresasSeleccionadas' => $empresasSeleccionadas,
+                'unidadesSeleccionadas' => $unidadesSeleccionadas,
+                'modelosSeleccionados' => $modelosSeleccionados,
+                'tanquesSeleccionados' => $tanquesSeleccionados,
+                'busqueda' => $busqueda,
+
+                'empresaSort' => $empresaSort,
+                'empresaDirection' => $empresaDirection,
+                'unidadSort' => $unidadSort,
+                'unidadDirection' => $unidadDirection,
+
+                'kpis' => $kpis,
+                'saludOperativa' => [],
+                'unidadesAnaliticas' => $unidadesAnaliticas,
+                'resumenConsolidado' => $resumenConsolidado,
+
+                /*
+                 * Compatibilidad con referencias heredadas del Blade.
+                 */
+                'empresasSelector' => $empresasFiltro,
+                'empresaId' => $empresasSeleccionadas->first(),
+                'estadoEmpresa' => null,
+                'estadoUnidad' => null,
+                'alertas' => [],
+                'resumenEmpresas' => $resumenConsolidado,
+                'unidadesAtencion' => $unidadesAnaliticas,
+            ]);
+        }
 
         $unidadesBase = Unidad::query()
             ->whereIn('empresa_id', $empresaIdsBase);

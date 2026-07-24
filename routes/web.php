@@ -1184,137 +1184,106 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    /*
-    |--------------------------------------------------------------------------
-    | Panel operativo
-    |--------------------------------------------------------------------------
-    */
+    Route::middleware('permiso:auditoria.consultar')->group(function () {
+        /*
+        |--------------------------------------------------------------------------
+        | Panel operativo
+        |--------------------------------------------------------------------------
+        */
 
-    Route::get(
-        '/analisis/panel-operativo',
-        [
-            AnalisisOperativoController::class,
-            'panelOperativo',
-        ]
-    )->name('analisis.panel-operativo');
+        Route::get(
+            '/analisis/panel-operativo',
+            [AnalisisOperativoController::class, 'panelOperativo']
+        )->name('analisis.panel-operativo');
 
-    Route::get(
-        '/analisis/panel-operativo/ventana',
-        [
-            AnalisisOperativoController::class,
-            'panelOperativo',
-        ]
-    )->name('analisis.panel-operativo.ventana');
+        Route::get(
+            '/analisis/panel-operativo/ventana',
+            [AnalisisOperativoController::class, 'panelOperativo']
+        )->name('analisis.panel-operativo.ventana');
 
-    /*
-    |--------------------------------------------------------------------------
-    | Análisis de rendimientos
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | Auditoría de abastecimientos
+        |--------------------------------------------------------------------------
+        */
 
-    Route::get(
-        '/analisis/rendimientos',
-        [
-            AnalisisRendimientoController::class,
-            'index',
-        ]
-    )->name('analisis.rendimientos.index');
+        Route::get(
+            '/auditoria/abastecimientos',
+            [AuditoriaAbastecimientoController::class, 'index']
+        )->name('auditoria.abastecimientos.index');
 
-    Route::get(
-        '/analisis/rendimientos/ventana',
-        [
-            AnalisisRendimientoController::class,
-            'indexVentana',
-        ]
-    )->name('analisis.rendimientos.index.ventana');
+        Route::get(
+            '/auditoria/abastecimientos/ventana',
+            [AuditoriaAbastecimientoController::class, 'indexVentana']
+        )->name('auditoria.abastecimientos.index.ventana');
 
-    /*
-    |--------------------------------------------------------------------------
-    | Análisis de consumo por unidad
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | Auditoría de reemplazo de marchamos
+        |--------------------------------------------------------------------------
+        */
 
-    Route::get(
-        '/analisis/consumo-unidades',
-        [
-            AnalisisConsumoUnidadController::class,
-            'index',
-        ]
-    )->name('analisis.consumo-unidades.index');
+        Route::get(
+            '/auditoria/marchamos',
+            [AuditoriaMarchamoController::class, 'index']
+        )->name('auditoria.marchamos.index');
 
-    Route::get(
-        '/analisis/consumo-unidades/ventana',
-        [
-            AnalisisConsumoUnidadController::class,
-            'indexVentana',
-        ]
-    )->name('analisis.consumo-unidades.index.ventana');
+        Route::get(
+            '/auditoria/marchamos/ventana',
+            [AuditoriaMarchamoController::class, 'indexVentana']
+        )->name('auditoria.marchamos.index.ventana');
+    });
 
-    /*
-    |--------------------------------------------------------------------------
-    | Análisis de rutas
-    |--------------------------------------------------------------------------
-    */
+    Route::middleware('permiso:analisis.consultar')->group(function () {
+        /*
+        |--------------------------------------------------------------------------
+        | Análisis de rendimientos
+        |--------------------------------------------------------------------------
+        */
 
-    Route::get(
-        '/analisis/rutas',
-        [
-            AnalisisRutaController::class,
-            'index',
-        ]
-    )->name('analisis.rutas.index');
+        Route::get(
+            '/analisis/rendimientos',
+            [AnalisisRendimientoController::class, 'index']
+        )->name('analisis.rendimientos.index');
 
-    Route::get(
-        '/analisis/rutas/ventana',
-        [
-            AnalisisRutaController::class,
-            'indexVentana',
-        ]
-    )->name('analisis.rutas.index.ventana');
+        Route::get(
+            '/analisis/rendimientos/ventana',
+            [AnalisisRendimientoController::class, 'indexVentana']
+        )->name('analisis.rendimientos.index.ventana');
 
-    /*
-    |--------------------------------------------------------------------------
-    | Auditoría de abastecimientos
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | Análisis de consumo por unidad
+        |--------------------------------------------------------------------------
+        */
 
-    Route::get(
-        '/auditoria/abastecimientos',
-        [
-            AuditoriaAbastecimientoController::class,
-            'index',
-        ]
-    )->name('auditoria.abastecimientos.index');
+        Route::get(
+            '/analisis/consumo-unidades',
+            [AnalisisConsumoUnidadController::class, 'index']
+        )->name('analisis.consumo-unidades.index');
 
-    Route::get(
-        '/auditoria/abastecimientos/ventana',
-        [
-            AuditoriaAbastecimientoController::class,
-            'indexVentana',
-        ]
-    )->name('auditoria.abastecimientos.index.ventana');
+        Route::get(
+            '/analisis/consumo-unidades/ventana',
+            [AnalisisConsumoUnidadController::class, 'indexVentana']
+        )->name('analisis.consumo-unidades.index.ventana');
 
-    /*
-    |--------------------------------------------------------------------------
-    | Auditoría de reemplazo de marchamos
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | Análisis de rutas
+        |--------------------------------------------------------------------------
+        */
 
-    Route::get(
-        '/auditoria/marchamos',
-        [
-            AuditoriaMarchamoController::class,
-            'index',
-        ]
-    )->name('auditoria.marchamos.index');
+        Route::get(
+            '/analisis/rutas',
+            [AnalisisRutaController::class, 'index']
+        )->name('analisis.rutas.index');
 
-    Route::get(
-        '/auditoria/marchamos/ventana',
-        [
-            AuditoriaMarchamoController::class,
-            'indexVentana',
-        ]
-    )->name('auditoria.marchamos.index.ventana');
+        Route::get(
+            '/analisis/rutas/ventana',
+            [AnalisisRutaController::class, 'indexVentana']
+        )->name('analisis.rutas.index.ventana');
+    });
+
 });
 
 require __DIR__.'/auth.php';

@@ -19,19 +19,20 @@
             ? 'Volver al sistema'
             : 'Abrir en nueva pestaña';
 
-        $consultaEjecutada = request()->hasAny([
-            'empresas',
-            'unidades',
-            'modelos_medicion',
-            'total_tanques',
-            'busqueda',
-            'empresa_sort',
-            'empresa_direction',
-            'unidad_sort',
-            'unidad_direction',
-            'empresa_page',
-            'unidad_page',
-        ]);
+        $consultaEjecutada = request()->boolean('consultar')
+            || request()->hasAny([
+                'empresa_ids',
+                'unidad_ids',
+                'modelos_medicion',
+                'total_tanques',
+                'busqueda',
+                'empresa_sort',
+                'empresa_direction',
+                'unidad_sort',
+                'unidad_direction',
+                'empresa_page',
+                'unidad_page',
+            ]);
 
         $totalEmpresas = (int) (
             ($kpis['empresas_activas'] ?? 0)
@@ -128,6 +129,7 @@
                 array_merge(
                     request()->query(),
                     [
+                        'consultar' => 1,
                         'empresa_sort' => $campo,
                         'empresa_direction' => $nuevaDireccion,
                         'empresa_page' => null,
@@ -152,6 +154,7 @@
                 array_merge(
                     request()->query(),
                     [
+                        'consultar' => 1,
                         'unidad_sort' => $campo,
                         'unidad_direction' => $nuevaDireccion,
                         'unidad_page' => null,
@@ -674,6 +677,11 @@
                     action="{{ $rutaConsulta }}"
                     class="mb-5"
                 >
+                    <input
+                        type="hidden"
+                        name="consultar"
+                        value="1"
+                    >
                     <div
                         class="cc-filter-panel
                                cc-filter-panel-compact
@@ -706,90 +714,113 @@
                                     Empresa
                                 </label>
 
-                                <div
-                                    class="cc-filter-multiselect"
-                                    data-cc-filter-multiselect
-                                >
-                                    <button
-                                        type="button"
-                                        class="cc-filter-multiselect-toggle"
-                                        data-cc-filter-toggle
-                                    >
-                                        <span
-                                            data-cc-filter-label
-                                            data-default-label="Todas"
-                                            data-plural-suffix="seleccionadas"
-                                        >
-                                            Todas
-                                        </span>
-
-                                        <span
-                                            class="cc-filter-multiselect-arrow"
-                                        >
-                                            ⌄
-                                        </span>
-                                    </button>
-
+                                @if ($esUsuarioDieselCop)
                                     <div
-                                        class="cc-filter-multiselect-menu"
-                                        data-cc-filter-menu
+                                        class="cc-filter-multiselect"
+                                        data-cc-filter-multiselect
                                     >
-                                        <div
-                                            class="cc-filter-multiselect-list"
+                                        <button
+                                            type="button"
+                                            class="cc-filter-multiselect-toggle"
+                                            data-cc-filter-toggle
                                         >
-                                            <label
-                                                class="cc-filter-multiselect-option
-                                                       cc-filter-multiselect-option-master"
+                                            <span
+                                                data-cc-filter-label
+                                                data-default-label="Todas"
+                                                data-plural-suffix="seleccionadas"
                                             >
-                                                <input
-                                                    type="checkbox"
-                                                    data-cc-filter-master
-                                                >
+                                                Todas
+                                            </span>
 
-                                                <span>
-                                                    Seleccionar todo
-                                                </span>
-                                            </label>
+                                            <span
+                                                class="cc-filter-multiselect-arrow"
+                                            >
+                                                ⌄
+                                            </span>
+                                        </button>
 
-                                            @foreach (
-                                                $empresasFiltro
-                                                as $empresa
-                                            )
+                                        <div
+                                            class="cc-filter-multiselect-menu"
+                                            data-cc-filter-menu
+                                        >
+                                            <div
+                                                class="cc-filter-multiselect-list"
+                                            >
                                                 <label
-                                                    class="cc-filter-multiselect-option"
-                                                    data-cc-filter-option
+                                                    class="cc-filter-multiselect-option
+                                                           cc-filter-multiselect-option-master"
                                                 >
                                                     <input
                                                         type="checkbox"
-                                                        name="empresa_ids[]"
-                                                        value="{{
-                                                            $empresa->id
-                                                        }}"
-                                                        @checked(
-                                                            $empresasSeleccionadas
-                                                                ->contains(
-                                                                    (int)
-                                                                    $empresa->id
-                                                                )
-                                                        )
-                                                        data-cc-filter-checkbox
+                                                        data-cc-filter-master
                                                     >
 
-                                                    <span
-                                                        data-cc-filter-option-label
-                                                    >
-                                                        {{
-                                                            $empresa
-                                                                ->nombre_legal
-                                                            ?: $empresa
-                                                                ->nombre_comercial
-                                                        }}
+                                                    <span>
+                                                        Seleccionar todo
                                                     </span>
                                                 </label>
-                                            @endforeach
+
+                                                @foreach (
+                                                    $empresasFiltro
+                                                    as $empresa
+                                                )
+                                                    <label
+                                                        class="cc-filter-multiselect-option"
+                                                        data-cc-filter-option
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            name="empresa_ids[]"
+                                                            value="{{ $empresa->id }}"
+                                                            @checked(
+                                                                $empresasSeleccionadas
+                                                                    ->contains(
+                                                                        (int) $empresa->id
+                                                                    )
+                                                            )
+                                                            data-cc-filter-checkbox
+                                                        >
+
+                                                        <span
+                                                            data-cc-filter-option-label
+                                                        >
+                                                            {{
+                                                                $empresa
+                                                                    ->nombre_legal
+                                                                ?: $empresa
+                                                                    ->nombre_comercial
+                                                            }}
+                                                        </span>
+                                                    </label>
+                                                @endforeach
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                @else
+                                    <select
+                                        class="cc-input"
+                                        disabled
+                                    >
+                                        <option selected>
+                                            {{
+                                                $empresaUsuario
+                                                    ? (
+                                                        $empresaUsuario
+                                                            ->nombre_legal
+                                                        ?: $empresaUsuario
+                                                            ->nombre_comercial
+                                                    )
+                                                    : 'Empresa no disponible'
+                                            }}
+                                        </option>
+                                    </select>
+
+                                    <input
+                                        type="hidden"
+                                        name="empresa_ids[]"
+                                        value="{{ auth()->user()->empresa_id }}"
+                                    >
+                                @endif
                             </div>
 
                             <div class="cc-field">

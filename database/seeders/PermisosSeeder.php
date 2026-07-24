@@ -801,29 +801,11 @@ class PermisosSeeder extends Seeder
             // Auditoría
             // -------------------------------------------------------------
             [
-                'codigo' => 'auditoria.panel_operativo.ver',
+                'codigo' => 'auditoria.consultar',
                 'modulo' => 'auditoria',
-                'accion' => 'panel_operativo_ver',
-                'nombre' => 'Ver control operativo de flota',
-                'descripcion' => 'Permite visualizar el panel de control operativo de flota según el alcance autorizado del rol.',
-                'alcance' => 'ambos',
-                'estado' => 'activo',
-            ],
-            [
-                'codigo' => 'auditoria.abastecimientos.ver',
-                'modulo' => 'auditoria',
-                'accion' => 'abastecimientos_ver',
-                'nombre' => 'Ver auditoría de abastecimientos',
-                'descripcion' => 'Permite visualizar la auditoría de abastecimientos según el alcance autorizado del rol.',
-                'alcance' => 'ambos',
-                'estado' => 'activo',
-            ],
-            [
-                'codigo' => 'auditoria.marchamos.ver',
-                'modulo' => 'auditoria',
-                'accion' => 'marchamos_ver',
-                'nombre' => 'Ver auditoría de marchamos',
-                'descripcion' => 'Permite visualizar la auditoría de marchamos según el alcance autorizado del rol.',
+                'accion' => 'consultar',
+                'nombre' => 'Consultar auditoría',
+                'descripcion' => 'Permite consultar las vistas informacionales de control operativo, abastecimientos y marchamos.',
                 'alcance' => 'ambos',
                 'estado' => 'activo',
             ],
@@ -832,32 +814,15 @@ class PermisosSeeder extends Seeder
             // Análisis
             // -------------------------------------------------------------
             [
-                'codigo' => 'analisis.kilometraje.ver',
+                'codigo' => 'analisis.consultar',
                 'modulo' => 'analisis',
-                'accion' => 'kilometraje_ver',
-                'nombre' => 'Ver análisis de kilometraje',
-                'descripcion' => 'Permite visualizar el análisis de kilometraje según el alcance autorizado del rol.',
+                'accion' => 'consultar',
+                'nombre' => 'Consultar análisis',
+                'descripcion' => 'Permite consultar las vistas informacionales de rendimientos, consumo por unidad y rutas.',
                 'alcance' => 'ambos',
                 'estado' => 'activo',
             ],
-            [
-                'codigo' => 'analisis.consumo_unidad.ver',
-                'modulo' => 'analisis',
-                'accion' => 'consumo_unidad_ver',
-                'nombre' => 'Ver consumo por unidad',
-                'descripcion' => 'Permite visualizar el análisis de consumo por unidad según el alcance autorizado del rol.',
-                'alcance' => 'ambos',
-                'estado' => 'activo',
-            ],
-            [
-                'codigo' => 'analisis.rutas.ver',
-                'modulo' => 'analisis',
-                'accion' => 'rutas_ver',
-                'nombre' => 'Ver análisis de rutas',
-                'descripcion' => 'Permite visualizar el análisis de rutas según el alcance autorizado del rol.',
-                'alcance' => 'ambos',
-                'estado' => 'activo',
-            ],
+
         ];
 
         foreach ($permisos as $permiso) {
@@ -895,7 +860,7 @@ class PermisosSeeder extends Seeder
                 'estado' => 'inactivo',
                 'fecha_actualizacion' => now(),
                 'fecha_inactivacion' => now(),
-                'motivo_inactivacion' => 'Permiso reemplazado por el mapeo funcional definitivo de los módulos Empresas, Usuarios, Unidades, Licencias, Marchamos, Gasolineras Internas, Gasolineras Externas, Puntos de Ruta, Rutas, Motoristas y Abastecimientos.',
+                'motivo_inactivacion' => 'Permiso reemplazado por el mapeo funcional definitivo de los módulos Empresas, Usuarios, Unidades, Licencias, Marchamos, Gasolineras Internas, Gasolineras Externas, Puntos de Ruta, Rutas, Motoristas, Abastecimientos, Auditoría y Análisis.',
             ]);
         }
     }
