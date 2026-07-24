@@ -840,36 +840,54 @@
                     @endif
 
                     <!-- Rutas -->
-                    <div class="cc-sidebar-group">
-                        <div
-                            id="ccRutasToggle"
-                            class="cc-sidebar-parent cc-sidebar-collapsible-parent {{ $rutasActivo ? 'cc-sidebar-parent-active' : '' }}"
-                            role="button"
-                            tabindex="0"
-                            aria-expanded="false"
-                            aria-controls="ccRutasSubnav"
-                        >
-                            <span>Rutas</span>
-                            <span class="cc-sidebar-collapse-icon" aria-hidden="true">▼</span>
+                    @if ($usuarioAutenticado->tieneAlgunPermiso([
+                        'rutas.consultar',
+                        'rutas.administrar',
+                        'rutas.crear',
+                    ]))
+                        <div class="cc-sidebar-group">
+                            <div
+                                id="ccRutasToggle"
+                                class="cc-sidebar-parent cc-sidebar-collapsible-parent {{ $rutasActivo ? 'cc-sidebar-parent-active' : '' }}"
+                                role="button"
+                                tabindex="0"
+                                aria-expanded="false"
+                                aria-controls="ccRutasSubnav"
+                            >
+                                <span>Rutas</span>
+                                <span class="cc-sidebar-collapse-icon" aria-hidden="true">▼</span>
+                            </div>
+
+                            <div id="ccRutasSubnav" class="cc-sidebar-subnav cc-sidebar-subnav-collapsed">
+                                @if ($usuarioAutenticado->tienePermiso('rutas.consultar'))
+                                    <a
+                                        href="{{ route('rutas.index') }}"
+                                        class="cc-sidebar-sublink {{ request()->routeIs('rutas.index') ? 'cc-sidebar-sublink-active' : '' }}"
+                                    >
+                                        Consulta rutas
+                                    </a>
+                                @endif
+
+                                @if ($usuarioAutenticado->tienePermiso('rutas.administrar'))
+                                    <a
+                                        href="{{ route('rutas.administrar') }}"
+                                        class="cc-sidebar-sublink {{ request()->routeIs('rutas.administrar') || request()->routeIs('rutas.show') || request()->routeIs('rutas.edit') ? 'cc-sidebar-sublink-active' : '' }}"
+                                    >
+                                        Administrar rutas
+                                    </a>
+                                @endif
+
+                                @if ($usuarioAutenticado->tienePermiso('rutas.crear'))
+                                    <a
+                                        href="{{ route('rutas.create') }}"
+                                        class="cc-sidebar-sublink {{ request()->routeIs('rutas.create') ? 'cc-sidebar-sublink-active' : '' }}"
+                                    >
+                                        Nueva ruta
+                                    </a>
+                                @endif
+                            </div>
                         </div>
-
-                        <div id="ccRutasSubnav" class="cc-sidebar-subnav cc-sidebar-subnav-collapsed">
-                            <a href="{{ route('rutas.index') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('rutas.index') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Consulta rutas
-                            </a>
-
-                            <a href="{{ route('rutas.administrar') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('rutas.administrar') || request()->routeIs('rutas.show') || request()->routeIs('rutas.edit') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Administrar rutas
-                            </a>
-
-                            <a href="{{ route('rutas.create') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('rutas.create') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Nueva ruta
-                            </a>
-                        </div>
-                    </div>
+                    @endif
 
                     <!-- Motoristas -->
                     <div class="cc-sidebar-group">

@@ -135,15 +135,19 @@ class RutaController extends Controller
 
         $estado = $validated['estado'] ?? null;
 
-        $hayFiltros = ! $esUsuarioDieselCop
-            || $request->hasAny([
-                'empresa_ids',
-                'empresa_id',
-                'ruta_ids',
-                'ruta_id',
-                'estado',
-                'consultar',
-            ]);
+        $consultaEjecutada = $request->boolean('consultar');
+
+        /*
+         * La empresa obligatoria limita el alcance del usuario empresarial,
+         * pero no ejecuta automáticamente Consulta ni Administrar.
+         */
+        $hayFiltros = $consultaEjecutada
+            || ! empty($rutaIds)
+            || filled($estado)
+            || (
+                $esUsuarioDieselCop
+                && ! empty($empresaIds)
+            );
 
         $query = Ruta::query()
             ->with([

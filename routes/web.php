@@ -660,48 +660,99 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     | Rutas
     |--------------------------------------------------------------------------
+    |
+    | Todas las rutas estáticas se declaran antes de /rutas/{ruta}.
+    |
     */
 
-    Route::get('/rutas', [RutaController::class, 'index'])
-        ->name('rutas.index');
+    Route::middleware('permiso:rutas.consultar')->group(function () {
+        Route::get(
+            '/rutas',
+            [RutaController::class, 'index']
+        )->name('rutas.index');
 
-    Route::get('/rutas/consulta-ventana', [RutaController::class, 'consultaVentana'])
-        ->name('rutas.consulta.ventana');
+        Route::get(
+            '/rutas/consulta/ventana',
+            [RutaController::class, 'consultaVentana']
+        )->name('rutas.consulta.ventana');
+    });
 
-    Route::get('/rutas/administrar', [RutaController::class, 'administrar'])
-        ->name('rutas.administrar');
+    Route::middleware('permiso:rutas.administrar')->group(function () {
+        Route::get(
+            '/rutas/administrar',
+            [RutaController::class, 'administrar']
+        )->name('rutas.administrar');
 
-    Route::get('/rutas/administrar-ventana', [RutaController::class, 'administrarVentana'])
-        ->name('rutas.administrar.ventana');
+        Route::get(
+            '/rutas/administrar/ventana',
+            [RutaController::class, 'administrarVentana']
+        )->name('rutas.administrar.ventana');
+    });
 
-    Route::get('/rutas/create', [RutaController::class, 'create'])
-        ->name('rutas.create');
+    Route::middleware('permiso:rutas.crear')->group(function () {
+        Route::get(
+            '/rutas/nueva',
+            [RutaController::class, 'create']
+        )->name('rutas.create');
 
-    Route::get('/rutas/create-ventana', [RutaController::class, 'createVentana'])
-        ->name('rutas.create.ventana');
+        Route::get(
+            '/rutas/nueva/ventana',
+            [RutaController::class, 'createVentana']
+        )->name('rutas.create.ventana');
 
-    Route::post('/rutas', [RutaController::class, 'store'])
-        ->name('rutas.store');
+        Route::post(
+            '/rutas',
+            [RutaController::class, 'store']
+        )->name('rutas.store');
+    });
 
-    Route::get('/rutas/{ruta}', [RutaController::class, 'show'])
-        ->name('rutas.show');
+    /*
+    |--------------------------------------------------------------------------
+    | Rutas - Rutas dinámicas
+    |--------------------------------------------------------------------------
+    */
 
-    Route::get('/rutas/{ruta}/ventana', [RutaController::class, 'showVentana'])
-        ->name('rutas.show.ventana');
+    Route::middleware('permiso:rutas.administrar')->group(function () {
+        Route::get(
+            '/rutas/{ruta}/ficha/ventana',
+            [RutaController::class, 'showVentana']
+        )->name('rutas.show.ventana');
 
-    Route::get('/rutas/{ruta}/edit', [RutaController::class, 'edit'])
-        ->name('rutas.edit');
+        Route::get(
+            '/rutas/{ruta}',
+            [RutaController::class, 'show']
+        )->name('rutas.show');
+    });
 
-    Route::get('/rutas/{ruta}/edit-ventana', [RutaController::class, 'editVentana'])
-        ->name('rutas.edit.ventana');
+    Route::middleware('permiso:rutas.editar')->group(function () {
+        Route::get(
+            '/rutas/{ruta}/editar/ventana',
+            [RutaController::class, 'editVentana']
+        )->name('rutas.edit.ventana');
 
-    Route::put('/rutas/{ruta}', [RutaController::class, 'update'])
-        ->name('rutas.update');
+        Route::get(
+            '/rutas/{ruta}/editar',
+            [RutaController::class, 'edit']
+        )->name('rutas.edit');
 
-    Route::patch('/rutas/{ruta}/inactivar', [RutaController::class, 'inactivar'])
+        Route::put(
+            '/rutas/{ruta}',
+            [RutaController::class, 'update']
+        )->name('rutas.update');
+    });
+
+    Route::patch(
+        '/rutas/{ruta}/inactivar',
+        [RutaController::class, 'inactivar']
+    )
+        ->middleware('permiso:rutas.inactivar')
         ->name('rutas.inactivar');
 
-    Route::patch('/rutas/{ruta}/reactivar', [RutaController::class, 'reactivar'])
+    Route::patch(
+        '/rutas/{ruta}/reactivar',
+        [RutaController::class, 'reactivar']
+    )
+        ->middleware('permiso:rutas.reactivar')
         ->name('rutas.reactivar');
 
     /*
