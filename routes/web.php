@@ -459,48 +459,100 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     | Gasolineras externas
     |--------------------------------------------------------------------------
+    |
+    | Las rutas estáticas deben declararse antes de las rutas dinámicas
+    | /gasolineras-externas/{gasolineraExterna}.
+    |
     */
 
-    Route::get('/gasolineras-externas', [GasolineraExternaController::class, 'index'])
-        ->name('gasolineras-externas.index');
+    Route::middleware('permiso:gasolineras_externas.consultar')->group(function () {
+        Route::get(
+            '/gasolineras-externas',
+            [GasolineraExternaController::class, 'index']
+        )->name('gasolineras-externas.index');
 
-    Route::get('/gasolineras-externas/consulta/ventana', [GasolineraExternaController::class, 'consultaVentana'])
-        ->name('gasolineras-externas.consulta.ventana');
+        Route::get(
+            '/gasolineras-externas/consulta/ventana',
+            [GasolineraExternaController::class, 'consultaVentana']
+        )->name('gasolineras-externas.consulta.ventana');
+    });
 
-    Route::get('/gasolineras-externas/administrar', [GasolineraExternaController::class, 'administrar'])
-        ->name('gasolineras-externas.administrar');
+    Route::middleware('permiso:gasolineras_externas.administrar')->group(function () {
+        Route::get(
+            '/gasolineras-externas/administrar',
+            [GasolineraExternaController::class, 'administrar']
+        )->name('gasolineras-externas.administrar');
 
-    Route::get('/gasolineras-externas/administrar/ventana', [GasolineraExternaController::class, 'administrarVentana'])
-        ->name('gasolineras-externas.administrar.ventana');
+        Route::get(
+            '/gasolineras-externas/administrar/ventana',
+            [GasolineraExternaController::class, 'administrarVentana']
+        )->name('gasolineras-externas.administrar.ventana');
+    });
 
-    Route::get('/gasolineras-externas/nueva', [GasolineraExternaController::class, 'create'])
-        ->name('gasolineras-externas.create');
+    Route::middleware('permiso:gasolineras_externas.crear')->group(function () {
+        Route::get(
+            '/gasolineras-externas/nueva',
+            [GasolineraExternaController::class, 'create']
+        )->name('gasolineras-externas.create');
 
-    Route::get('/gasolineras-externas/nueva/ventana', [GasolineraExternaController::class, 'createVentana'])
-        ->name('gasolineras-externas.create.ventana');
+        Route::get(
+            '/gasolineras-externas/nueva/ventana',
+            [GasolineraExternaController::class, 'createVentana']
+        )->name('gasolineras-externas.create.ventana');
 
-    Route::post('/gasolineras-externas', [GasolineraExternaController::class, 'store'])
-        ->name('gasolineras-externas.store');
+        Route::post(
+            '/gasolineras-externas',
+            [GasolineraExternaController::class, 'store']
+        )->name('gasolineras-externas.store');
+    });
 
-    Route::get('/gasolineras-externas/{gasolineraExterna}/ficha/ventana', [GasolineraExternaController::class, 'showVentana'])
-        ->name('gasolineras-externas.show.ventana');
+    /*
+    |--------------------------------------------------------------------------
+    | Gasolineras externas - Rutas dinámicas
+    |--------------------------------------------------------------------------
+    */
 
-    Route::get('/gasolineras-externas/{gasolineraExterna}/editar/ventana', [GasolineraExternaController::class, 'editVentana'])
-        ->name('gasolineras-externas.edit.ventana');
+    Route::middleware('permiso:gasolineras_externas.administrar')->group(function () {
+        Route::get(
+            '/gasolineras-externas/{gasolineraExterna}/ficha/ventana',
+            [GasolineraExternaController::class, 'showVentana']
+        )->name('gasolineras-externas.show.ventana');
 
-    Route::get('/gasolineras-externas/{gasolineraExterna}', [GasolineraExternaController::class, 'show'])
-        ->name('gasolineras-externas.show');
+        Route::get(
+            '/gasolineras-externas/{gasolineraExterna}',
+            [GasolineraExternaController::class, 'show']
+        )->name('gasolineras-externas.show');
+    });
 
-    Route::get('/gasolineras-externas/{gasolineraExterna}/editar', [GasolineraExternaController::class, 'edit'])
-        ->name('gasolineras-externas.edit');
+    Route::middleware('permiso:gasolineras_externas.editar')->group(function () {
+        Route::get(
+            '/gasolineras-externas/{gasolineraExterna}/editar/ventana',
+            [GasolineraExternaController::class, 'editVentana']
+        )->name('gasolineras-externas.edit.ventana');
 
-    Route::put('/gasolineras-externas/{gasolineraExterna}', [GasolineraExternaController::class, 'update'])
-        ->name('gasolineras-externas.update');
+        Route::get(
+            '/gasolineras-externas/{gasolineraExterna}/editar',
+            [GasolineraExternaController::class, 'edit']
+        )->name('gasolineras-externas.edit');
 
-    Route::patch('/gasolineras-externas/{gasolineraExterna}/inactivar', [GasolineraExternaController::class, 'inactivar'])
+        Route::put(
+            '/gasolineras-externas/{gasolineraExterna}',
+            [GasolineraExternaController::class, 'update']
+        )->name('gasolineras-externas.update');
+    });
+
+    Route::patch(
+        '/gasolineras-externas/{gasolineraExterna}/inactivar',
+        [GasolineraExternaController::class, 'inactivar']
+    )
+        ->middleware('permiso:gasolineras_externas.inactivar')
         ->name('gasolineras-externas.inactivar');
 
-    Route::patch('/gasolineras-externas/{gasolineraExterna}/reactivar', [GasolineraExternaController::class, 'reactivar'])
+    Route::patch(
+        '/gasolineras-externas/{gasolineraExterna}/reactivar',
+        [GasolineraExternaController::class, 'reactivar']
+    )
+        ->middleware('permiso:gasolineras_externas.reactivar')
         ->name('gasolineras-externas.reactivar');
 
         /*

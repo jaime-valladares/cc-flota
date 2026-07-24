@@ -740,36 +740,54 @@
                     @endif
 
                     <!-- Gasolineras externas -->
-                    <div class="cc-sidebar-group">
-                        <div
-                            id="ccGasolinerasExternasToggle"
-                            class="cc-sidebar-parent cc-sidebar-collapsible-parent {{ $gasolinerasExternasActivo ? 'cc-sidebar-parent-active' : '' }}"
-                            role="button"
-                            tabindex="0"
-                            aria-expanded="false"
-                            aria-controls="ccGasolinerasExternasSubnav"
-                        >
-                            <span>Gasolineras Externas</span>
-                            <span class="cc-sidebar-collapse-icon" aria-hidden="true">▼</span>
+                    @if ($usuarioAutenticado->tieneAlgunPermiso([
+                        'gasolineras_externas.consultar',
+                        'gasolineras_externas.administrar',
+                        'gasolineras_externas.crear',
+                    ]))
+                        <div class="cc-sidebar-group">
+                            <div
+                                id="ccGasolinerasExternasToggle"
+                                class="cc-sidebar-parent cc-sidebar-collapsible-parent {{ $gasolinerasExternasActivo ? 'cc-sidebar-parent-active' : '' }}"
+                                role="button"
+                                tabindex="0"
+                                aria-expanded="false"
+                                aria-controls="ccGasolinerasExternasSubnav"
+                            >
+                                <span>Gasolineras Externas</span>
+                                <span class="cc-sidebar-collapse-icon" aria-hidden="true">▼</span>
+                            </div>
+
+                            <div id="ccGasolinerasExternasSubnav" class="cc-sidebar-subnav cc-sidebar-subnav-collapsed">
+                                @if ($usuarioAutenticado->tienePermiso('gasolineras_externas.consultar'))
+                                    <a
+                                        href="{{ route('gasolineras-externas.index') }}"
+                                        class="cc-sidebar-sublink {{ request()->routeIs('gasolineras-externas.index') ? 'cc-sidebar-sublink-active' : '' }}"
+                                    >
+                                        Consulta gasolineras
+                                    </a>
+                                @endif
+
+                                @if ($usuarioAutenticado->tienePermiso('gasolineras_externas.administrar'))
+                                    <a
+                                        href="{{ route('gasolineras-externas.administrar') }}"
+                                        class="cc-sidebar-sublink {{ request()->routeIs('gasolineras-externas.administrar') || request()->routeIs('gasolineras-externas.show') || request()->routeIs('gasolineras-externas.edit') ? 'cc-sidebar-sublink-active' : '' }}"
+                                    >
+                                        Administrar gasolineras
+                                    </a>
+                                @endif
+
+                                @if ($usuarioAutenticado->tienePermiso('gasolineras_externas.crear'))
+                                    <a
+                                        href="{{ route('gasolineras-externas.create') }}"
+                                        class="cc-sidebar-sublink {{ request()->routeIs('gasolineras-externas.create') ? 'cc-sidebar-sublink-active' : '' }}"
+                                    >
+                                        Nueva gasolinera
+                                    </a>
+                                @endif
+                            </div>
                         </div>
-
-                        <div id="ccGasolinerasExternasSubnav" class="cc-sidebar-subnav cc-sidebar-subnav-collapsed">
-                            <a href="{{ route('gasolineras-externas.index') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('gasolineras-externas.index') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Consulta gasolineras
-                            </a>
-
-                            <a href="{{ route('gasolineras-externas.administrar') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('gasolineras-externas.administrar') || request()->routeIs('gasolineras-externas.show') || request()->routeIs('gasolineras-externas.edit') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Administrar gasolineras
-                            </a>
-
-                            <a href="{{ route('gasolineras-externas.create') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('gasolineras-externas.create') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Nueva gasolinera
-                            </a>
-                        </div>
-                    </div>
+                    @endif
 
                     <!-- Puntos de ruta -->
                     <div class="cc-sidebar-group">
