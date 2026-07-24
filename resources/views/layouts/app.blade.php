@@ -890,40 +890,54 @@
                     @endif
 
                     <!-- Motoristas -->
-                    <div class="cc-sidebar-group">
-                        <div
-                            id="ccMotoristasToggle"
-                            class="cc-sidebar-parent cc-sidebar-collapsible-parent {{ $motoristasActivo ? 'cc-sidebar-parent-active' : '' }}"
-                            role="button"
-                            tabindex="0"
-                            aria-expanded="false"
-                            aria-controls="ccMotoristasSubnav"
-                        >
-                            <span>Motoristas</span>
-                            <span class="cc-sidebar-collapse-icon" aria-hidden="true">▼</span>
+                    @if ($usuarioAutenticado->tieneAlgunPermiso([
+                        'motoristas.consultar',
+                        'motoristas.administrar',
+                        'motoristas.crear',
+                    ]))
+                        <div class="cc-sidebar-group">
+                            <div
+                                id="ccMotoristasToggle"
+                                class="cc-sidebar-parent cc-sidebar-collapsible-parent {{ $motoristasActivo ? 'cc-sidebar-parent-active' : '' }}"
+                                role="button"
+                                tabindex="0"
+                                aria-expanded="false"
+                                aria-controls="ccMotoristasSubnav"
+                            >
+                                <span>Motoristas</span>
+                                <span class="cc-sidebar-collapse-icon" aria-hidden="true">▼</span>
+                            </div>
+
+                            <div id="ccMotoristasSubnav" class="cc-sidebar-subnav cc-sidebar-subnav-collapsed">
+                                @if ($usuarioAutenticado->tienePermiso('motoristas.consultar'))
+                                    <a
+                                        href="{{ route('motoristas.index') }}"
+                                        class="cc-sidebar-sublink {{ request()->routeIs('motoristas.index') ? 'cc-sidebar-sublink-active' : '' }}"
+                                    >
+                                        Consulta motoristas
+                                    </a>
+                                @endif
+
+                                @if ($usuarioAutenticado->tienePermiso('motoristas.administrar'))
+                                    <a
+                                        href="{{ route('motoristas.administrar') }}"
+                                        class="cc-sidebar-sublink {{ request()->routeIs('motoristas.administrar') || request()->routeIs('motoristas.show') || request()->routeIs('motoristas.edit') ? 'cc-sidebar-sublink-active' : '' }}"
+                                    >
+                                        Administrar motoristas
+                                    </a>
+                                @endif
+
+                                @if ($usuarioAutenticado->tienePermiso('motoristas.crear'))
+                                    <a
+                                        href="{{ route('motoristas.create') }}"
+                                        class="cc-sidebar-sublink {{ request()->routeIs('motoristas.create') ? 'cc-sidebar-sublink-active' : '' }}"
+                                    >
+                                        Nuevo motorista
+                                    </a>
+                                @endif
+                            </div>
                         </div>
-
-                        <div id="ccMotoristasSubnav" class="cc-sidebar-subnav cc-sidebar-subnav-collapsed">
-                            <a href="{{ route('motoristas.index') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('motoristas.index') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Consulta motoristas
-                            </a>
-
-                            <a href="{{ route('motoristas.administrar') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('motoristas.administrar') || request()->routeIs('motoristas.show') || request()->routeIs('motoristas.edit') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Administrar motoristas
-                            </a>
-
-                            <a href="{{ route('motoristas.create') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('motoristas.create') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Nuevo motorista
-                            </a>
-                        </div>
-                    </div>
-
-                    <div class="cc-sidebar-section">
-                        Transacciones
-                    </div>
+                    @endif
 
                     <!-- Abastecimientos -->
                     <div class="cc-sidebar-group">

@@ -18,6 +18,12 @@ class RolPermisosSeeder extends Seeder
             'DIESEL_SUPER_ADMIN' => 'ALL',
 
             'DIESEL_ADMIN' => [
+                'motoristas.consultar',
+                'motoristas.administrar',
+                'motoristas.editar',
+                'motoristas.inactivar',
+                'motoristas.reactivar',
+
                 'rutas.consultar',
                 'rutas.administrar',
                 'rutas.editar',
@@ -89,11 +95,6 @@ class RolPermisosSeeder extends Seeder
 
 
 
-                'motoristas.ver',
-                'motoristas.crear',
-                'motoristas.actualizar',
-                'motoristas.inactivar',
-                'motoristas.reactivar',
 
                 'abastecimientos.ver',
                 'abastecimientos.corregir',
@@ -116,6 +117,8 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'DIESEL_TECNICO' => [
+                'motoristas.consultar',
+
                 'rutas.consultar',
 
                 'puntos_ruta.consultar',
@@ -143,7 +146,6 @@ class RolPermisosSeeder extends Seeder
                 'reemplazos.ver',
                 'reemplazos.crear',
 
-                'motoristas.ver',
                 'abastecimientos.ver',
 
 
@@ -153,6 +155,8 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'DIESEL_AUDITOR' => [
+                'motoristas.consultar',
+
                 'rutas.consultar',
 
                 'puntos_ruta.consultar',
@@ -171,7 +175,6 @@ class RolPermisosSeeder extends Seeder
 
                 'empresas.consultar',
 
-                'motoristas.ver',
                 'abastecimientos.ver',
                 'auditoria.panel_operativo.ver',
                 'auditoria.abastecimientos.ver',
@@ -182,6 +185,13 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_ADMIN' => [
+                'motoristas.consultar',
+                'motoristas.administrar',
+                'motoristas.crear',
+                'motoristas.editar',
+                'motoristas.inactivar',
+                'motoristas.reactivar',
+
                 'rutas.consultar',
                 'rutas.administrar',
                 'rutas.crear',
@@ -240,11 +250,6 @@ class RolPermisosSeeder extends Seeder
 
 
 
-                'motoristas.ver',
-                'motoristas.crear',
-                'motoristas.actualizar',
-                'motoristas.inactivar',
-                'motoristas.reactivar',
 
                 'abastecimientos.ver',
                 'abastecimientos.crear',
@@ -266,6 +271,12 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_SUPERVISOR' => [
+                'motoristas.consultar',
+                'motoristas.administrar',
+                'motoristas.editar',
+                'motoristas.inactivar',
+                'motoristas.reactivar',
+
                 'rutas.consultar',
                 'rutas.administrar',
                 'rutas.editar',
@@ -317,7 +328,6 @@ class RolPermisosSeeder extends Seeder
 
 
 
-                'motoristas.ver',
 
                 'abastecimientos.ver',
                 'abastecimientos.crear',
@@ -335,6 +345,8 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_OPERADOR' => [
+                'motoristas.consultar',
+
                 'rutas.consultar',
 
                 'puntos_ruta.consultar',
@@ -352,7 +364,6 @@ class RolPermisosSeeder extends Seeder
                 'unidades.consultar',
 
 
-                'motoristas.ver',
 
                 'abastecimientos.ver',
                 'abastecimientos.crear',
@@ -369,6 +380,8 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_AUDITOR' => [
+                'motoristas.consultar',
+
                 'rutas.consultar',
 
                 'puntos_ruta.consultar',
@@ -385,7 +398,6 @@ class RolPermisosSeeder extends Seeder
 
                 'usuarios.consultar',
 
-                'motoristas.ver',
                 'abastecimientos.ver',
                 'auditoria.panel_operativo.ver',
                 'auditoria.abastecimientos.ver',

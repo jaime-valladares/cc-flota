@@ -641,11 +641,20 @@ class PermisosSeeder extends Seeder
             // Motoristas
             // -------------------------------------------------------------
             [
-                'codigo' => 'motoristas.ver',
+                'codigo' => 'motoristas.consultar',
                 'modulo' => 'motoristas',
-                'accion' => 'ver',
-                'nombre' => 'Ver motoristas',
-                'descripcion' => 'Permite visualizar motoristas según el alcance autorizado del rol.',
+                'accion' => 'consultar',
+                'nombre' => 'Consultar motoristas',
+                'descripcion' => 'Permite consultar motoristas según el alcance autorizado.',
+                'alcance' => 'ambos',
+                'estado' => 'activo',
+            ],
+            [
+                'codigo' => 'motoristas.administrar',
+                'modulo' => 'motoristas',
+                'accion' => 'administrar',
+                'nombre' => 'Administrar motoristas',
+                'descripcion' => 'Permite acceder al listado administrativo y a la ficha de motoristas.',
                 'alcance' => 'ambos',
                 'estado' => 'activo',
             ],
@@ -654,17 +663,17 @@ class PermisosSeeder extends Seeder
                 'modulo' => 'motoristas',
                 'accion' => 'crear',
                 'nombre' => 'Crear motoristas',
-                'descripcion' => 'Permite registrar motoristas de una empresa cliente.',
-                'alcance' => 'empresa',
+                'descripcion' => 'Permite registrar nuevos motoristas.',
+                'alcance' => 'ambos',
                 'estado' => 'activo',
             ],
             [
-                'codigo' => 'motoristas.actualizar',
+                'codigo' => 'motoristas.editar',
                 'modulo' => 'motoristas',
-                'accion' => 'actualizar',
-                'nombre' => 'Actualizar motoristas',
-                'descripcion' => 'Permite actualizar datos de motoristas.',
-                'alcance' => 'empresa',
+                'accion' => 'editar',
+                'nombre' => 'Editar motoristas',
+                'descripcion' => 'Permite modificar motoristas activos.',
+                'alcance' => 'ambos',
                 'estado' => 'activo',
             ],
             [
@@ -672,8 +681,8 @@ class PermisosSeeder extends Seeder
                 'modulo' => 'motoristas',
                 'accion' => 'inactivar',
                 'nombre' => 'Inactivar motoristas',
-                'descripcion' => 'Permite inactivar motoristas sin eliminarlos físicamente.',
-                'alcance' => 'empresa',
+                'descripcion' => 'Permite inactivar motoristas sin eliminar su historial.',
+                'alcance' => 'ambos',
                 'estado' => 'activo',
             ],
             [
@@ -682,7 +691,7 @@ class PermisosSeeder extends Seeder
                 'accion' => 'reactivar',
                 'nombre' => 'Reactivar motoristas',
                 'descripcion' => 'Permite reactivar motoristas previamente inactivos.',
-                'alcance' => 'empresa',
+                'alcance' => 'ambos',
                 'estado' => 'activo',
             ],
 
@@ -886,7 +895,7 @@ class PermisosSeeder extends Seeder
                 'estado' => 'inactivo',
                 'fecha_actualizacion' => now(),
                 'fecha_inactivacion' => now(),
-                'motivo_inactivacion' => 'Permiso reemplazado por el mapeo funcional definitivo de los módulos Empresas, Usuarios, Unidades, Licencias, Marchamos, Gasolineras Internas, Gasolineras Externas, Puntos de Ruta y Rutas.',
+                'motivo_inactivacion' => 'Permiso reemplazado por el mapeo funcional definitivo de los módulos Empresas, Usuarios, Unidades, Licencias, Marchamos, Gasolineras Internas, Gasolineras Externas, Puntos de Ruta, Rutas y Motoristas.',
             ]);
         }
     }

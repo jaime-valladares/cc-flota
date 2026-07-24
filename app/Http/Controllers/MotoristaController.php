@@ -178,10 +178,19 @@ class MotoristaController extends Controller
             $empresaIds = [(int) $user->empresa_id];
         }
 
-        $hayFiltros = $request->boolean('consultar')
-            || count($empresaIds) > 0
+        $consultaEjecutada = $request->boolean('consultar');
+
+        /*
+         * La empresa obligatoria limita el alcance del usuario empresarial,
+         * pero no ejecuta automáticamente Consulta ni Administrar.
+         */
+        $hayFiltros = $consultaEjecutada
             || count($motoristaIds) > 0
-            || count($estadoIds) > 0;
+            || count($estadoIds) > 0
+            || (
+                $esUsuarioDieselCop
+                && count($empresaIds) > 0
+            );
 
         $empresasSelector = $this->obtenerEmpresasSelector(
             $esUsuarioDieselCop,

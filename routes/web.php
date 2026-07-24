@@ -759,49 +759,101 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     | Motoristas
     |--------------------------------------------------------------------------
+    |
+    | Todas las rutas estáticas se declaran antes de /motoristas/{motorista}.
+    |
     */
 
-    Route::get('/motoristas', [MotoristaController::class, 'index'])
-        ->name('motoristas.index');
+    Route::middleware('permiso:motoristas.consultar')->group(function () {
+        Route::get(
+            '/motoristas',
+            [MotoristaController::class, 'index']
+        )->name('motoristas.index');
 
-    Route::get('/motoristas/consulta/ventana', [MotoristaController::class, 'consultaVentana'])
-        ->name('motoristas.consulta.ventana');
+        Route::get(
+            '/motoristas/consulta/ventana',
+            [MotoristaController::class, 'consultaVentana']
+        )->name('motoristas.consulta.ventana');
+    });
 
-    Route::get('/motoristas/administrar', [MotoristaController::class, 'administrar'])
-        ->name('motoristas.administrar');
+    Route::middleware('permiso:motoristas.administrar')->group(function () {
+        Route::get(
+            '/motoristas/administrar',
+            [MotoristaController::class, 'administrar']
+        )->name('motoristas.administrar');
 
-    Route::get('/motoristas/administrar/ventana', [MotoristaController::class, 'administrarVentana'])
-        ->name('motoristas.administrar.ventana');
+        Route::get(
+            '/motoristas/administrar/ventana',
+            [MotoristaController::class, 'administrarVentana']
+        )->name('motoristas.administrar.ventana');
+    });
 
-    Route::get('/motoristas/nuevo', [MotoristaController::class, 'create'])
-        ->name('motoristas.create');
+    Route::middleware('permiso:motoristas.crear')->group(function () {
+        Route::get(
+            '/motoristas/nuevo',
+            [MotoristaController::class, 'create']
+        )->name('motoristas.create');
 
-    Route::get('/motoristas/nuevo/ventana', [MotoristaController::class, 'createVentana'])
-        ->name('motoristas.create.ventana');
+        Route::get(
+            '/motoristas/nuevo/ventana',
+            [MotoristaController::class, 'createVentana']
+        )->name('motoristas.create.ventana');
 
-    Route::post('/motoristas', [MotoristaController::class, 'store'])
-        ->name('motoristas.store');
+        Route::post(
+            '/motoristas',
+            [MotoristaController::class, 'store']
+        )->name('motoristas.store');
+    });
 
-    Route::get('/motoristas/{motorista}/ficha/ventana', [MotoristaController::class, 'showVentana'])
-        ->name('motoristas.show.ventana');
+    /*
+    |--------------------------------------------------------------------------
+    | Motoristas - Rutas dinámicas
+    |--------------------------------------------------------------------------
+    */
 
-    Route::get('/motoristas/{motorista}/editar/ventana', [MotoristaController::class, 'editVentana'])
-        ->name('motoristas.edit.ventana');
+    Route::middleware('permiso:motoristas.administrar')->group(function () {
+        Route::get(
+            '/motoristas/{motorista}/ficha/ventana',
+            [MotoristaController::class, 'showVentana']
+        )->name('motoristas.show.ventana');
 
-    Route::get('/motoristas/{motorista}', [MotoristaController::class, 'show'])
-        ->name('motoristas.show');
+        Route::get(
+            '/motoristas/{motorista}',
+            [MotoristaController::class, 'show']
+        )->name('motoristas.show');
+    });
 
-    Route::get('/motoristas/{motorista}/editar', [MotoristaController::class, 'edit'])
-        ->name('motoristas.edit');
+    Route::middleware('permiso:motoristas.editar')->group(function () {
+        Route::get(
+            '/motoristas/{motorista}/editar/ventana',
+            [MotoristaController::class, 'editVentana']
+        )->name('motoristas.edit.ventana');
 
-    Route::put('/motoristas/{motorista}', [MotoristaController::class, 'update'])
-        ->name('motoristas.update');
+        Route::get(
+            '/motoristas/{motorista}/editar',
+            [MotoristaController::class, 'edit']
+        )->name('motoristas.edit');
 
-    Route::patch('/motoristas/{motorista}/inactivar', [MotoristaController::class, 'inactivar'])
+        Route::put(
+            '/motoristas/{motorista}',
+            [MotoristaController::class, 'update']
+        )->name('motoristas.update');
+    });
+
+    Route::patch(
+        '/motoristas/{motorista}/inactivar',
+        [MotoristaController::class, 'inactivar']
+    )
+        ->middleware('permiso:motoristas.inactivar')
         ->name('motoristas.inactivar');
 
-    Route::patch('/motoristas/{motorista}/reactivar', [MotoristaController::class, 'reactivar'])
+    Route::patch(
+        '/motoristas/{motorista}/reactivar',
+        [MotoristaController::class, 'reactivar']
+    )
+        ->middleware('permiso:motoristas.reactivar')
         ->name('motoristas.reactivar');
+
 
     /*
     |--------------------------------------------------------------------------
