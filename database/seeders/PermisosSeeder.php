@@ -75,11 +75,20 @@ class PermisosSeeder extends Seeder
             // Usuarios
             // -------------------------------------------------------------
             [
-                'codigo' => 'usuarios.ver',
+                'codigo' => 'usuarios.consultar',
                 'modulo' => 'usuarios',
-                'accion' => 'ver',
-                'nombre' => 'Ver usuarios',
-                'descripcion' => 'Permite visualizar usuarios según el alcance autorizado del rol.',
+                'accion' => 'consultar',
+                'nombre' => 'Consultar usuarios',
+                'descripcion' => 'Permite acceder a la consulta informativa de usuarios según el alcance autorizado.',
+                'alcance' => 'ambos',
+                'estado' => 'activo',
+            ],
+            [
+                'codigo' => 'usuarios.administrar',
+                'modulo' => 'usuarios',
+                'accion' => 'administrar',
+                'nombre' => 'Administrar usuarios',
+                'descripcion' => 'Permite acceder al listado administrativo y a la ficha de usuarios administrables.',
                 'alcance' => 'ambos',
                 'estado' => 'activo',
             ],
@@ -88,25 +97,16 @@ class PermisosSeeder extends Seeder
                 'modulo' => 'usuarios',
                 'accion' => 'crear',
                 'nombre' => 'Crear usuarios',
-                'descripcion' => 'Permite crear usuarios según el alcance autorizado del rol.',
+                'descripcion' => 'Permite registrar usuarios dentro del alcance autorizado.',
                 'alcance' => 'ambos',
                 'estado' => 'activo',
             ],
             [
-                'codigo' => 'usuarios.actualizar',
+                'codigo' => 'usuarios.editar',
                 'modulo' => 'usuarios',
-                'accion' => 'actualizar',
-                'nombre' => 'Actualizar usuarios',
-                'descripcion' => 'Permite actualizar información de usuarios según el alcance autorizado del rol.',
-                'alcance' => 'ambos',
-                'estado' => 'activo',
-            ],
-            [
-                'codigo' => 'usuarios.cambiar_rol',
-                'modulo' => 'usuarios',
-                'accion' => 'cambiar_rol',
-                'nombre' => 'Cambiar rol de usuario',
-                'descripcion' => 'Permite cambiar el rol asignado a usuarios según el alcance autorizado del rol.',
+                'accion' => 'editar',
+                'nombre' => 'Editar usuarios',
+                'descripcion' => 'Permite modificar usuarios activos dentro del alcance autorizado.',
                 'alcance' => 'ambos',
                 'estado' => 'activo',
             ],
@@ -115,7 +115,7 @@ class PermisosSeeder extends Seeder
                 'modulo' => 'usuarios',
                 'accion' => 'inactivar',
                 'nombre' => 'Inactivar usuarios',
-                'descripcion' => 'Permite inactivar usuarios sin eliminarlos físicamente.',
+                'descripcion' => 'Permite inactivar usuarios administrables sin eliminarlos físicamente.',
                 'alcance' => 'ambos',
                 'estado' => 'activo',
             ],
@@ -124,7 +124,7 @@ class PermisosSeeder extends Seeder
                 'modulo' => 'usuarios',
                 'accion' => 'reactivar',
                 'nombre' => 'Reactivar usuarios',
-                'descripcion' => 'Permite reactivar usuarios previamente inactivos.',
+                'descripcion' => 'Permite reactivar usuarios administrables previamente inactivos.',
                 'alcance' => 'ambos',
                 'estado' => 'activo',
             ],
@@ -686,6 +686,9 @@ class PermisosSeeder extends Seeder
             ->whereIn('codigo', [
                 'empresas.ver',
                 'empresas.actualizar',
+                'usuarios.ver',
+                'usuarios.actualizar',
+                'usuarios.cambiar_rol',
             ])
             ->get();
 
@@ -694,7 +697,7 @@ class PermisosSeeder extends Seeder
                 'estado' => 'inactivo',
                 'fecha_actualizacion' => now(),
                 'fecha_inactivacion' => now(),
-                'motivo_inactivacion' => 'Permiso reemplazado por el mapeo funcional definitivo del módulo Empresas.',
+                'motivo_inactivacion' => 'Permiso reemplazado por el mapeo funcional definitivo de los módulos Empresas y Usuarios.',
             ]);
         }
     }

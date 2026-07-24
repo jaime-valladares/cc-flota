@@ -487,8 +487,8 @@
 
                     <!-- Usuarios -->
                     @if ($usuarioAutenticado->tieneAlgunPermiso([
-                        'usuarios.ver',
-                        'usuarios.actualizar',
+                        'usuarios.consultar',
+                        'usuarios.administrar',
                         'usuarios.crear',
                     ]))
                         <div class="cc-sidebar-group">
@@ -505,16 +505,16 @@
                             </div>
 
                             <div id="ccUsuariosSubnav" class="cc-sidebar-subnav cc-sidebar-subnav-collapsed">
-                                @if ($usuarioAutenticado->tienePermiso('usuarios.ver'))
+                                @if ($usuarioAutenticado->tienePermiso('usuarios.consultar'))
                                     <a href="{{ route('usuarios.index') }}"
                                        class="cc-sidebar-sublink {{ request()->routeIs('usuarios.index') || request()->routeIs('usuarios.show') ? 'cc-sidebar-sublink-active' : '' }}">
                                         Consulta usuarios
                                     </a>
                                 @endif
 
-                                @if ($usuarioAutenticado->tienePermiso('usuarios.actualizar'))
+                                @if ($usuarioAutenticado->tienePermiso('usuarios.administrar'))
                                     <a href="{{ route('usuarios.administrar') }}"
-                                       class="cc-sidebar-sublink {{ request()->routeIs('usuarios.administrar') || request()->routeIs('usuarios.edit') ? 'cc-sidebar-sublink-active' : '' }}">
+                                       class="cc-sidebar-sublink {{ request()->routeIs('usuarios.administrar') || request()->routeIs('usuarios.show') || request()->routeIs('usuarios.edit') ? 'cc-sidebar-sublink-active' : '' }}">
                                         Administrar usuario
                                     </a>
                                 @endif

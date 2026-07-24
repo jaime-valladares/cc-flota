@@ -190,7 +190,7 @@
     <div class="cc-actions cc-actions-split">
         <div class="cc-actions-normal">
             @if (
-                Auth::user()->tienePermiso('usuarios.actualizar')
+                Auth::user()->tienePermiso('usuarios.editar')
                 && $usuario->estado === 'activo'
             )
                 <a

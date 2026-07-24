@@ -54,12 +54,11 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     |
     | Las rutas fijas deben declararse antes de /usuarios/{usuario}
-    | para evitar que palabras como "administrar" o "nuevo" sean
-    | interpretadas como identificadores de usuario.
+    | para evitar que palabras reservadas sean interpretadas como identificadores.
     |
     */
 
-    Route::middleware('permiso:usuarios.ver')->group(function () {
+    Route::middleware('permiso:usuarios.consultar')->group(function () {
         Route::get(
             '/usuarios',
             [UsuarioController::class, 'index']
@@ -88,7 +87,7 @@ Route::middleware('auth')->group(function () {
         )->name('usuarios.store');
     });
 
-    Route::middleware('permiso:usuarios.actualizar')->group(function () {
+    Route::middleware('permiso:usuarios.administrar')->group(function () {
         Route::get(
             '/usuarios/administrar',
             [UsuarioController::class, 'administrar']
@@ -106,7 +105,7 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::middleware('permiso:usuarios.ver')->group(function () {
+    Route::middleware('permiso:usuarios.administrar')->group(function () {
         Route::get(
             '/usuarios/{usuario}/ventana',
             [UsuarioController::class, 'showVentana']
@@ -118,7 +117,7 @@ Route::middleware('auth')->group(function () {
         )->name('usuarios.show');
     });
 
-    Route::middleware('permiso:usuarios.actualizar')->group(function () {
+    Route::middleware('permiso:usuarios.editar')->group(function () {
         Route::get(
             '/usuarios/{usuario}/editar/ventana',
             [UsuarioController::class, 'editVentana']
@@ -803,28 +802,6 @@ Route::middleware('auth')->group(function () {
         )->name('empresas.consulta.ventana');
     });
 
-    Route::middleware('permiso:empresas.administrar')->group(function () {
-        Route::get(
-            '/empresas/administrar',
-            [EmpresaController::class, 'administrar']
-        )->name('empresas.administrar');
-
-        Route::get(
-            '/empresas/administrar/ventana',
-            [EmpresaController::class, 'administrarVentana']
-        )->name('empresas.administrar.ventana');
-
-        Route::get(
-            '/empresas/{empresa}/ventana',
-            [EmpresaController::class, 'showVentana']
-        )->name('empresas.show.ventana');
-
-        Route::get(
-            '/empresas/{empresa}',
-            [EmpresaController::class, 'show']
-        )->name('empresas.show');
-    });
-
     Route::middleware('permiso:empresas.crear')->group(function () {
         Route::get(
             '/empresas/create',
@@ -840,6 +817,36 @@ Route::middleware('auth')->group(function () {
             '/empresas',
             [EmpresaController::class, 'store']
         )->name('empresas.store');
+    });
+
+    Route::middleware('permiso:empresas.administrar')->group(function () {
+        Route::get(
+            '/empresas/administrar',
+            [EmpresaController::class, 'administrar']
+        )->name('empresas.administrar');
+
+        Route::get(
+            '/empresas/administrar/ventana',
+            [EmpresaController::class, 'administrarVentana']
+        )->name('empresas.administrar.ventana');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Empresas - Rutas dinámicas
+    |--------------------------------------------------------------------------
+    */
+
+    Route::middleware('permiso:empresas.administrar')->group(function () {
+        Route::get(
+            '/empresas/{empresa}/ventana',
+            [EmpresaController::class, 'showVentana']
+        )->name('empresas.show.ventana');
+
+        Route::get(
+            '/empresas/{empresa}',
+            [EmpresaController::class, 'show']
+        )->name('empresas.show');
     });
 
     Route::middleware('permiso:empresas.editar')->group(function () {

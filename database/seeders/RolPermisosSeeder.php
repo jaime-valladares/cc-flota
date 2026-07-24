@@ -18,18 +18,18 @@ class RolPermisosSeeder extends Seeder
             'DIESEL_SUPER_ADMIN' => 'ALL',
 
             'DIESEL_ADMIN' => [
+                'usuarios.consultar',
+                'usuarios.administrar',
+                'usuarios.editar',
+                'usuarios.inactivar',
+                'usuarios.reactivar',
+
                 'empresas.consultar',
                 'empresas.administrar',
                 'empresas.editar',
                 'empresas.inactivar',
                 'empresas.reactivar',
 
-                'usuarios.ver',
-                'usuarios.crear',
-                'usuarios.actualizar',
-                'usuarios.cambiar_rol',
-                'usuarios.inactivar',
-                'usuarios.reactivar',
 
                 'unidades.ver',
                 'unidades.crear',
@@ -124,9 +124,10 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'DIESEL_AUDITOR' => [
+                'usuarios.consultar',
+
                 'empresas.consultar',
 
-                'usuarios.ver',
                 'unidades.ver',
                 'licencias.ver',
                 'marchamos.ver',
@@ -146,10 +147,10 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_ADMIN' => [
-                'usuarios.ver',
+                'usuarios.consultar',
+                'usuarios.administrar',
                 'usuarios.crear',
-                'usuarios.actualizar',
-                'usuarios.cambiar_rol',
+                'usuarios.editar',
                 'usuarios.inactivar',
                 'usuarios.reactivar',
 
@@ -198,7 +199,11 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_SUPERVISOR' => [
-                'usuarios.ver',
+                'usuarios.consultar',
+                'usuarios.administrar',
+                'usuarios.editar',
+                'usuarios.inactivar',
+                'usuarios.reactivar',
 
                 'unidades.ver',
 
@@ -253,7 +258,8 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_AUDITOR' => [
-                'usuarios.ver',
+                'usuarios.consultar',
+
                 'unidades.ver',
                 'licencias.ver',
                 'marchamos.ver',

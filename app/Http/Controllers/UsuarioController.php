@@ -34,7 +34,7 @@ class UsuarioController extends Controller
     {
         return view(
             'usuarios.administrar',
-            $this->prepararConsultaUsuarios($request)
+            $this->prepararConsultaUsuarios($request, true)
         );
     }
 
@@ -42,11 +42,14 @@ class UsuarioController extends Controller
     {
         return view(
             'usuarios.administrar-ventana',
-            $this->prepararConsultaUsuarios($request)
+            $this->prepararConsultaUsuarios($request, true)
         );
     }
 
-    private function prepararConsultaUsuarios(Request $request): array
+    private function prepararConsultaUsuarios(
+        Request $request,
+        bool $modoAdministracion = false
+    ): array
     {
         /** @var User $usuarioAutenticado */
         $usuarioAutenticado = Auth::user();
@@ -157,13 +160,23 @@ class UsuarioController extends Controller
             ];
         }
 
-        $hayFiltros = ! $esUsuarioDieselCop
-            || $request->boolean('consultar')
+        /*
+         * El alcance obligatorio del usuario empresarial no debe contarse
+         * como una consulta ejecutada. Tanto Consulta como Administrar deben
+         * iniciar sin resultados hasta que el usuario presione Consultar o
+         * ingrese un filtro real.
+         */
+        $hayFiltros = $request->boolean('consultar')
             || $busquedaUsuario !== ''
-            || filled($tipoUsuario)
-            || count($empresaIds) > 0
             || count($rolIds) > 0
-            || filled($estado);
+            || filled($estado)
+            || (
+                $esUsuarioDieselCop
+                && (
+                    filled($tipoUsuario)
+                    || count($empresaIds) > 0
+                )
+            );
 
         $empresasSelector = $esUsuarioDieselCop
             ? Empresa::query()
@@ -196,6 +209,13 @@ class UsuarioController extends Controller
             $usuarioAutenticado
         );
 
+        if ($modoAdministracion) {
+            $this->aplicarAlcanceAdministracion(
+                $query,
+                $usuarioAutenticado
+            );
+        }
+
         if ($hayFiltros) {
             $this->aplicarFiltrosUsuario(
                 $query,
@@ -222,6 +242,13 @@ class UsuarioController extends Controller
             $baseResumen,
             $usuarioAutenticado
         );
+
+        if ($modoAdministracion) {
+            $this->aplicarAlcanceAdministracion(
+                $baseResumen,
+                $usuarioAutenticado
+            );
+        }
 
         if ($hayFiltros) {
             $this->aplicarFiltrosUsuario(
@@ -265,6 +292,51 @@ class UsuarioController extends Controller
                 $usuarioAutenticado->empresaIdOperativa()
             );
         }
+    }
+
+    private function aplicarAlcanceAdministracion(
+        Builder $query,
+        User $usuarioAutenticado
+    ): void {
+        if ($usuarioAutenticado->tieneRol(
+            User::ROL_DIESEL_SUPER_ADMIN
+        )) {
+            return;
+        }
+
+        if ($usuarioAutenticado->tieneRol(
+            User::ROL_DIESEL_ADMIN
+        )) {
+            $query->where(
+                'tipo_usuario',
+                User::TIPO_EMPRESA
+            );
+
+            return;
+        }
+
+        if ($usuarioAutenticado->tieneRol(
+            User::ROL_EMPRESA_ADMIN
+        )) {
+            return;
+        }
+
+        if ($usuarioAutenticado->tieneRol(
+            User::ROL_EMPRESA_SUPERVISOR
+        )) {
+            $query->whereHas(
+                'role',
+                fn (Builder $roleQuery) =>
+                    $roleQuery->whereIn('codigo', [
+                        User::ROL_EMPRESA_OPERADOR,
+                        User::ROL_EMPRESA_AUDITOR,
+                    ])
+            );
+
+            return;
+        }
+
+        $query->whereRaw('1 = 0');
     }
 
     private function aplicarFiltrosUsuario(
@@ -369,16 +441,10 @@ class UsuarioController extends Controller
                 )
                 ->get();
 
-        $roles = Role::query()
-            ->where('estado', 'activo')
-            ->when(
-                ! $esUsuarioDieselCop,
-                fn (Builder $query) =>
-                    $query->where('alcance', 'empresa')
-            )
-            ->orderBy('alcance')
-            ->orderBy('nombre')
-            ->get();
+        $roles = $this->rolesAsignablesPor(
+            $usuarioAutenticado,
+            $usuario
+        );
 
         return [
             'usuario' => $usuario,
@@ -386,9 +452,9 @@ class UsuarioController extends Controller
             'roles' => $roles,
             'esUsuarioDieselCop' => $esUsuarioDieselCop,
             'puedeCambiarRol' =>
-                $usuarioAutenticado->tienePermiso(
-                    'usuarios.cambiar_rol'
-                ),
+                is_null($usuario)
+                || (int) $usuarioAutenticado->id
+                    !== (int) $usuario->id,
         ];
     }
 
@@ -408,7 +474,8 @@ class UsuarioController extends Controller
         );
 
         $role = $this->obtenerRolValido(
-            (int) $validated['rol_id']
+            (int) $validated['rol_id'],
+            $usuarioAutenticado
         );
 
         $this->validarCoherenciaRol(
@@ -458,7 +525,7 @@ class UsuarioController extends Controller
 
     public function show(User $usuario): View
     {
-        $this->autorizarAccesoUsuario($usuario);
+        $this->autorizarAdministracionUsuario($usuario);
 
         $usuario->load([
             'empresa',
@@ -476,7 +543,7 @@ class UsuarioController extends Controller
 
     public function showVentana(User $usuario): View
     {
-        $this->autorizarAccesoUsuario($usuario);
+        $this->autorizarAdministracionUsuario($usuario);
 
         $usuario->load([
             'empresa',
@@ -494,7 +561,7 @@ class UsuarioController extends Controller
 
     public function edit(User $usuario): View
     {
-        $this->autorizarAccesoUsuario($usuario);
+        $this->autorizarAdministracionUsuario($usuario);
         $this->validarUsuarioActivo($usuario);
 
         return view(
@@ -505,7 +572,7 @@ class UsuarioController extends Controller
 
     public function editVentana(User $usuario): View
     {
-        $this->autorizarAccesoUsuario($usuario);
+        $this->autorizarAdministracionUsuario($usuario);
         $this->validarUsuarioActivo($usuario);
 
         return view(
@@ -518,7 +585,7 @@ class UsuarioController extends Controller
         Request $request,
         User $usuario
     ): RedirectResponse {
-        $this->autorizarAccesoUsuario($usuario);
+        $this->autorizarAdministracionUsuario($usuario);
         $this->validarUsuarioActivo($usuario);
 
         /** @var User $usuarioAutenticado */
@@ -534,8 +601,22 @@ class UsuarioController extends Controller
             $usuarioAutenticado
         );
 
+        if (
+            (int) $usuarioAutenticado->id
+            === (int) $usuario->id
+        ) {
+            $validated['tipo_usuario'] =
+                $usuario->tipo_usuario;
+            $validated['empresa_id'] =
+                $usuario->empresa_id;
+            $validated['rol_id'] =
+                $usuario->rol_id;
+        }
+
         $role = $this->obtenerRolValido(
-            (int) $validated['rol_id']
+            (int) $validated['rol_id'],
+            $usuarioAutenticado,
+            $usuario
         );
 
         $this->validarCoherenciaRol(
@@ -543,17 +624,6 @@ class UsuarioController extends Controller
             $role
         );
 
-        if (
-            (int) $usuario->rol_id !== (int) $role->id
-            && ! $usuarioAutenticado->tienePermiso(
-                'usuarios.cambiar_rol'
-            )
-        ) {
-            abort(
-                403,
-                'No tiene autorización para cambiar el rol del usuario.'
-            );
-        }
 
         $datosActualizar = [
             'empresa_id' =>
@@ -593,13 +663,33 @@ class UsuarioController extends Controller
         Request $request,
         User $usuario
     ): RedirectResponse {
-        $this->autorizarAccesoUsuario($usuario);
+        $this->autorizarAdministracionUsuario($usuario);
         $this->validarUsuarioActivo($usuario);
 
         if ((int) $usuario->id === (int) Auth::id()) {
             return back()->withErrors([
                 'motivo_inactivacion' =>
                     'No puede inactivar su propio usuario mientras está en sesión.',
+            ]);
+        }
+
+        if (
+            $usuario->tieneRol(User::ROL_DIESEL_SUPER_ADMIN)
+            && User::query()
+                ->where('estado', 'activo')
+                ->whereHas(
+                    'role',
+                    fn (Builder $query) =>
+                        $query->where(
+                            'codigo',
+                            User::ROL_DIESEL_SUPER_ADMIN
+                        )
+                )
+                ->count() <= 1
+        ) {
+            return back()->withErrors([
+                'motivo_inactivacion' =>
+                    'No puede inactivar el último superadministrador activo.',
             ]);
         }
 
@@ -646,7 +736,7 @@ class UsuarioController extends Controller
         Request $request,
         User $usuario
     ): RedirectResponse {
-        $this->autorizarAccesoUsuario($usuario);
+        $this->autorizarAdministracionUsuario($usuario);
 
         if ($usuario->estado !== 'inactivo') {
             abort(
@@ -770,12 +860,85 @@ class UsuarioController extends Controller
         }
     }
 
-    private function obtenerRolValido(int $rolId): Role
-    {
-        return Role::query()
+    private function obtenerRolValido(
+        int $rolId,
+        User $usuarioAutenticado,
+        ?User $usuarioObjetivo = null
+    ): Role {
+        $rol = Role::query()
             ->whereKey($rolId)
             ->where('estado', 'activo')
             ->firstOrFail();
+
+        $rolesPermitidos = $this->rolesAsignablesPor(
+            $usuarioAutenticado,
+            $usuarioObjetivo
+        )->pluck('id');
+
+        if (! $rolesPermitidos->contains($rol->id)) {
+            abort(
+                403,
+                'No tiene autorización para asignar el rol seleccionado.'
+            );
+        }
+
+        return $rol;
+    }
+
+    private function rolesAsignablesPor(
+        User $usuarioAutenticado,
+        ?User $usuarioObjetivo = null
+    ) {
+        if (
+            ! is_null($usuarioObjetivo)
+            && (int) $usuarioAutenticado->id
+                === (int) $usuarioObjetivo->id
+        ) {
+            return Role::query()
+                ->whereKey($usuarioObjetivo->rol_id)
+                ->where('estado', 'activo')
+                ->get();
+        }
+
+        $query = Role::query()
+            ->where('estado', 'activo');
+
+        if ($usuarioAutenticado->tieneRol(
+            User::ROL_DIESEL_SUPER_ADMIN
+        )) {
+            return $query
+                ->orderBy('alcance')
+                ->orderBy('nombre')
+                ->get();
+        }
+
+        if (
+            $usuarioAutenticado->tieneRol(
+                User::ROL_DIESEL_ADMIN
+            )
+            || $usuarioAutenticado->tieneRol(
+                User::ROL_EMPRESA_ADMIN
+            )
+        ) {
+            return $query
+                ->where('alcance', User::TIPO_EMPRESA)
+                ->orderBy('nombre')
+                ->get();
+        }
+
+        if ($usuarioAutenticado->tieneRol(
+            User::ROL_EMPRESA_SUPERVISOR
+        )) {
+            return $query
+                ->whereIn('codigo', [
+                    User::ROL_EMPRESA_OPERADOR,
+                    User::ROL_EMPRESA_AUDITOR,
+                ])
+                ->orderBy('nombre')
+                ->get();
+        }
+
+        return collect();
     }
 
     private function validarCoherenciaRol(
@@ -805,23 +968,73 @@ class UsuarioController extends Controller
         }
     }
 
-    private function autorizarAccesoUsuario(
+    private function autorizarAdministracionUsuario(
         User $usuario
     ): void {
+        $usuario->loadMissing('role');
+
         /** @var User $usuarioAutenticado */
         $usuarioAutenticado = Auth::user();
 
+        if ($usuarioAutenticado->tieneRol(
+            User::ROL_DIESEL_SUPER_ADMIN
+        )) {
+            return;
+        }
+
+        if ($usuarioAutenticado->tieneRol(
+            User::ROL_DIESEL_ADMIN
+        )) {
+            if ($usuario->tipo_usuario !== User::TIPO_EMPRESA) {
+                abort(
+                    403,
+                    'No tiene autorización para administrar usuarios Diesel Cop.'
+                );
+            }
+
+            return;
+        }
+
         if (
-            $usuarioAutenticado->esUsuarioEmpresa()
-            && (int) $usuarioAutenticado
-                ->empresaIdOperativa()
-                !== (int) $usuario->empresa_id
+            (int) $usuarioAutenticado->empresaIdOperativa()
+            !== (int) $usuario->empresa_id
         ) {
             abort(
                 403,
                 'No tiene autorización para acceder a este usuario.'
             );
         }
+
+        if ($usuarioAutenticado->tieneRol(
+            User::ROL_EMPRESA_ADMIN
+        )) {
+            return;
+        }
+
+        if ($usuarioAutenticado->tieneRol(
+            User::ROL_EMPRESA_SUPERVISOR
+        )) {
+            if (! in_array(
+                $usuario->role?->codigo,
+                [
+                    User::ROL_EMPRESA_OPERADOR,
+                    User::ROL_EMPRESA_AUDITOR,
+                ],
+                true
+            )) {
+                abort(
+                    403,
+                    'No tiene autorización para administrar este usuario.'
+                );
+            }
+
+            return;
+        }
+
+        abort(
+            403,
+            'No tiene autorización para administrar usuarios.'
+        );
     }
 
     private function validarUsuarioActivo(

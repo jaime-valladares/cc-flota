@@ -64,7 +64,10 @@
                                     {{ trim($usuario->name . ' ' . ($usuario->apellido ?? '')) }}
                                 </h5>
 
-                                @if ($usuario->estado === 'activo')
+                                @if (
+                                Auth::user()->tienePermiso('usuarios.editar')
+                                && $usuario->estado === 'activo'
+                            )
                                     <span class="cc-badge cc-badge-active">Activo</span>
                                 @else
                                     <span class="cc-badge cc-badge-inactive">Inactivo</span>
