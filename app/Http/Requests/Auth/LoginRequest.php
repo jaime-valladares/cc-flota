@@ -50,6 +50,22 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        $usuario = Auth::user();
+
+        if (! $usuario || $usuario->estado !== 'activo') {
+            Auth::guard('web')->logout();
+
+            RateLimiter::hit($this->throttleKey());
+
+            /*
+             * Se utiliza el mismo mensaje de credenciales inválidas para no
+             * revelar si una cuenta existe o si se encuentra inactiva.
+             */
+            throw ValidationException::withMessages([
+                'email' => trans('auth.failed'),
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 

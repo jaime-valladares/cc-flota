@@ -1,8 +1,9 @@
 <?php
 
+use App\Http\Middleware\AsegurarPermiso;
+use App\Http\Middleware\AsegurarUsuarioActivo;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
-use App\Http\Middleware\AsegurarPermiso;
 use Illuminate\Foundation\Configuration\Middleware;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -14,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'permiso' => AsegurarPermiso::class,
+            'usuario.activo' => AsegurarUsuarioActivo::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
