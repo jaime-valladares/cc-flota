@@ -193,13 +193,20 @@ class GasolineraController extends Controller
 
         $consultaEjecutada = $request->boolean('consultar');
 
+        /*
+         * La empresa obligatoria del usuario empresarial limita el alcance,
+         * pero no ejecuta automáticamente Consulta ni Administrar.
+         */
         $hayFiltros =
             $consultaEjecutada
             || filled($busquedaEmpresa)
             || filled($busquedaGasolinera)
-            || count($empresaIds) > 0
             || count($gasolineraIds) > 0
-            || filled($estado);
+            || filled($estado)
+            || (
+                $esUsuarioDieselCop
+                && count($empresaIds) > 0
+            );
 
         $empresasSelector = Empresa::query()
             ->when(

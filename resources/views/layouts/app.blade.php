@@ -670,46 +670,74 @@
                     </div>
 
                     <!-- Gasolineras internas -->
-                    <div class="cc-sidebar-group">
-                        <div
-                            id="ccGasolinerasToggle"
-                            class="cc-sidebar-parent cc-sidebar-collapsible-parent {{ $gasolinerasActivo ? 'cc-sidebar-parent-active' : '' }}"
-                            role="button"
-                            tabindex="0"
-                            aria-expanded="false"
-                            aria-controls="ccGasolinerasSubnav"
-                        >
-                            <span>Gasolineras Internas</span>
-                            <span class="cc-sidebar-collapse-icon" aria-hidden="true">▼</span>
+                    @if ($usuarioAutenticado->tieneAlgunPermiso([
+                        'gasolineras.consultar',
+                        'gasolineras.administrar',
+                        'gasolineras.crear',
+                        'tanques.administrar',
+                        'recargas_tanques.registrar',
+                    ]))
+                        <div class="cc-sidebar-group">
+                            <div
+                                id="ccGasolinerasToggle"
+                                class="cc-sidebar-parent cc-sidebar-collapsible-parent {{ $gasolinerasActivo ? 'cc-sidebar-parent-active' : '' }}"
+                                role="button"
+                                tabindex="0"
+                                aria-expanded="false"
+                                aria-controls="ccGasolinerasSubnav"
+                            >
+                                <span>Gasolineras Internas</span>
+                                <span class="cc-sidebar-collapse-icon" aria-hidden="true">▼</span>
+                            </div>
+
+                            <div id="ccGasolinerasSubnav" class="cc-sidebar-subnav cc-sidebar-subnav-collapsed">
+                                @if ($usuarioAutenticado->tienePermiso('gasolineras.consultar'))
+                                    <a
+                                        href="{{ route('gasolineras.index') }}"
+                                        class="cc-sidebar-sublink {{ request()->routeIs('gasolineras.index') ? 'cc-sidebar-sublink-active' : '' }}"
+                                    >
+                                        Consulta gasolineras
+                                    </a>
+                                @endif
+
+                                @if ($usuarioAutenticado->tienePermiso('gasolineras.administrar'))
+                                    <a
+                                        href="{{ route('gasolineras.administrar') }}"
+                                        class="cc-sidebar-sublink {{ request()->routeIs('gasolineras.administrar') || request()->routeIs('gasolineras.show') || request()->routeIs('gasolineras.edit') ? 'cc-sidebar-sublink-active' : '' }}"
+                                    >
+                                        Administrar gasolineras
+                                    </a>
+                                @endif
+
+                                @if ($usuarioAutenticado->tienePermiso('tanques.administrar'))
+                                    <a
+                                        href="{{ route('gasolineras.tanques.index') }}"
+                                        class="cc-sidebar-sublink {{ request()->routeIs('gasolineras.tanques.index') || request()->routeIs('gasolineras.tanques.show') ? 'cc-sidebar-sublink-active' : '' }}"
+                                    >
+                                        Gestión de tanques
+                                    </a>
+                                @endif
+
+                                @if ($usuarioAutenticado->tienePermiso('recargas_tanques.registrar'))
+                                    <a
+                                        href="{{ route('gasolineras.tanques.recargas.index') }}"
+                                        class="cc-sidebar-sublink {{ request()->routeIs('gasolineras.tanques.recargas.*') ? 'cc-sidebar-sublink-active' : '' }}"
+                                    >
+                                        Recarga de tanques
+                                    </a>
+                                @endif
+
+                                @if ($usuarioAutenticado->tienePermiso('gasolineras.crear'))
+                                    <a
+                                        href="{{ route('gasolineras.create') }}"
+                                        class="cc-sidebar-sublink {{ request()->routeIs('gasolineras.create') ? 'cc-sidebar-sublink-active' : '' }}"
+                                    >
+                                        Nueva gasolinera
+                                    </a>
+                                @endif
+                            </div>
                         </div>
-
-                        <div id="ccGasolinerasSubnav" class="cc-sidebar-subnav cc-sidebar-subnav-collapsed">
-                            <a href="{{ route('gasolineras.index') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('gasolineras.index') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Consulta gasolineras
-                            </a>
-
-                            <a href="{{ route('gasolineras.administrar') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('gasolineras.administrar') || request()->routeIs('gasolineras.show') || request()->routeIs('gasolineras.edit') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Administrar gasolineras
-                            </a>
-
-                            <a href="{{ route('gasolineras.tanques.index') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('gasolineras.tanques.index') || request()->routeIs('gasolineras.tanques.show') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Gestión de tanques
-                            </a>
-
-                            <a href="{{ route('gasolineras.tanques.recargas.index') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('gasolineras.tanques.recargas.index') || request()->routeIs('gasolineras.tanques.recargas.show') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Recarga de tanques
-                            </a>
-
-                            <a href="{{ route('gasolineras.create') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('gasolineras.create') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Nueva gasolinera
-                            </a>
-                        </div>
-                    </div>
+                    @endif
 
                     <!-- Gasolineras externas -->
                     <div class="cc-sidebar-group">

@@ -335,14 +335,23 @@ class PermisosSeeder extends Seeder
             ],
 
             // -------------------------------------------------------------
-            // Gasolineras
+            // Gasolineras internas
             // -------------------------------------------------------------
             [
-                'codigo' => 'gasolineras.ver',
+                'codigo' => 'gasolineras.consultar',
                 'modulo' => 'gasolineras',
-                'accion' => 'ver',
-                'nombre' => 'Ver gasolineras',
-                'descripcion' => 'Permite visualizar gasolineras internas según el alcance autorizado del rol.',
+                'accion' => 'consultar',
+                'nombre' => 'Consultar gasolineras internas',
+                'descripcion' => 'Permite consultar gasolineras internas según el alcance autorizado.',
+                'alcance' => 'ambos',
+                'estado' => 'activo',
+            ],
+            [
+                'codigo' => 'gasolineras.administrar',
+                'modulo' => 'gasolineras',
+                'accion' => 'administrar',
+                'nombre' => 'Administrar gasolineras internas',
+                'descripcion' => 'Permite acceder al listado administrativo y a la ficha de gasolineras internas.',
                 'alcance' => 'ambos',
                 'estado' => 'activo',
             ],
@@ -350,48 +359,48 @@ class PermisosSeeder extends Seeder
                 'codigo' => 'gasolineras.crear',
                 'modulo' => 'gasolineras',
                 'accion' => 'crear',
-                'nombre' => 'Crear gasolineras',
-                'descripcion' => 'Permite registrar gasolineras internas de una empresa cliente.',
-                'alcance' => 'empresa',
+                'nombre' => 'Crear gasolineras internas',
+                'descripcion' => 'Permite registrar una gasolinera interna con su inventario inicial.',
+                'alcance' => 'ambos',
                 'estado' => 'activo',
             ],
             [
-                'codigo' => 'gasolineras.actualizar',
+                'codigo' => 'gasolineras.editar',
                 'modulo' => 'gasolineras',
-                'accion' => 'actualizar',
-                'nombre' => 'Actualizar gasolineras',
-                'descripcion' => 'Permite actualizar datos de gasolineras internas.',
-                'alcance' => 'empresa',
+                'accion' => 'editar',
+                'nombre' => 'Editar gasolineras internas',
+                'descripcion' => 'Permite modificar los datos administrativos de una gasolinera interna activa.',
+                'alcance' => 'ambos',
                 'estado' => 'activo',
             ],
             [
                 'codigo' => 'gasolineras.inactivar',
                 'modulo' => 'gasolineras',
                 'accion' => 'inactivar',
-                'nombre' => 'Inactivar gasolineras',
-                'descripcion' => 'Permite inactivar gasolineras internas sin eliminarlas físicamente.',
-                'alcance' => 'empresa',
+                'nombre' => 'Inactivar gasolineras internas',
+                'descripcion' => 'Permite inactivar una gasolinera interna sin eliminar sus tanques ni su historial.',
+                'alcance' => 'ambos',
                 'estado' => 'activo',
             ],
             [
                 'codigo' => 'gasolineras.reactivar',
                 'modulo' => 'gasolineras',
                 'accion' => 'reactivar',
-                'nombre' => 'Reactivar gasolineras',
-                'descripcion' => 'Permite reactivar gasolineras internas previamente inactivas.',
-                'alcance' => 'empresa',
+                'nombre' => 'Reactivar gasolineras internas',
+                'descripcion' => 'Permite reactivar una gasolinera interna previamente inactiva.',
+                'alcance' => 'ambos',
                 'estado' => 'activo',
             ],
 
             // -------------------------------------------------------------
-            // Tanques
+            // Gestión de tanques
             // -------------------------------------------------------------
             [
-                'codigo' => 'tanques.ver',
+                'codigo' => 'tanques.administrar',
                 'modulo' => 'tanques',
-                'accion' => 'ver',
-                'nombre' => 'Ver tanques',
-                'descripcion' => 'Permite visualizar tanques internos según el alcance autorizado del rol.',
+                'accion' => 'administrar',
+                'nombre' => 'Administrar tanques',
+                'descripcion' => 'Permite consultar el listado administrativo y acceder a la ficha de tanques.',
                 'alcance' => 'ambos',
                 'estado' => 'activo',
             ],
@@ -400,17 +409,17 @@ class PermisosSeeder extends Seeder
                 'modulo' => 'tanques',
                 'accion' => 'crear',
                 'nombre' => 'Crear tanques',
-                'descripcion' => 'Permite registrar tanques internos asociados a gasolineras.',
-                'alcance' => 'empresa',
+                'descripcion' => 'Permite registrar tanques adicionales en una gasolinera interna activa.',
+                'alcance' => 'ambos',
                 'estado' => 'activo',
             ],
             [
-                'codigo' => 'tanques.actualizar',
+                'codigo' => 'tanques.editar',
                 'modulo' => 'tanques',
-                'accion' => 'actualizar',
-                'nombre' => 'Actualizar tanques',
-                'descripcion' => 'Permite actualizar datos administrativos y operativos de tanques.',
-                'alcance' => 'empresa',
+                'accion' => 'editar',
+                'nombre' => 'Editar tanques',
+                'descripcion' => 'Permite modificar los datos controlados de un tanque activo.',
+                'alcance' => 'ambos',
                 'estado' => 'activo',
             ],
             [
@@ -418,8 +427,8 @@ class PermisosSeeder extends Seeder
                 'modulo' => 'tanques',
                 'accion' => 'inactivar',
                 'nombre' => 'Inactivar tanques',
-                'descripcion' => 'Permite inactivar tanques sin eliminarlos físicamente.',
-                'alcance' => 'empresa',
+                'descripcion' => 'Permite inactivar un tanque preservando su inventario e historial.',
+                'alcance' => 'ambos',
                 'estado' => 'activo',
             ],
             [
@@ -427,8 +436,30 @@ class PermisosSeeder extends Seeder
                 'modulo' => 'tanques',
                 'accion' => 'reactivar',
                 'nombre' => 'Reactivar tanques',
-                'descripcion' => 'Permite reactivar tanques previamente inactivos.',
-                'alcance' => 'empresa',
+                'descripcion' => 'Permite reactivar un tanque previamente inactivo.',
+                'alcance' => 'ambos',
+                'estado' => 'activo',
+            ],
+
+            // -------------------------------------------------------------
+            // Recarga de tanques
+            // -------------------------------------------------------------
+            [
+                'codigo' => 'recargas_tanques.registrar',
+                'modulo' => 'recargas_tanques',
+                'accion' => 'registrar',
+                'nombre' => 'Registrar recargas de tanques',
+                'descripcion' => 'Permite consultar tanques recargables y registrar una recarga indivisible en uno o varios tanques.',
+                'alcance' => 'ambos',
+                'estado' => 'activo',
+            ],
+            [
+                'codigo' => 'recargas_tanques.anular',
+                'modulo' => 'recargas_tanques',
+                'accion' => 'anular',
+                'nombre' => 'Anular recargas de tanques',
+                'descripcion' => 'Permite anular completamente una recarga y revertir el inventario de todos los tanques involucrados.',
+                'alcance' => 'ambos',
                 'estado' => 'activo',
             ],
 
@@ -708,6 +739,10 @@ class PermisosSeeder extends Seeder
                 'marchamos.ver_historial',
                 'marchamos.reemplazar_abastecimiento',
                 'marchamos.reemplazar_dano_desgaste',
+                'gasolineras.ver',
+                'gasolineras.actualizar',
+                'tanques.ver',
+                'tanques.actualizar',
             ])
             ->get();
 
@@ -716,7 +751,7 @@ class PermisosSeeder extends Seeder
                 'estado' => 'inactivo',
                 'fecha_actualizacion' => now(),
                 'fecha_inactivacion' => now(),
-                'motivo_inactivacion' => 'Permiso reemplazado por el mapeo funcional definitivo de los módulos Empresas, Usuarios, Unidades, Licencias y Marchamos.',
+                'motivo_inactivacion' => 'Permiso reemplazado por el mapeo funcional definitivo de los módulos Empresas, Usuarios, Unidades, Licencias, Marchamos y Gasolineras Internas.',
             ]);
         }
     }

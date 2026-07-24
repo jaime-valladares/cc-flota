@@ -18,6 +18,19 @@ class RolPermisosSeeder extends Seeder
             'DIESEL_SUPER_ADMIN' => 'ALL',
 
             'DIESEL_ADMIN' => [
+                'gasolineras.consultar',
+                'gasolineras.administrar',
+                'gasolineras.editar',
+                'gasolineras.inactivar',
+                'gasolineras.reactivar',
+                'tanques.administrar',
+                'tanques.crear',
+                'tanques.editar',
+                'tanques.inactivar',
+                'tanques.reactivar',
+                'recargas_tanques.registrar',
+                'recargas_tanques.anular',
+
                 'marchamos.consultar',
                 'marchamos.administrar',
                 'marchamos.reemplazar',
@@ -56,17 +69,7 @@ class RolPermisosSeeder extends Seeder
                 'puntos_seguridad.reactivar',
 
 
-                'gasolineras.ver',
-                'gasolineras.crear',
-                'gasolineras.actualizar',
-                'gasolineras.inactivar',
-                'gasolineras.reactivar',
 
-                'tanques.ver',
-                'tanques.crear',
-                'tanques.actualizar',
-                'tanques.inactivar',
-                'tanques.reactivar',
 
                 'motoristas.ver',
                 'motoristas.crear',
@@ -95,6 +98,10 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'DIESEL_TECNICO' => [
+                'gasolineras.consultar',
+                'recargas_tanques.registrar',
+                'recargas_tanques.anular',
+
                 'marchamos.consultar',
                 'marchamos.administrar',
                 'marchamos.reemplazar',
@@ -112,8 +119,6 @@ class RolPermisosSeeder extends Seeder
                 'reemplazos.ver',
                 'reemplazos.crear',
 
-                'gasolineras.ver',
-                'tanques.ver',
                 'motoristas.ver',
                 'abastecimientos.ver',
 
@@ -124,6 +129,8 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'DIESEL_AUDITOR' => [
+                'gasolineras.consultar',
+
                 'marchamos.consultar',
 
                 'licencias.consultar',
@@ -134,7 +141,6 @@ class RolPermisosSeeder extends Seeder
 
                 'empresas.consultar',
 
-                'gasolineras.ver',
                 'gasolineras_externas.ver',
                 'puntos_ruta.ver',
                 'rutas.ver',
@@ -149,6 +155,20 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_ADMIN' => [
+                'gasolineras.consultar',
+                'gasolineras.administrar',
+                'gasolineras.crear',
+                'gasolineras.editar',
+                'gasolineras.inactivar',
+                'gasolineras.reactivar',
+                'tanques.administrar',
+                'tanques.crear',
+                'tanques.editar',
+                'tanques.inactivar',
+                'tanques.reactivar',
+                'recargas_tanques.registrar',
+                'recargas_tanques.anular',
+
                 'marchamos.consultar',
                 'marchamos.administrar',
                 'marchamos.reemplazar',
@@ -170,17 +190,7 @@ class RolPermisosSeeder extends Seeder
 
 
 
-                'gasolineras.ver',
-                'gasolineras.crear',
-                'gasolineras.actualizar',
-                'gasolineras.inactivar',
-                'gasolineras.reactivar',
 
-                'tanques.ver',
-                'tanques.crear',
-                'tanques.actualizar',
-                'tanques.inactivar',
-                'tanques.reactivar',
 
                 'motoristas.ver',
                 'motoristas.crear',
@@ -208,6 +218,19 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_SUPERVISOR' => [
+                'gasolineras.consultar',
+                'gasolineras.administrar',
+                'gasolineras.editar',
+                'gasolineras.inactivar',
+                'gasolineras.reactivar',
+                'tanques.administrar',
+                'tanques.crear',
+                'tanques.editar',
+                'tanques.inactivar',
+                'tanques.reactivar',
+                'recargas_tanques.registrar',
+                'recargas_tanques.anular',
+
                 'marchamos.consultar',
                 'marchamos.administrar',
                 'marchamos.reemplazar',
@@ -228,8 +251,6 @@ class RolPermisosSeeder extends Seeder
 
 
 
-                'gasolineras.ver',
-                'tanques.ver',
                 'motoristas.ver',
 
                 'abastecimientos.ver',
@@ -248,6 +269,10 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_OPERADOR' => [
+                'gasolineras.consultar',
+                'recargas_tanques.registrar',
+                'recargas_tanques.anular',
+
                 'marchamos.consultar',
                 'marchamos.administrar',
                 'marchamos.reemplazar',
@@ -255,8 +280,6 @@ class RolPermisosSeeder extends Seeder
                 'unidades.consultar',
 
 
-                'gasolineras.ver',
-                'tanques.ver',
                 'motoristas.ver',
 
                 'abastecimientos.ver',
@@ -274,6 +297,8 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_AUDITOR' => [
+                'gasolineras.consultar',
+
                 'marchamos.consultar',
 
                 'licencias.consultar',
@@ -282,7 +307,6 @@ class RolPermisosSeeder extends Seeder
 
                 'usuarios.consultar',
 
-                'gasolineras.ver',
                 'gasolineras_externas.ver',
                 'puntos_ruta.ver',
                 'rutas.ver',

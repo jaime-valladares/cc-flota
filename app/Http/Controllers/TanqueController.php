@@ -166,13 +166,20 @@ class TanqueController extends Controller
 
         $consultaEjecutada = $request->boolean('consultar');
 
+        /*
+         * La empresa obligatoria del usuario empresarial limita el alcance,
+         * pero no ejecuta automáticamente la búsqueda.
+         */
         $hayFiltros = $consultaEjecutada
             || filled($busquedaEmpresa)
             || filled($busquedaGasolinera)
-            || $empresaIds->isNotEmpty()
             || $gasolineraIds->isNotEmpty()
             || filled($nombre)
-            || filled($estado);
+            || filled($estado)
+            || (
+                $esUsuarioDieselCop
+                && $empresaIds->isNotEmpty()
+            );
 
         $empresasSelector = $esUsuarioDieselCop
             ? Empresa::query()
