@@ -1,14 +1,25 @@
 @php
     $usuario = $usuario ?? null;
     $esEdicion = ! is_null($usuario);
-    $tipoUsuarioActual = old('tipo_usuario', $usuario->tipo_usuario ?? '');
-    $empresaActual = old('empresa_id', $usuario->empresa_id ?? '');
-    $rolActual = old('rol_id', $usuario->rol_id ?? '');
+    $tipoUsuarioActual = old(
+        'tipo_usuario',
+        $usuario->tipo_usuario
+            ?? ($esUsuarioDieselCop ? '' : 'empresa')
+    );
+    $empresaActual = old(
+        'empresa_id',
+        $usuario->empresa_id
+            ?? Auth::user()->empresaIdOperativa()
+    );
+    $rolActual = old(
+        'rol_id',
+        $usuario->rol_id ?? ''
+    );
     $modoVentana = $modoVentana ?? false;
+    $queryParams = request()->query();
 @endphp
 
 <div class="cc-grid cc-grid-compact">
-
     <div class="cc-form-section-slim">
         <div class="cc-form-section-title">
             Clasificación y acceso
@@ -34,16 +45,12 @@
             <input type="hidden" name="tipo_usuario" value="empresa">
 
             <select id="tipo_usuario" class="cc-input" disabled>
-                <option value="empresa" selected>
-                    Empresa
-                </option>
+                <option value="empresa" selected>Empresa</option>
             </select>
         @endif
 
         @error('tipo_usuario')
-            <div class="cc-error">
-                {{ $message }}
-            </div>
+            <div class="cc-error">{{ $message }}</div>
         @enderror
     </div>
 
@@ -57,8 +64,10 @@
                 <option value="">Seleccione</option>
 
                 @foreach ($empresas as $empresa)
-                    <option value="{{ $empresa->id }}"
-                            @selected((string) $empresaActual === (string) $empresa->id)>
+                    <option
+                        value="{{ $empresa->id }}"
+                        @selected((string) $empresaActual === (string) $empresa->id)
+                    >
                         {{ $empresa->nombre_comercial ?: $empresa->nombre_legal }}
                     </option>
                 @endforeach
@@ -76,9 +85,7 @@
         @endif
 
         @error('empresa_id')
-            <div class="cc-error">
-                {{ $message }}
-            </div>
+            <div class="cc-error">{{ $message }}</div>
         @enderror
     </div>
 
@@ -87,22 +94,36 @@
             Rol <span class="cc-required">*</span>
         </label>
 
-        <select id="rol_id" name="rol_id" class="cc-input" required>
-            <option value="">Seleccione</option>
+        @if ($esEdicion && ! $puedeCambiarRol)
+            <input type="hidden" name="rol_id" value="{{ $rolActual }}">
 
-            @foreach ($roles as $rol)
-                <option value="{{ $rol->id }}"
+            <select id="rol_id" class="cc-input" disabled>
+                @foreach ($roles as $rol)
+                    @if ((string) $rolActual === (string) $rol->id)
+                        <option value="{{ $rol->id }}" selected>
+                            {{ $rol->nombre }}
+                        </option>
+                    @endif
+                @endforeach
+            </select>
+        @else
+            <select id="rol_id" name="rol_id" class="cc-input" required>
+                <option value="">Seleccione</option>
+
+                @foreach ($roles as $rol)
+                    <option
+                        value="{{ $rol->id }}"
                         data-alcance="{{ $rol->alcance }}"
-                        @selected((string) $rolActual === (string) $rol->id)>
-                    {{ $rol->nombre }}
-                </option>
-            @endforeach
-        </select>
+                        @selected((string) $rolActual === (string) $rol->id)
+                    >
+                        {{ $rol->nombre }}
+                    </option>
+                @endforeach
+            </select>
+        @endif
 
         @error('rol_id')
-            <div class="cc-error">
-                {{ $message }}
-            </div>
+            <div class="cc-error">{{ $message }}</div>
         @enderror
     </div>
 
@@ -116,40 +137,32 @@
         <label for="name">
             Nombre <span class="cc-required">*</span>
         </label>
-
         <input
             id="name"
             name="name"
             type="text"
             class="cc-input"
             value="{{ old('name', $usuario->name ?? '') }}"
+            maxlength="100"
             required
         >
-
         @error('name')
-            <div class="cc-error">
-                {{ $message }}
-            </div>
+            <div class="cc-error">{{ $message }}</div>
         @enderror
     </div>
 
     <div class="cc-field">
-        <label for="apellido">
-            Apellido
-        </label>
-
+        <label for="apellido">Apellido</label>
         <input
             id="apellido"
             name="apellido"
             type="text"
             class="cc-input"
             value="{{ old('apellido', $usuario->apellido ?? '') }}"
+            maxlength="100"
         >
-
         @error('apellido')
-            <div class="cc-error">
-                {{ $message }}
-            </div>
+            <div class="cc-error">{{ $message }}</div>
         @enderror
     </div>
 
@@ -157,28 +170,22 @@
         <label for="email">
             Correo electrónico <span class="cc-required">*</span>
         </label>
-
         <input
             id="email"
             name="email"
             type="email"
             class="cc-input"
             value="{{ old('email', $usuario->email ?? '') }}"
+            maxlength="255"
             required
         >
-
         @error('email')
-            <div class="cc-error">
-                {{ $message }}
-            </div>
+            <div class="cc-error">{{ $message }}</div>
         @enderror
     </div>
 
     <div class="cc-field">
-        <label for="telefono">
-            Teléfono
-        </label>
-
+        <label for="telefono">Teléfono</label>
         <input
             id="telefono"
             name="telefono"
@@ -188,32 +195,23 @@
             maxlength="9"
             placeholder="0000-0000"
         >
-
         @error('telefono')
-            <div class="cc-error">
-                {{ $message }}
-            </div>
+            <div class="cc-error">{{ $message }}</div>
         @enderror
     </div>
 
     <div class="cc-field cc-col-span-2">
-        <label for="cargo">
-            Cargo
-        </label>
-
+        <label for="cargo">Cargo</label>
         <input
             id="cargo"
             name="cargo"
             type="text"
             class="cc-input"
             value="{{ old('cargo', $usuario->cargo ?? '') }}"
-            placeholder="Ej. Administrador, Supervisor de Flota, Operador"
+            maxlength="100"
         >
-
         @error('cargo')
-            <div class="cc-error">
-                {{ $message }}
-            </div>
+            <div class="cc-error">{{ $message }}</div>
         @enderror
     </div>
 
@@ -226,43 +224,37 @@
     <div class="cc-field">
         <label for="password">
             Contraseña
-            @if (! $esEdicion)
+            @unless ($esEdicion)
                 <span class="cc-required">*</span>
-            @endif
+            @endunless
         </label>
-
         <input
             id="password"
             name="password"
             type="password"
             class="cc-input"
-            @if (! $esEdicion) required @endif
+            @unless ($esEdicion) required @endunless
         >
-
         @error('password')
-            <div class="cc-error">
-                {{ $message }}
-            </div>
+            <div class="cc-error">{{ $message }}</div>
         @enderror
     </div>
 
     <div class="cc-field">
         <label for="password_confirmation">
             Confirmar contraseña
-            @if (! $esEdicion)
+            @unless ($esEdicion)
                 <span class="cc-required">*</span>
-            @endif
+            @endunless
         </label>
-
         <input
             id="password_confirmation"
             name="password_confirmation"
             type="password"
             class="cc-input"
-            @if (! $esEdicion) required @endif
+            @unless ($esEdicion) required @endunless
         >
     </div>
-
 </div>
 
 <div class="cc-actions cc-actions-compact">
@@ -270,17 +262,22 @@
         {{ $submitLabel }}
     </button>
 
-    @if ($esEdicion)
-        <a href="{{ $modoVentana ? route('usuarios.show.ventana', $usuario) : route('usuarios.show', $usuario) }}"
-           class="cc-btn-secondary cc-btn-form-action">
-            Cancelar
-        </a>
-    @else
-        <a href="{{ $modoVentana ? route('usuarios.consulta.ventana') : route('usuarios.index') }}"
-           class="cc-btn-secondary cc-btn-form-action">
-            Cancelar
-        </a>
-    @endif
+    <a
+        href="{{ $esEdicion
+            ? (
+                $modoVentana
+                    ? route('usuarios.show.ventana', array_merge($queryParams, ['usuario' => $usuario]))
+                    : route('usuarios.show', array_merge($queryParams, ['usuario' => $usuario]))
+            )
+            : (
+                $modoVentana
+                    ? route('usuarios.create.ventana', $queryParams)
+                    : route('usuarios.create', $queryParams)
+            ) }}"
+        class="cc-btn-secondary cc-btn-form-action"
+    >
+        Cancelar
+    </a>
 </div>
 
 <script>
@@ -301,26 +298,33 @@
     const telefonoInput = document.getElementById('telefono');
 
     function actualizarFormularioUsuario() {
+        if (! tipoUsuarioSelect || ! empresaSelect || ! rolSelect) {
+            return;
+        }
+
         const tipoUsuario = tipoUsuarioSelect.value;
 
         if (tipoUsuario === 'diesel_cop') {
             empresaSelect.value = '';
             empresaSelect.disabled = true;
-            empresaRequiredMarker.style.display = 'none';
+
+            if (empresaRequiredMarker) {
+                empresaRequiredMarker.style.display = 'none';
+            }
         } else {
-            empresaSelect.disabled = false;
-            empresaRequiredMarker.style.display = 'inline';
+            @if ($esUsuarioDieselCop)
+                empresaSelect.disabled = false;
+            @endif
+
+            if (empresaRequiredMarker) {
+                empresaRequiredMarker.style.display = 'inline';
+            }
         }
 
-        Array.from(rolSelect.options).forEach((option) => {
+        Array.from(rolSelect.options).forEach(function (option) {
             const alcance = option.dataset.alcance;
 
-            if (!alcance) {
-                option.hidden = false;
-                return;
-            }
-
-            if (!tipoUsuario) {
+            if (! alcance || ! tipoUsuario) {
                 option.hidden = false;
                 return;
             }
@@ -333,14 +337,14 @@
         });
     }
 
-    if (tipoUsuarioSelect && empresaSelect && rolSelect) {
-        tipoUsuarioSelect.addEventListener('change', actualizarFormularioUsuario);
-        actualizarFormularioUsuario();
-    }
+    tipoUsuarioSelect?.addEventListener(
+        'change',
+        actualizarFormularioUsuario
+    );
 
-    if (telefonoInput) {
-        telefonoInput.addEventListener('input', function () {
-            this.value = formatPhone(this.value);
-        });
-    }
+    telefonoInput?.addEventListener('input', function () {
+        this.value = formatPhone(this.value);
+    });
+
+    actualizarFormularioUsuario();
 </script>
