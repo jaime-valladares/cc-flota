@@ -18,6 +18,10 @@ class RolPermisosSeeder extends Seeder
             'DIESEL_SUPER_ADMIN' => 'ALL',
 
             'DIESEL_ADMIN' => [
+                'abastecimientos.consultar',
+                'abastecimientos.administrar',
+                'abastecimientos.modificar',
+
                 'motoristas.consultar',
                 'motoristas.administrar',
                 'motoristas.editar',
@@ -96,9 +100,6 @@ class RolPermisosSeeder extends Seeder
 
 
 
-                'abastecimientos.ver',
-                'abastecimientos.corregir',
-                'abastecimientos.anular',
 
                 'reemplazos.ver',
                 'reemplazos.crear',
@@ -117,6 +118,9 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'DIESEL_TECNICO' => [
+                'abastecimientos.consultar',
+                'abastecimientos.registrar',
+
                 'motoristas.consultar',
 
                 'rutas.consultar',
@@ -146,7 +150,6 @@ class RolPermisosSeeder extends Seeder
                 'reemplazos.ver',
                 'reemplazos.crear',
 
-                'abastecimientos.ver',
 
 
                 'analisis.kilometraje.ver',
@@ -155,6 +158,8 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'DIESEL_AUDITOR' => [
+                'abastecimientos.consultar',
+
                 'motoristas.consultar',
 
                 'rutas.consultar',
@@ -175,7 +180,6 @@ class RolPermisosSeeder extends Seeder
 
                 'empresas.consultar',
 
-                'abastecimientos.ver',
                 'auditoria.panel_operativo.ver',
                 'auditoria.abastecimientos.ver',
                 'auditoria.marchamos.ver',
@@ -185,6 +189,11 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_ADMIN' => [
+                'abastecimientos.consultar',
+                'abastecimientos.administrar',
+                'abastecimientos.registrar',
+                'abastecimientos.modificar',
+
                 'motoristas.consultar',
                 'motoristas.administrar',
                 'motoristas.crear',
@@ -251,10 +260,6 @@ class RolPermisosSeeder extends Seeder
 
 
 
-                'abastecimientos.ver',
-                'abastecimientos.crear',
-                'abastecimientos.corregir',
-                'abastecimientos.anular',
 
                 'reemplazos.ver',
                 'reemplazos.crear',
@@ -271,6 +276,10 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_SUPERVISOR' => [
+                'abastecimientos.consultar',
+                'abastecimientos.administrar',
+                'abastecimientos.modificar',
+
                 'motoristas.consultar',
                 'motoristas.administrar',
                 'motoristas.editar',
@@ -329,9 +338,6 @@ class RolPermisosSeeder extends Seeder
 
 
 
-                'abastecimientos.ver',
-                'abastecimientos.crear',
-                'abastecimientos.corregir',
 
                 'reemplazos.ver',
                 'reemplazos.crear',
@@ -345,6 +351,9 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_OPERADOR' => [
+                'abastecimientos.consultar',
+                'abastecimientos.registrar',
+
                 'motoristas.consultar',
 
                 'rutas.consultar',
@@ -365,8 +374,6 @@ class RolPermisosSeeder extends Seeder
 
 
 
-                'abastecimientos.ver',
-                'abastecimientos.crear',
 
                 'reemplazos.ver',
                 'reemplazos.crear',
@@ -380,6 +387,8 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_AUDITOR' => [
+                'abastecimientos.consultar',
+
                 'motoristas.consultar',
 
                 'rutas.consultar',
@@ -398,7 +407,6 @@ class RolPermisosSeeder extends Seeder
 
                 'usuarios.consultar',
 
-                'abastecimientos.ver',
                 'auditoria.panel_operativo.ver',
                 'auditoria.abastecimientos.ver',
                 'auditoria.marchamos.ver',

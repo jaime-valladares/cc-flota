@@ -940,57 +940,35 @@
                     @endif
 
                     <!-- Abastecimientos -->
-                    <div class="cc-sidebar-group">
-                        <div
-                            id="ccAbastecimientosToggle"
-                            class="cc-sidebar-parent cc-sidebar-collapsible-parent {{ $abastecimientosActivo ? 'cc-sidebar-parent-active' : '' }}"
-                            role="button"
-                            tabindex="0"
-                            aria-expanded="false"
-                            aria-controls="ccAbastecimientosSubnav"
-                        >
-                            <span>Abastecimientos</span>
-                            <span class="cc-sidebar-collapse-icon" aria-hidden="true">▼</span>
+                    @if ($usuarioAutenticado->tieneAlgunPermiso([
+                        'abastecimientos.consultar',
+                        'abastecimientos.administrar',
+                        'abastecimientos.registrar',
+                    ]))
+                        <div class="cc-sidebar-group">
+                            <div id="ccAbastecimientosToggle" class="cc-sidebar-parent cc-sidebar-collapsible-parent {{ $abastecimientosActivo ? 'cc-sidebar-parent-active' : '' }}" role="button" tabindex="0" aria-expanded="false" aria-controls="ccAbastecimientosSubnav">
+                                <span>Abastecimientos</span>
+                                <span class="cc-sidebar-collapse-icon" aria-hidden="true">▼</span>
+                            </div>
+                            <div id="ccAbastecimientosSubnav" class="cc-sidebar-subnav cc-sidebar-subnav-collapsed">
+                                @if ($usuarioAutenticado->tienePermiso('abastecimientos.consultar'))
+                                    <a href="{{ route('abastecimientos.consulta') }}" class="cc-sidebar-sublink {{ request()->routeIs('abastecimientos.consulta*') || request()->routeIs('abastecimientos.show*') ? 'cc-sidebar-sublink-active' : '' }}">
+                                        Consultar abastecimientos
+                                    </a>
+                                @endif
+                                @if ($usuarioAutenticado->tienePermiso('abastecimientos.administrar'))
+                                    <a href="{{ route('abastecimientos.administrar') }}" class="cc-sidebar-sublink {{ request()->routeIs('abastecimientos.administrar*') || request()->routeIs('abastecimientos.edit*') ? 'cc-sidebar-sublink-active' : '' }}">
+                                        Administrar abastecimientos
+                                    </a>
+                                @endif
+                                @if ($usuarioAutenticado->tienePermiso('abastecimientos.registrar'))
+                                    <a href="{{ route('abastecimientos.index') }}" class="cc-sidebar-sublink {{ request()->routeIs('abastecimientos.index*') || request()->routeIs('abastecimientos.create*') ? 'cc-sidebar-sublink-active' : '' }}">
+                                        Registrar abastecimiento
+                                    </a>
+                                @endif
+                            </div>
                         </div>
-
-                        <div id="ccAbastecimientosSubnav" class="cc-sidebar-subnav cc-sidebar-subnav-collapsed">
-                            <a href="{{ route('abastecimientos.consulta') }}"
-                               class="cc-sidebar-sublink {{
-                                   request()->routeIs('abastecimientos.consulta*')
-                                   || (
-                                       request()->routeIs('abastecimientos.show*')
-                                       && request('origen_retorno') === 'consulta'
-                                   )
-                                       ? 'cc-sidebar-sublink-active'
-                                       : ''
-                               }}">
-                                Consultar abastecimientos
-                            </a>
-
-                            <a href="{{ route('abastecimientos.administrar') }}"
-                               class="cc-sidebar-sublink {{
-                                   request()->routeIs('abastecimientos.administrar*')
-                                   || (
-                                       request()->routeIs('abastecimientos.show*')
-                                       && request('origen_retorno') !== 'consulta'
-                                   )
-                                       ? 'cc-sidebar-sublink-active'
-                                       : ''
-                               }}">
-                                Administrar abastecimientos
-                            </a>
-
-                            <a href="{{ route('abastecimientos.index') }}"
-                               class="cc-sidebar-sublink {{
-                                   request()->routeIs('abastecimientos.index')
-                                   || request()->routeIs('abastecimientos.create')
-                                       ? 'cc-sidebar-sublink-active'
-                                       : ''
-                               }}">
-                                Registrar abastecimiento
-                            </a>
-                        </div>
-                    </div>
+                    @endif
 
                     <div class="cc-sidebar-section">
                         Control

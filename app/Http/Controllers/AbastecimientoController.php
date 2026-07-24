@@ -610,22 +610,20 @@ class AbastecimientoController extends Controller
             $validated['fecha_hasta']
             ?? null;
 
+        $consultaEjecutada =
+            $request->boolean('consultar');
+
+        /* La empresa obligatoria limita el alcance, pero no ejecuta la búsqueda. */
         $hayFiltros =
-            ! $esUsuarioDieselCop
-            || $request->hasAny([
-                'empresa_ids',
-                'empresa_id',
-                'unidad_ids',
-                'unidad_id',
-                'motorista_ids',
-                'motorista_id',
-                'tipo_origen',
-                'modelo_medicion',
-                'estado',
-                'fecha_desde',
-                'fecha_hasta',
-                'consultar',
-            ]);
+            $consultaEjecutada
+            || ! empty($unidadIds)
+            || ! empty($motoristaIds)
+            || filled($tipoOrigen)
+            || filled($modeloMedicion)
+            || filled($fechaDesde)
+            || filled($fechaHasta)
+            || (! $soloAdministrables && filled($estado))
+            || ($esUsuarioDieselCop && ! empty($empresaIds));
 
         $query = Abastecimiento::query()
             ->with([
@@ -1963,12 +1961,13 @@ class AbastecimientoController extends Controller
         $consultaEjecutada =
             $request->boolean('consultar');
 
+        /* La empresa obligatoria limita el alcance, pero no ejecuta la búsqueda. */
         $hayFiltros =
             $consultaEjecutada
             || filled($busquedaEmpresa)
             || filled($busquedaPlaca)
-            || $empresaIds->isNotEmpty()
-            || $placas->isNotEmpty();
+            || $placas->isNotEmpty()
+            || ($esUsuarioDieselCop && $empresaIds->isNotEmpty());
 
         $empresas = Empresa::query()
             ->where(

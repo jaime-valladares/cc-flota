@@ -1030,167 +1030,53 @@ Route::middleware('auth')->group(function () {
     | Abastecimientos de unidades
     |--------------------------------------------------------------------------
     |
-    | Las rutas fijas deben permanecer antes de las rutas dinámicas para
-    | evitar que Laravel interprete palabras como "consulta" o "administrar"
-    | como identificadores de abastecimientos.
+    | Todas las rutas estáticas permanecen antes de las rutas dinámicas.
     |
     */
 
-    /*
-    |--------------------------------------------------------------------------
-    | Registro de abastecimientos
-    |--------------------------------------------------------------------------
-    */
+    Route::middleware('permiso:abastecimientos.registrar')->group(function () {
+        Route::get('/abastecimientos', [AbastecimientoController::class, 'index'])
+            ->name('abastecimientos.index');
+        Route::get('/abastecimientos/ventana', [AbastecimientoController::class, 'indexVentana'])
+            ->name('abastecimientos.index.ventana');
+        Route::get('/abastecimientos/unidades/{unidad}/crear', [AbastecimientoController::class, 'create'])
+            ->name('abastecimientos.create');
+        Route::get('/abastecimientos/unidades/{unidad}/crear/ventana', [AbastecimientoController::class, 'createVentana'])
+            ->name('abastecimientos.create.ventana');
+        Route::post('/abastecimientos/unidades/{unidad}', [AbastecimientoController::class, 'store'])
+            ->name('abastecimientos.store');
+    });
 
-    Route::get(
-        '/abastecimientos',
-        [
-            AbastecimientoController::class,
-            'index',
-        ]
-    )->name('abastecimientos.index');
+    Route::middleware('permiso:abastecimientos.consultar')->group(function () {
+        Route::get('/abastecimientos/consulta', [AbastecimientoController::class, 'consulta'])
+            ->name('abastecimientos.consulta');
+        Route::get('/abastecimientos/consulta/ventana', [AbastecimientoController::class, 'consultaVentana'])
+            ->name('abastecimientos.consulta.ventana');
+    });
 
-    Route::get(
-        '/abastecimientos/ventana',
-        [
-            AbastecimientoController::class,
-            'indexVentana',
-        ]
-    )->name('abastecimientos.index.ventana');
+    Route::middleware('permiso:abastecimientos.administrar')->group(function () {
+        Route::get('/abastecimientos/administrar', [AbastecimientoController::class, 'administrar'])
+            ->name('abastecimientos.administrar');
+        Route::get('/abastecimientos/administrar/ventana', [AbastecimientoController::class, 'administrarVentana'])
+            ->name('abastecimientos.administrar.ventana');
+    });
 
-    /*
-    |--------------------------------------------------------------------------
-    | Consulta histórica
-    |--------------------------------------------------------------------------
-    */
+    /* Rutas dinámicas: deben permanecer después de todas las rutas fijas. */
+    Route::middleware('permiso:abastecimientos.consultar')->group(function () {
+        Route::get('/abastecimientos/{abastecimiento}/ficha/ventana', [AbastecimientoController::class, 'showVentana'])
+            ->name('abastecimientos.show.ventana');
+        Route::get('/abastecimientos/{abastecimiento}/ficha', [AbastecimientoController::class, 'show'])
+            ->name('abastecimientos.show');
+    });
 
-    Route::get(
-        '/abastecimientos/consulta',
-        [
-            AbastecimientoController::class,
-            'consulta',
-        ]
-    )->name('abastecimientos.consulta');
-
-    Route::get(
-        '/abastecimientos/consulta/ventana',
-        [
-            AbastecimientoController::class,
-            'consultaVentana',
-        ]
-    )->name('abastecimientos.consulta.ventana');
-
-    /*
-    |--------------------------------------------------------------------------
-    | Administración
-    |--------------------------------------------------------------------------
-    */
-
-    Route::get(
-        '/abastecimientos/administrar',
-        [
-            AbastecimientoController::class,
-            'administrar',
-        ]
-    )->name('abastecimientos.administrar');
-
-    Route::get(
-        '/abastecimientos/administrar/ventana',
-        [
-            AbastecimientoController::class,
-            'administrarVentana',
-        ]
-    )->name('abastecimientos.administrar.ventana');
-
-    /*
-    |--------------------------------------------------------------------------
-    | Registro por unidad
-    |--------------------------------------------------------------------------
-    */
-
-    Route::get(
-        '/abastecimientos/unidades/{unidad}/crear',
-        [
-            AbastecimientoController::class,
-            'create',
-        ]
-    )->name('abastecimientos.create');
-
-    Route::get(
-        '/abastecimientos/unidades/{unidad}/crear/ventana',
-        [
-            AbastecimientoController::class,
-            'createVentana',
-        ]
-    )->name('abastecimientos.create.ventana');
-
-    Route::post(
-        '/abastecimientos/unidades/{unidad}',
-        [
-            AbastecimientoController::class,
-            'store',
-        ]
-    )->name('abastecimientos.store');
-
-    /*
-    |--------------------------------------------------------------------------
-    | Modificación de abastecimientos
-    |--------------------------------------------------------------------------
-    |
-    | Solo el último abastecimiento registrado de cada unidad puede abrir
-    | estas rutas. La validación definitiva se ejecuta nuevamente en el
-    | controlador y dentro de la transacción del servicio.
-    |
-    */
-
-    Route::get(
-        '/abastecimientos/{abastecimiento}/editar',
-        [
-            AbastecimientoController::class,
-            'edit',
-        ]
-    )->name('abastecimientos.edit');
-
-    Route::get(
-        '/abastecimientos/{abastecimiento}/editar/ventana',
-        [
-            AbastecimientoController::class,
-            'editVentana',
-        ]
-    )->name('abastecimientos.edit.ventana');
-
-    Route::put(
-        '/abastecimientos/{abastecimiento}',
-        [
-            AbastecimientoController::class,
-            'update',
-        ]
-    )->name('abastecimientos.update');
-
-    /*
-    |--------------------------------------------------------------------------
-    | Ficha de abastecimiento
-    |--------------------------------------------------------------------------
-    |
-    | Estas rutas dinámicas deben permanecer al final del bloque.
-    |
-    */
-
-    Route::get(
-        '/abastecimientos/{abastecimiento}/ficha/ventana',
-        [
-            AbastecimientoController::class,
-            'showVentana',
-        ]
-    )->name('abastecimientos.show.ventana');
-
-    Route::get(
-        '/abastecimientos/{abastecimiento}/ficha',
-        [
-            AbastecimientoController::class,
-            'show',
-        ]
-    )->name('abastecimientos.show');
+    Route::middleware('permiso:abastecimientos.modificar')->group(function () {
+        Route::get('/abastecimientos/{abastecimiento}/editar', [AbastecimientoController::class, 'edit'])
+            ->name('abastecimientos.edit');
+        Route::get('/abastecimientos/{abastecimiento}/editar/ventana', [AbastecimientoController::class, 'editVentana'])
+            ->name('abastecimientos.edit.ventana');
+        Route::put('/abastecimientos/{abastecimiento}', [AbastecimientoController::class, 'update'])
+            ->name('abastecimientos.update');
+    });
 
     /*
     |--------------------------------------------------------------------------
