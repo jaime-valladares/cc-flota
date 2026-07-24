@@ -559,49 +559,108 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     | Puntos de ruta
     |--------------------------------------------------------------------------
+    |
+    | Las rutas estáticas se declaran antes de las rutas dinámicas
+    | /puntos-ruta/{puntoRuta}.
+    |
     */
 
-    Route::get('/puntos-ruta', [PuntoRutaController::class, 'index'])
-        ->name('puntos-ruta.index');
+    Route::middleware('permiso:puntos_ruta.consultar')->group(function () {
+        Route::get(
+            '/puntos-ruta',
+            [PuntoRutaController::class, 'index']
+        )->name('puntos-ruta.index');
 
-    Route::get('/puntos-ruta/consulta/ventana', [PuntoRutaController::class, 'consultaVentana'])
-        ->name('puntos-ruta.consulta.ventana');
+        Route::get(
+            '/puntos-ruta/consulta/ventana',
+            [PuntoRutaController::class, 'consultaVentana']
+        )->name('puntos-ruta.consulta.ventana');
+    });
 
-    Route::get('/puntos-ruta/administrar', [PuntoRutaController::class, 'administrar'])
-        ->name('puntos-ruta.administrar');
+    Route::middleware('permiso:puntos_ruta.administrar')->group(function () {
+        Route::get(
+            '/puntos-ruta/administrar',
+            [PuntoRutaController::class, 'administrar']
+        )->name('puntos-ruta.administrar');
 
-    Route::get('/puntos-ruta/administrar/ventana', [PuntoRutaController::class, 'administrarVentana'])
-        ->name('puntos-ruta.administrar.ventana');
+        Route::get(
+            '/puntos-ruta/administrar/ventana',
+            [PuntoRutaController::class, 'administrarVentana']
+        )->name('puntos-ruta.administrar.ventana');
+    });
 
-    Route::get('/puntos-ruta/nuevo', [PuntoRutaController::class, 'create'])
-        ->name('puntos-ruta.create');
+    Route::middleware('permiso:puntos_ruta.crear')->group(function () {
+        Route::get(
+            '/puntos-ruta/nuevo',
+            [PuntoRutaController::class, 'create']
+        )->name('puntos-ruta.create');
 
-    Route::get('/puntos-ruta/nuevo/ventana', [PuntoRutaController::class, 'createVentana'])
-        ->name('puntos-ruta.create.ventana');
+        Route::get(
+            '/puntos-ruta/nuevo/ventana',
+            [PuntoRutaController::class, 'createVentana']
+        )->name('puntos-ruta.create.ventana');
 
-    Route::post('/puntos-ruta', [PuntoRutaController::class, 'store'])
-        ->name('puntos-ruta.store');
+        Route::post(
+            '/puntos-ruta',
+            [PuntoRutaController::class, 'store']
+        )->name('puntos-ruta.store');
+    });
 
-    Route::get('/puntos-ruta/{puntoRuta}/ficha/ventana', [PuntoRutaController::class, 'showVentana'])
-        ->name('puntos-ruta.show.ventana');
+    /*
+    |--------------------------------------------------------------------------
+    | Puntos de ruta - Rutas dinámicas
+    |--------------------------------------------------------------------------
+    */
 
-    Route::get('/puntos-ruta/{puntoRuta}/editar/ventana', [PuntoRutaController::class, 'editVentana'])
-        ->name('puntos-ruta.edit.ventana');
+    Route::middleware('permiso:puntos_ruta.administrar')->group(function () {
+        Route::get(
+            '/puntos-ruta/{puntoRuta}/ficha/ventana',
+            [PuntoRutaController::class, 'showVentana']
+        )->name('puntos-ruta.show.ventana');
 
-    Route::get('/puntos-ruta/{puntoRuta}', [PuntoRutaController::class, 'show'])
-        ->name('puntos-ruta.show');
+        Route::get(
+            '/puntos-ruta/{puntoRuta}',
+            [PuntoRutaController::class, 'show']
+        )->name('puntos-ruta.show');
+    });
 
-    Route::get('/puntos-ruta/{puntoRuta}/editar', [PuntoRutaController::class, 'edit'])
-        ->name('puntos-ruta.edit');
+    Route::middleware('permiso:puntos_ruta.editar')->group(function () {
+        Route::get(
+            '/puntos-ruta/{puntoRuta}/editar/ventana',
+            [PuntoRutaController::class, 'editVentana']
+        )->name('puntos-ruta.edit.ventana');
 
-    Route::put('/puntos-ruta/{puntoRuta}', [PuntoRutaController::class, 'update'])
-        ->name('puntos-ruta.update');
+        Route::get(
+            '/puntos-ruta/{puntoRuta}/editar',
+            [PuntoRutaController::class, 'edit']
+        )->name('puntos-ruta.edit');
 
-    Route::patch('/puntos-ruta/{puntoRuta}/inactivar', [PuntoRutaController::class, 'inactivar'])
+        Route::put(
+            '/puntos-ruta/{puntoRuta}',
+            [PuntoRutaController::class, 'update']
+        )->name('puntos-ruta.update');
+    });
+
+    Route::patch(
+        '/puntos-ruta/{puntoRuta}/inactivar',
+        [PuntoRutaController::class, 'inactivar']
+    )
+        ->middleware('permiso:puntos_ruta.inactivar')
         ->name('puntos-ruta.inactivar');
 
-    Route::patch('/puntos-ruta/{puntoRuta}/reactivar', [PuntoRutaController::class, 'reactivar'])
+    Route::patch(
+        '/puntos-ruta/{puntoRuta}/reactivar',
+        [PuntoRutaController::class, 'reactivar']
+    )
+        ->middleware('permiso:puntos_ruta.reactivar')
         ->name('puntos-ruta.reactivar');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Rutas
+    |--------------------------------------------------------------------------
+    */
 
     Route::get('/rutas', [RutaController::class, 'index'])
         ->name('rutas.index');
@@ -645,7 +704,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/rutas/{ruta}/reactivar', [RutaController::class, 'reactivar'])
         ->name('rutas.reactivar');
 
-        /*
+    /*
     |--------------------------------------------------------------------------
     | Motoristas
     |--------------------------------------------------------------------------
@@ -691,7 +750,7 @@ Route::middleware('auth')->group(function () {
         ->name('motoristas.inactivar');
 
     Route::patch('/motoristas/{motorista}/reactivar', [MotoristaController::class, 'reactivar'])
-        ->name('motoristas.reactivar');    
+        ->name('motoristas.reactivar');
 
     /*
     |--------------------------------------------------------------------------

@@ -197,11 +197,17 @@ class PuntoRutaController extends Controller
 
         $consultaEjecutada = $request->boolean('consultar');
 
-        $hayFiltros = ! $esUsuarioDieselCop
-            || $consultaEjecutada
-            || $empresaIds->isNotEmpty()
+        /*
+         * La empresa obligatoria limita el alcance del usuario empresarial,
+         * pero no ejecuta automáticamente Consulta ni Administrar.
+         */
+        $hayFiltros = $consultaEjecutada
             || $puntoRutaIds->isNotEmpty()
-            || filled($estado);
+            || filled($estado)
+            || (
+                $esUsuarioDieselCop
+                && $empresaIds->isNotEmpty()
+            );
 
         /*
         |--------------------------------------------------------------------------

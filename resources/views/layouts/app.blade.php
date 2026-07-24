@@ -790,36 +790,54 @@
                     @endif
 
                     <!-- Puntos de ruta -->
-                    <div class="cc-sidebar-group">
-                        <div
-                            id="ccPuntosRutaToggle"
-                            class="cc-sidebar-parent cc-sidebar-collapsible-parent {{ $puntosRutaActivo ? 'cc-sidebar-parent-active' : '' }}"
-                            role="button"
-                            tabindex="0"
-                            aria-expanded="false"
-                            aria-controls="ccPuntosRutaSubnav"
-                        >
-                            <span>Puntos de Ruta</span>
-                            <span class="cc-sidebar-collapse-icon" aria-hidden="true">▼</span>
+                    @if ($usuarioAutenticado->tieneAlgunPermiso([
+                        'puntos_ruta.consultar',
+                        'puntos_ruta.administrar',
+                        'puntos_ruta.crear',
+                    ]))
+                        <div class="cc-sidebar-group">
+                            <div
+                                id="ccPuntosRutaToggle"
+                                class="cc-sidebar-parent cc-sidebar-collapsible-parent {{ $puntosRutaActivo ? 'cc-sidebar-parent-active' : '' }}"
+                                role="button"
+                                tabindex="0"
+                                aria-expanded="false"
+                                aria-controls="ccPuntosRutaSubnav"
+                            >
+                                <span>Puntos de Ruta</span>
+                                <span class="cc-sidebar-collapse-icon" aria-hidden="true">▼</span>
+                            </div>
+
+                            <div id="ccPuntosRutaSubnav" class="cc-sidebar-subnav cc-sidebar-subnav-collapsed">
+                                @if ($usuarioAutenticado->tienePermiso('puntos_ruta.consultar'))
+                                    <a
+                                        href="{{ route('puntos-ruta.index') }}"
+                                        class="cc-sidebar-sublink {{ request()->routeIs('puntos-ruta.index') ? 'cc-sidebar-sublink-active' : '' }}"
+                                    >
+                                        Consulta puntos
+                                    </a>
+                                @endif
+
+                                @if ($usuarioAutenticado->tienePermiso('puntos_ruta.administrar'))
+                                    <a
+                                        href="{{ route('puntos-ruta.administrar') }}"
+                                        class="cc-sidebar-sublink {{ request()->routeIs('puntos-ruta.administrar') || request()->routeIs('puntos-ruta.show') || request()->routeIs('puntos-ruta.edit') ? 'cc-sidebar-sublink-active' : '' }}"
+                                    >
+                                        Administrar puntos
+                                    </a>
+                                @endif
+
+                                @if ($usuarioAutenticado->tienePermiso('puntos_ruta.crear'))
+                                    <a
+                                        href="{{ route('puntos-ruta.create') }}"
+                                        class="cc-sidebar-sublink {{ request()->routeIs('puntos-ruta.create') ? 'cc-sidebar-sublink-active' : '' }}"
+                                    >
+                                        Nuevo punto
+                                    </a>
+                                @endif
+                            </div>
                         </div>
-
-                        <div id="ccPuntosRutaSubnav" class="cc-sidebar-subnav cc-sidebar-subnav-collapsed">
-                            <a href="{{ route('puntos-ruta.index') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('puntos-ruta.index') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Consulta puntos
-                            </a>
-
-                            <a href="{{ route('puntos-ruta.administrar') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('puntos-ruta.administrar') || request()->routeIs('puntos-ruta.show') || request()->routeIs('puntos-ruta.edit') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Administrar puntos
-                            </a>
-
-                            <a href="{{ route('puntos-ruta.create') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('puntos-ruta.create') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Nuevo punto
-                            </a>
-                        </div>
-                    </div>
+                    @endif
 
                     <!-- Rutas -->
                     <div class="cc-sidebar-group">

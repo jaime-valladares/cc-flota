@@ -18,6 +18,12 @@ class RolPermisosSeeder extends Seeder
             'DIESEL_SUPER_ADMIN' => 'ALL',
 
             'DIESEL_ADMIN' => [
+                'puntos_ruta.consultar',
+                'puntos_ruta.administrar',
+                'puntos_ruta.editar',
+                'puntos_ruta.inactivar',
+                'puntos_ruta.reactivar',
+
                 'gasolineras_externas.consultar',
                 'gasolineras_externas.administrar',
                 'gasolineras_externas.editar',
@@ -104,6 +110,8 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'DIESEL_TECNICO' => [
+                'puntos_ruta.consultar',
+
                 'gasolineras_externas.consultar',
 
                 'gasolineras.consultar',
@@ -137,6 +145,8 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'DIESEL_AUDITOR' => [
+                'puntos_ruta.consultar',
+
                 'gasolineras_externas.consultar',
 
                 'gasolineras.consultar',
@@ -151,7 +161,6 @@ class RolPermisosSeeder extends Seeder
 
                 'empresas.consultar',
 
-                'puntos_ruta.ver',
                 'rutas.ver',
                 'motoristas.ver',
                 'abastecimientos.ver',
@@ -164,6 +173,13 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_ADMIN' => [
+                'puntos_ruta.consultar',
+                'puntos_ruta.administrar',
+                'puntos_ruta.crear',
+                'puntos_ruta.editar',
+                'puntos_ruta.inactivar',
+                'puntos_ruta.reactivar',
+
                 'gasolineras_externas.consultar',
                 'gasolineras_externas.administrar',
                 'gasolineras_externas.crear',
@@ -234,6 +250,12 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_SUPERVISOR' => [
+                'puntos_ruta.consultar',
+                'puntos_ruta.administrar',
+                'puntos_ruta.editar',
+                'puntos_ruta.inactivar',
+                'puntos_ruta.reactivar',
+
                 'gasolineras_externas.consultar',
                 'gasolineras_externas.administrar',
                 'gasolineras_externas.editar',
@@ -291,6 +313,8 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_OPERADOR' => [
+                'puntos_ruta.consultar',
+
                 'gasolineras_externas.consultar',
 
                 'gasolineras.consultar',
@@ -321,6 +345,8 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_AUDITOR' => [
+                'puntos_ruta.consultar',
+
                 'gasolineras_externas.consultar',
 
                 'gasolineras.consultar',
@@ -333,7 +359,6 @@ class RolPermisosSeeder extends Seeder
 
                 'usuarios.consultar',
 
-                'puntos_ruta.ver',
                 'rutas.ver',
                 'motoristas.ver',
                 'abastecimientos.ver',
