@@ -17,11 +17,20 @@ class PermisosSeeder extends Seeder
             // Empresas
             // -------------------------------------------------------------
             [
-                'codigo' => 'empresas.ver',
+                'codigo' => 'empresas.consultar',
                 'modulo' => 'empresas',
-                'accion' => 'ver',
-                'nombre' => 'Ver empresas',
-                'descripcion' => 'Permite visualizar empresas cliente registradas en CC-Flota.',
+                'accion' => 'consultar',
+                'nombre' => 'Consultar empresas',
+                'descripcion' => 'Permite acceder a la consulta informativa de empresas en sus vistas interna y externa.',
+                'alcance' => 'diesel_cop',
+                'estado' => 'activo',
+            ],
+            [
+                'codigo' => 'empresas.administrar',
+                'modulo' => 'empresas',
+                'accion' => 'administrar',
+                'nombre' => 'Administrar empresas',
+                'descripcion' => 'Permite acceder al listado administrativo y a la ficha administrativa de empresas.',
                 'alcance' => 'diesel_cop',
                 'estado' => 'activo',
             ],
@@ -35,11 +44,11 @@ class PermisosSeeder extends Seeder
                 'estado' => 'activo',
             ],
             [
-                'codigo' => 'empresas.actualizar',
+                'codigo' => 'empresas.editar',
                 'modulo' => 'empresas',
-                'accion' => 'actualizar',
-                'nombre' => 'Actualizar empresas',
-                'descripcion' => 'Permite actualizar información administrativa de empresas cliente.',
+                'accion' => 'editar',
+                'nombre' => 'Editar empresas',
+                'descripcion' => 'Permite modificar la información administrativa de empresas activas.',
                 'alcance' => 'diesel_cop',
                 'estado' => 'activo',
             ],
@@ -177,8 +186,8 @@ class PermisosSeeder extends Seeder
                 'modulo' => 'licencias',
                 'accion' => 'ver',
                 'nombre' => 'Ver licencias',
-                'descripcion' => 'Permite visualizar licencias asociadas a empresas y unidades.',
-                'alcance' => 'diesel_cop',
+                'descripcion' => 'Permite visualizar licencias según el alcance autorizado del rol.',
+                'alcance' => 'ambos',
                 'estado' => 'activo',
             ],
             [
@@ -415,6 +424,45 @@ class PermisosSeeder extends Seeder
             ],
 
             // -------------------------------------------------------------
+            // Gasolineras externas
+            // -------------------------------------------------------------
+            [
+                'codigo' => 'gasolineras_externas.ver',
+                'modulo' => 'gasolineras_externas',
+                'accion' => 'ver',
+                'nombre' => 'Ver gasolineras externas',
+                'descripcion' => 'Permite visualizar gasolineras externas según el alcance autorizado del rol.',
+                'alcance' => 'ambos',
+                'estado' => 'activo',
+            ],
+
+            // -------------------------------------------------------------
+            // Puntos de ruta
+            // -------------------------------------------------------------
+            [
+                'codigo' => 'puntos_ruta.ver',
+                'modulo' => 'puntos_ruta',
+                'accion' => 'ver',
+                'nombre' => 'Ver puntos de ruta',
+                'descripcion' => 'Permite visualizar puntos de ruta según el alcance autorizado del rol.',
+                'alcance' => 'ambos',
+                'estado' => 'activo',
+            ],
+
+            // -------------------------------------------------------------
+            // Rutas
+            // -------------------------------------------------------------
+            [
+                'codigo' => 'rutas.ver',
+                'modulo' => 'rutas',
+                'accion' => 'ver',
+                'nombre' => 'Ver rutas',
+                'descripcion' => 'Permite visualizar rutas según el alcance autorizado del rol.',
+                'alcance' => 'ambos',
+                'estado' => 'activo',
+            ],
+
+            // -------------------------------------------------------------
             // Motoristas
             // -------------------------------------------------------------
             [
@@ -566,23 +614,63 @@ class PermisosSeeder extends Seeder
             ],
 
             // -------------------------------------------------------------
-            // Auditoría y análisis
+            // Auditoría
             // -------------------------------------------------------------
             [
-                'codigo' => 'auditoria.ver',
+                'codigo' => 'auditoria.panel_operativo.ver',
                 'modulo' => 'auditoria',
-                'accion' => 'ver',
-                'nombre' => 'Ver auditoría',
-                'descripcion' => 'Permite visualizar eventos de auditoría según el alcance autorizado del rol.',
-                'alcance' => 'diesel_cop',
+                'accion' => 'panel_operativo_ver',
+                'nombre' => 'Ver control operativo de flota',
+                'descripcion' => 'Permite visualizar el panel de control operativo de flota según el alcance autorizado del rol.',
+                'alcance' => 'ambos',
                 'estado' => 'activo',
             ],
             [
-                'codigo' => 'analisis.ver',
+                'codigo' => 'auditoria.abastecimientos.ver',
+                'modulo' => 'auditoria',
+                'accion' => 'abastecimientos_ver',
+                'nombre' => 'Ver auditoría de abastecimientos',
+                'descripcion' => 'Permite visualizar la auditoría de abastecimientos según el alcance autorizado del rol.',
+                'alcance' => 'ambos',
+                'estado' => 'activo',
+            ],
+            [
+                'codigo' => 'auditoria.marchamos.ver',
+                'modulo' => 'auditoria',
+                'accion' => 'marchamos_ver',
+                'nombre' => 'Ver auditoría de marchamos',
+                'descripcion' => 'Permite visualizar la auditoría de marchamos según el alcance autorizado del rol.',
+                'alcance' => 'ambos',
+                'estado' => 'activo',
+            ],
+
+            // -------------------------------------------------------------
+            // Análisis
+            // -------------------------------------------------------------
+            [
+                'codigo' => 'analisis.kilometraje.ver',
                 'modulo' => 'analisis',
-                'accion' => 'ver',
-                'nombre' => 'Ver análisis',
-                'descripcion' => 'Permite visualizar paneles, indicadores y reportes analíticos según el alcance autorizado del rol.',
+                'accion' => 'kilometraje_ver',
+                'nombre' => 'Ver análisis de kilometraje',
+                'descripcion' => 'Permite visualizar el análisis de kilometraje según el alcance autorizado del rol.',
+                'alcance' => 'ambos',
+                'estado' => 'activo',
+            ],
+            [
+                'codigo' => 'analisis.consumo_unidad.ver',
+                'modulo' => 'analisis',
+                'accion' => 'consumo_unidad_ver',
+                'nombre' => 'Ver consumo por unidad',
+                'descripcion' => 'Permite visualizar el análisis de consumo por unidad según el alcance autorizado del rol.',
+                'alcance' => 'ambos',
+                'estado' => 'activo',
+            ],
+            [
+                'codigo' => 'analisis.rutas.ver',
+                'modulo' => 'analisis',
+                'accion' => 'rutas_ver',
+                'nombre' => 'Ver análisis de rutas',
+                'descripcion' => 'Permite visualizar el análisis de rutas según el alcance autorizado del rol.',
                 'alcance' => 'ambos',
                 'estado' => 'activo',
             ],
@@ -594,15 +682,19 @@ class PermisosSeeder extends Seeder
                 $permiso
             );
         }
+        $permisosEmpresasObsoletos = Permiso::query()
+            ->whereIn('codigo', [
+                'empresas.ver',
+                'empresas.actualizar',
+            ])
+            ->get();
 
-        $permisoEditarEmpresaAnterior = Permiso::where('codigo', 'empresas.editar')->first();
-
-        if ($permisoEditarEmpresaAnterior) {
-            $permisoEditarEmpresaAnterior->update([
+        foreach ($permisosEmpresasObsoletos as $permisoObsoleto) {
+            $permisoObsoleto->update([
                 'estado' => 'inactivo',
                 'fecha_actualizacion' => now(),
                 'fecha_inactivacion' => now(),
-                'motivo_inactivacion' => 'Permiso reemplazado por empresas.actualizar en definición funcional V1.',
+                'motivo_inactivacion' => 'Permiso reemplazado por el mapeo funcional definitivo del módulo Empresas.',
             ]);
         }
     }

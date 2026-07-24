@@ -18,9 +18,9 @@ class RolPermisosSeeder extends Seeder
             'DIESEL_SUPER_ADMIN' => 'ALL',
 
             'DIESEL_ADMIN' => [
-                'empresas.ver',
-                'empresas.crear',
-                'empresas.actualizar',
+                'empresas.consultar',
+                'empresas.administrar',
+                'empresas.editar',
                 'empresas.inactivar',
                 'empresas.reactivar',
 
@@ -85,12 +85,16 @@ class RolPermisosSeeder extends Seeder
                 'inventario.ver',
                 'inventario.ajustar',
 
-                'auditoria.ver',
-                'analisis.ver',
+                'auditoria.panel_operativo.ver',
+                'auditoria.abastecimientos.ver',
+                'auditoria.marchamos.ver',
+                'analisis.kilometraje.ver',
+                'analisis.consumo_unidad.ver',
+                'analisis.rutas.ver',
             ],
 
             'DIESEL_TECNICO' => [
-                'empresas.ver',
+                'empresas.consultar',
 
                 'unidades.ver',
                 'unidades.crear',
@@ -113,30 +117,32 @@ class RolPermisosSeeder extends Seeder
                 'motoristas.ver',
                 'abastecimientos.ver',
 
-                'analisis.ver',
+
+                'analisis.kilometraje.ver',
+                'analisis.consumo_unidad.ver',
+                'analisis.rutas.ver',
             ],
 
             'DIESEL_AUDITOR' => [
-                'empresas.ver',
-                'usuarios.ver',
+                'empresas.consultar',
 
+                'usuarios.ver',
                 'unidades.ver',
                 'licencias.ver',
-
-                'puntos_seguridad.ver',
-
                 'marchamos.ver',
                 'marchamos.ver_historial',
-
                 'gasolineras.ver',
-                'tanques.ver',
+                'gasolineras_externas.ver',
+                'puntos_ruta.ver',
+                'rutas.ver',
                 'motoristas.ver',
                 'abastecimientos.ver',
-                'reemplazos.ver',
-                'inventario.ver',
-
-                'auditoria.ver',
-                'analisis.ver',
+                'auditoria.panel_operativo.ver',
+                'auditoria.abastecimientos.ver',
+                'auditoria.marchamos.ver',
+                'analisis.kilometraje.ver',
+                'analisis.consumo_unidad.ver',
+                'analisis.rutas.ver',
             ],
 
             'EMPRESA_ADMIN' => [
@@ -185,7 +191,10 @@ class RolPermisosSeeder extends Seeder
                 'inventario.ver',
                 'inventario.ajustar',
 
-                'analisis.ver',
+
+                'analisis.kilometraje.ver',
+                'analisis.consumo_unidad.ver',
+                'analisis.rutas.ver',
             ],
 
             'EMPRESA_SUPERVISOR' => [
@@ -211,7 +220,10 @@ class RolPermisosSeeder extends Seeder
 
                 'inventario.ver',
 
-                'analisis.ver',
+
+                'analisis.kilometraje.ver',
+                'analisis.consumo_unidad.ver',
+                'analisis.rutas.ver',
             ],
 
             'EMPRESA_OPERADOR' => [
@@ -234,25 +246,30 @@ class RolPermisosSeeder extends Seeder
 
                 'inventario.ver',
 
-                'analisis.ver',
+
+                'analisis.kilometraje.ver',
+                'analisis.consumo_unidad.ver',
+                'analisis.rutas.ver',
             ],
 
             'EMPRESA_AUDITOR' => [
+                'usuarios.ver',
                 'unidades.ver',
-
+                'licencias.ver',
                 'marchamos.ver',
                 'marchamos.ver_historial',
-
                 'gasolineras.ver',
-                'tanques.ver',
+                'gasolineras_externas.ver',
+                'puntos_ruta.ver',
+                'rutas.ver',
                 'motoristas.ver',
-
                 'abastecimientos.ver',
-                'reemplazos.ver',
-
-                'inventario.ver',
-
-                'analisis.ver',
+                'auditoria.panel_operativo.ver',
+                'auditoria.abastecimientos.ver',
+                'auditoria.marchamos.ver',
+                'analisis.kilometraje.ver',
+                'analisis.consumo_unidad.ver',
+                'analisis.rutas.ver',
             ],
         ];
 

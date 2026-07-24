@@ -301,7 +301,10 @@
                                                 {{ $empresa->nombre_legal }}
                                             </h5>
 
-                                            @if ($empresa->estado === 'activa')
+                                            @if (
+                                                    Auth::user()->tienePermiso('empresas.editar')
+                                                    && $empresa->estado === 'activa'
+                                                )
                                                 <span class="cc-badge cc-badge-active">
                                                     Activa
                                                 </span>

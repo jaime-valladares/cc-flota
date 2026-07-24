@@ -13,6 +13,7 @@ use App\Http\Controllers\AnalisisConsumoUnidadController;
 use App\Http\Controllers\AnalisisRendimientoController;
 use App\Http\Controllers\AnalisisRutaController;
 use App\Http\Controllers\AuditoriaMarchamoController;
+use App\Http\Controllers\AuditoriaAbastecimientoController;
 use App\Http\Controllers\MarchamoAsignacionInicialController;
 use App\Http\Controllers\MarchamoController;
 use App\Http\Controllers\MarchamoReemplazoController;
@@ -51,48 +52,101 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     | Usuarios
     |--------------------------------------------------------------------------
+    |
+    | Las rutas fijas deben declararse antes de /usuarios/{usuario}
+    | para evitar que palabras como "administrar" o "nuevo" sean
+    | interpretadas como identificadores de usuario.
+    |
     */
 
-    Route::get('/usuarios', [UsuarioController::class, 'index'])
-        ->name('usuarios.index');
+    Route::middleware('permiso:usuarios.ver')->group(function () {
+        Route::get(
+            '/usuarios',
+            [UsuarioController::class, 'index']
+        )->name('usuarios.index');
 
-    Route::get('/usuarios/consulta/ventana', [UsuarioController::class, 'consultaVentana'])
-        ->name('usuarios.consulta.ventana');
+        Route::get(
+            '/usuarios/consulta/ventana',
+            [UsuarioController::class, 'consultaVentana']
+        )->name('usuarios.consulta.ventana');
+    });
 
-    Route::get('/usuarios/administrar', [UsuarioController::class, 'administrar'])
-        ->name('usuarios.administrar');
+    Route::middleware('permiso:usuarios.crear')->group(function () {
+        Route::get(
+            '/usuarios/nuevo',
+            [UsuarioController::class, 'create']
+        )->name('usuarios.create');
 
-    Route::get('/usuarios/administrar/ventana', [UsuarioController::class, 'administrarVentana'])
-        ->name('usuarios.administrar.ventana');
+        Route::get(
+            '/usuarios/nuevo/ventana',
+            [UsuarioController::class, 'createVentana']
+        )->name('usuarios.create.ventana');
 
-    Route::get('/usuarios/nuevo', [UsuarioController::class, 'create'])
-        ->name('usuarios.create');
+        Route::post(
+            '/usuarios',
+            [UsuarioController::class, 'store']
+        )->name('usuarios.store');
+    });
 
-    Route::get('/usuarios/nuevo/ventana', [UsuarioController::class, 'createVentana'])
-        ->name('usuarios.create.ventana');
+    Route::middleware('permiso:usuarios.actualizar')->group(function () {
+        Route::get(
+            '/usuarios/administrar',
+            [UsuarioController::class, 'administrar']
+        )->name('usuarios.administrar');
 
-    Route::post('/usuarios', [UsuarioController::class, 'store'])
-        ->name('usuarios.store');
+        Route::get(
+            '/usuarios/administrar/ventana',
+            [UsuarioController::class, 'administrarVentana']
+        )->name('usuarios.administrar.ventana');
+    });
 
-    Route::get('/usuarios/{usuario}/ventana', [UsuarioController::class, 'showVentana'])
-        ->name('usuarios.show.ventana');
+    /*
+    |--------------------------------------------------------------------------
+    | Usuarios - Rutas dinámicas
+    |--------------------------------------------------------------------------
+    */
 
-    Route::get('/usuarios/{usuario}/editar/ventana', [UsuarioController::class, 'editVentana'])
-        ->name('usuarios.edit.ventana');
+    Route::middleware('permiso:usuarios.ver')->group(function () {
+        Route::get(
+            '/usuarios/{usuario}/ventana',
+            [UsuarioController::class, 'showVentana']
+        )->name('usuarios.show.ventana');
 
-    Route::get('/usuarios/{usuario}', [UsuarioController::class, 'show'])
-        ->name('usuarios.show');
+        Route::get(
+            '/usuarios/{usuario}',
+            [UsuarioController::class, 'show']
+        )->name('usuarios.show');
+    });
 
-    Route::get('/usuarios/{usuario}/editar', [UsuarioController::class, 'edit'])
-        ->name('usuarios.edit');
+    Route::middleware('permiso:usuarios.actualizar')->group(function () {
+        Route::get(
+            '/usuarios/{usuario}/editar/ventana',
+            [UsuarioController::class, 'editVentana']
+        )->name('usuarios.edit.ventana');
 
-    Route::put('/usuarios/{usuario}', [UsuarioController::class, 'update'])
-        ->name('usuarios.update');
+        Route::get(
+            '/usuarios/{usuario}/editar',
+            [UsuarioController::class, 'edit']
+        )->name('usuarios.edit');
 
-    Route::patch('/usuarios/{usuario}/inactivar', [UsuarioController::class, 'inactivar'])
+        Route::put(
+            '/usuarios/{usuario}',
+            [UsuarioController::class, 'update']
+        )->name('usuarios.update');
+    });
+
+    Route::patch(
+        '/usuarios/{usuario}/inactivar',
+        [UsuarioController::class, 'inactivar']
+    )
+        ->middleware('permiso:usuarios.inactivar')
         ->name('usuarios.inactivar');
 
-    Route::patch('/usuarios/{usuario}/reactivar', [UsuarioController::class, 'reactivar'])
+    Route::patch(
+        '/usuarios/{usuario}/reactivar',
+        [UsuarioController::class, 'reactivar']
+    )
+        ->middleware('permiso:usuarios.reactivar')
         ->name('usuarios.reactivar');
 
     /*
@@ -731,33 +785,93 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     | Empresas
     |--------------------------------------------------------------------------
+    |
+    | Las rutas fijas deben declararse antes de /empresas/{empresa}
+    | para evitar que palabras reservadas sean interpretadas como identificadores.
+    |
     */
 
-    Route::get('/empresas/consulta/ventana', [EmpresaController::class, 'consultaVentana'])
-        ->name('empresas.consulta.ventana');
+    Route::middleware('permiso:empresas.consultar')->group(function () {
+        Route::get(
+            '/empresas',
+            [EmpresaController::class, 'index']
+        )->name('empresas.index');
 
-    Route::get('/empresas/create/ventana', [EmpresaController::class, 'createVentana'])
-        ->name('empresas.create.ventana');
+        Route::get(
+            '/empresas/consulta/ventana',
+            [EmpresaController::class, 'consultaVentana']
+        )->name('empresas.consulta.ventana');
+    });
 
-    Route::get('/empresas/administrar', [EmpresaController::class, 'administrar'])
-        ->name('empresas.administrar');
+    Route::middleware('permiso:empresas.administrar')->group(function () {
+        Route::get(
+            '/empresas/administrar',
+            [EmpresaController::class, 'administrar']
+        )->name('empresas.administrar');
 
-    Route::get('/empresas/administrar/ventana', [EmpresaController::class, 'administrarVentana'])
-        ->name('empresas.administrar.ventana');
+        Route::get(
+            '/empresas/administrar/ventana',
+            [EmpresaController::class, 'administrarVentana']
+        )->name('empresas.administrar.ventana');
 
-    Route::patch('/empresas/{empresa}/inactivar', [EmpresaController::class, 'inactivar'])
+        Route::get(
+            '/empresas/{empresa}/ventana',
+            [EmpresaController::class, 'showVentana']
+        )->name('empresas.show.ventana');
+
+        Route::get(
+            '/empresas/{empresa}',
+            [EmpresaController::class, 'show']
+        )->name('empresas.show');
+    });
+
+    Route::middleware('permiso:empresas.crear')->group(function () {
+        Route::get(
+            '/empresas/create',
+            [EmpresaController::class, 'create']
+        )->name('empresas.create');
+
+        Route::get(
+            '/empresas/create/ventana',
+            [EmpresaController::class, 'createVentana']
+        )->name('empresas.create.ventana');
+
+        Route::post(
+            '/empresas',
+            [EmpresaController::class, 'store']
+        )->name('empresas.store');
+    });
+
+    Route::middleware('permiso:empresas.editar')->group(function () {
+        Route::get(
+            '/empresas/{empresa}/editar/ventana',
+            [EmpresaController::class, 'editVentana']
+        )->name('empresas.edit.ventana');
+
+        Route::get(
+            '/empresas/{empresa}/editar',
+            [EmpresaController::class, 'edit']
+        )->name('empresas.edit');
+
+        Route::put(
+            '/empresas/{empresa}',
+            [EmpresaController::class, 'update']
+        )->name('empresas.update');
+    });
+
+    Route::patch(
+        '/empresas/{empresa}/inactivar',
+        [EmpresaController::class, 'inactivar']
+    )
+        ->middleware('permiso:empresas.inactivar')
         ->name('empresas.inactivar');
 
-    Route::patch('/empresas/{empresa}/reactivar', [EmpresaController::class, 'reactivar'])
+    Route::patch(
+        '/empresas/{empresa}/reactivar',
+        [EmpresaController::class, 'reactivar']
+    )
+        ->middleware('permiso:empresas.reactivar')
         ->name('empresas.reactivar');
-
-    Route::get('/empresas/{empresa}/ventana', [EmpresaController::class, 'showVentana'])
-        ->name('empresas.show.ventana');
-
-    Route::get('/empresas/{empresa}/editar/ventana', [EmpresaController::class, 'editVentana'])
-        ->name('empresas.edit.ventana');
-
-    Route::resource('empresas', EmpresaController::class)->except(['destroy']);
 
     /*
     |--------------------------------------------------------------------------
@@ -852,6 +966,28 @@ Route::middleware('auth')->group(function () {
             'indexVentana',
         ]
     )->name('analisis.rutas.index.ventana');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Auditoría de abastecimientos
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/auditoria/abastecimientos',
+        [
+            AuditoriaAbastecimientoController::class,
+            'index',
+        ]
+    )->name('auditoria.abastecimientos.index');
+
+    Route::get(
+        '/auditoria/abastecimientos/ventana',
+        [
+            AuditoriaAbastecimientoController::class,
+            'indexVentana',
+        ]
+    )->name('auditoria.abastecimientos.index.ventana');
 
     /*
     |--------------------------------------------------------------------------

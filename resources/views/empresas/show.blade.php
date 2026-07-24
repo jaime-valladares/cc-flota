@@ -275,7 +275,10 @@
                 <div class="cc-actions cc-actions-split">
                     <div class="cc-actions-normal">
 
-                        @if ($empresa->estado === 'activa')
+                        @if (
+                            Auth::user()->tienePermiso('empresas.editar')
+                            && $empresa->estado === 'activa'
+                        )
                             <a href="{{ route(
                                 'empresas.edit',
                                 array_merge(
@@ -296,7 +299,10 @@
                     </div>
                 </div>
 
-                @if ($empresa->estado === 'activa')
+                @if (
+                    Auth::user()->tienePermiso('empresas.inactivar')
+                    && $empresa->estado === 'activa'
+                )
                     <section class="cc-danger-zone">
                         <div class="cc-danger-zone-header">
                             <div>
@@ -338,37 +344,14 @@
                                         Seleccione un motivo
                                     </option>
 
-                                    <option value="Falta de pago">
-                                        Falta de pago
-                                    </option>
-
-                                    <option value="No continúa como cliente">
-                                        No continúa como cliente
-                                    </option>
-
-                                    <option value="Contrato finalizado">
-                                        Contrato finalizado
-                                    </option>
-
-                                    <option value="Empresa duplicada">
-                                        Empresa duplicada
-                                    </option>
-
-                                    <option value="Datos incorrectos en registro">
-                                        Datos incorrectos en registro
-                                    </option>
-
-                                    <option value="Solicitud del cliente">
-                                        Solicitud del cliente
-                                    </option>
-
-                                    <option value="Suspensión administrativa">
-                                        Suspensión administrativa
-                                    </option>
-
-                                    <option value="Otro">
-                                        Otro
-                                    </option>
+                                    <option value="Falta de pago">Falta de pago</option>
+                                    <option value="No continúa como cliente">No continúa como cliente</option>
+                                    <option value="Contrato finalizado">Contrato finalizado</option>
+                                    <option value="Empresa duplicada">Empresa duplicada</option>
+                                    <option value="Datos incorrectos en registro">Datos incorrectos en registro</option>
+                                    <option value="Solicitud del cliente">Solicitud del cliente</option>
+                                    <option value="Suspensión administrativa">Suspensión administrativa</option>
+                                    <option value="Otro">Otro</option>
                                 </select>
 
                                 @error('motivo_inactivacion')
@@ -384,7 +367,10 @@
                             </button>
                         </form>
                     </section>
-                @else
+                @elseif (
+                    Auth::user()->tienePermiso('empresas.reactivar')
+                    && $empresa->estado === 'inactiva'
+                )
                     <div class="cc-actions">
                         <form method="POST"
                               action="{{ route(

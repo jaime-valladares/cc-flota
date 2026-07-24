@@ -366,8 +366,9 @@
 
     <body class="antialiased">
         @php
-            $userName = Auth::user()->name ?? 'Usuario';
-            $userEmail = Auth::user()->email ?? null;
+            $usuarioAutenticado = Auth::user();
+            $userName = $usuarioAutenticado->name ?? 'Usuario';
+            $userEmail = $usuarioAutenticado->email ?? null;
 
             $initials = collect(explode(' ', trim($userName)))
                 ->filter()
@@ -393,6 +394,9 @@
             $auditoriaActivo = request()->routeIs(
                 'analisis.panel-operativo'
             )
+                || request()->routeIs(
+                    'auditoria.abastecimientos.*'
+                )
                 || request()->routeIs(
                     'auditoria.marchamos.*'
                 );
@@ -438,68 +442,92 @@
                     </div>
 
                     <!-- Empresas -->
-                    <div class="cc-sidebar-group">
-                        <div
-                            id="ccEmpresasToggle"
-                            class="cc-sidebar-parent cc-sidebar-collapsible-parent {{ $empresasActivo ? 'cc-sidebar-parent-active' : '' }}"
-                            role="button"
-                            tabindex="0"
-                            aria-expanded="false"
-                            aria-controls="ccEmpresasSubnav"
-                        >
-                            <span>Empresas</span>
-                            <span class="cc-sidebar-collapse-icon" aria-hidden="true">▼</span>
+                    @if ($usuarioAutenticado->tieneAlgunPermiso([
+                        'empresas.consultar',
+                        'empresas.administrar',
+                        'empresas.crear',
+                    ]))
+                        <div class="cc-sidebar-group">
+                            <div
+                                id="ccEmpresasToggle"
+                                class="cc-sidebar-parent cc-sidebar-collapsible-parent {{ $empresasActivo ? 'cc-sidebar-parent-active' : '' }}"
+                                role="button"
+                                tabindex="0"
+                                aria-expanded="false"
+                                aria-controls="ccEmpresasSubnav"
+                            >
+                                <span>Empresas</span>
+                                <span class="cc-sidebar-collapse-icon" aria-hidden="true">▼</span>
+                            </div>
+
+                            <div id="ccEmpresasSubnav" class="cc-sidebar-subnav cc-sidebar-subnav-collapsed">
+                                @if ($usuarioAutenticado->tienePermiso('empresas.consultar'))
+                                    <a href="{{ route('empresas.index') }}"
+                                       class="cc-sidebar-sublink {{ request()->routeIs('empresas.index') || request()->routeIs('empresas.show') ? 'cc-sidebar-sublink-active' : '' }}">
+                                        Consulta empresas
+                                    </a>
+                                @endif
+
+                                @if ($usuarioAutenticado->tienePermiso('empresas.administrar'))
+                                    <a href="{{ route('empresas.administrar') }}"
+                                       class="cc-sidebar-sublink {{ request()->routeIs('empresas.administrar') || request()->routeIs('empresas.show') || request()->routeIs('empresas.edit') ? 'cc-sidebar-sublink-active' : '' }}">
+                                        Administrar empresa
+                                    </a>
+                                @endif
+
+                                @if ($usuarioAutenticado->tienePermiso('empresas.crear'))
+                                    <a href="{{ route('empresas.create') }}"
+                                       class="cc-sidebar-sublink {{ request()->routeIs('empresas.create') ? 'cc-sidebar-sublink-active' : '' }}">
+                                        Nueva empresa
+                                    </a>
+                                @endif
+                            </div>
                         </div>
-
-                        <div id="ccEmpresasSubnav" class="cc-sidebar-subnav cc-sidebar-subnav-collapsed">
-                            <a href="{{ route('empresas.index') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('empresas.index') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Consulta empresas
-                            </a>
-
-                            <a href="{{ route('empresas.administrar') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('empresas.administrar') || request()->routeIs('empresas.show') || request()->routeIs('empresas.edit') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Administrar empresa
-                            </a>
-
-                            <a href="{{ route('empresas.create') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('empresas.create') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Nueva empresa
-                            </a>
-                        </div>
-                    </div>
+                    @endif
 
                     <!-- Usuarios -->
-                    <div class="cc-sidebar-group">
-                        <div
-                            id="ccUsuariosToggle"
-                            class="cc-sidebar-parent cc-sidebar-collapsible-parent {{ $usuariosActivo ? 'cc-sidebar-parent-active' : '' }}"
-                            role="button"
-                            tabindex="0"
-                            aria-expanded="false"
-                            aria-controls="ccUsuariosSubnav"
-                        >
-                            <span>Usuarios</span>
-                            <span class="cc-sidebar-collapse-icon" aria-hidden="true">▼</span>
+                    @if ($usuarioAutenticado->tieneAlgunPermiso([
+                        'usuarios.ver',
+                        'usuarios.actualizar',
+                        'usuarios.crear',
+                    ]))
+                        <div class="cc-sidebar-group">
+                            <div
+                                id="ccUsuariosToggle"
+                                class="cc-sidebar-parent cc-sidebar-collapsible-parent {{ $usuariosActivo ? 'cc-sidebar-parent-active' : '' }}"
+                                role="button"
+                                tabindex="0"
+                                aria-expanded="false"
+                                aria-controls="ccUsuariosSubnav"
+                            >
+                                <span>Usuarios</span>
+                                <span class="cc-sidebar-collapse-icon" aria-hidden="true">▼</span>
+                            </div>
+
+                            <div id="ccUsuariosSubnav" class="cc-sidebar-subnav cc-sidebar-subnav-collapsed">
+                                @if ($usuarioAutenticado->tienePermiso('usuarios.ver'))
+                                    <a href="{{ route('usuarios.index') }}"
+                                       class="cc-sidebar-sublink {{ request()->routeIs('usuarios.index') || request()->routeIs('usuarios.show') ? 'cc-sidebar-sublink-active' : '' }}">
+                                        Consulta usuarios
+                                    </a>
+                                @endif
+
+                                @if ($usuarioAutenticado->tienePermiso('usuarios.actualizar'))
+                                    <a href="{{ route('usuarios.administrar') }}"
+                                       class="cc-sidebar-sublink {{ request()->routeIs('usuarios.administrar') || request()->routeIs('usuarios.edit') ? 'cc-sidebar-sublink-active' : '' }}">
+                                        Administrar usuario
+                                    </a>
+                                @endif
+
+                                @if ($usuarioAutenticado->tienePermiso('usuarios.crear'))
+                                    <a href="{{ route('usuarios.create') }}"
+                                       class="cc-sidebar-sublink {{ request()->routeIs('usuarios.create') ? 'cc-sidebar-sublink-active' : '' }}">
+                                        Nuevo usuario
+                                    </a>
+                                @endif
+                            </div>
                         </div>
-
-                        <div id="ccUsuariosSubnav" class="cc-sidebar-subnav cc-sidebar-subnav-collapsed">
-                            <a href="{{ route('usuarios.index') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('usuarios.index') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Consulta usuarios
-                            </a>
-
-                            <a href="{{ route('usuarios.administrar') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('usuarios.administrar') || request()->routeIs('usuarios.show') || request()->routeIs('usuarios.edit') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Administrar usuario
-                            </a>
-
-                            <a href="{{ route('usuarios.create') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('usuarios.create') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Nuevo usuario
-                            </a>
-                        </div>
-                    </div>
+                    @endif
 
                     <div class="cc-sidebar-section">
                         Configuración operativa
@@ -852,12 +880,17 @@
 
                         <div id="ccAuditoriaSubnav" class="cc-sidebar-subnav cc-sidebar-subnav-collapsed">
                             <a href="{{ route('analisis.panel-operativo') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('analisis.panel-operativo') ? 'cc-sidebar-sublink-active' : '' }}">
+                            class="cc-sidebar-sublink {{ request()->routeIs('analisis.panel-operativo') ? 'cc-sidebar-sublink-active' : '' }}">
                                 Control operativo de flota
                             </a>
 
+                            <a href="{{ route('auditoria.abastecimientos.index') }}"
+                            class="cc-sidebar-sublink {{ request()->routeIs('auditoria.abastecimientos.*') ? 'cc-sidebar-sublink-active' : '' }}">
+                                Auditoría de Abastecimientos
+                            </a>
+
                             <a href="{{ route('auditoria.marchamos.index') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('auditoria.marchamos.*') ? 'cc-sidebar-sublink-active' : '' }}">
+                            class="cc-sidebar-sublink {{ request()->routeIs('auditoria.marchamos.*') ? 'cc-sidebar-sublink-active' : '' }}">
                                 Auditoría de Marchamos
                             </a>
                         </div>
