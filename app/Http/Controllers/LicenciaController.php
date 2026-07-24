@@ -54,8 +54,6 @@ class LicenciaController extends Controller
      */
     public function administrar(Request $request): View
     {
-        $this->autorizarAdministracionLicencias();
-
         $data = $this->prepararConsultaLicencias(
             request: $request,
             soloEmpresasActivas: true
@@ -71,8 +69,6 @@ class LicenciaController extends Controller
      */
     public function administrarVentana(Request $request): View
     {
-        $this->autorizarAdministracionLicencias();
-
         $data = $this->prepararConsultaLicencias(
             request: $request,
             soloEmpresasActivas: true
@@ -230,12 +226,19 @@ class LicenciaController extends Controller
         $placa = $placas[0] ?? null;
         $periodoVigencia = $periodosVigenciaSeleccionados[0] ?? null;
 
+        /*
+         * La empresa obligatoria del usuario empresarial define alcance,
+         * pero no ejecuta automáticamente la consulta.
+         */
         $hayFiltros = $request->boolean('consultar')
             || filled($busqueda)
-            || count($empresaIds) > 0
             || count($placas) > 0
             || count($periodosVigenciaSeleccionados) > 0
-            || filled($estado);
+            || filled($estado)
+            || (
+                $esUsuarioDieselCop
+                && count($empresaIds) > 0
+            );
 
         $empresas = Empresa::query()
             ->when(
@@ -289,12 +292,41 @@ class LicenciaController extends Controller
                 }
             );
 
-        $placasSelector = (clone $baseQuery)
+        /*
+         * El selector se construye desde una consulta propia para evitar
+         * ambigüedad de columnas al unir licencias y unidades. El alcance
+         * empresarial debe calificarse explícitamente como licencias.empresa_id.
+         */
+        $placasSelector = Licencia::query()
             ->join(
                 'unidades',
                 'licencias.unidad_id',
                 '=',
                 'unidades.id'
+            )
+            ->join(
+                'empresas',
+                'licencias.empresa_id',
+                '=',
+                'empresas.id'
+            )
+            ->when(
+                ! $esUsuarioDieselCop,
+                function ($query) use ($user) {
+                    $query->where(
+                        'licencias.empresa_id',
+                        $user->empresa_id
+                    );
+                }
+            )
+            ->when(
+                $soloEmpresasActivas,
+                function ($query) {
+                    $query->where(
+                        'empresas.estado',
+                        'activa'
+                    );
+                }
             )
             ->orderBy('unidades.placa')
             ->pluck('unidades.placa')
@@ -575,8 +607,6 @@ class LicenciaController extends Controller
      */
     public function create(Request $request): View
     {
-        $this->autorizarAdministracionLicencias();
-
         $data = $this->prepararFormularioLicencia($request);
 
         return view('licencias.create', $data);
@@ -589,8 +619,6 @@ class LicenciaController extends Controller
      */
     public function createVentana(Request $request): View
     {
-        $this->autorizarAdministracionLicencias();
-
         $data = $this->prepararFormularioLicencia($request);
 
         return view('licencias.create-ventana', $data);
@@ -684,8 +712,6 @@ class LicenciaController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $this->autorizarAdministracionLicencias();
-
         $validated = $request->validate(
             $this->reglasValidacionCrearLicencia($request)
         );
@@ -892,7 +918,6 @@ class LicenciaController extends Controller
         Request $request,
         Licencia $licencia
     ): View {
-        $this->autorizarAdministracionLicencias();
         $this->validarEmpresaActivaLicencia($licencia);
 
         $this->cargarRelacionesFicha($licencia);
@@ -912,7 +937,6 @@ class LicenciaController extends Controller
         Request $request,
         Licencia $licencia
     ): View {
-        $this->autorizarAdministracionLicencias();
         $this->validarEmpresaActivaLicencia($licencia);
 
         $this->cargarRelacionesFicha($licencia);
@@ -933,7 +957,6 @@ class LicenciaController extends Controller
         Request $request,
         Licencia $licencia
     ): View {
-        $this->autorizarAdministracionLicencias();
         $this->validarLicenciaEditable($licencia);
 
         $licencia->load([
@@ -956,7 +979,6 @@ class LicenciaController extends Controller
         Request $request,
         Licencia $licencia
     ): View {
-        $this->autorizarAdministracionLicencias();
         $this->validarLicenciaEditable($licencia);
 
         $licencia->load([
@@ -979,7 +1001,6 @@ class LicenciaController extends Controller
         Request $request,
         Licencia $licencia
     ): RedirectResponse {
-        $this->autorizarAdministracionLicencias();
         $this->validarLicenciaEditable($licencia);
 
         $validated = $request->validate(
@@ -1054,7 +1075,6 @@ class LicenciaController extends Controller
         Request $request,
         Licencia $licencia
     ): RedirectResponse {
-        $this->autorizarAdministracionLicencias();
         $this->validarEmpresaActivaLicencia($licencia);
 
         if ($licencia->estado === 'inactiva') {
@@ -1132,7 +1152,6 @@ class LicenciaController extends Controller
         Request $request,
         Licencia $licencia
     ): RedirectResponse {
-        $this->autorizarAdministracionLicencias();
         $this->validarEmpresaActivaLicencia($licencia);
 
         if (
@@ -1348,19 +1367,6 @@ class LicenciaController extends Controller
                 'La cantidad de tanques protegidos debe ser 1, 2 o 3.'
             ),
         };
-    }
-
-    /**
-     * Restringe operaciones administrativas a Diesel Cop.
-     */
-    private function autorizarAdministracionLicencias(): void
-    {
-        if (! $this->esUsuarioDieselCop()) {
-            abort(
-                403,
-                'La administración de licencias está disponible únicamente para Diesel Cop. Contacte a su punto de contacto para solicitar cambios.'
-            );
-        }
     }
 
     /**

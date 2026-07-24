@@ -578,36 +578,48 @@
                     @endif
 
                     <!-- Licencias -->
-                    <div class="cc-sidebar-group">
-                        <div
-                            id="ccLicenciasToggle"
-                            class="cc-sidebar-parent cc-sidebar-collapsible-parent {{ $licenciasActivo ? 'cc-sidebar-parent-active' : '' }}"
-                            role="button"
-                            tabindex="0"
-                            aria-expanded="false"
-                            aria-controls="ccLicenciasSubnav"
-                        >
-                            <span>Licencias</span>
-                            <span class="cc-sidebar-collapse-icon" aria-hidden="true">▼</span>
+                    @if ($usuarioAutenticado->tieneAlgunPermiso([
+                        'licencias.consultar',
+                        'licencias.administrar',
+                        'licencias.crear',
+                    ]))
+                        <div class="cc-sidebar-group">
+                            <div
+                                id="ccLicenciasToggle"
+                                class="cc-sidebar-parent cc-sidebar-collapsible-parent {{ $licenciasActivo ? 'cc-sidebar-parent-active' : '' }}"
+                                role="button"
+                                tabindex="0"
+                                aria-expanded="false"
+                                aria-controls="ccLicenciasSubnav"
+                            >
+                                <span>Licencias</span>
+                                <span class="cc-sidebar-collapse-icon" aria-hidden="true">▼</span>
+                            </div>
+
+                            <div id="ccLicenciasSubnav" class="cc-sidebar-subnav cc-sidebar-subnav-collapsed">
+                                @if ($usuarioAutenticado->tienePermiso('licencias.consultar'))
+                                    <a href="{{ route('licencias.index') }}"
+                                       class="cc-sidebar-sublink {{ request()->routeIs('licencias.index') ? 'cc-sidebar-sublink-active' : '' }}">
+                                        Consulta licencias
+                                    </a>
+                                @endif
+
+                                @if ($usuarioAutenticado->tienePermiso('licencias.administrar'))
+                                    <a href="{{ route('licencias.administrar') }}"
+                                       class="cc-sidebar-sublink {{ request()->routeIs('licencias.administrar') || request()->routeIs('licencias.show') || request()->routeIs('licencias.edit') ? 'cc-sidebar-sublink-active' : '' }}">
+                                        Administrar licencia
+                                    </a>
+                                @endif
+
+                                @if ($usuarioAutenticado->tienePermiso('licencias.crear'))
+                                    <a href="{{ route('licencias.create') }}"
+                                       class="cc-sidebar-sublink {{ request()->routeIs('licencias.create') ? 'cc-sidebar-sublink-active' : '' }}">
+                                        Nueva licencia
+                                    </a>
+                                @endif
+                            </div>
                         </div>
-
-                        <div id="ccLicenciasSubnav" class="cc-sidebar-subnav cc-sidebar-subnav-collapsed">
-                            <a href="{{ route('licencias.index') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('licencias.index') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Consulta licencias
-                            </a>
-
-                            <a href="{{ route('licencias.administrar') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('licencias.administrar') || request()->routeIs('licencias.show') || request()->routeIs('licencias.edit') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Administrar licencia
-                            </a>
-
-                            <a href="{{ route('licencias.create') }}"
-                               class="cc-sidebar-sublink {{ request()->routeIs('licencias.create') ? 'cc-sidebar-sublink-active' : '' }}">
-                                Nueva licencia
-                            </a>
-                        </div>
-                    </div>
+                    @endif
 
                     <!-- Marchamos -->
                     <div class="cc-sidebar-group">

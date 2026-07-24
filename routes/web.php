@@ -569,48 +569,63 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     | Licencias
     |--------------------------------------------------------------------------
+    |
+    | Las rutas fijas se declaran antes de las rutas dinámicas.
+    |
     */
 
-    Route::get('/licencias', [LicenciaController::class, 'index'])
-        ->name('licencias.index');
+    Route::middleware('permiso:licencias.consultar')->group(function () {
+        Route::get('/licencias', [LicenciaController::class, 'index'])
+            ->name('licencias.index');
 
-    Route::get('/licencias/consulta/ventana', [LicenciaController::class, 'consultaVentana'])
-        ->name('licencias.consulta.ventana');
+        Route::get('/licencias/consulta/ventana', [LicenciaController::class, 'consultaVentana'])
+            ->name('licencias.consulta.ventana');
+    });
 
-    Route::get('/licencias/administrar', [LicenciaController::class, 'administrar'])
-        ->name('licencias.administrar');
+    Route::middleware('permiso:licencias.administrar')->group(function () {
+        Route::get('/licencias/administrar', [LicenciaController::class, 'administrar'])
+            ->name('licencias.administrar');
 
-    Route::get('/licencias/administrar/ventana', [LicenciaController::class, 'administrarVentana'])
-        ->name('licencias.administrar.ventana');
+        Route::get('/licencias/administrar/ventana', [LicenciaController::class, 'administrarVentana'])
+            ->name('licencias.administrar.ventana');
+    });
 
-    Route::get('/licencias/nueva', [LicenciaController::class, 'create'])
-        ->name('licencias.create');
+    Route::middleware('permiso:licencias.crear')->group(function () {
+        Route::get('/licencias/nueva', [LicenciaController::class, 'create'])
+            ->name('licencias.create');
 
-    Route::get('/licencias/nueva/ventana', [LicenciaController::class, 'createVentana'])
-        ->name('licencias.create.ventana');
+        Route::get('/licencias/nueva/ventana', [LicenciaController::class, 'createVentana'])
+            ->name('licencias.create.ventana');
 
-    Route::post('/licencias', [LicenciaController::class, 'store'])
-        ->name('licencias.store');
+        Route::post('/licencias', [LicenciaController::class, 'store'])
+            ->name('licencias.store');
+    });
 
-    Route::get('/licencias/{licencia}/ficha/ventana', [LicenciaController::class, 'showVentana'])
-        ->name('licencias.show.ventana');
+    Route::middleware('permiso:licencias.administrar')->group(function () {
+        Route::get('/licencias/{licencia}/ficha/ventana', [LicenciaController::class, 'showVentana'])
+            ->name('licencias.show.ventana');
 
-    Route::get('/licencias/{licencia}/editar/ventana', [LicenciaController::class, 'editVentana'])
-        ->name('licencias.edit.ventana');
+        Route::get('/licencias/{licencia}', [LicenciaController::class, 'show'])
+            ->name('licencias.show');
+    });
 
-    Route::get('/licencias/{licencia}', [LicenciaController::class, 'show'])
-        ->name('licencias.show');
+    Route::middleware('permiso:licencias.editar')->group(function () {
+        Route::get('/licencias/{licencia}/editar/ventana', [LicenciaController::class, 'editVentana'])
+            ->name('licencias.edit.ventana');
 
-    Route::get('/licencias/{licencia}/editar', [LicenciaController::class, 'edit'])
-        ->name('licencias.edit');
+        Route::get('/licencias/{licencia}/editar', [LicenciaController::class, 'edit'])
+            ->name('licencias.edit');
 
-    Route::put('/licencias/{licencia}', [LicenciaController::class, 'update'])
-        ->name('licencias.update');
+        Route::put('/licencias/{licencia}', [LicenciaController::class, 'update'])
+            ->name('licencias.update');
+    });
 
     Route::patch('/licencias/{licencia}/inactivar', [LicenciaController::class, 'inactivar'])
+        ->middleware('permiso:licencias.inactivar')
         ->name('licencias.inactivar');
 
     Route::patch('/licencias/{licencia}/reactivar', [LicenciaController::class, 'reactivar'])
+        ->middleware('permiso:licencias.reactivar')
         ->name('licencias.reactivar');
 
     /*

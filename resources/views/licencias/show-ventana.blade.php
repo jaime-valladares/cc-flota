@@ -9,18 +9,22 @@
     );
 
     $licenciaEditable =
-        $licencia->estado === 'activa'
+        Auth::user()->tienePermiso('licencias.editar')
+        && $licencia->estado === 'activa'
         && ! $licencia->esta_vencida;
 
     $licenciaRenovable =
-        $licencia->estado === 'activa'
+        Auth::user()->tienePermiso('licencias.reactivar')
+        && $licencia->estado === 'activa'
         && $licencia->esta_vencida;
 
     $licenciaReactivable =
-        $licencia->estado === 'inactiva';
+        Auth::user()->tienePermiso('licencias.reactivar')
+        && $licencia->estado === 'inactiva';
 
     $licenciaInactivable =
-        $licencia->estado === 'activa'
+        Auth::user()->tienePermiso('licencias.inactivar')
+        && $licencia->estado === 'activa'
         && ! $licencia->esta_vencida;
 
     $condicionAdvertencia = in_array(
@@ -763,7 +767,11 @@
                             </div>
                         @endif
 
-                        <section class="cc-danger-zone">
+                        @if (
+                    Auth::user()->tienePermiso('licencias.inactivar')
+                    || Auth::user()->tienePermiso('licencias.reactivar')
+                )
+                    <section class="cc-danger-zone">
                             <div class="cc-danger-zone-header">
                                 <div>
                                     <h5>
@@ -969,7 +977,8 @@
                                     </p>
                                 </div>
                             @endif
-                        </section>
+                            </section>
+                @endif
 
                     </div>
                 </div>

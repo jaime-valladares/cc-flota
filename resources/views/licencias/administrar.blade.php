@@ -537,7 +537,8 @@
                                 $unidad = $licencia->unidad;
 
                                 $licenciaEditable =
-                                    $licencia->estado === 'activa'
+                                    Auth::user()->tienePermiso('licencias.editar')
+                                    && $licencia->estado === 'activa'
                                     && ! $licencia->esta_vencida;
 
                                 $parametrosFicha = array_merge(

@@ -18,6 +18,12 @@ class RolPermisosSeeder extends Seeder
             'DIESEL_SUPER_ADMIN' => 'ALL',
 
             'DIESEL_ADMIN' => [
+                'licencias.consultar',
+                'licencias.administrar',
+                'licencias.editar',
+                'licencias.inactivar',
+                'licencias.reactivar',
+
                 'unidades.consultar',
                 'unidades.administrar',
                 'unidades.editar',
@@ -38,11 +44,6 @@ class RolPermisosSeeder extends Seeder
 
 
 
-                'licencias.ver',
-                'licencias.provisionar',
-                'licencias.asignar',
-                'licencias.suspender',
-                'licencias.inactivar',
 
                 'puntos_seguridad.ver',
                 'puntos_seguridad.crear',
@@ -124,13 +125,14 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'DIESEL_AUDITOR' => [
+                'licencias.consultar',
+
                 'unidades.consultar',
 
                 'usuarios.consultar',
 
                 'empresas.consultar',
 
-                'licencias.ver',
                 'marchamos.ver',
                 'marchamos.ver_historial',
                 'gasolineras.ver',
@@ -148,6 +150,8 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_ADMIN' => [
+                'licencias.consultar',
+
                 'unidades.consultar',
                 'unidades.administrar',
                 'unidades.editar',
@@ -205,6 +209,8 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_SUPERVISOR' => [
+                'licencias.consultar',
+
                 'unidades.consultar',
                 'unidades.administrar',
                 'unidades.editar',
@@ -269,11 +275,12 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_AUDITOR' => [
+                'licencias.consultar',
+
                 'unidades.consultar',
 
                 'usuarios.consultar',
 
-                'licencias.ver',
                 'marchamos.ver',
                 'marchamos.ver_historial',
                 'gasolineras.ver',
