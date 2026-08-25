@@ -367,14 +367,24 @@
     <body class="antialiased">
         @php
             $usuarioAutenticado = Auth::user();
-            $userName = $usuarioAutenticado->name ?? 'Usuario';
+            $nombre = trim((string) ($usuarioAutenticado->name ?? ''));
+            $apellido = trim((string) ($usuarioAutenticado->apellido ?? ''));
+            $userName = trim($nombre.' '.$apellido);
             $userEmail = $usuarioAutenticado->email ?? null;
 
-            $initials = collect(explode(' ', trim($userName)))
-                ->filter()
-                ->map(fn ($part) => mb_substr($part, 0, 1))
-                ->take(2)
-                ->implode('');
+            if ($userName === '') {
+                $userName = 'Usuario';
+            }
+
+            $initials = '';
+
+            if ($nombre !== '') {
+                $initials .= mb_substr($nombre, 0, 1);
+            }
+
+            if ($apellido !== '') {
+                $initials .= mb_substr($apellido, 0, 1);
+            }
 
             if ($initials === '') {
                 $initials = 'U';
@@ -1098,7 +1108,7 @@
                         </div>
 
                         <div class="cc-user-avatar">
-                            {{ strtoupper($initials) }}
+                            {{ mb_strtoupper($initials) }}
                         </div>
 
                         <form id="ccLogoutForm" method="POST" action="{{ route('logout') }}">

@@ -26,7 +26,7 @@ return [
             'jaime.ricardo.valladares@gmail.com'
         ),
         'password' => env('CC_FLOTA_RECOVERY_ADMIN_PASSWORD'),
-        'name' => env('CC_FLOTA_RECOVERY_ADMIN_NAME', 'Jaime Ricardo'),
+        'name' => env('CC_FLOTA_RECOVERY_ADMIN_NAME', 'Jaime'),
         'apellido' => env(
             'CC_FLOTA_RECOVERY_ADMIN_LAST_NAME',
             'Valladares'
