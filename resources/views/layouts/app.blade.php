@@ -85,6 +85,18 @@
                 height: 1.35rem;
             }
 
+            .cc-sidebar-controls {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.45rem;
+                flex: 0 0 auto;
+            }
+
+            .cc-sidebar-reset-button {
+                width: 2.5rem;
+                height: 2.5rem;
+            }
+
             .cc-topbar-left {
                 display: flex;
                 align-items: center;
@@ -1068,20 +1080,35 @@
                 <!-- Topbar -->
                 <header class="cc-topbar">
                     <div class="cc-topbar-left">
-                        <button
-                            id="ccSidebarMenuToggle"
-                            type="button"
-                            class="cc-sidebar-menu-toggle"
-                            aria-label="Mostrar u ocultar menú lateral"
-                            aria-controls="ccSidebar"
-                            aria-expanded="true"
-                        >
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-                                <path d="M4 6h16"></path>
-                                <path d="M4 12h16"></path>
-                                <path d="M4 18h16"></path>
-                            </svg>
-                        </button>
+                        <div class="cc-sidebar-controls">
+                            <button
+                                id="ccSidebarMenuToggle"
+                                type="button"
+                                class="cc-sidebar-menu-toggle"
+                                aria-label="Mostrar u ocultar menú lateral"
+                                aria-controls="ccSidebar"
+                                aria-expanded="true"
+                            >
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                                    <path d="M4 6h16"></path>
+                                    <path d="M4 12h16"></path>
+                                    <path d="M4 18h16"></path>
+                                </svg>
+                            </button>
+
+                            <button
+                                id="ccSidebarReset"
+                                type="button"
+                                class="cc-sidebar-menu-toggle cc-sidebar-reset-button"
+                                aria-label="Restablecer menú"
+                                title="Restablecer menú"
+                            >
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M3 12a9 9 0 1 0 3-6.7"></path>
+                                    <path d="M3 4v6h6"></path>
+                                </svg>
+                            </button>
+                        </div>
 
                         <div>
                             <div class="cc-topbar-kicker">
@@ -1158,6 +1185,7 @@
                  * En escritorio el menú inicia visible; en tablet/teléfono inicia oculto.
                  */
                 const sidebarMenuToggle = document.getElementById('ccSidebarMenuToggle');
+                const sidebarReset = document.getElementById('ccSidebarReset');
                 const sidebarOverlay = document.getElementById('ccSidebarOverlay');
                 const desktopMediaQuery = window.matchMedia('(min-width: 1024px)');
 
@@ -1252,6 +1280,7 @@
                 ];
 
                 let gruposAbiertos = [];
+                const gruposDisponibles = [];
 
                 try {
                     const estadoGuardado = JSON.parse(sessionStorage.getItem(sidebarStateKey) || '[]');
@@ -1277,6 +1306,8 @@
                         toggle.setAttribute('aria-expanded', abierto ? 'true' : 'false');
                         subnav.classList.toggle('cc-sidebar-subnav-collapsed', !abierto);
                     };
+
+                    gruposDisponibles.push({ aplicarEstado });
 
                     aplicarEstado(gruposAbiertos.includes(groupKey));
 
@@ -1308,6 +1339,24 @@
                         }
                     });
                 });
+
+                if (sidebarReset) {
+                    sidebarReset.addEventListener('click', function () {
+                        gruposAbiertos = [];
+
+                        gruposDisponibles.forEach(function ({ aplicarEstado }) {
+                            aplicarEstado(false);
+                        });
+
+                        sessionStorage.removeItem(sidebarStateKey);
+                        localStorage.removeItem('ccSidebarScrollTop');
+                        sidebar.scrollTop = 0;
+
+                        document.body.classList.remove('cc-sidebar-desktop-hidden');
+                        document.body.classList.remove('cc-sidebar-mobile-open');
+                        actualizarEstadoHamburguesa();
+                    });
+                }
 
                 const logoutForm = document.getElementById('ccLogoutForm');
 
