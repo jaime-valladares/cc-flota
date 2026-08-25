@@ -544,6 +544,15 @@ class MarchamoReemplazoController extends Controller
 
     private function datosIndex(Request $request): array
     {
+        $request->validate([
+            'unidad_ids' => ['nullable', 'array'],
+            'unidad_ids.*' => [
+                'integer',
+                'distinct',
+                'exists:unidades,id',
+            ],
+        ]);
+
         $user = Auth::user();
 
         $esUsuarioDieselCop = is_null(
@@ -595,21 +604,16 @@ class MarchamoReemplazoController extends Controller
             ->values();
 
         /*
-         * Placas seleccionadas.
+         * Unidades seleccionadas.
          */
-        $placas = collect(
+        $unidadIds = collect(
             $request->input(
-                'placas',
+                'unidad_ids',
                 []
             )
         )
-            ->filter(
-                fn ($placa): bool => filled($placa)
-            )
-            ->map(
-                fn ($placa): string =>
-                    trim((string) $placa)
-            )
+            ->filter(fn ($id): bool => filled($id))
+            ->map(fn ($id): int => (int) $id)
             ->unique()
             ->values();
 
@@ -621,7 +625,7 @@ class MarchamoReemplazoController extends Controller
         );
 
         if (filled($unidadIdAnterior)) {
-            $placaAnterior = Unidad::query()
+            $unidadAnteriorExiste = Unidad::query()
                 ->when(
                     ! $esUsuarioDieselCop,
                     function ($query) use ($user) {
@@ -635,14 +639,12 @@ class MarchamoReemplazoController extends Controller
                     'id',
                     $unidadIdAnterior
                 )
-                ->value('placa');
+                ->exists();
 
-            if (filled($placaAnterior)) {
-                $placas->push(
-                    trim((string) $placaAnterior)
-                );
+            if ($unidadAnteriorExiste) {
+                $unidadIds->push((int) $unidadIdAnterior);
 
-                $placas = $placas
+                $unidadIds = $unidadIds
                     ->unique()
                     ->values();
             }
@@ -669,7 +671,7 @@ class MarchamoReemplazoController extends Controller
         $hayFiltros = $consultaEjecutada
             || filled($busquedaEmpresa)
             || filled($busquedaPlaca)
-            || $placas->isNotEmpty()
+            || $unidadIds->isNotEmpty()
             || (
                 $esUsuarioDieselCop
                 && $empresaIds->isNotEmpty()
@@ -851,9 +853,10 @@ class MarchamoReemplazoController extends Controller
             );
 
         /*
-         * El selector de placas respeta las empresas seleccionadas.
+         * El selector de unidades respeta las empresas seleccionadas.
          */
-        $placasSelector = (clone $baseUnidadesQuery)
+        $unidadesSelector = (clone $baseUnidadesQuery)
+            ->with('empresa')
             ->when(
                 $empresaIds->isNotEmpty(),
                 function ($query) use ($empresaIds) {
@@ -863,11 +866,9 @@ class MarchamoReemplazoController extends Controller
                     );
                 }
             )
+            ->orderBy('empresa_id')
             ->orderBy('placa')
-            ->pluck('placa')
-            ->filter()
-            ->unique()
-            ->values();
+            ->get();
 
         /*
          * Se conserva para compatibilidad temporal con las vistas
@@ -934,11 +935,11 @@ class MarchamoReemplazoController extends Controller
             )
             ->when(
                 $hayFiltros
-                && $placas->isNotEmpty(),
-                function ($query) use ($placas) {
+                && $unidadIds->isNotEmpty(),
+                function ($query) use ($unidadIds) {
                     $query->whereIn(
-                        'placa',
-                        $placas->all()
+                        'id',
+                        $unidadIds->all()
                     );
                 }
             )
@@ -959,8 +960,8 @@ class MarchamoReemplazoController extends Controller
             'unidades' =>
                 $unidades,
 
-            'placasSelector' =>
-                $placasSelector,
+            'unidadesSelector' =>
+                $unidadesSelector,
 
             'unidadesDisponibles' =>
                 $unidadesDisponibles,
@@ -974,8 +975,8 @@ class MarchamoReemplazoController extends Controller
             'empresaIds' =>
                 $empresaIds->all(),
 
-            'placas' =>
-                $placas->all(),
+            'unidadIds' =>
+                $unidadIds->all(),
 
             /*
              * Compatibilidad con los selectores simples anteriores.

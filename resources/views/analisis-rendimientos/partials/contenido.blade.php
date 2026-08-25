@@ -821,7 +821,7 @@
                         value="{{ $busqueda }}"
                         maxlength="150"
                         class="cc-input"
-                        placeholder="Empresa, placa, motorista, origen, ruta o número de abastecimiento"
+                        placeholder="Empresa, Nombre / Placa, motorista, origen, ruta o número de abastecimiento"
                     >
                 </div>
 

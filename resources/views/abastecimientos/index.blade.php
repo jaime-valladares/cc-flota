@@ -235,7 +235,7 @@
 
                             <div class="cc-field">
                                 <label for="busqueda_placa">
-                                    Buscar placa
+                                    Buscar Nombre / Placa
                                 </label>
 
                                 <input
@@ -251,7 +251,7 @@
 
                             <div class="cc-field">
                                 <label>
-                                    Placa
+                                    Nombre / Placa
                                 </label>
 
                                 <div
@@ -267,8 +267,8 @@
                                             data-cc-filter-label
                                             data-default-label="Todas"
                                         >
-                                            @if (! empty($placas))
-                                                {{ count($placas) }}
+                                            @if (! empty($unidadIds))
+                                                {{ count($unidadIds) }}
                                                 seleccionadas
                                             @else
                                                 Todas
@@ -299,19 +299,19 @@
                                                 </span>
                                             </label>
 
-                                            @foreach ($placasSelector as $placaOpcion)
+                                            @foreach ($unidadesSelector as $unidadOpcion)
                                                 <label
                                                     class="cc-filter-multiselect-option"
                                                     data-cc-filter-option
                                                 >
                                                     <input
                                                         type="checkbox"
-                                                        name="placas[]"
-                                                        value="{{ $placaOpcion }}"
+                                                        name="unidad_ids[]"
+                                                        value="{{ $unidadOpcion->id }}"
                                                         @checked(
                                                             in_array(
-                                                                $placaOpcion,
-                                                                $placas ?? [],
+                                                                (int) $unidadOpcion->id,
+                                                                $unidadIds ?? [],
                                                                 true
                                                             )
                                                         )
@@ -319,7 +319,7 @@
                                                     >
 
                                                     <span data-cc-filter-option-label>
-                                                        {{ $placaOpcion }}
+                                                        {{ ($unidadOpcion->empresa_nombre ?? $unidadOpcion->empresa?->nombre_comercial ?? $unidadOpcion->empresa?->nombre_legal ?? "Empresa") . " · " . $unidadOpcion->placa }}
                                                     </span>
                                                 </label>
                                             @endforeach

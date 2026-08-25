@@ -1169,6 +1169,15 @@ final class CcFlotaSeederDiagnostics
         $indicesRequeridos = [
             [
                 'tabla' =>
+                    'unidades',
+
+                'columnas' => [
+                    'empresa_id',
+                    'placa',
+                ],
+            ],
+            [
+                'tabla' =>
                     'marchamos',
 
                 'columnas' => [
@@ -1258,8 +1267,37 @@ final class CcFlotaSeederDiagnostics
             }
         }
 
+        $nombresPlacasDuplicados = DB::table('unidades')
+            ->select('empresa_id', 'placa')
+            ->groupBy('empresa_id', 'placa')
+            ->havingRaw('COUNT(*) > 1')
+            ->exists();
+
+        if ($nombresPlacasDuplicados) {
+            $errores[] =
+                'Existen Nombres / Placas duplicados dentro de una empresa.';
+        }
+
+        $snapshot = DB::selectOne(
+            'SELECT CHARACTER_MAXIMUM_LENGTH AS longitud '
+            . 'FROM information_schema.COLUMNS '
+            . 'WHERE TABLE_SCHEMA = ? '
+            . 'AND TABLE_NAME = ? '
+            . 'AND COLUMN_NAME = ?',
+            [
+                $base,
+                'abastecimientos',
+                'unidad_placa_snapshot',
+            ]
+        );
+
+        if ((int) ($snapshot->longitud ?? 0) < 30) {
+            $errores[] =
+                'abastecimientos.unidad_placa_snapshot debe aceptar 30 caracteres.';
+        }
+
         $comprobaciones[] =
-            'Índices únicos críticos del esquema validados.';
+            'Unicidad por empresa y longitud del snapshot validadas.';
     }
 
     /**

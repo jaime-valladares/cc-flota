@@ -795,7 +795,7 @@
                         value="{{ $busqueda }}"
                         maxlength="150"
                         class="cc-input"
-                        placeholder="Empresa, placa, marca o modelo"
+                        placeholder="Empresa, Nombre / Placa, marca o modelo"
                     >
                 </div>
 

@@ -1001,7 +1001,7 @@
                         value="{{ $busqueda }}"
                         maxlength="150"
                         class="cc-input"
-                        placeholder="Empresa, placa, usuario, código, punto o evento"
+                        placeholder="Empresa, Nombre / Placa, usuario, código, punto o evento"
                     >
                 </div>
 

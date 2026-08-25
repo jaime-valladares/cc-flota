@@ -313,7 +313,7 @@
 
                                     <div class="cc-detail-item">
                                         <div class="cc-detail-label">
-                                            Placa
+                                            Nombre / Placa
                                         </div>
 
                                         <div class="cc-detail-value">

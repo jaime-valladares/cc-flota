@@ -1109,7 +1109,7 @@
                         value="{{ $busqueda }}"
                         maxlength="150"
                         class="cc-input"
-                        placeholder="Empresa, placa, motorista, ruta, punto o abastecimiento"
+                        placeholder="Empresa, Nombre / Placa, motorista, ruta, punto o abastecimiento"
                     >
                 </div>
 

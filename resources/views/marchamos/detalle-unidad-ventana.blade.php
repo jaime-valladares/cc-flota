@@ -76,8 +76,8 @@
                                     'empresa_ids' => [
                                         $unidad->empresa_id,
                                     ],
-                                    'placas' => [
-                                        $unidad->placa,
+                                    'unidad_ids' => [
+                                        $unidad->id,
                                     ],
                                     'consultar' => 1,
                                 ]

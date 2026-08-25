@@ -1119,7 +1119,7 @@
                                     value="{{ $busqueda }}"
                                     maxlength="150"
                                     class="cc-input"
-                                    placeholder="Empresa, placa, estado, licencia, modelo o diagnóstico"
+                                    placeholder="Empresa, Nombre / Placa, estado, licencia, modelo o diagnóstico"
                                 >
                             </div>
 

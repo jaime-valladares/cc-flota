@@ -110,7 +110,7 @@
                         </div>
 
                         <div class="cc-profile-title">
-                            {{ $unidad->placa ?? 'Sin placa' }}
+                            {{ $unidad->placa ?? 'Sin Nombre / Placa' }}
                         </div>
 
                         <div class="cc-profile-meta">
@@ -278,11 +278,11 @@
 
                             <div class="cc-detail-item">
                                 <div class="cc-detail-label">
-                                    Placa
+                                    Nombre / Placa
                                 </div>
 
                                 <div class="cc-detail-value">
-                                    {{ $unidad->placa ?? 'Sin placa' }}
+                                    {{ $unidad->placa ?? 'Sin Nombre / Placa' }}
                                 </div>
                             </div>
 

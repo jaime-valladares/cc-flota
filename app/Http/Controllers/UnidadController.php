@@ -105,15 +105,15 @@ class UnidadController extends Controller
                 Rule::exists('empresas', 'id'),
             ],
 
-            'placas' => [
+            'unidad_ids' => [
                 'nullable',
                 'array',
             ],
 
-            'placas.*' => [
+            'unidad_ids.*' => [
                 'nullable',
-                'string',
-                'max:30',
+                'integer',
+                Rule::exists('unidades', 'id'),
             ],
 
             'modelos_medicion' => [
@@ -137,10 +137,10 @@ class UnidadController extends Controller
                 Rule::exists('empresas', 'id'),
             ],
 
-            'placa' => [
+            'unidad_id' => [
                 'nullable',
-                'string',
-                'max:30',
+                'integer',
+                Rule::exists('unidades', 'id'),
             ],
 
             'modelo_medicion' => [
@@ -169,11 +169,11 @@ class UnidadController extends Controller
             'empresa_id.exists' =>
                 'La empresa seleccionada no es válida.',
 
-            'placas.array' =>
-                'La selección de placas no es válida.',
+            'unidad_ids.array' =>
+                'La selección de unidades no es válida.',
 
-            'placas.*.max' =>
-                'Una de las placas seleccionadas no es válida.',
+            'unidad_ids.*.exists' =>
+                'Una de las unidades seleccionadas no es válida.',
 
             'modelos_medicion.array' =>
                 'La selección de modelos de medición no es válida.',
@@ -209,27 +209,19 @@ class UnidadController extends Controller
             ->values()
             ->all();
 
-        $placas = collect(
-            $validated['placas'] ?? []
+        $unidadIds = collect(
+            $validated['unidad_ids'] ?? []
         )
             ->filter()
-            ->map(
-                fn ($placa) => mb_strtoupper(
-                    trim((string) $placa)
-                )
-            );
+            ->map(fn ($id) => (int) $id);
 
-        $placa = trim(
-            (string) ($validated['placa'] ?? '')
-        );
-
-        if ($placa !== '') {
-            $placas->push(
-                mb_strtoupper($placa)
+        if (! empty($validated['unidad_id'])) {
+            $unidadIds->push(
+                (int) $validated['unidad_id']
             );
         }
 
-        $placas = $placas
+        $unidadIds = $unidadIds
             ->unique()
             ->values()
             ->all();
@@ -275,7 +267,7 @@ class UnidadController extends Controller
          */
         $hayFiltros = $request->boolean('consultar')
             || $busqueda !== ''
-            || count($placas) > 0
+            || count($unidadIds) > 0
             || count($modelosMedicionSeleccionados) > 0
             || in_array(
                 $estado,
@@ -354,25 +346,25 @@ class UnidadController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Selector de placas
+        | Selector de unidades
         |--------------------------------------------------------------------------
         */
 
-        $placasSelectorQuery = clone $baseQuery;
+        $unidadesSelectorQuery = clone $baseQuery;
 
         if (count($empresaIds) > 0) {
-            $placasSelectorQuery->whereIn(
+            $unidadesSelectorQuery->whereIn(
                 'empresa_id',
                 $empresaIds
             );
         }
 
-        $placasSelector = $placasSelectorQuery
+        $unidadesSelector = $unidadesSelectorQuery
+            ->with('empresa')
             ->whereNotNull('placa')
+            ->orderBy('empresa_id')
             ->orderBy('placa')
-            ->pluck('placa')
-            ->unique()
-            ->values();
+            ->get();
 
         /*
         |--------------------------------------------------------------------------
@@ -387,7 +379,7 @@ class UnidadController extends Controller
                 query: $unidadesQuery,
                 busqueda: $busqueda,
                 empresaIds: $empresaIds,
-                placas: $placas,
+                unidadIds: $unidadIds,
                 modelosMedicionSeleccionados:
                     $modelosMedicionSeleccionados,
                 estado: $estado
@@ -409,7 +401,7 @@ class UnidadController extends Controller
                 query: $baseResumen,
                 busqueda: $busqueda,
                 empresaIds: $empresaIds,
-                placas: $placas,
+                unidadIds: $unidadIds,
                 modelosMedicionSeleccionados:
                     $modelosMedicionSeleccionados,
                 estado: $estado
@@ -469,12 +461,12 @@ class UnidadController extends Controller
             'estado' => $estado,
 
             'modeloMedicion' => $modeloMedicion,
-            'placa' => $placa,
+            'unidadId' => $unidadIds[0] ?? null,
 
             'busqueda' => $busqueda,
 
-            'placas' => $placas,
-            'placasSelector' => $placasSelector,
+            'unidadIds' => $unidadIds,
+            'unidadesSelector' => $unidadesSelector,
 
             'modelosMedicionSeleccionados' =>
                 $modelosMedicionSeleccionados,
@@ -509,7 +501,7 @@ class UnidadController extends Controller
         Builder $query,
         string $busqueda,
         array $empresaIds,
-        array $placas,
+        array $unidadIds,
         array $modelosMedicionSeleccionados,
         ?string $estado
     ): void {
@@ -551,10 +543,10 @@ class UnidadController extends Controller
             );
         }
 
-        if (count($placas) > 0) {
+        if (count($unidadIds) > 0) {
             $query->whereIn(
-                'placa',
-                $placas
+                'id',
+                $unidadIds
             );
         }
 
@@ -665,18 +657,26 @@ class UnidadController extends Controller
         $esUsuarioDieselCop =
             is_null($user->empresa_id);
 
+        $empresaId = $esUsuarioDieselCop
+            ? (int) $request->validate([
+                'empresa_id' => [
+                    'required',
+                    'integer',
+                    Rule::exists('empresas', 'id')
+                        ->where('estado', 'activa'),
+                ],
+            ])['empresa_id']
+            : (int) $user->empresa_id;
+
         $validated = $request->validate(
             $this->reglasValidacionUnidad(
                 unidad: null,
+                empresaId: $empresaId,
                 esUsuarioDieselCop:
                     $esUsuarioDieselCop
             ),
             $this->mensajesValidacionUnidad()
         );
-
-        $empresaId = $esUsuarioDieselCop
-            ? (int) $validated['empresa_id']
-            : (int) $user->empresa_id;
 
         $this->validarEmpresaActivaPorId(
             $empresaId
@@ -684,9 +684,7 @@ class UnidadController extends Controller
 
         $unidad = Unidad::create([
             'empresa_id' => $empresaId,
-            'placa' => mb_strtoupper(
-                trim($validated['placa'])
-            ),
+            'placa' => trim($validated['placa']),
             'marca' => $validated['marca'] ?? null,
             'total_tanques' =>
                 $validated['total_tanques'],
@@ -877,6 +875,7 @@ class UnidadController extends Controller
         $validated = $request->validate(
             $this->reglasValidacionUnidad(
                 unidad: $unidad,
+                empresaId: (int) $unidad->empresa_id,
                 esUsuarioDieselCop:
                     is_null($user->empresa_id)
             ),
@@ -887,9 +886,7 @@ class UnidadController extends Controller
          * Empresa y estado no pueden cambiarse desde edición.
          */
         $unidad->update([
-            'placa' => mb_strtoupper(
-                trim($validated['placa'])
-            ),
+            'placa' => trim($validated['placa']),
             'marca' => $validated['marca'] ?? null,
             'total_tanques' =>
                 $validated['total_tanques'],
@@ -1108,6 +1105,7 @@ class UnidadController extends Controller
      */
     private function reglasValidacionUnidad(
         ?Unidad $unidad,
+        int $empresaId,
         bool $esUsuarioDieselCop
     ): array {
         return [
@@ -1136,9 +1134,9 @@ class UnidadController extends Controller
                 Rule::unique(
                     'unidades',
                     'placa'
-                )->ignore(
-                    $unidad?->id
-                ),
+                )
+                    ->where('empresa_id', $empresaId)
+                    ->ignore($unidad?->id),
             ],
 
             'marca' => [
@@ -1201,13 +1199,13 @@ class UnidadController extends Controller
                 'La empresa seleccionada no es válida o no está activa.',
 
             'placa.required' =>
-                'Debe ingresar la placa de la unidad.',
+                'Debe ingresar el Nombre / Placa de la unidad.',
 
             'placa.max' =>
-                'La placa no debe exceder 30 caracteres.',
+                'El Nombre / Placa no debe exceder 30 caracteres.',
 
             'placa.unique' =>
-                'Ya existe una unidad registrada con esta placa.',
+                'Ya existe una unidad con este Nombre / Placa dentro de la empresa.',
 
             'marca.max' =>
                 'La marca no debe exceder 100 caracteres.',

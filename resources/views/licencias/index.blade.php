@@ -109,7 +109,7 @@
 
                             <div class="cc-field">
                                 <label for="busqueda">
-                                    Buscar empresa o placa
+                                    Buscar empresa o Nombre / Placa
                                 </label>
 
                                 <input
@@ -119,7 +119,7 @@
                                     class="cc-input"
                                     value="{{ $busqueda ?? '' }}"
                                     maxlength="150"
-                                    placeholder="Empresa o placa"
+                                    placeholder="Empresa o Nombre / Placa"
                                 >
 
                                 @error('busqueda')
@@ -248,7 +248,7 @@
 
                             <div class="cc-field">
                                 <label>
-                                    Placa
+                                    Nombre / Placa
                                 </label>
 
                                 <div
@@ -264,8 +264,8 @@
                                             data-cc-filter-label
                                             data-default-label="Todas"
                                         >
-                                            @if (! empty($placas))
-                                                {{ count($placas) }}
+                                            @if (! empty($unidadIds))
+                                                {{ count($unidadIds) }}
                                                 seleccionadas
                                             @else
                                                 Todas
@@ -294,19 +294,19 @@
                                                 </span>
                                             </label>
 
-                                            @foreach ($placasSelector as $placaOpcion)
+                                            @foreach ($unidadesSelector as $unidadOpcion)
                                                 <label
                                                     class="cc-filter-multiselect-option"
                                                     data-cc-filter-option
                                                 >
                                                     <input
                                                         type="checkbox"
-                                                        name="placas[]"
-                                                        value="{{ $placaOpcion }}"
+                                                        name="unidad_ids[]"
+                                                        value="{{ $unidadOpcion->id }}"
                                                         @checked(
                                                             in_array(
-                                                                $placaOpcion,
-                                                                $placas ?? [],
+                                                                (int) $unidadOpcion->id,
+                                                                $unidadIds ?? [],
                                                                 true
                                                             )
                                                         )
@@ -314,7 +314,7 @@
                                                     >
 
                                                     <span data-cc-filter-option-label>
-                                                        {{ $placaOpcion }}
+                                                        {{ ($unidadOpcion->empresa_nombre ?? $unidadOpcion->empresa?->nombre_comercial ?? $unidadOpcion->empresa?->nombre_legal ?? "Empresa") . " · " . $unidadOpcion->placa }}
                                                     </span>
                                                 </label>
                                             @endforeach
@@ -323,13 +323,13 @@
                                     </div>
                                 </div>
 
-                                @error('placas')
+                                @error('unidad_ids')
                                     <div class="cc-error">
                                         {{ $message }}
                                     </div>
                                 @enderror
 
-                                @error('placas.*')
+                                @error('unidad_ids.*')
                                     <div class="cc-error">
                                         {{ $message }}
                                     </div>
@@ -502,7 +502,7 @@
                             <thead>
                                 <tr>
                                     <th style="width: 9rem;">
-                                        Placa
+                                        Nombre / Placa
                                     </th>
 
                                     <th style="width: 15rem;">
@@ -567,7 +567,7 @@
                                     <tr>
                                         <td class="cc-table-adaptive-nowrap">
                                             <div class="cc-table-adaptive-strong">
-                                                {{ $unidad->placa ?? 'Sin placa' }}
+                                                {{ $unidad->placa ?? 'Sin Nombre / Placa' }}
                                             </div>
 
                                             <div class="cc-table-adaptive-muted">

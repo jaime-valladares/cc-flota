@@ -224,7 +224,7 @@
 
                                     <div class="cc-field">
                                         <label for="busqueda_placa">
-                                            Buscar placa
+                                            Buscar Nombre / Placa
                                         </label>
 
                                         <input
@@ -240,7 +240,7 @@
 
                                     <div class="cc-field">
                                         <label>
-                                            Placa
+                                            Nombre / Placa
                                         </label>
 
                                         <div
@@ -257,8 +257,8 @@
                                                     data-default-label="Todas"
                                                     data-plural-label="seleccionadas"
                                                 >
-                                                    @if (! empty($placas))
-                                                        {{ count($placas) }} seleccionadas
+                                                    @if (! empty($unidadIds))
+                                                        {{ count($unidadIds) }} seleccionadas
                                                     @else
                                                         Todas
                                                     @endif
@@ -286,19 +286,19 @@
                                                         </span>
                                                     </label>
 
-                                                    @forelse ($placasSelector as $placaOpcion)
+                                                    @forelse ($unidadesSelector as $unidadOpcion)
                                                         <label
                                                             class="cc-filter-multiselect-option"
                                                             data-cc-filter-option
                                                         >
                                                             <input
                                                                 type="checkbox"
-                                                                name="placas[]"
-                                                                value="{{ $placaOpcion }}"
+                                                                name="unidad_ids[]"
+                                                                value="{{ $unidadOpcion->id }}"
                                                                 @checked(
                                                                     in_array(
-                                                                        $placaOpcion,
-                                                                        $placas ?? [],
+                                                                        (int) $unidadOpcion->id,
+                                                                        $unidadIds ?? [],
                                                                         true
                                                                     )
                                                                 )
@@ -306,12 +306,12 @@
                                                             >
 
                                                             <span data-cc-filter-option-label>
-                                                                {{ $placaOpcion }}
+                                                                {{ ($unidadOpcion->empresa_nombre ?? $unidadOpcion->empresa?->nombre_comercial ?? $unidadOpcion->empresa?->nombre_legal ?? "Empresa") . " · " . $unidadOpcion->placa }}
                                                             </span>
                                                         </label>
                                                     @empty
                                                         <div class="px-3 py-3 text-sm text-[var(--cc-text-muted)]">
-                                                            No hay placas elegibles disponibles.
+                                                            No hay unidades elegibles disponibles.
                                                         </div>
                                                     @endforelse
 

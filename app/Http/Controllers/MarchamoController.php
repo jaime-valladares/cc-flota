@@ -69,6 +69,15 @@ class MarchamoController extends Controller
     private function obtenerDatosConsulta(
         Request $request
     ): array {
+        $request->validate([
+            'unidad_ids' => ['nullable', 'array'],
+            'unidad_ids.*' => [
+                'integer',
+                'distinct',
+                'exists:unidades,id',
+            ],
+        ]);
+
         $user = Auth::user();
 
         $esUsuarioDieselCop = is_null(
@@ -124,22 +133,17 @@ class MarchamoController extends Controller
         /*
          * Compatibilidad con:
          *
-         * - placas[]
+         * - unidad_ids[]
          * - búsqueda directa
          */
-        $placas = collect(
+        $unidadIds = collect(
             $request->input(
-                'placas',
+                'unidad_ids',
                 []
             )
         )
-            ->filter(
-                fn ($placa) => filled($placa)
-            )
-            ->map(
-                fn ($placa) =>
-                    trim((string) $placa)
-            )
+            ->filter(fn ($id) => filled($id))
+            ->map(fn ($id) => (int) $id)
             ->unique()
             ->values()
             ->all();
@@ -159,7 +163,9 @@ class MarchamoController extends Controller
         }
 
         $empresaId = $empresaIds[0] ?? null;
-        $placa = $placas[0] ?? null;
+        $unidadId = filled($unidadId)
+            ? (int) $unidadId
+            : ($unidadIds[0] ?? null);
 
         $consultaEjecutada = $request->boolean(
             'consultar'
@@ -172,7 +178,7 @@ class MarchamoController extends Controller
         $hayFiltros = $consultaEjecutada
             || filled($busquedaEmpresa)
             || filled($busquedaPlaca)
-            || count($placas) > 0
+            || count($unidadIds) > 0
             || filled($unidadId)
             || (
                 $esUsuarioDieselCop
@@ -275,15 +281,14 @@ class MarchamoController extends Controller
             );
 
         /*
-         * El selector de placas contiene todas las unidades consultables,
+         * El selector de unidades contiene todas las unidades consultables,
          * incluyendo las pertenecientes a empresas o licencias inactivas.
          */
-        $placasSelector = (clone $baseUnidadesQuery)
+        $unidadesSelector = (clone $baseUnidadesQuery)
+            ->with('empresa')
+            ->orderBy('empresa_id')
             ->orderBy('placa')
-            ->pluck('placa')
-            ->filter()
-            ->unique()
-            ->values();
+            ->get();
 
         /*
          * Se conserva esta colección para compatibilidad con vistas
@@ -349,11 +354,11 @@ class MarchamoController extends Controller
             )
             ->when(
                 $hayFiltros
-                && count($placas) > 0,
-                function ($query) use ($placas) {
+                && count($unidadIds) > 0,
+                function ($query) use ($unidadIds) {
                     $query->whereIn(
-                        'placa',
-                        $placas
+                        'id',
+                        $unidadIds
                     );
                 }
             )
@@ -390,8 +395,8 @@ class MarchamoController extends Controller
             'unidades' =>
                 $unidades,
 
-            'placasSelector' =>
-                $placasSelector,
+            'unidadesSelector' =>
+                $unidadesSelector,
 
             'busquedaEmpresa' =>
                 $busquedaEmpresa,
@@ -402,8 +407,8 @@ class MarchamoController extends Controller
             'empresaIds' =>
                 $empresaIds,
 
-            'placas' =>
-                $placas,
+            'unidadIds' =>
+                $unidadIds,
 
             /*
              * Variables simples conservadas para compatibilidad.
@@ -413,9 +418,6 @@ class MarchamoController extends Controller
 
             'unidadId' =>
                 $unidadId,
-
-            'placa' =>
-                $placa,
 
             'hayFiltros' =>
                 $hayFiltros,

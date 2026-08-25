@@ -203,7 +203,7 @@
                             </div>
 
                             <div class="cc-detail-item">
-                                <div class="cc-detail-label">Placa</div>
+                                <div class="cc-detail-label">Nombre / Placa</div>
                                 <div class="cc-detail-value">{{ $unidadPlaca }}</div>
                             </div>
 

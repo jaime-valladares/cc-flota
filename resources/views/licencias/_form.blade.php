@@ -53,7 +53,7 @@
 
         <div class="cc-field">
             <label>
-                Unidad / placa
+                Nombre / Placa
             </label>
 
             <input
@@ -131,7 +131,7 @@
 
         <div class="cc-field">
             <label for="unidad_id">
-                Unidad / placa
+                Nombre / Placa
                 <span class="cc-required">*</span>
             </label>
 
@@ -398,7 +398,7 @@
             }
 
             const placa =
-                option.dataset.placa || 'Sin placa';
+                option.dataset.placa || 'Sin Nombre / Placa';
 
             const marca =
                 option.dataset.marca || 'Sin marca registrada';

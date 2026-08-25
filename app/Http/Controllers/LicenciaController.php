@@ -107,18 +107,19 @@ class LicenciaController extends Controller
                 'integer',
                 Rule::exists('empresas', 'id'),
             ],
-            'placas' => [
+            'unidad_ids' => [
                 'nullable',
                 'array',
             ],
-            'placas.*' => [
-                'string',
-                'max:20',
+            'unidad_ids.*' => [
+                'integer',
+                'distinct',
+                Rule::exists('unidades', 'id'),
             ],
-            'placa' => [
+            'unidad_id' => [
                 'nullable',
-                'string',
-                'max:20',
+                'integer',
+                Rule::exists('unidades', 'id'),
             ],
             'periodos_vigencia' => [
                 'nullable',
@@ -168,17 +169,17 @@ class LicenciaController extends Controller
             ->values()
             ->all();
 
-        $placas = collect($validated['placas'] ?? [])
+        $unidadIds = collect($validated['unidad_ids'] ?? [])
             ->when(
-                filled($validated['placa'] ?? null),
+                filled($validated['unidad_id'] ?? null),
                 function ($collection) use ($validated) {
                     return $collection->push(
-                        $validated['placa']
+                        $validated['unidad_id']
                     );
                 }
             )
-            ->filter(fn ($placa) => filled($placa))
-            ->map(fn ($placa) => trim((string) $placa))
+            ->filter(fn ($id) => filled($id))
+            ->map(fn ($id) => (int) $id)
             ->unique()
             ->values()
             ->all();
@@ -223,7 +224,7 @@ class LicenciaController extends Controller
          * y para compatibilidad con los formularios actuales.
          */
         $empresaId = $empresaIds[0] ?? null;
-        $placa = $placas[0] ?? null;
+        $unidadId = $unidadIds[0] ?? null;
         $periodoVigencia = $periodosVigenciaSeleccionados[0] ?? null;
 
         /*
@@ -232,7 +233,7 @@ class LicenciaController extends Controller
          */
         $hayFiltros = $request->boolean('consultar')
             || filled($busqueda)
-            || count($placas) > 0
+            || count($unidadIds) > 0
             || count($periodosVigenciaSeleccionados) > 0
             || filled($estado)
             || (
@@ -297,7 +298,7 @@ class LicenciaController extends Controller
          * ambigüedad de columnas al unir licencias y unidades. El alcance
          * empresarial debe calificarse explícitamente como licencias.empresa_id.
          */
-        $placasSelector = Licencia::query()
+        $unidadesSelector = Licencia::query()
             ->join(
                 'unidades',
                 'licencias.unidad_id',
@@ -328,11 +329,18 @@ class LicenciaController extends Controller
                     );
                 }
             )
+            ->select([
+                'unidades.id',
+                'unidades.placa',
+                DB::raw(
+                    'COALESCE(empresas.nombre_comercial, '
+                    . 'empresas.nombre_legal) as empresa_nombre'
+                ),
+            ])
+            ->orderBy('empresas.nombre_comercial')
             ->orderBy('unidades.placa')
-            ->pluck('unidades.placa')
-            ->filter()
-            ->unique()
-            ->values();
+            ->distinct()
+            ->get();
 
         $hoy = now()->toDateString();
 
@@ -449,11 +457,11 @@ class LicenciaController extends Controller
                 }
             )
             ->when(
-                $hayFiltros && count($placas) > 0,
-                function ($query) use ($placas) {
+                $hayFiltros && count($unidadIds) > 0,
+                function ($query) use ($unidadIds) {
                     $query->whereIn(
-                        'unidades.placa',
-                        $placas
+                        'unidades.id',
+                        $unidadIds
                     );
                 }
             )
@@ -570,7 +578,7 @@ class LicenciaController extends Controller
              * Variables múltiples.
              */
             'empresaIds' => $empresaIds,
-            'placas' => $placas,
+            'unidadIds' => $unidadIds,
             'periodosVigenciaSeleccionados' =>
                 $periodosVigenciaSeleccionados,
 
@@ -578,11 +586,11 @@ class LicenciaController extends Controller
              * Variables simples.
              */
             'empresaId' => $empresaId,
-            'placa' => $placa,
+            'unidadId' => $unidadId,
             'periodoVigencia' => $periodoVigencia,
             'estado' => $estado,
 
-            'placasSelector' => $placasSelector,
+            'unidadesSelector' => $unidadesSelector,
             'busqueda' => $busqueda,
             'hayFiltros' => $hayFiltros,
 

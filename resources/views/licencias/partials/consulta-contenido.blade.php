@@ -58,7 +58,7 @@
 
             <div class="lg:col-span-2 cc-field">
                 <label for="placa">
-                    Placa
+                    Nombre / Placa
                 </label>
                 <input id="placa"
                        type="text"
@@ -179,7 +179,7 @@
                         <div class="flex-1 min-w-0">
                             <div class="flex flex-wrap items-center gap-3">
                                 <h5 class="font-[var(--cc-font-heading)] text-xl font-extrabold text-[var(--cc-text-heading)] tracking-[-0.03em] cc-cell-truncate">
-                                    {{ $licencia->unidad->placa ?? 'Sin placa' }}
+                                    {{ $licencia->unidad->placa ?? 'Sin Nombre / Placa' }}
                                 </h5>
 
                                 @if ($licencia->estado === 'activa')
@@ -253,7 +253,7 @@
                         <div class="lg:col-span-3 min-w-0">
                             <div class="flex items-center gap-3 min-w-0">
                                 <h5 class="font-[var(--cc-font-heading)] text-xl font-extrabold text-[var(--cc-text-heading)] tracking-[-0.03em] cc-cell-truncate">
-                                    {{ $licencia->unidad->placa ?? 'Sin placa' }}
+                                    {{ $licencia->unidad->placa ?? 'Sin Nombre / Placa' }}
                                 </h5>
 
                                 @if ($licencia->estado === 'activa')

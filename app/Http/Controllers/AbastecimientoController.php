@@ -1879,15 +1879,15 @@ class AbastecimientoController extends Controller
                     'exists:empresas,id',
                 ],
 
-                'placas' => [
+                'unidad_ids' => [
                     'nullable',
                     'array',
                 ],
 
-                'placas.*' => [
-                    'string',
+                'unidad_ids.*' => [
+                    'integer',
                     'distinct',
-                    'max:50',
+                    'exists:unidades,id',
                 ],
             ],
             [
@@ -1900,11 +1900,14 @@ class AbastecimientoController extends Controller
                 'empresa_ids.*.distinct' =>
                     'No debe seleccionar una empresa más de una vez.',
 
-                'placas.array' =>
-                    'La selección de placas no es válida.',
+                'unidad_ids.array' =>
+                    'La selección de unidades no es válida.',
 
-                'placas.*.distinct' =>
-                    'No debe seleccionar una placa más de una vez.',
+                'unidad_ids.*.distinct' =>
+                    'No debe seleccionar una unidad más de una vez.',
+
+                'unidad_ids.*.exists' =>
+                    'Una de las unidades seleccionadas no existe.',
             ]
         );
 
@@ -1937,17 +1940,15 @@ class AbastecimientoController extends Controller
             ->unique()
             ->values();
 
-        $placas = collect(
-            $validated['placas']
+        $unidadIds = collect(
+            $validated['unidad_ids']
             ?? []
         )
             ->filter(
-                fn ($placa): bool =>
-                    filled($placa)
+                fn ($id): bool => filled($id)
             )
             ->map(
-                fn ($placa): string =>
-                    trim((string) $placa)
+                fn ($id): int => (int) $id
             )
             ->unique()
             ->values();
@@ -1966,7 +1967,7 @@ class AbastecimientoController extends Controller
             $consultaEjecutada
             || filled($busquedaEmpresa)
             || filled($busquedaPlaca)
-            || $placas->isNotEmpty()
+            || $unidadIds->isNotEmpty()
             || ($esUsuarioDieselCop && $empresaIds->isNotEmpty());
 
         $empresas = Empresa::query()
@@ -1994,8 +1995,9 @@ class AbastecimientoController extends Controller
                 $user->empresa_id
             );
 
-        $placasSelector =
+        $unidadesSelector =
             (clone $baseUnidades)
+                ->with('empresa')
                 ->when(
                     $empresaIds->isNotEmpty(),
                     function ($query) use (
@@ -2007,11 +2009,9 @@ class AbastecimientoController extends Controller
                         );
                     }
                 )
+                ->orderBy('empresa_id')
                 ->orderBy('placa')
-                ->pluck('placa')
-                ->filter()
-                ->unique()
-                ->values();
+                ->get();
 
         $unidadesQuery =
             (clone $baseUnidades)
@@ -2087,13 +2087,13 @@ class AbastecimientoController extends Controller
                     }
                 )
                 ->when(
-                    $placas->isNotEmpty(),
+                    $unidadIds->isNotEmpty(),
                     function ($query) use (
-                        $placas
+                        $unidadIds
                     ) {
                         $query->whereIn(
-                            'placa',
-                            $placas->all()
+                            'id',
+                            $unidadIds->all()
                         );
                     }
                 );
@@ -2108,8 +2108,8 @@ class AbastecimientoController extends Controller
             'empresas' =>
                 $empresas,
 
-            'placasSelector' =>
-                $placasSelector,
+            'unidadesSelector' =>
+                $unidadesSelector,
 
             'unidades' =>
                 $unidades,
@@ -2123,8 +2123,8 @@ class AbastecimientoController extends Controller
             'empresaIds' =>
                 $empresaIds->all(),
 
-            'placas' =>
-                $placas->all(),
+            'unidadIds' =>
+                $unidadIds->all(),
 
             'hayFiltros' =>
                 $hayFiltros,

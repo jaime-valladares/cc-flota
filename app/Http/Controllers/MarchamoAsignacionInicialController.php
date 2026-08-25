@@ -544,8 +544,8 @@ class MarchamoAsignacionInicialController extends Controller
                         $unidad->empresa_id,
                     ],
 
-                    'placas' => [
-                        $unidad->placa,
+                    'unidad_ids' => [
+                        $unidad->id,
                     ],
 
                     'consultar' => 1,
@@ -559,6 +559,15 @@ class MarchamoAsignacionInicialController extends Controller
 
     private function datosIndex(Request $request): array
     {
+        $request->validate([
+            'unidad_ids' => ['nullable', 'array'],
+            'unidad_ids.*' => [
+                'integer',
+                'distinct',
+                'exists:unidades,id',
+            ],
+        ]);
+
         $user = Auth::user();
 
         $esUsuarioDieselCop = is_null(
@@ -606,16 +615,16 @@ class MarchamoAsignacionInicialController extends Controller
             ->values();
 
         /*
-         * Placas seleccionadas.
+         * Unidades seleccionadas.
          */
-        $placas = collect(
+        $unidadIds = collect(
             $request->input(
-                'placas',
+                'unidad_ids',
                 []
             )
         )
-            ->filter(fn ($placa) => filled($placa))
-            ->map(fn ($placa) => trim((string) $placa))
+            ->filter(fn ($id) => filled($id))
+            ->map(fn ($id) => (int) $id)
             ->unique()
             ->values();
 
@@ -627,7 +636,7 @@ class MarchamoAsignacionInicialController extends Controller
         );
 
         if (filled($unidadIdAnterior)) {
-            $placaAnterior = Unidad::query()
+            $unidadAnteriorExiste = Unidad::query()
                 ->when(
                     ! $esUsuarioDieselCop,
                     function ($query) use ($user) {
@@ -641,14 +650,12 @@ class MarchamoAsignacionInicialController extends Controller
                     'id',
                     $unidadIdAnterior
                 )
-                ->value('placa');
+                ->exists();
 
-            if (filled($placaAnterior)) {
-                $placas->push(
-                    trim((string) $placaAnterior)
-                );
+            if ($unidadAnteriorExiste) {
+                $unidadIds->push((int) $unidadIdAnterior);
 
-                $placas = $placas
+                $unidadIds = $unidadIds
                     ->unique()
                     ->values();
             }
@@ -675,7 +682,7 @@ class MarchamoAsignacionInicialController extends Controller
         $hayFiltros = $consultaEjecutada
             || filled($busquedaEmpresa)
             || filled($busquedaPlaca)
-            || $placas->isNotEmpty()
+            || $unidadIds->isNotEmpty()
             || (
                 $esUsuarioDieselCop
                 && $empresaIds->isNotEmpty()
@@ -800,12 +807,13 @@ class MarchamoAsignacionInicialController extends Controller
             );
 
         /*
-         * Las placas disponibles se limitan a las empresas seleccionadas.
+         * Las unidades disponibles se limitan a las empresas seleccionadas.
          *
          * Para usuarios de empresa, empresaIds contiene automáticamente
          * su empresa.
          */
-        $placasSelector = (clone $baseUnidadesQuery)
+        $unidadesSelector = (clone $baseUnidadesQuery)
+            ->with('empresa')
             ->when(
                 $empresaIds->isNotEmpty(),
                 function ($query) use ($empresaIds) {
@@ -815,11 +823,9 @@ class MarchamoAsignacionInicialController extends Controller
                     );
                 }
             )
+            ->orderBy('empresa_id')
             ->orderBy('placa')
-            ->pluck('placa')
-            ->filter()
-            ->unique()
-            ->values();
+            ->get();
 
         /*
          * Colección conservada para compatibilidad con vistas anteriores.
@@ -881,11 +887,11 @@ class MarchamoAsignacionInicialController extends Controller
                 }
             )
             ->when(
-                $hayFiltros && $placas->isNotEmpty(),
-                function ($query) use ($placas) {
+                $hayFiltros && $unidadIds->isNotEmpty(),
+                function ($query) use ($unidadIds) {
                     $query->whereIn(
-                        'placa',
-                        $placas->all()
+                        'id',
+                        $unidadIds->all()
                     );
                 }
             )
@@ -906,8 +912,8 @@ class MarchamoAsignacionInicialController extends Controller
             'unidades' =>
                 $unidades,
 
-            'placasSelector' =>
-                $placasSelector,
+            'unidadesSelector' =>
+                $unidadesSelector,
 
             'unidadesDisponibles' =>
                 $unidadesDisponibles,
@@ -921,8 +927,8 @@ class MarchamoAsignacionInicialController extends Controller
             'empresaIds' =>
                 $empresaIds->all(),
 
-            'placas' =>
-                $placas->all(),
+            'unidadIds' =>
+                $unidadIds->all(),
 
             /*
              * Variables temporales para compatibilidad con vistas simples.

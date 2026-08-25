@@ -119,7 +119,7 @@
 
     <div class="cc-field">
         <label for="placa">
-            Placa <span class="cc-required">*</span>
+            Nombre / Placa <span class="cc-required">*</span>
         </label>
 
         <input
@@ -130,7 +130,7 @@
             value="{{ old('placa', $unidad->placa ?? '') }}"
             maxlength="30"
             required
-            placeholder="Ej. C-123456"
+            placeholder="Ej. Camión 01 o P123-456"
             autocomplete="off"
         >
 
@@ -453,12 +453,6 @@
     const capacidadCubiertaInput = document.getElementById(
         'capacidad_cubierta'
     );
-
-    if (placaInput) {
-        placaInput.addEventListener('input', function () {
-            this.value = this.value.toUpperCase();
-        });
-    }
 
     function validarTanquesLicencia() {
         if (!totalTanquesInput || !tanquesLicenciaInput) {
