@@ -285,7 +285,7 @@ class AnalisisConsumoUnidadController extends Controller
         $paginador = $this->paginarColeccion(
             $unidadesAnalizadas,
             $request,
-            20
+            10
         );
 
         $resumen = $this->obtenerResumen(

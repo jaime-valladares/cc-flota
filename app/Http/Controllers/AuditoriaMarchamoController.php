@@ -477,7 +477,7 @@ class AuditoriaMarchamoController extends Controller
             1
         );
 
-        $porPagina = 20;
+        $porPagina = 10;
 
         $eventosPaginados = new LengthAwarePaginator(
             $eventosOrdenados

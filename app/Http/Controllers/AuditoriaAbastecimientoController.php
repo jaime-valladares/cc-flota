@@ -214,7 +214,7 @@ class AuditoriaAbastecimientoController extends Controller
         }
 
         $filas = $this->ordenarResultados($filas, $sort, $direction);
-        $paginador = $this->paginarColeccion($filas, $request, 20);
+        $paginador = $this->paginarColeccion($filas, $request, 10);
 
         return [
             'abastecimientosAuditados' => $paginador,

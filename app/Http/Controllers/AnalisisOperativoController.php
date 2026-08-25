@@ -183,7 +183,7 @@ class AnalisisOperativoController extends Controller
             $unidadesAnaliticas = new LengthAwarePaginator(
                 collect(),
                 0,
-                20,
+                10,
                 1,
                 [
                     'path' => $request->url(),
@@ -406,7 +406,7 @@ class AnalisisOperativoController extends Controller
         );
 
         $paginaUnidades = max((int) $request->input('unidad_page', 1), 1);
-        $porPaginaUnidades = 20;
+        $porPaginaUnidades = 10;
 
         $unidadesAnaliticas = new LengthAwarePaginator(
             $unidadesAnaliticasColeccion->forPage($paginaUnidades, $porPaginaUnidades)->values(),

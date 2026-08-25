@@ -950,7 +950,7 @@ class MarchamoReemplazoController extends Controller
                 }
             )
             ->orderBy('placa')
-            ->paginate(15)
+            ->paginate(10)
             ->withQueryString();
 
         return [

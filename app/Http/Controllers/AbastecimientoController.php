@@ -671,7 +671,7 @@ class AbastecimientoController extends Controller
                 'fecha_hora_abastecimiento'
             )
             ->orderByDesc('id')
-            ->paginate(15)
+            ->paginate(10)
             ->withQueryString();
 
         $ultimosIdsPorUnidad =
@@ -2101,7 +2101,7 @@ class AbastecimientoController extends Controller
 
         $unidades = $unidadesQuery
             ->orderBy('placa')
-            ->paginate(15)
+            ->paginate(10)
             ->withQueryString();
 
         return [

@@ -383,7 +383,8 @@ class MarchamoController extends Controller
                 }
             )
             ->orderBy('placa')
-            ->get();
+            ->paginate(10)
+            ->withQueryString();
 
         return [
             'unidadesConCobertura' =>
@@ -529,7 +530,7 @@ class MarchamoController extends Controller
                 'fecha_activacion'
             )
             ->orderByDesc('id')
-            ->paginate(15)
+            ->paginate(10)
             ->withQueryString();
 
         $totalMarchamos = Marchamo::query()

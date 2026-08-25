@@ -416,7 +416,7 @@ class AnalisisRutaController extends Controller
         );
 
         $abastecimientos = $queryResultados
-            ->paginate(20)
+            ->paginate(10)
             ->withQueryString();
 
         $abastecimientos
