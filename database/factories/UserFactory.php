@@ -25,6 +25,8 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
+            'tipo_usuario' => User::TIPO_DIESEL_COP,
+            'estado' => 'activo',
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),

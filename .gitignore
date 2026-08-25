@@ -1,6 +1,7 @@
 *.log
 .DS_Store
 .env
+.env.testing
 .env.backup
 .env.production
 .phpactor.json
@@ -27,3 +28,4 @@ Thumbs.db
 
 # Respaldos locales de base de datos
 *.sql
+!database/schema/mysql-schema.sql

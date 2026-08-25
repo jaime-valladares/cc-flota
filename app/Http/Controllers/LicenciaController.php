@@ -337,7 +337,7 @@ class LicenciaController extends Controller
                     . 'empresas.nombre_legal) as empresa_nombre'
                 ),
             ])
-            ->orderBy('empresas.nombre_comercial')
+            ->orderBy('empresa_nombre')
             ->orderBy('unidades.placa')
             ->distinct()
             ->get();
