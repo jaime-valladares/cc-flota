@@ -53,7 +53,7 @@ class AnalisisRendimientoController extends Controller
                     'string',
                     'distinct',
                     Rule::in([
-                        Abastecimiento::MODELO_GALONES_KILOMETRO,
+                        Abastecimiento::MODELO_KILOMETROS_GALON,
                         Abastecimiento::MODELO_GALONES_HORA,
                         Abastecimiento::MODELO_GALONES_VIAJE,
                     ]),
@@ -81,7 +81,7 @@ class AnalisisRendimientoController extends Controller
                 'modelo_medicion' => [
                     'nullable',
                     Rule::in([
-                        Abastecimiento::MODELO_GALONES_KILOMETRO,
+                        Abastecimiento::MODELO_KILOMETROS_GALON,
                         Abastecimiento::MODELO_GALONES_HORA,
                         Abastecimiento::MODELO_GALONES_VIAJE,
                     ]),
@@ -316,7 +316,7 @@ class AnalisisRendimientoController extends Controller
             'tipoResumen' => $this->determinarTipoResumen($modelosMedicion),
             'opcionesModelos' => [
                 Abastecimiento::MODELO_GALONES_VIAJE => 'Galones por viaje',
-                Abastecimiento::MODELO_GALONES_KILOMETRO => 'Kilómetros por galón',
+                Abastecimiento::MODELO_KILOMETROS_GALON => 'Kilómetros por galón',
                 Abastecimiento::MODELO_GALONES_HORA => 'Galones por hora',
             ],
         ];
@@ -822,7 +822,7 @@ class AnalisisRendimientoController extends Controller
 
         return match ($modelosMedicion[0]) {
             Abastecimiento::MODELO_GALONES_VIAJE => 'viaje',
-            Abastecimiento::MODELO_GALONES_KILOMETRO => 'kilometro',
+            Abastecimiento::MODELO_KILOMETROS_GALON => 'kilometro',
             Abastecimiento::MODELO_GALONES_HORA => 'hora',
             default => 'mixto',
         };
@@ -910,7 +910,7 @@ class AnalisisRendimientoController extends Controller
         }
 
         $permitidos = [
-            Abastecimiento::MODELO_GALONES_KILOMETRO,
+            Abastecimiento::MODELO_KILOMETROS_GALON,
             Abastecimiento::MODELO_GALONES_HORA,
             Abastecimiento::MODELO_GALONES_VIAJE,
         ];

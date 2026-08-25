@@ -370,7 +370,7 @@ final class CcFlotaAbastecimientoMaterializer
                 $evento['modelo_medicion'],
                 [
                     Abastecimiento::
-                        MODELO_GALONES_KILOMETRO,
+                        MODELO_KILOMETROS_GALON,
 
                     Abastecimiento::
                         MODELO_GALONES_HORA,

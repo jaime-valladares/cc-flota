@@ -56,7 +56,7 @@
         ?: ($abastecimiento->motorista?->nombre_completo ?: 'Motorista no disponible');
 
     $modeloTexto = match ($abastecimiento->modelo_medicion) {
-        'galones_kilometro' => 'Kilómetros por galón',
+        'kilometros_galon' => 'Kilómetros por galón',
         'galones_hora' => 'Horas por galón',
         'galones_viaje' => 'Galones por viaje',
         default => 'No definido',
@@ -797,7 +797,7 @@
                         </div>
 
                         <div class="cc-detail-grid">
-                            @if ($abastecimiento->modelo_medicion === 'galones_kilometro')
+                            @if ($abastecimiento->modelo_medicion === 'kilometros_galon')
                                 <div class="cc-detail-item">
                                     <div class="cc-detail-label">Kilómetros por galón</div>
                                     <div class="cc-detail-value">

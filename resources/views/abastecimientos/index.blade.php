@@ -398,7 +398,7 @@
                                 $modeloMedicionTexto = match (
                                     $unidad->modelo_medicion
                                 ) {
-                                    'galones_kilometro' =>
+                                    'kilometros_galon' =>
                                         'Kilómetros por galón',
 
                                     'galones_hora' =>

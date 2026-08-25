@@ -1277,8 +1277,8 @@ class UnidadController extends Controller
             'galones_hora' =>
                 'Galones por hora',
 
-            'galones_kilometro' =>
-                'Galones por kilómetro',
+            'kilometros_galon' =>
+                'Kilómetros por galón',
 
             'galones_viaje' =>
                 'Galones por viaje',

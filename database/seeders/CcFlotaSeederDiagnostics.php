@@ -829,8 +829,8 @@ final class CcFlotaSeederDiagnostics
                 'externo',
 
             Abastecimiento::
-                MODELO_GALONES_KILOMETRO =>
-                'galones_kilometro',
+                MODELO_KILOMETROS_GALON =>
+                'kilometros_galon',
 
             Abastecimiento::
                 MODELO_GALONES_HORA =>

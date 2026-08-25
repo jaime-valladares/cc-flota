@@ -143,7 +143,7 @@ final class CcFlotaSeederConfig
      * La suma debe ser 100.
      */
     public const DISTRIBUCION_MODELOS = [
-        'galones_kilometro' => 40,
+        'kilometros_galon' => 40,
         'galones_hora' => 30,
         'galones_viaje' => 30,
     ];

@@ -42,7 +42,7 @@ class AnalisisOperativoController extends Controller
             'unidad_ids.*' => ['integer', 'exists:unidades,id'],
 
             'modelos_medicion' => ['nullable', 'array'],
-            'modelos_medicion.*' => ['string', 'in:galones_hora,galones_kilometro,galones_viaje'],
+            'modelos_medicion.*' => ['string', 'in:galones_hora,kilometros_galon,galones_viaje'],
 
             'total_tanques' => ['nullable', 'array'],
             'total_tanques.*' => ['integer', 'min:1', 'max:3'],
@@ -888,7 +888,7 @@ class AnalisisOperativoController extends Controller
     {
         return match ($modelo) {
             'galones_hora' => 'Galones por hora',
-            'galones_kilometro' => 'Galones por kilómetro',
+            'kilometros_galon' => 'Kilómetros por galón',
             'galones_viaje' => 'Galones por viaje',
             default => 'No definido',
         };

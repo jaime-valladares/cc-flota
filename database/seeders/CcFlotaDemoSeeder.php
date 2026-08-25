@@ -36,7 +36,7 @@ class CcFlotaDemoSeeder extends Seeder
     ];
 
     private array $modelosMedicion = [
-        'galones_kilometro',
+        'kilometros_galon',
         'galones_hora',
         'galones_viaje',
     ];

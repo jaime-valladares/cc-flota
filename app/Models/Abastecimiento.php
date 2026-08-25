@@ -153,8 +153,8 @@ class Abastecimiento extends Model
     |--------------------------------------------------------------------------
     */
 
-    public const MODELO_GALONES_KILOMETRO =
-        'galones_kilometro';
+    public const MODELO_KILOMETROS_GALON =
+        'kilometros_galon';
 
     public const MODELO_GALONES_HORA =
         'galones_hora';

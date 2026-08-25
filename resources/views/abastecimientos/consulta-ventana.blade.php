@@ -60,7 +60,7 @@
         );
 
         $modelosTexto = [
-            'galones_kilometro' => 'Kilómetros por galón',
+            'kilometros_galon' => 'Kilómetros por galón',
             'galones_hora' => 'Horas por galón',
             'galones_viaje' => 'Galones por viaje',
         ];
@@ -595,10 +595,10 @@
                                     </option>
 
                                     <option
-                                        value="galones_kilometro"
+                                        value="kilometros_galon"
                                         @selected(
                                             $modeloMedicion
-                                                === 'galones_kilometro'
+                                                === 'kilometros_galon'
                                         )
                                     >
                                         Kilómetros por galón

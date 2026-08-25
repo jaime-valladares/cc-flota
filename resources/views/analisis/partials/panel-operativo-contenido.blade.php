@@ -992,7 +992,7 @@
                                                                 Galones por hora
                                                                 @break
 
-                                                            @case('galones_kilometro')
+                                                            @case('kilometros_galon')
                                                                 Kilómetros por galón
                                                                 @break
 

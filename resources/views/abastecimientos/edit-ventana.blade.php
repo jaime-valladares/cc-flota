@@ -94,7 +94,7 @@
             : 'Sin empresa';
 
         $modeloTexto = match ($unidad->modelo_medicion) {
-            'galones_kilometro' => 'Kilómetros por galón',
+            'kilometros_galon' => 'Kilómetros por galón',
             'galones_hora' => 'Horas por galón',
             'galones_viaje' => 'Galones por viaje',
             default => 'No definido',

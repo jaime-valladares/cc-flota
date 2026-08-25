@@ -206,7 +206,7 @@ class AbastecimientoService
                     ! in_array(
                         $modeloMedicion,
                         [
-                            Abastecimiento::MODELO_GALONES_KILOMETRO,
+                            Abastecimiento::MODELO_KILOMETROS_GALON,
                             Abastecimiento::MODELO_GALONES_HORA,
                             Abastecimiento::MODELO_GALONES_VIAJE,
                         ],
@@ -532,7 +532,7 @@ class AbastecimientoService
                         in_array(
                             $modeloMedicion,
                             [
-                                Abastecimiento::MODELO_GALONES_KILOMETRO,
+                                Abastecimiento::MODELO_KILOMETROS_GALON,
                                 Abastecimiento::MODELO_GALONES_VIAJE,
                             ],
                             true
@@ -1066,7 +1066,7 @@ class AbastecimientoService
                     ! in_array(
                         $modeloMedicion,
                         [
-                            Abastecimiento::MODELO_GALONES_KILOMETRO,
+                            Abastecimiento::MODELO_KILOMETROS_GALON,
                             Abastecimiento::MODELO_GALONES_HORA,
                             Abastecimiento::MODELO_GALONES_VIAJE,
                         ],
@@ -1421,7 +1421,7 @@ class AbastecimientoService
                         in_array(
                             $modeloMedicion,
                             [
-                                Abastecimiento::MODELO_GALONES_KILOMETRO,
+                                Abastecimiento::MODELO_KILOMETROS_GALON,
                                 Abastecimiento::MODELO_GALONES_VIAJE,
                             ],
                             true

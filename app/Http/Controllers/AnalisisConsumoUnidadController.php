@@ -313,7 +313,7 @@ class AnalisisConsumoUnidadController extends Controller
             'resumen' => $resumen,
             'graficos' => $graficos,
             'opcionesModelos' => [
-                Abastecimiento::MODELO_GALONES_KILOMETRO =>
+                Abastecimiento::MODELO_KILOMETROS_GALON =>
                     'Kilómetros por galón',
                 Abastecimiento::MODELO_GALONES_HORA =>
                     'Galones por hora',
@@ -545,7 +545,7 @@ class AnalisisConsumoUnidadController extends Controller
         string $modelo
     ): float {
         return $modelo
-            === Abastecimiento::MODELO_GALONES_KILOMETRO
+            === Abastecimiento::MODELO_KILOMETROS_GALON
                 ? (float) $resultados->max()
                 : (float) $resultados->min();
     }
@@ -555,7 +555,7 @@ class AnalisisConsumoUnidadController extends Controller
         string $modelo
     ): float {
         return $modelo
-            === Abastecimiento::MODELO_GALONES_KILOMETRO
+            === Abastecimiento::MODELO_KILOMETROS_GALON
                 ? (float) $resultados->min()
                 : (float) $resultados->max();
     }
@@ -579,7 +579,7 @@ class AnalisisConsumoUnidadController extends Controller
         }
 
         $mejora = $modelo
-            === Abastecimiento::MODELO_GALONES_KILOMETRO
+            === Abastecimiento::MODELO_KILOMETROS_GALON
                 ? $actual > $anterior
                 : $actual < $anterior;
 
@@ -753,7 +753,7 @@ class AnalisisConsumoUnidadController extends Controller
     private function modelosPermitidos(): array
     {
         return [
-            Abastecimiento::MODELO_GALONES_KILOMETRO,
+            Abastecimiento::MODELO_KILOMETROS_GALON,
             Abastecimiento::MODELO_GALONES_HORA,
             Abastecimiento::MODELO_GALONES_VIAJE,
         ];
