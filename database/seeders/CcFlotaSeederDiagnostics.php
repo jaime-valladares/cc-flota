@@ -165,8 +165,9 @@ final class CcFlotaSeederDiagnostics
     }
 
     /**
-     * Confirma que el usuario que debe preservarse existe
-     * exactamente bajo las reglas acordadas.
+     * Confirma que existe exactamente una Cuenta Maestra válida.
+     * Otros usuarios, incluido el administrador funcional inicial, pueden
+     * coexistir durante el diagnóstico previo a la limpieza.
      */
     private static function validarSuperusuario(
         array &$errores,
@@ -174,31 +175,28 @@ final class CcFlotaSeederDiagnostics
         array &$comprobaciones
     ): void {
         try {
-            $cantidadUsuarios =
-                User::query()->count();
+            $cuentasMaestras = User::query()
+                ->where('es_cuenta_recuperacion', true)
+                ->with('role')
+                ->get();
 
-            if ($cantidadUsuarios !== 1) {
+            if ($cuentasMaestras->count() !== 1) {
                 $errores[] =
-                    'Se esperaba exactamente 1 usuario antes '
-                    . "del reset y existen {$cantidadUsuarios}.";
+                    'Se esperaba exactamente 1 Cuenta Maestra y existen '
+                    . $cuentasMaestras->count()
+                    . '.';
             }
 
-            $usuario = User::query()
-                ->with('role')
-                ->first();
+            $usuario = $cuentasMaestras->first();
 
             if (! $usuario) {
                 $errores[] =
-                    'No existe el superusuario que debe preservarse.';
+                    'No existe la Cuenta Maestra que debe preservarse.';
 
                 return;
             }
 
             $condiciones = [
-                'email' =>
-                    $usuario->email
-                    === 'admin@cc-flota.local',
-
                 'estado' =>
                     $usuario->estado
                     === 'activo',
@@ -215,6 +213,9 @@ final class CcFlotaSeederDiagnostics
                 'rol' =>
                     $usuario->role?->codigo
                     === 'DIESEL_SUPER_ADMIN',
+
+                'es_cuenta_recuperacion' =>
+                    $usuario->esCuentaMaestra(),
             ];
 
             foreach (
@@ -223,20 +224,9 @@ final class CcFlotaSeederDiagnostics
             ) {
                 if (! $correcto) {
                     $errores[] =
-                        "El superusuario no cumple la condición "
+                        "La Cuenta Maestra no cumple la condición "
                         . "[{$campo}].";
                 }
-            }
-
-            if (
-                $usuario->id !== 1
-                && $usuario->email
-                    === 'admin@cc-flota.local'
-            ) {
-                $advertencias[] =
-                    'El superusuario es válido, pero su ID no es 1. '
-                    . 'Los seeders usan el ID recuperado dinámicamente, '
-                    . 'por lo que no es bloqueante.';
             }
 
             if (
@@ -251,7 +241,7 @@ final class CcFlotaSeederDiagnostics
             }
 
             $comprobaciones[] =
-                'Superusuario único y preservable validado.';
+                'Cuenta Maestra única y preservable validada.';
         } catch (Throwable $error) {
             $errores[] =
                 'No fue posible validar el superusuario: '

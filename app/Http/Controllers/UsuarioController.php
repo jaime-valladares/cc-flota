@@ -978,7 +978,7 @@ class UsuarioController extends Controller
          * ordinaria. Se responde 404 para no revelar su existencia mediante
          * enumeración directa de identificadores.
          */
-        if ($usuario->esCuentaRecuperacion()) {
+        if ($usuario->esCuentaMaestra()) {
             abort(404);
         }
 

@@ -25,6 +25,12 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
+        abort_if(
+            $request->user()->esCuentaMaestra(),
+            403,
+            'La identidad de la Cuenta Maestra no puede modificarse desde el perfil.'
+        );
+
         $request->user()->fill($request->validated());
 
         if ($request->user()->isDirty('email')) {

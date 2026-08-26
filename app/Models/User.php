@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use LogicException;
 
 #[Fillable([
     'empresa_id',
@@ -36,6 +37,38 @@ class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
+
+    protected static function booted(): void
+    {
+        static::saving(function (User $usuario): void {
+            $eraCuentaMaestra = $usuario->exists
+                && (bool) $usuario->getRawOriginal(
+                    'es_cuenta_recuperacion'
+                );
+
+            if (
+                ($eraCuentaMaestra || $usuario->esCuentaMaestra())
+                && ! $usuario->cumpleInvariantesCuentaMaestra()
+            ) {
+                throw new LogicException(
+                    'La Cuenta Maestra debe permanecer activa, global y con el rol DIESEL_SUPER_ADMIN.'
+                );
+            }
+        });
+
+        static::deleting(function (User $usuario): void {
+            if (
+                $usuario->esCuentaMaestra()
+                || (bool) $usuario->getRawOriginal(
+                    'es_cuenta_recuperacion'
+                )
+            ) {
+                throw new LogicException(
+                    'La Cuenta Maestra no puede eliminarse.'
+                );
+            }
+        });
+    }
 
     public const TIPO_DIESEL_COP = 'diesel_cop';
     public const TIPO_EMPRESA = 'empresa';
@@ -94,6 +127,29 @@ class User extends Authenticatable
     public function esCuentaRecuperacion(): bool
     {
         return (bool) $this->es_cuenta_recuperacion;
+    }
+
+    /**
+     * Nombre semántico de la identidad extraordinaria del sistema.
+     *
+     * El campo histórico sigue siendo la fuente de identidad para no
+     * introducir acoplamientos runtime a un ID o correo concretos.
+     */
+    public function esCuentaMaestra(): bool
+    {
+        return $this->esCuentaRecuperacion();
+    }
+
+    public function cumpleInvariantesCuentaMaestra(): bool
+    {
+        return $this->esCuentaMaestra()
+            && $this->tipo_usuario === self::TIPO_DIESEL_COP
+            && is_null($this->empresa_id)
+            && $this->estado === 'activo'
+            && Role::query()
+                ->whereKey($this->rol_id)
+                ->where('codigo', self::ROL_DIESEL_SUPER_ADMIN)
+                ->exists();
     }
 
     public function esDieselCop(): bool
