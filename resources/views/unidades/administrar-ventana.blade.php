@@ -543,11 +543,7 @@
                                             && $licencia->esta_vigente;
 
                                         $puedeEditar =
-                                            $unidad->estado !== 'inactiva'
-                                            && (
-                                                $unidadRegistradaSinLicencia
-                                                || $licenciaVigente
-                                            );
+                                            $unidad->estado === 'registrada';
 
                                         $disponibilidadPendiente = in_array(
                                             $unidad->disponibilidad_operativa,

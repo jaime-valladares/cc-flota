@@ -502,11 +502,7 @@
 
                                 $puedeEditar =
                                     Auth::user()->tienePermiso('unidades.editar')
-                                    && $unidad->estado !== 'inactiva'
-                                    && (
-                                        $unidadRegistradaSinLicencia
-                                        || $licenciaVigente
-                                    );
+                                    && $unidad->estado === 'registrada';
 
                                 $disponibilidadPendiente = in_array(
                                     $unidad->disponibilidad_operativa,

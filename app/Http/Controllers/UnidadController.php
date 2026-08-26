@@ -3,12 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\Empresa;
+use App\Models\Licencia;
+use App\Models\Marchamo;
+use App\Models\PuntoSeguridadUnidad;
 use App\Models\Unidad;
+use App\Support\PlantillasPuntosSeguridad;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class UnidadController extends Controller
@@ -72,8 +78,7 @@ class UnidadController extends Controller
     private function prepararConsultaUnidades(
         Request $request,
         bool $modoAdministracion = false
-    ): array
-    {
+    ): array {
         $user = Auth::user();
 
         $esUsuarioDieselCop = is_null($user->empresa_id);
@@ -157,35 +162,25 @@ class UnidadController extends Controller
                 ),
             ],
         ], [
-            'busqueda.max' =>
-                'La búsqueda no debe exceder 150 caracteres.',
+            'busqueda.max' => 'La búsqueda no debe exceder 150 caracteres.',
 
-            'empresa_ids.array' =>
-                'La selección de empresas no es válida.',
+            'empresa_ids.array' => 'La selección de empresas no es válida.',
 
-            'empresa_ids.*.exists' =>
-                'Una de las empresas seleccionadas no es válida.',
+            'empresa_ids.*.exists' => 'Una de las empresas seleccionadas no es válida.',
 
-            'empresa_id.exists' =>
-                'La empresa seleccionada no es válida.',
+            'empresa_id.exists' => 'La empresa seleccionada no es válida.',
 
-            'unidad_ids.array' =>
-                'La selección de unidades no es válida.',
+            'unidad_ids.array' => 'La selección de unidades no es válida.',
 
-            'unidad_ids.*.exists' =>
-                'Una de las unidades seleccionadas no es válida.',
+            'unidad_ids.*.exists' => 'Una de las unidades seleccionadas no es válida.',
 
-            'modelos_medicion.array' =>
-                'La selección de modelos de medición no es válida.',
+            'modelos_medicion.array' => 'La selección de modelos de medición no es válida.',
 
-            'modelos_medicion.*.in' =>
-                'Uno de los modelos de medición seleccionados no es válido.',
+            'modelos_medicion.*.in' => 'Uno de los modelos de medición seleccionados no es válido.',
 
-            'modelo_medicion.in' =>
-                'El modelo de medición seleccionado no es válido.',
+            'modelo_medicion.in' => 'El modelo de medición seleccionado no es válido.',
 
-            'estado.in' =>
-                'El estado seleccionado no es válido.',
+            'estado.in' => 'El estado seleccionado no es válido.',
         ]);
 
         $busqueda = trim(
@@ -288,8 +283,7 @@ class UnidadController extends Controller
         $empresas = Empresa::query()
             ->when(
                 $modoAdministracion,
-                fn (Builder $query) =>
-                    $query->where('estado', 'activa')
+                fn (Builder $query) => $query->where('estado', 'activa')
             )
             ->when(
                 ! $esUsuarioDieselCop,
@@ -380,8 +374,7 @@ class UnidadController extends Controller
                 busqueda: $busqueda,
                 empresaIds: $empresaIds,
                 unidadIds: $unidadIds,
-                modelosMedicionSeleccionados:
-                    $modelosMedicionSeleccionados,
+                modelosMedicionSeleccionados: $modelosMedicionSeleccionados,
                 estado: $estado
             );
         } else {
@@ -402,8 +395,7 @@ class UnidadController extends Controller
                 busqueda: $busqueda,
                 empresaIds: $empresaIds,
                 unidadIds: $unidadIds,
-                modelosMedicionSeleccionados:
-                    $modelosMedicionSeleccionados,
+                modelosMedicionSeleccionados: $modelosMedicionSeleccionados,
                 estado: $estado
             );
         }
@@ -468,8 +460,7 @@ class UnidadController extends Controller
             'unidadIds' => $unidadIds,
             'unidadesSelector' => $unidadesSelector,
 
-            'modelosMedicionSeleccionados' =>
-                $modelosMedicionSeleccionados,
+            'modelosMedicionSeleccionados' => $modelosMedicionSeleccionados,
 
             'hayFiltros' => $hayFiltros,
 
@@ -480,17 +471,13 @@ class UnidadController extends Controller
 
             'resumenUnidades' => $resumenUnidades,
 
-            'esUsuarioDieselCop' =>
-                $esUsuarioDieselCop,
+            'esUsuarioDieselCop' => $esUsuarioDieselCop,
 
-            'empresaUsuario' =>
-                $empresaUsuario,
+            'empresaUsuario' => $empresaUsuario,
 
-            'modelosMedicion' =>
-                $this->modelosMedicion(),
+            'modelosMedicion' => $this->modelosMedicion(),
 
-            'estadosUnidad' =>
-                $this->estadosUnidad(),
+            'estadosUnidad' => $this->estadosUnidad(),
         ];
     }
 
@@ -519,7 +506,7 @@ class UnidadController extends Controller
                         ->where(
                             'placa',
                             'like',
-                            '%' . $busqueda . '%'
+                            '%'.$busqueda.'%'
                         )
                         ->orWhereHas(
                             'empresa',
@@ -530,12 +517,12 @@ class UnidadController extends Controller
                                     ->where(
                                         'nombre_legal',
                                         'like',
-                                        '%' . $busqueda . '%'
+                                        '%'.$busqueda.'%'
                                     )
                                     ->orWhere(
                                         'nombre_comercial',
                                         'like',
-                                        '%' . $busqueda . '%'
+                                        '%'.$busqueda.'%'
                                     );
                             }
                         );
@@ -635,12 +622,9 @@ class UnidadController extends Controller
         return [
             'empresas' => $empresas,
             'empresaUsuario' => $empresaUsuario,
-            'esUsuarioDieselCop' =>
-                $esUsuarioDieselCop,
-            'modelosMedicion' =>
-                $this->modelosMedicion(),
-            'estadosUnidad' =>
-                $this->estadosUnidad(),
+            'esUsuarioDieselCop' => $esUsuarioDieselCop,
+            'modelosMedicion' => $this->modelosMedicion(),
+            'estadosUnidad' => $this->estadosUnidad(),
         ];
     }
 
@@ -672,8 +656,7 @@ class UnidadController extends Controller
             $this->reglasValidacionUnidad(
                 unidad: null,
                 empresaId: $empresaId,
-                esUsuarioDieselCop:
-                    $esUsuarioDieselCop
+                esUsuarioDieselCop: $esUsuarioDieselCop
             ),
             $this->mensajesValidacionUnidad()
         );
@@ -682,26 +665,36 @@ class UnidadController extends Controller
             $empresaId
         );
 
-        $unidad = Unidad::create([
-            'empresa_id' => $empresaId,
-            'placa' => trim($validated['placa']),
-            'marca' => $validated['marca'] ?? null,
-            'total_tanques' =>
-                $validated['total_tanques'],
-            'cantidad_tanques_con_licencia' =>
-                $validated[
-                    'cantidad_tanques_con_licencia'
-                ],
-            'capacidad_total' =>
-                $validated['capacidad_total'],
-            'capacidad_cubierta' =>
-                $validated['capacidad_cubierta'],
-            'modelo_medicion' =>
-                $validated['modelo_medicion'],
-            'estado' => 'registrada',
-            'creado_por' => $user->id,
-            'actualizado_por' => $user->id,
-        ]);
+        $estructura = $this->derivarEstructuraTanques($validated);
+
+        $unidad = DB::transaction(function () use (
+            $empresaId,
+            $validated,
+            $estructura,
+            $user
+        ): Unidad {
+            $unidad = Unidad::create([
+                'empresa_id' => $empresaId,
+                'placa' => trim($validated['placa']),
+                'marca' => $validated['marca'] ?? null,
+                'total_tanques' => $estructura['total_tanques'],
+                'cantidad_tanques_con_licencia' => $estructura['cantidad_tanques_con_licencia'],
+                'capacidad_total' => $estructura['capacidad_total'],
+                'capacidad_cubierta' => $estructura['capacidad_cubierta'],
+                'modelo_medicion' => $validated['modelo_medicion'],
+                'rendimiento_teorico_km_galon' => $validated['rendimiento_teorico_km_galon'],
+                'rendimiento_teorico_gal_hora' => $validated['modelo_medicion'] === 'galones_hora'
+                        ? $validated['rendimiento_teorico_gal_hora']
+                        : null,
+                'estado' => 'registrada',
+                'creado_por' => $user->id,
+                'actualizado_por' => $user->id,
+            ]);
+
+            $unidad->tanquesUnidad()->createMany($estructura['tanques']);
+
+            return $unidad;
+        });
 
         $queryParams = $this->parametrosRetorno(
             $request
@@ -831,6 +824,7 @@ class UnidadController extends Controller
             'empresa',
             'licencia',
             'puntosSeguridad',
+            'tanquesUnidad',
         ]);
 
         return [
@@ -845,17 +839,13 @@ class UnidadController extends Controller
                 ->filter()
                 ->values(),
 
-            'empresaUsuario' =>
-                $unidad->empresa,
+            'empresaUsuario' => $unidad->empresa,
 
-            'esUsuarioDieselCop' =>
-                $esUsuarioDieselCop,
+            'esUsuarioDieselCop' => $esUsuarioDieselCop,
 
-            'modelosMedicion' =>
-                $this->modelosMedicion(),
+            'modelosMedicion' => $this->modelosMedicion(),
 
-            'estadosUnidad' =>
-                $this->estadosUnidad(),
+            'estadosUnidad' => $this->estadosUnidad(),
         ];
     }
 
@@ -876,8 +866,7 @@ class UnidadController extends Controller
             $this->reglasValidacionUnidad(
                 unidad: $unidad,
                 empresaId: (int) $unidad->empresa_id,
-                esUsuarioDieselCop:
-                    is_null($user->empresa_id)
+                esUsuarioDieselCop: is_null($user->empresa_id)
             ),
             $this->mensajesValidacionUnidad()
         );
@@ -885,23 +874,48 @@ class UnidadController extends Controller
         /*
          * Empresa y estado no pueden cambiarse desde edición.
          */
-        $unidad->update([
-            'placa' => trim($validated['placa']),
-            'marca' => $validated['marca'] ?? null,
-            'total_tanques' =>
-                $validated['total_tanques'],
-            'cantidad_tanques_con_licencia' =>
-                $validated[
-                    'cantidad_tanques_con_licencia'
-                ],
-            'capacidad_total' =>
-                $validated['capacidad_total'],
-            'capacidad_cubierta' =>
-                $validated['capacidad_cubierta'],
-            'modelo_medicion' =>
-                $validated['modelo_medicion'],
-            'actualizado_por' => $user->id,
-        ]);
+        $estructura = $this->derivarEstructuraTanques($validated);
+
+        DB::transaction(function () use (
+            $unidad,
+            $validated,
+            $estructura,
+            $user
+        ): void {
+            $unidadBloqueada = Unidad::query()
+                ->lockForUpdate()
+                ->findOrFail($unidad->id);
+
+            if ($unidadBloqueada->estado !== 'registrada') {
+                abort(403, 'La configuración estructural de una unidad activa no puede modificarse.');
+            }
+
+            $this->reconciliarPlantillaLicencia(
+                $unidadBloqueada,
+                $estructura['cantidad_tanques_con_licencia'],
+                (int) $user->id
+            );
+
+            $unidadBloqueada->update([
+                'placa' => trim($validated['placa']),
+                'marca' => $validated['marca'] ?? null,
+                'total_tanques' => $estructura['total_tanques'],
+                'cantidad_tanques_con_licencia' => $estructura['cantidad_tanques_con_licencia'],
+                'capacidad_total' => $estructura['capacidad_total'],
+                'capacidad_cubierta' => $estructura['capacidad_cubierta'],
+                'modelo_medicion' => $validated['modelo_medicion'],
+                'rendimiento_teorico_km_galon' => $validated['rendimiento_teorico_km_galon'],
+                'rendimiento_teorico_gal_hora' => $validated['modelo_medicion'] === 'galones_hora'
+                        ? $validated['rendimiento_teorico_gal_hora']
+                        : null,
+                'actualizado_por' => $user->id,
+            ]);
+
+            $unidadBloqueada->tanquesUnidad()->delete();
+            $unidadBloqueada->tanquesUnidad()->createMany(
+                $estructura['tanques']
+            );
+        });
 
         $queryParams = $this->parametrosRetorno(
             $request
@@ -965,22 +979,18 @@ class UnidadController extends Controller
                 ),
             ],
         ], [
-            'motivo_inactivacion.required' =>
-                'Debe seleccionar el motivo de inactivación.',
+            'motivo_inactivacion.required' => 'Debe seleccionar el motivo de inactivación.',
 
-            'motivo_inactivacion.in' =>
-                'El motivo de inactivación seleccionado no es válido.',
+            'motivo_inactivacion.in' => 'El motivo de inactivación seleccionado no es válido.',
 
-            'motivo_inactivacion.max' =>
-                'El motivo de inactivación no debe exceder 150 caracteres.',
+            'motivo_inactivacion.max' => 'El motivo de inactivación no debe exceder 150 caracteres.',
         ]);
 
         $unidad->update([
             'estado' => 'inactiva',
             'fecha_inactivacion' => now(),
             'inactivado_por' => Auth::id(),
-            'motivo_inactivacion' =>
-                $validated['motivo_inactivacion'],
+            'motivo_inactivacion' => $validated['motivo_inactivacion'],
             'actualizado_por' => Auth::id(),
         ]);
 
@@ -1145,34 +1155,26 @@ class UnidadController extends Controller
                 'max:100',
             ],
 
-            'total_tanques' => [
+            'cantidad_tanques' => [
                 'required',
                 'integer',
                 'min:1',
                 'max:3',
             ],
-
-            'cantidad_tanques_con_licencia' => [
+            'tanques' => [
                 'required',
-                'integer',
-                'min:1',
-                'max:3',
-                'lte:total_tanques',
+                'array',
+                'size:'.(int) request('cantidad_tanques', 0),
             ],
-
-            'capacidad_total' => [
+            'tanques.*.capacidad' => [
                 'required',
                 'numeric',
                 'gt:0',
                 'max:99999999.99',
             ],
-
-            'capacidad_cubierta' => [
+            'tanques.*.cubierto_por_licencia' => [
                 'required',
-                'numeric',
-                'gt:0',
-                'lte:capacidad_total',
-                'max:99999999.99',
+                'boolean',
             ],
 
             'modelo_medicion' => [
@@ -1183,6 +1185,21 @@ class UnidadController extends Controller
                     )
                 ),
             ],
+            'rendimiento_teorico_km_galon' => [
+                'required',
+                'numeric',
+                'gt:0',
+                'max:99999999.9999',
+            ],
+            'rendimiento_teorico_gal_hora' => [
+                'nullable',
+                Rule::requiredIf(
+                    fn (): bool => request('modelo_medicion') === 'galones_hora'
+                ),
+                'numeric',
+                'gt:0',
+                'max:99999999.9999',
+            ],
         ];
     }
 
@@ -1192,77 +1209,33 @@ class UnidadController extends Controller
     private function mensajesValidacionUnidad(): array
     {
         return [
-            'empresa_id.required' =>
-                'Debe seleccionar una empresa.',
+            'empresa_id.required' => 'Debe seleccionar una empresa.',
 
-            'empresa_id.exists' =>
-                'La empresa seleccionada no es válida o no está activa.',
+            'empresa_id.exists' => 'La empresa seleccionada no es válida o no está activa.',
 
-            'placa.required' =>
-                'Debe ingresar el Nombre / Placa de la unidad.',
+            'placa.required' => 'Debe ingresar el Nombre / Placa de la unidad.',
 
-            'placa.max' =>
-                'El Nombre / Placa no debe exceder 30 caracteres.',
+            'placa.max' => 'El Nombre / Placa no debe exceder 30 caracteres.',
 
-            'placa.unique' =>
-                'Ya existe una unidad con este Nombre / Placa dentro de la empresa.',
+            'placa.unique' => 'Ya existe una unidad con este Nombre / Placa dentro de la empresa.',
 
-            'marca.max' =>
-                'La marca no debe exceder 100 caracteres.',
+            'marca.max' => 'La marca no debe exceder 100 caracteres.',
 
-            'total_tanques.required' =>
-                'Debe indicar el total de tanques de la unidad.',
+            'cantidad_tanques.required' => 'Debe indicar el total de tanques de la unidad.',
+            'cantidad_tanques.integer' => 'El total de tanques debe ser un número entero.',
+            'cantidad_tanques.min' => 'La unidad debe tener al menos un tanque.',
+            'cantidad_tanques.max' => 'La unidad puede tener como máximo tres tanques.',
+            'tanques.size' => 'Debe configurar exactamente la cantidad de tanques seleccionada.',
+            'tanques.*.capacidad.required' => 'Debe ingresar la capacidad de cada tanque.',
+            'tanques.*.capacidad.gt' => 'La capacidad de cada tanque debe ser mayor que cero.',
+            'rendimiento_teorico_km_galon.required' => 'Debe ingresar el rendimiento teórico en Km/Gal.',
+            'rendimiento_teorico_km_galon.gt' => 'El rendimiento teórico en Km/Gal debe ser mayor que cero.',
+            'rendimiento_teorico_gal_hora.required' => 'Debe ingresar el rendimiento teórico en Gal/Hora.',
+            'rendimiento_teorico_gal_hora.gt' => 'El rendimiento teórico en Gal/Hora debe ser mayor que cero.',
 
-            'total_tanques.integer' =>
-                'El total de tanques debe ser un número entero.',
+            'modelo_medicion.required' => 'Debe seleccionar un modelo de medición.',
 
-            'total_tanques.min' =>
-                'La unidad debe tener al menos un tanque.',
-
-            'total_tanques.max' =>
-                'La unidad puede tener como máximo tres tanques.',
-
-            'cantidad_tanques_con_licencia.required' =>
-                'Debe indicar la cantidad de tanques cubiertos por la licencia.',
-
-            'cantidad_tanques_con_licencia.integer' =>
-                'La cantidad de tanques cubiertos debe ser un número entero.',
-
-            'cantidad_tanques_con_licencia.min' =>
-                'La licencia debe cubrir al menos un tanque.',
-
-            'cantidad_tanques_con_licencia.max' =>
-                'La licencia puede cubrir como máximo tres tanques.',
-
-            'cantidad_tanques_con_licencia.lte' =>
-                'La cantidad de tanques cubiertos no puede superar el total de tanques.',
-
-            'capacidad_total.required' =>
-                'Debe ingresar la capacidad total de la unidad.',
-
-            'capacidad_total.numeric' =>
-                'La capacidad total debe ser un valor numérico.',
-
-            'capacidad_total.gt' =>
-                'La capacidad total debe ser mayor que cero.',
-
-            'capacidad_cubierta.required' =>
-                'Debe ingresar la capacidad cubierta por la licencia.',
-
-            'capacidad_cubierta.numeric' =>
-                'La capacidad cubierta debe ser un valor numérico.',
-
-            'capacidad_cubierta.gt' =>
-                'La capacidad cubierta debe ser mayor que cero.',
-
-            'capacidad_cubierta.lte' =>
-                'La capacidad cubierta no puede superar la capacidad total.',
-
-            'modelo_medicion.required' =>
-                'Debe seleccionar un modelo de medición.',
-
-            'modelo_medicion.in' =>
-                'El modelo de medición seleccionado no es válido.',
+            'modelo_medicion.in' => 'El modelo de medición seleccionado no es válido.',
         ];
     }
 
@@ -1272,15 +1245,135 @@ class UnidadController extends Controller
     private function modelosMedicion(): array
     {
         return [
-            'galones_hora' =>
-                'Galones por hora',
+            'galones_hora' => 'Galones por hora',
 
-            'kilometros_galon' =>
-                'Kilómetros por galón',
+            'kilometros_galon' => 'Kilómetros por galón',
 
-            'galones_viaje' =>
-                'Galones por viaje',
+            'galones_viaje' => 'Galones por viaje',
         ];
+    }
+
+    /**
+     * Deriva todos los agregados estructurales exclusivamente desde los
+     * tanques validados. Nunca acepta totales enviados por el navegador.
+     */
+    private function derivarEstructuraTanques(array $validated): array
+    {
+        $tanques = collect($validated['tanques'])
+            ->values()
+            ->map(function (array $tanque, int $indice): array {
+                return [
+                    'numero' => $indice + 1,
+                    'capacidad' => round((float) $tanque['capacidad'], 2),
+                    'cubierto_por_licencia' => filter_var(
+                        $tanque['cubierto_por_licencia'],
+                        FILTER_VALIDATE_BOOLEAN
+                    ),
+                ];
+            });
+
+        $cubiertos = $tanques->where('cubierto_por_licencia', true);
+
+        if ($cubiertos->isEmpty()) {
+            throw ValidationException::withMessages([
+                'tanques' => 'Debe seleccionar al menos un tanque cubierto por la licencia.',
+            ]);
+        }
+
+        return [
+            'total_tanques' => $tanques->count(),
+            'cantidad_tanques_con_licencia' => $cubiertos->count(),
+            'capacidad_total' => round($tanques->sum('capacidad'), 2),
+            'capacidad_cubierta' => round($cubiertos->sum('capacidad'), 2),
+            'tanques' => $tanques->all(),
+        ];
+    }
+
+    /**
+     * Mantiene alineadas licencia y puntos cuando cambia la cantidad de
+     * tanques cubiertos. Una plantilla solo puede regenerarse si la
+     * asignación inicial no tiene ningún avance que preservar.
+     */
+    private function reconciliarPlantillaLicencia(
+        Unidad $unidad,
+        int $cantidadCubiertaNueva,
+        int $usuarioId
+    ): void {
+        $licencia = Licencia::query()
+            ->where('unidad_id', $unidad->id)
+            ->lockForUpdate()
+            ->first();
+
+        if (! $licencia) {
+            return;
+        }
+
+        $plantillaNueva = match ($cantidadCubiertaNueva) {
+            1 => 'plantilla_1_tanque',
+            2 => 'plantilla_2_tanques',
+            3 => 'plantilla_3_tanques',
+            default => throw ValidationException::withMessages([
+                'tanques' => 'La cantidad de tanques cubiertos no permite seleccionar una plantilla válida.',
+            ]),
+        };
+
+        if ($licencia->plantilla_puntos_seguridad === $plantillaNueva) {
+            return;
+        }
+
+        $puntos = PuntoSeguridadUnidad::query()
+            ->where('unidad_id', $unidad->id)
+            ->lockForUpdate()
+            ->get();
+
+        $marchamos = Marchamo::query()
+            ->where('unidad_id', $unidad->id)
+            ->lockForUpdate()
+            ->get();
+
+        $asignacionIniciada = $marchamos->isNotEmpty()
+            || $puntos->contains(
+                fn (PuntoSeguridadUnidad $punto): bool =>
+                    ! is_null($punto->marchamo_actual_id)
+                    || $punto->estado_asignacion !== 'pendiente'
+            );
+
+        if ($asignacionIniciada) {
+            throw ValidationException::withMessages([
+                'tanques' => 'No puede cambiar la cantidad de tanques cubiertos porque la asignación inicial de marchamos ya tiene avance. Retire primero todos los marchamos provisionales desde la asignación inicial.',
+            ]);
+        }
+
+        PuntoSeguridadUnidad::query()
+            ->where('unidad_id', $unidad->id)
+            ->delete();
+
+        $licencia->update([
+            'plantilla_puntos_seguridad' => $plantillaNueva,
+            'actualizado_por' => $usuarioId,
+        ]);
+
+        foreach (PlantillasPuntosSeguridad::porPlantilla($plantillaNueva) as $punto) {
+            PuntoSeguridadUnidad::create([
+                'unidad_id' => $unidad->id,
+                'orden' => $punto['orden_visual'] ?? $punto['orden'] ?? null,
+                'codigo_punto' => $punto['codigo_punto'] ?? null,
+                'grupo' => $punto['grupo'] ?? null,
+                'subgrupo' => $punto['subgrupo'] ?? null,
+                'nombre_punto' => $punto['nombre_punto'] ?? $punto['nombre'] ?? 'Punto sin nombre',
+                'descripcion' => null,
+                'posicion_tanque' => $punto['posicion_tanque'] ?? null,
+                'tipo_punto' => $punto['tipo_punto'] ?? null,
+                'requiere_marchamo' => (bool) ($punto['requiere_marchamo'] ?? true),
+                'plantilla_origen' => $plantillaNueva,
+                'criterio_origen' => $punto['criterio_origen'] ?? null,
+                'estado_asignacion' => 'pendiente',
+                'marchamo_actual_id' => null,
+                'estado' => 'activo',
+                'creado_por' => $usuarioId,
+                'actualizado_por' => $usuarioId,
+            ]);
+        }
     }
 
     /**
@@ -1289,14 +1382,11 @@ class UnidadController extends Controller
     private function estadosUnidad(): array
     {
         return [
-            'registrada' =>
-                'Registrada',
+            'registrada' => 'Registrada',
 
-            'activa' =>
-                'Activa',
+            'activa' => 'Activa',
 
-            'inactiva' =>
-                'Inactiva',
+            'inactiva' => 'Inactiva',
         ];
     }
 
@@ -1382,8 +1472,7 @@ class UnidadController extends Controller
      *
      * Casos permitidos:
      *
-     * - unidad registrada sin licencia, durante preparación inicial;
-     * - unidad no inactiva con licencia vigente.
+     * Solo una unidad registrada conserva configuración editable.
      */
     private function validarUnidadEditable(
         Unidad $unidad
@@ -1394,61 +1483,14 @@ class UnidadController extends Controller
             'puntosSeguridad',
         ]);
 
-        if ($unidad->estado === 'inactiva') {
-            abort(
-                403,
-                'No se puede modificar esta unidad porque está inactiva. Debe reactivarla desde la ficha.'
-            );
-        }
-
-        /*
-         * Antes de crear la licencia, Diesel Cop todavía puede corregir
-         * la información de una unidad registrada.
-         */
-        if (
-            $unidad->estado === 'registrada'
-            && ! $unidad->licencia
-        ) {
+        if ($unidad->estado === 'registrada') {
             return;
         }
 
-        if (! $unidad->licencia) {
-            abort(
-                403,
-                'La unidad no tiene una licencia registrada y no puede modificarse en su estado actual.'
-            );
-        }
-
-        if ($unidad->licencia->estado === 'inactiva') {
-            abort(
-                403,
-                'No se puede modificar esta unidad porque su licencia está inactiva. Debe reactivar la licencia desde su ficha.'
-            );
-        }
-
-        if (
-            $unidad->licencia
-                ->esta_pendiente_activacion
-        ) {
-            abort(
-                403,
-                'No se puede modificar esta unidad porque su licencia todavía no ha iniciado.'
-            );
-        }
-
-        if ($unidad->licencia->esta_vencida) {
-            abort(
-                403,
-                'No se puede modificar esta unidad porque su licencia está vencida. Debe renovar la licencia desde su ficha.'
-            );
-        }
-
-        if (! $unidad->licencia->esta_vigente) {
-            abort(
-                403,
-                'La licencia no habilita actualmente la modificación de esta unidad.'
-            );
-        }
+        abort(
+            403,
+            'La configuración estructural solo puede modificarse mientras la unidad está registrada.'
+        );
     }
 
     /**
@@ -1551,6 +1593,7 @@ class UnidadController extends Controller
         $unidad->load([
             'empresa',
             'licencia',
+            'tanquesUnidad',
             'puntosSeguridad.marchamoActual',
             'creadoPor',
             'actualizadoPor',

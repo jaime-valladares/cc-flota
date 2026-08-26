@@ -13,11 +13,7 @@
 
     $puedeEditar =
         Auth::user()->tienePermiso('unidades.editar')
-        && $unidad->estado !== 'inactiva'
-        && (
-            $unidadRegistradaSinLicencia
-            || $licenciaVigente
-        );
+        && $unidad->estado === 'registrada';
 
     $puedeInactivar =
         Auth::user()->tienePermiso('unidades.inactivar')
@@ -679,6 +675,17 @@
                                             galones
                                         </div>
                                     </div>
+                                    @foreach ($unidad->tanquesUnidad as $tanqueUnidad)
+                                        <div class="cc-detail-item">
+                                            <div class="cc-detail-label">
+                                                Tanque {{ $tanqueUnidad->numero }}
+                                            </div>
+                                            <div class="cc-detail-value">
+                                                {{ number_format((float) $tanqueUnidad->capacidad, 2) }} galones
+                                                — {{ $tanqueUnidad->cubierto_por_licencia ? 'Cubierto' : 'No cubierto' }}
+                                            </div>
+                                        </div>
+                                    @endforeach
 
                                     <div class="cc-detail-item">
                                         <div class="cc-detail-label">
@@ -715,6 +722,20 @@
                                             {{ $unidad->modelo_medicion_texto }}
                                         </div>
                                     </div>
+                                    <div class="cc-detail-item">
+                                        <div class="cc-detail-label">Km/Gal teórico</div>
+                                        <div class="cc-detail-value">
+                                            {{ is_null($unidad->rendimiento_teorico_km_galon) ? 'No definido' : number_format((float) $unidad->rendimiento_teorico_km_galon, 4) }}
+                                        </div>
+                                    </div>
+                                    @if ($unidad->modelo_medicion === 'galones_hora')
+                                        <div class="cc-detail-item">
+                                            <div class="cc-detail-label">Gal/Hora teórico</div>
+                                            <div class="cc-detail-value">
+                                                {{ is_null($unidad->rendimiento_teorico_gal_hora) ? 'No definido' : number_format((float) $unidad->rendimiento_teorico_gal_hora, 4) }}
+                                            </div>
+                                        </div>
+                                    @endif
                                 </div>
                             </section>
 

@@ -334,7 +334,7 @@ class LicenciaController extends Controller
                 'unidades.placa',
                 DB::raw(
                     'COALESCE(empresas.nombre_comercial, '
-                    . 'empresas.nombre_legal) as empresa_nombre'
+                    .'empresas.nombre_legal) as empresa_nombre'
                 ),
             ])
             ->orderBy('empresa_nombre')
@@ -431,17 +431,17 @@ class LicenciaController extends Controller
                                 ->where(
                                     'unidades.placa',
                                     'like',
-                                    '%' . $busqueda . '%'
+                                    '%'.$busqueda.'%'
                                 )
                                 ->orWhere(
                                     'empresas.nombre_legal',
                                     'like',
-                                    '%' . $busqueda . '%'
+                                    '%'.$busqueda.'%'
                                 )
                                 ->orWhere(
                                     'empresas.nombre_comercial',
                                     'like',
-                                    '%' . $busqueda . '%'
+                                    '%'.$busqueda.'%'
                                 );
                         }
                     );
@@ -579,8 +579,7 @@ class LicenciaController extends Controller
              */
             'empresaIds' => $empresaIds,
             'unidadIds' => $unidadIds,
-            'periodosVigenciaSeleccionados' =>
-                $periodosVigenciaSeleccionados,
+            'periodosVigenciaSeleccionados' => $periodosVigenciaSeleccionados,
 
             /*
              * Variables simples.
@@ -598,8 +597,7 @@ class LicenciaController extends Controller
             'totalActivas' => $totalActivas,
             'totalInactivas' => $totalInactivas,
             'totalVigentes' => $totalVigentes,
-            'totalPendientesActivacion' =>
-                $totalPendientesActivacion,
+            'totalPendientesActivacion' => $totalPendientesActivacion,
             'totalVencidas' => $totalVencidas,
 
             'resumenLicencias' => $resumenLicencias,
@@ -704,11 +702,9 @@ class LicenciaController extends Controller
         return [
             'empresas' => $empresas,
             'unidades' => $unidades,
-            'empresaSeleccionadaId' =>
-                $empresaSeleccionadaId,
+            'empresaSeleccionadaId' => $empresaSeleccionadaId,
             'esUsuarioDieselCop' => true,
-            'periodosVigencia' =>
-                $this->periodosVigencia(),
+            'periodosVigencia' => $this->periodosVigencia(),
         ];
     }
 
@@ -741,8 +737,7 @@ class LicenciaController extends Controller
             return back()
                 ->withInput()
                 ->withErrors([
-                    'unidad_id' =>
-                        'La unidad seleccionada no pertenece a la empresa indicada.',
+                    'unidad_id' => 'La unidad seleccionada no pertenece a la empresa indicada.',
                 ]);
         }
 
@@ -750,8 +745,7 @@ class LicenciaController extends Controller
             return back()
                 ->withInput()
                 ->withErrors([
-                    'unidad_id' =>
-                        'Esta unidad ya tiene una licencia registrada.',
+                    'unidad_id' => 'Esta unidad ya tiene una licencia registrada.',
                 ]);
         }
 
@@ -759,8 +753,7 @@ class LicenciaController extends Controller
             return back()
                 ->withInput()
                 ->withErrors([
-                    'unidad_id' =>
-                        'Solo se puede crear una licencia para unidades registradas pendientes de configuración.',
+                    'unidad_id' => 'Solo se puede crear una licencia para unidades registradas pendientes de configuración.',
                 ]);
         }
 
@@ -771,8 +764,7 @@ class LicenciaController extends Controller
             return back()
                 ->withInput()
                 ->withErrors([
-                    'unidad_id' =>
-                        'La empresa asociada a la unidad debe estar activa.',
+                    'unidad_id' => 'La empresa asociada a la unidad debe estar activa.',
                 ]);
         }
 
@@ -780,8 +772,24 @@ class LicenciaController extends Controller
             return back()
                 ->withInput()
                 ->withErrors([
-                    'unidad_id' =>
-                        'Esta unidad ya tiene puntos de seguridad generados.',
+                    'unidad_id' => 'Esta unidad ya tiene puntos de seguridad generados.',
+                ]);
+        }
+
+        $tanquesUnidad = $unidad->tanquesUnidad()->get();
+        $tanquesCubiertos = $tanquesUnidad
+            ->where('cubierto_por_licencia', true);
+
+        if (
+            $tanquesUnidad->count() !== (int) $unidad->total_tanques
+            || $tanquesCubiertos->count()
+                !== (int) $unidad->cantidad_tanques_con_licencia
+            || $tanquesCubiertos->isEmpty()
+        ) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'unidad_id' => 'La estructura de tanques de la unidad está incompleta o no coincide con su cobertura derivada.',
                 ]);
         }
 
@@ -807,20 +815,16 @@ class LicenciaController extends Controller
                 $licenciaCreada = Licencia::create([
                     'empresa_id' => $unidad->empresa_id,
                     'unidad_id' => $unidad->id,
-                    'periodo_vigencia_meses' =>
-                        $periodoVigencia,
-                    'fecha_activacion' =>
-                        $fechaActivacion->toDateString(),
-                    'fecha_vencimiento' =>
-                        $fechaActivacion
-                            ->copy()
-                            ->addMonthsNoOverflow(
-                                $periodoVigencia
-                            )
-                            ->toDateString(),
+                    'periodo_vigencia_meses' => $periodoVigencia,
+                    'fecha_activacion' => $fechaActivacion->toDateString(),
+                    'fecha_vencimiento' => $fechaActivacion
+                        ->copy()
+                        ->addMonthsNoOverflow(
+                            $periodoVigencia
+                        )
+                        ->toDateString(),
                     'estado' => 'activa',
-                    'plantilla_puntos_seguridad' =>
-                        $plantilla,
+                    'plantilla_puntos_seguridad' => $plantilla,
                     'creado_por' => Auth::id(),
                     'actualizado_por' => Auth::id(),
                 ]);
@@ -832,42 +836,31 @@ class LicenciaController extends Controller
                 ) {
                     PuntoSeguridadUnidad::create([
                         'unidad_id' => $unidad->id,
-                        'orden' =>
-                            $punto['orden_visual']
+                        'orden' => $punto['orden_visual']
                             ?? $punto['orden']
                             ?? null,
-                        'codigo_punto' =>
-                            $punto['codigo_punto']
+                        'codigo_punto' => $punto['codigo_punto']
                             ?? null,
-                        'grupo' =>
-                            $punto['grupo']
+                        'grupo' => $punto['grupo']
                             ?? null,
-                        'subgrupo' =>
-                            $punto['subgrupo']
+                        'subgrupo' => $punto['subgrupo']
                             ?? null,
-                        'nombre_punto' =>
-                            $punto['nombre_punto']
+                        'nombre_punto' => $punto['nombre_punto']
                             ?? $punto['nombre']
                             ?? 'Punto sin nombre',
                         'descripcion' => null,
-                        'posicion_tanque' =>
-                            $punto['posicion_tanque']
+                        'posicion_tanque' => $punto['posicion_tanque']
                             ?? null,
-                        'tipo_punto' =>
-                            $punto['tipo_punto']
+                        'tipo_punto' => $punto['tipo_punto']
                             ?? null,
-                        'requiere_marchamo' =>
-                            (bool) (
-                                $punto['requiere_marchamo']
-                                ?? true
-                            ),
-                        'plantilla_origen' =>
-                            $plantilla,
-                        'criterio_origen' =>
-                            $punto['criterio_origen']
+                        'requiere_marchamo' => (bool) (
+                            $punto['requiere_marchamo']
+                            ?? true
+                        ),
+                        'plantilla_origen' => $plantilla,
+                        'criterio_origen' => $punto['criterio_origen']
                             ?? null,
-                        'estado_asignacion' =>
-                            'pendiente',
+                        'estado_asignacion' => 'pendiente',
                         'marchamo_actual_id' => null,
                         'estado' => 'activo',
                         'creado_por' => Auth::id(),
@@ -974,8 +967,7 @@ class LicenciaController extends Controller
 
         return view('licencias.edit', [
             'licencia' => $licencia,
-            'periodosVigencia' =>
-                $this->periodosVigencia(),
+            'periodosVigencia' => $this->periodosVigencia(),
             'esUsuarioDieselCop' => true,
         ]);
     }
@@ -996,8 +988,7 @@ class LicenciaController extends Controller
 
         return view('licencias.edit-ventana', [
             'licencia' => $licencia,
-            'periodosVigencia' =>
-                $this->periodosVigencia(),
+            'periodosVigencia' => $this->periodosVigencia(),
             'esUsuarioDieselCop' => true,
         ]);
     }
@@ -1024,17 +1015,14 @@ class LicenciaController extends Controller
         ];
 
         $licencia->update([
-            'periodo_vigencia_meses' =>
-                $periodoVigencia,
-            'fecha_activacion' =>
-                $fechaActivacion->toDateString(),
-            'fecha_vencimiento' =>
-                $fechaActivacion
-                    ->copy()
-                    ->addMonthsNoOverflow(
-                        $periodoVigencia
-                    )
-                    ->toDateString(),
+            'periodo_vigencia_meses' => $periodoVigencia,
+            'fecha_activacion' => $fechaActivacion->toDateString(),
+            'fecha_vencimiento' => $fechaActivacion
+                ->copy()
+                ->addMonthsNoOverflow(
+                    $periodoVigencia
+                )
+                ->toDateString(),
             'actualizado_por' => Auth::id(),
         ]);
 
@@ -1087,8 +1075,7 @@ class LicenciaController extends Controller
 
         if ($licencia->estado === 'inactiva') {
             return back()->withErrors([
-                'motivo_inactivacion' =>
-                    'La licencia ya se encuentra inactiva.',
+                'motivo_inactivacion' => 'La licencia ya se encuentra inactiva.',
             ]);
         }
 
@@ -1107,8 +1094,7 @@ class LicenciaController extends Controller
             'estado' => 'inactiva',
             'fecha_inactivacion' => now(),
             'inactivado_por' => Auth::id(),
-            'motivo_inactivacion' =>
-                $validated['motivo_inactivacion'],
+            'motivo_inactivacion' => $validated['motivo_inactivacion'],
             'actualizado_por' => Auth::id(),
         ]);
 
@@ -1167,8 +1153,7 @@ class LicenciaController extends Controller
             && ! $this->licenciaEstaVencida($licencia)
         ) {
             return back()->withErrors([
-                'fecha_activacion' =>
-                    'La licencia se encuentra activa y no está vencida.',
+                'fecha_activacion' => 'La licencia se encuentra activa y no está vencida.',
             ]);
         }
 
@@ -1197,17 +1182,14 @@ class LicenciaController extends Controller
         ];
 
         $licencia->update([
-            'periodo_vigencia_meses' =>
-                $periodoVigencia,
-            'fecha_activacion' =>
-                $fechaActivacion->toDateString(),
-            'fecha_vencimiento' =>
-                $fechaActivacion
-                    ->copy()
-                    ->addMonthsNoOverflow(
-                        $periodoVigencia
-                    )
-                    ->toDateString(),
+            'periodo_vigencia_meses' => $periodoVigencia,
+            'fecha_activacion' => $fechaActivacion->toDateString(),
+            'fecha_vencimiento' => $fechaActivacion
+                ->copy()
+                ->addMonthsNoOverflow(
+                    $periodoVigencia
+                )
+                ->toDateString(),
             'estado' => 'activa',
             'fecha_inactivacion' => null,
             'inactivado_por' => null,

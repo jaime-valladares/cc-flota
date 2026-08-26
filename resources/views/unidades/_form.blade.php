@@ -13,6 +13,13 @@
         $unidad->empresa_id
             ?? ($empresaUsuario->id ?? '')
     );
+
+    $tanquesPersistidos = $unidad?->tanquesUnidad ?? collect();
+    $tanquesFormulario = collect(old('tanques', []));
+    $cantidadTanquesActual = (int) old(
+        'cantidad_tanques',
+        $tanquesPersistidos->count() ?: ($unidad->total_tanques ?? 1)
+    );
 @endphp
 
 @if ($errors->any())
@@ -170,15 +177,15 @@
         </div>
     </div>
 
-    <div class="cc-field">
-        <label for="total_tanques">
+    <div class="cc-field cc-col-span-2">
+        <label for="cantidad_tanques">
             Total de tanques de la unidad
             <span class="cc-required">*</span>
         </label>
 
         <select
-            id="total_tanques"
-            name="total_tanques"
+            id="cantidad_tanques"
+            name="cantidad_tanques"
             class="cc-input"
             required
         >
@@ -189,10 +196,7 @@
             <option
                 value="1"
                 @selected(
-                    (string) old(
-                        'total_tanques',
-                        $unidad->total_tanques ?? ''
-                    ) === '1'
+                    (string) $cantidadTanquesActual === '1'
                 )
             >
                 1 tanque
@@ -201,10 +205,7 @@
             <option
                 value="2"
                 @selected(
-                    (string) old(
-                        'total_tanques',
-                        $unidad->total_tanques ?? ''
-                    ) === '2'
+                    (string) $cantidadTanquesActual === '2'
                 )
             >
                 2 tanques
@@ -213,133 +214,79 @@
             <option
                 value="3"
                 @selected(
-                    (string) old(
-                        'total_tanques',
-                        $unidad->total_tanques ?? ''
-                    ) === '3'
+                    (string) $cantidadTanquesActual === '3'
                 )
             >
                 3 tanques
             </option>
         </select>
 
-        @error('total_tanques')
+        @error('cantidad_tanques')
             <div class="cc-error">
                 {{ $message }}
             </div>
         @enderror
     </div>
 
-    <div class="cc-field">
-        <label for="cantidad_tanques_con_licencia">
-            Tanques cubiertos por licencia
-            <span class="cc-required">*</span>
-        </label>
-
-        <select
-            id="cantidad_tanques_con_licencia"
-            name="cantidad_tanques_con_licencia"
-            class="cc-input"
-            required
-        >
-            <option value="">
-                Seleccione
-            </option>
-
-            <option
-                value="1"
-                @selected(
-                    (string) old(
-                        'cantidad_tanques_con_licencia',
-                        $unidad->cantidad_tanques_con_licencia ?? ''
-                    ) === '1'
-                )
-            >
-                1 tanque
-            </option>
-
-            <option
-                value="2"
-                @selected(
-                    (string) old(
-                        'cantidad_tanques_con_licencia',
-                        $unidad->cantidad_tanques_con_licencia ?? ''
-                    ) === '2'
-                )
-            >
-                2 tanques
-            </option>
-
-            <option
-                value="3"
-                @selected(
-                    (string) old(
-                        'cantidad_tanques_con_licencia',
-                        $unidad->cantidad_tanques_con_licencia ?? ''
-                    ) === '3'
-                )
-            >
-                3 tanques
-            </option>
-        </select>
-
-        @error('cantidad_tanques_con_licencia')
-            <div class="cc-error">
-                {{ $message }}
+    <div id="unidad-tanques" class="cc-col-span-2 cc-grid cc-grid-compact">
+        @for ($indice = 0; $indice < 3; $indice++)
+            @php
+                $persistido = $tanquesPersistidos->get($indice);
+                $enviado = $tanquesFormulario->get($indice, []);
+                $capacidad = $enviado['capacidad'] ?? $persistido?->capacidad;
+                $cubierto = array_key_exists('cubierto_por_licencia', $enviado)
+                    ? (bool) $enviado['cubierto_por_licencia']
+                    : (bool) ($persistido?->cubierto_por_licencia ?? ($indice === 0));
+            @endphp
+            <div class="cc-field" data-unidad-tanque="{{ $indice + 1 }}">
+                <label for="tanque_{{ $indice }}_capacidad">
+                    Tanque {{ $indice + 1 }} — Capacidad (gal)
+                    <span class="cc-required">*</span>
+                </label>
+                <input
+                    id="tanque_{{ $indice }}_capacidad"
+                    name="tanques[{{ $indice }}][capacidad]"
+                    type="number"
+                    class="cc-input"
+                    value="{{ $capacidad }}"
+                    min="0.01"
+                    max="99999999.99"
+                    step="0.01"
+                    data-capacidad-tanque
+                >
+                <input type="hidden" name="tanques[{{ $indice }}][cubierto_por_licencia]" value="0">
+                <label class="cc-checkbox-option">
+                    <input
+                        type="checkbox"
+                        name="tanques[{{ $indice }}][cubierto_por_licencia]"
+                        value="1"
+                        data-cobertura-tanque
+                        @checked($cubierto)
+                    >
+                    Cubierto por licencia
+                </label>
+                @error("tanques.$indice.capacidad")
+                    <div class="cc-error">{{ $message }}</div>
+                @enderror
             </div>
-        @enderror
+        @endfor
     </div>
 
+    @error('tanques')
+        <div class="cc-error cc-col-span-2">{{ $message }}</div>
+    @enderror
+
     <div class="cc-field">
-        <label for="capacidad_total">
-            Capacidad total de la unidad
-            <span class="cc-required">*</span>
-        </label>
-
-        <input
-            id="capacidad_total"
-            name="capacidad_total"
-            type="number"
-            class="cc-input"
-            value="{{ old('capacidad_total', $unidad->capacidad_total ?? '') }}"
-            min="0.01"
-            max="99999999.99"
-            step="0.01"
-            required
-            placeholder="Ej. 250.00"
-        >
-
-        @error('capacidad_total')
-            <div class="cc-error">
-                {{ $message }}
-            </div>
-        @enderror
+        <label>Capacidad total de la unidad</label>
+        <input id="capacidad_total_calculada" type="text" class="cc-input" readonly>
     </div>
-
     <div class="cc-field">
-        <label for="capacidad_cubierta">
-            Capacidad cubierta por licencia
-            <span class="cc-required">*</span>
-        </label>
-
-        <input
-            id="capacidad_cubierta"
-            name="capacidad_cubierta"
-            type="number"
-            class="cc-input"
-            value="{{ old('capacidad_cubierta', $unidad->capacidad_cubierta ?? '') }}"
-            min="0.01"
-            max="99999999.99"
-            step="0.01"
-            required
-            placeholder="Ej. 250.00"
-        >
-
-        @error('capacidad_cubierta')
-            <div class="cc-error">
-                {{ $message }}
-            </div>
-        @enderror
+        <label>Tanques cubiertos por licencia</label>
+        <input id="tanques_cubiertos_calculados" type="text" class="cc-input" readonly>
+    </div>
+    <div class="cc-field">
+        <label>Capacidad cubierta por licencia</label>
+        <input id="capacidad_cubierta_calculada" type="text" class="cc-input" readonly>
     </div>
 
     <div class="cc-form-section-slim">
@@ -383,6 +330,43 @@
             <div class="cc-error">
                 {{ $message }}
             </div>
+        @enderror
+    </div>
+
+    <div class="cc-field">
+        <label for="rendimiento_teorico_km_galon">
+            Km/Gal teórico <span class="cc-required">*</span>
+        </label>
+        <input
+            id="rendimiento_teorico_km_galon"
+            name="rendimiento_teorico_km_galon"
+            type="number"
+            class="cc-input"
+            value="{{ old('rendimiento_teorico_km_galon', $unidad->rendimiento_teorico_km_galon ?? '') }}"
+            min="0.0001"
+            step="0.0001"
+            required
+        >
+        @error('rendimiento_teorico_km_galon')
+            <div class="cc-error">{{ $message }}</div>
+        @enderror
+    </div>
+
+    <div class="cc-field" id="campo-rendimiento-gal-hora">
+        <label for="rendimiento_teorico_gal_hora">
+            Gal/Hora teórico <span class="cc-required">*</span>
+        </label>
+        <input
+            id="rendimiento_teorico_gal_hora"
+            name="rendimiento_teorico_gal_hora"
+            type="number"
+            class="cc-input"
+            value="{{ old('rendimiento_teorico_gal_hora', $unidad->rendimiento_teorico_gal_hora ?? '') }}"
+            min="0.0001"
+            step="0.0001"
+        >
+        @error('rendimiento_teorico_gal_hora')
+            <div class="cc-error">{{ $message }}</div>
         @enderror
     </div>
 
@@ -437,125 +421,64 @@
 
 <script>
     const placaInput = document.getElementById('placa');
+    const cantidadTanquesInput = document.getElementById('cantidad_tanques');
+    const modeloMedicionInput = document.getElementById('modelo_medicion');
+    const campoGalHora = document.getElementById('campo-rendimiento-gal-hora');
+    const rendimientoGalHora = document.getElementById('rendimiento_teorico_gal_hora');
+    const filasTanques = Array.from(document.querySelectorAll('[data-unidad-tanque]'));
 
-    const totalTanquesInput = document.getElementById(
-        'total_tanques'
-    );
+    function actualizarEstructura() {
+        const cantidad = Number(cantidadTanquesInput?.value || 0);
+        let capacidadTotal = 0;
+        let capacidadCubierta = 0;
+        let tanquesCubiertos = 0;
 
-    const tanquesLicenciaInput = document.getElementById(
-        'cantidad_tanques_con_licencia'
-    );
+        filasTanques.forEach(function (fila, indice) {
+            const visible = indice < cantidad;
+            const capacidad = fila.querySelector('[data-capacidad-tanque]');
+            const cobertura = fila.querySelector('[data-cobertura-tanque]');
 
-    const capacidadTotalInput = document.getElementById(
-        'capacidad_total'
-    );
+            fila.hidden = !visible;
+            fila.querySelectorAll('input[name]').forEach(function (input) {
+                input.disabled = !visible;
+            });
+            capacidad.required = visible;
 
-    const capacidadCubiertaInput = document.getElementById(
-        'capacidad_cubierta'
-    );
-
-    function validarTanquesLicencia() {
-        if (!totalTanquesInput || !tanquesLicenciaInput) {
-            return;
-        }
-
-        const totalTanques = Number(totalTanquesInput.value);
-        const tanquesLicencia = Number(
-            tanquesLicenciaInput.value
-        );
-
-        if (
-            totalTanques > 0
-            && tanquesLicencia > totalTanques
-        ) {
-            tanquesLicenciaInput.setCustomValidity(
-                'Los tanques cubiertos por licencia no pueden superar el total de tanques.'
-            );
-        } else {
-            tanquesLicenciaInput.setCustomValidity('');
-        }
-    }
-
-    function validarCapacidadCubierta() {
-        if (
-            !capacidadTotalInput
-            || !capacidadCubiertaInput
-        ) {
-            return;
-        }
-
-        const capacidadTotal = Number(
-            capacidadTotalInput.value
-        );
-
-        const capacidadCubierta = Number(
-            capacidadCubiertaInput.value
-        );
-
-        if (
-            capacidadTotal > 0
-            && capacidadCubierta > capacidadTotal
-        ) {
-            capacidadCubiertaInput.setCustomValidity(
-                'La capacidad cubierta no puede superar la capacidad total.'
-            );
-        } else {
-            capacidadCubiertaInput.setCustomValidity('');
-        }
-    }
-
-    function actualizarOpcionesTanquesLicencia() {
-        if (!totalTanquesInput || !tanquesLicenciaInput) {
-            return;
-        }
-
-        const totalTanques = Number(
-            totalTanquesInput.value
-        );
-
-        Array.from(tanquesLicenciaInput.options).forEach(
-            function (option) {
-                if (option.value === '') {
-                    return;
-                }
-
-                option.disabled =
-                    totalTanques > 0
-                    && Number(option.value) > totalTanques;
+            if (!visible) {
+                return;
             }
-        );
 
-        validarTanquesLicencia();
+            const galones = Number(capacidad.value || 0);
+            capacidadTotal += galones;
+
+            if (cobertura.checked) {
+                tanquesCubiertos++;
+                capacidadCubierta += galones;
+            }
+        });
+
+        document.getElementById('capacidad_total_calculada').value =
+            capacidadTotal.toFixed(2) + ' gal';
+        document.getElementById('tanques_cubiertos_calculados').value =
+            String(tanquesCubiertos);
+        document.getElementById('capacidad_cubierta_calculada').value =
+            capacidadCubierta.toFixed(2) + ' gal';
     }
 
-    if (totalTanquesInput) {
-        totalTanquesInput.addEventListener(
-            'change',
-            actualizarOpcionesTanquesLicencia
-        );
+    function actualizarGalHora() {
+        const aplica = modeloMedicionInput?.value === 'galones_hora';
+        campoGalHora.hidden = !aplica;
+        rendimientoGalHora.required = aplica;
+        rendimientoGalHora.disabled = !aplica;
     }
 
-    if (tanquesLicenciaInput) {
-        tanquesLicenciaInput.addEventListener(
-            'change',
-            validarTanquesLicencia
-        );
-    }
+    cantidadTanquesInput?.addEventListener('change', actualizarEstructura);
+    modeloMedicionInput?.addEventListener('change', actualizarGalHora);
+    filasTanques.forEach(function (fila) {
+        fila.addEventListener('input', actualizarEstructura);
+        fila.addEventListener('change', actualizarEstructura);
+    });
 
-    if (capacidadTotalInput) {
-        capacidadTotalInput.addEventListener(
-            'input',
-            validarCapacidadCubierta
-        );
-    }
-
-    if (capacidadCubiertaInput) {
-        capacidadCubiertaInput.addEventListener(
-            'input',
-            validarCapacidadCubierta
-        );
-    }
-
-    actualizarOpcionesTanquesLicencia();
-    validarCapacidadCubierta();
+    actualizarEstructura();
+    actualizarGalHora();
 </script>

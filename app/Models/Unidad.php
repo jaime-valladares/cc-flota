@@ -18,6 +18,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'capacidad_total',
     'capacidad_cubierta',
     'modelo_medicion',
+    'rendimiento_teorico_km_galon',
+    'rendimiento_teorico_gal_hora',
     'estado',
     'creado_por',
     'actualizado_por',
@@ -58,6 +60,18 @@ class Unidad extends Model
             Licencia::class,
             'unidad_id'
         );
+    }
+
+    /**
+     * Tanques físicos configurados en la unidad vehicular.
+     * No corresponde a los tanques de gasolineras internas.
+     */
+    public function tanquesUnidad(): HasMany
+    {
+        return $this->hasMany(
+            UnidadTanque::class,
+            'unidad_id'
+        )->orderBy('numero');
     }
 
     /**
@@ -193,17 +207,13 @@ class Unidad extends Model
     {
         return Attribute::make(
             get: fn (): string => match ($this->modelo_medicion) {
-                'galones_hora' =>
-                    'Galones por hora',
+                'galones_hora' => 'Galones por hora',
 
-                'kilometros_galon' =>
-                    'Kilómetros por galón',
+                'kilometros_galon' => 'Kilómetros por galón',
 
-                'galones_viaje' =>
-                    'Galones por viaje',
+                'galones_viaje' => 'Galones por viaje',
 
-                default =>
-                    'No definido',
+                default => 'No definido',
             }
         );
     }
@@ -217,17 +227,13 @@ class Unidad extends Model
     {
         return Attribute::make(
             get: fn (): string => match ($this->estado) {
-                'registrada' =>
-                    'Registrada',
+                'registrada' => 'Registrada',
 
-                'activa' =>
-                    'Activa',
+                'activa' => 'Activa',
 
-                'inactiva' =>
-                    'Inactiva',
+                'inactiva' => 'Inactiva',
 
-                default =>
-                    'No definido',
+                default => 'No definido',
             }
         );
     }
@@ -438,35 +444,25 @@ class Unidad extends Model
             get: fn (): string => match (
                 $this->disponibilidad_operativa
             ) {
-                'empresa_inactiva' =>
-                    'Bloqueada por empresa inactiva',
+                'empresa_inactiva' => 'Bloqueada por empresa inactiva',
 
-                'unidad_inactiva' =>
-                    'Unidad inactiva',
+                'unidad_inactiva' => 'Unidad inactiva',
 
-                'sin_licencia' =>
-                    'Sin licencia',
+                'sin_licencia' => 'Sin licencia',
 
-                'licencia_inactiva' =>
-                    'Bloqueada por licencia inactiva',
+                'licencia_inactiva' => 'Bloqueada por licencia inactiva',
 
-                'licencia_pendiente_activacion' =>
-                    'Licencia pendiente de activación',
+                'licencia_pendiente_activacion' => 'Licencia pendiente de activación',
 
-                'licencia_vencida' =>
-                    'Bloqueada por licencia vencida',
+                'licencia_vencida' => 'Bloqueada por licencia vencida',
 
-                'asignacion_inicial_pendiente' =>
-                    'Asignación inicial pendiente',
+                'asignacion_inicial_pendiente' => 'Asignación inicial pendiente',
 
-                'pendiente_activacion_operativa' =>
-                    'Pendiente de activación operativa',
+                'pendiente_activacion_operativa' => 'Pendiente de activación operativa',
 
-                'operable' =>
-                    'Operable',
+                'operable' => 'Operable',
 
-                default =>
-                    'Disponibilidad no definida',
+                default => 'Disponibilidad no definida',
             }
         );
     }
@@ -481,45 +477,35 @@ class Unidad extends Model
                 return match (
                     $this->disponibilidad_operativa
                 ) {
-                    'empresa_inactiva' =>
-                        'La unidad permanece disponible únicamente para consulta histórica porque su empresa está inactiva.',
+                    'empresa_inactiva' => 'La unidad permanece disponible únicamente para consulta histórica porque su empresa está inactiva.',
 
-                    'unidad_inactiva' =>
-                        'La unidad fue inactivada administrativamente y no puede participar en operaciones.',
+                    'unidad_inactiva' => 'La unidad fue inactivada administrativamente y no puede participar en operaciones.',
 
-                    'sin_licencia' =>
-                        'La unidad todavía no tiene una licencia registrada y no puede iniciar su configuración de puntos de seguridad.',
+                    'sin_licencia' => 'La unidad todavía no tiene una licencia registrada y no puede iniciar su configuración de puntos de seguridad.',
 
-                    'licencia_inactiva' =>
-                        'La unidad está bloqueada operativamente porque su licencia fue inactivada administrativamente.',
+                    'licencia_inactiva' => 'La unidad está bloqueada operativamente porque su licencia fue inactivada administrativamente.',
 
-                    'licencia_pendiente_activacion' =>
-                        sprintf(
-                            'La licencia todavía no ha iniciado. Su fecha de activación es %s.',
-                            $this->licencia?->fecha_activacion
-                                ?->format('d/m/Y')
-                                ?? 'no registrada'
-                        ),
+                    'licencia_pendiente_activacion' => sprintf(
+                        'La licencia todavía no ha iniciado. Su fecha de activación es %s.',
+                        $this->licencia?->fecha_activacion
+                            ?->format('d/m/Y')
+                            ?? 'no registrada'
+                    ),
 
-                    'licencia_vencida' =>
-                        sprintf(
-                            'La unidad está bloqueada operativamente porque su licencia venció el %s.',
-                            $this->licencia?->fecha_vencimiento
-                                ?->format('d/m/Y')
-                                ?? 'día no registrado'
-                        ),
+                    'licencia_vencida' => sprintf(
+                        'La unidad está bloqueada operativamente porque su licencia venció el %s.',
+                        $this->licencia?->fecha_vencimiento
+                            ?->format('d/m/Y')
+                            ?? 'día no registrado'
+                    ),
 
-                    'asignacion_inicial_pendiente' =>
-                        'La licencia está vigente, pero Diesel Cop todavía debe completar la asignación inicial de marchamos.',
+                    'asignacion_inicial_pendiente' => 'La licencia está vigente, pero Diesel Cop todavía debe completar la asignación inicial de marchamos.',
 
-                    'pendiente_activacion_operativa' =>
-                        'La licencia y los marchamos están completos, pero la unidad continúa registrada y pendiente de activación operativa.',
+                    'pendiente_activacion_operativa' => 'La licencia y los marchamos están completos, pero la unidad continúa registrada y pendiente de activación operativa.',
 
-                    'operable' =>
-                        'La empresa, la unidad, la licencia y la asignación inicial de marchamos cumplen las condiciones operativas.',
+                    'operable' => 'La empresa, la unidad, la licencia y la asignación inicial de marchamos cumplen las condiciones operativas.',
 
-                    default =>
-                        'No fue posible determinar la disponibilidad operativa de la unidad.',
+                    default => 'No fue posible determinar la disponibilidad operativa de la unidad.',
                 };
             }
         );
@@ -531,8 +517,7 @@ class Unidad extends Model
     protected function esOperable(): Attribute
     {
         return Attribute::make(
-            get: fn (): bool =>
-                $this->disponibilidad_operativa
+            get: fn (): bool => $this->disponibilidad_operativa
                 === 'operable'
         );
     }
@@ -543,8 +528,7 @@ class Unidad extends Model
     protected function puedeRecibirAsignacionInicial(): Attribute
     {
         return Attribute::make(
-            get: fn (): bool =>
-                $this->disponibilidad_operativa
+            get: fn (): bool => $this->disponibilidad_operativa
                 === 'asignacion_inicial_pendiente'
         );
     }
@@ -624,8 +608,7 @@ class Unidad extends Model
     protected function requiereAbastecimientoInicial(): Attribute
     {
         return Attribute::make(
-            get: fn (): bool =>
-                ! $this->tiene_abastecimientos_registrados
+            get: fn (): bool => ! $this->tiene_abastecimientos_registrados
         );
     }
 
@@ -638,20 +621,19 @@ class Unidad extends Model
     protected function casts(): array
     {
         return [
-            'total_tanques' =>
-                'integer',
+            'total_tanques' => 'integer',
 
-            'cantidad_tanques_con_licencia' =>
-                'integer',
+            'cantidad_tanques_con_licencia' => 'integer',
 
-            'capacidad_total' =>
-                'decimal:2',
+            'capacidad_total' => 'decimal:2',
 
-            'capacidad_cubierta' =>
-                'decimal:2',
+            'capacidad_cubierta' => 'decimal:2',
 
-            'fecha_inactivacion' =>
-                'datetime',
+            'rendimiento_teorico_km_galon' => 'decimal:4',
+
+            'rendimiento_teorico_gal_hora' => 'decimal:4',
+
+            'fecha_inactivacion' => 'datetime',
         ];
     }
 }
