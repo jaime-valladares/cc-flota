@@ -703,6 +703,14 @@ class GasolineraController extends Controller
                     ->withInput();
             }
 
+            if ($volumenActual > 0) {
+                return back()
+                    ->withErrors([
+                        "tanques.$index.volumen_actual" => 'Los tanques nuevos deben iniciar vacíos. Registre el inventario mediante una recarga con precio por galón.',
+                    ])
+                    ->withInput();
+            }
+
             if (
                 $volumenMinimoAlerta >= $capacidadTotal
             ) {
@@ -734,13 +742,15 @@ class GasolineraController extends Controller
                 foreach (
                     $validated['tanques'] as $tanqueData
                 ) {
-                    $volumenActual = (float) $tanqueData['volumen_actual'];
+                    $volumenActual = 0;
 
                     $tanque = Tanque::create([
                         'gasolinera_id' => $gasolinera->id,
                         'nombre' => $tanqueData['nombre'],
                         'capacidad_total' => $tanqueData['capacidad_total'],
-                        'volumen_actual' => $tanqueData['volumen_actual'],
+                        'volumen_actual' => 0,
+                        'valor_inventario_actual' => '0.00000000',
+                        'costo_promedio_galon_actual' => null,
                         'volumen_minimo_alerta' => $tanqueData['volumen_minimo_alerta'],
                         'estado' => 'activo',
                         'fecha_creacion' => now(),
@@ -756,6 +766,10 @@ class GasolineraController extends Controller
                         'sentido_movimiento' => 'entrada',
                         'volumen_movimiento' => $volumenActual,
                         'volumen_resultante' => $volumenActual,
+                        'valor_inventario_anterior' => '0.00000000',
+                        'valor_movimiento' => '0.00000000',
+                        'valor_inventario_resultante' => '0.00000000',
+                        'costo_unitario_aplicado' => null,
                         'fecha_hora_movimiento' => now(),
                         'observaciones' => 'Carga inicial registrada al crear el tanque.',
                         'usuario_registra_id' => Auth::id(),
@@ -1258,6 +1272,14 @@ class GasolineraController extends Controller
                 ->withInput();
         }
 
+        if ($volumenActual > 0) {
+            return back()
+                ->withErrors([
+                    'volumen_actual' => 'Los tanques nuevos deben iniciar vacíos. Registre el inventario mediante una recarga con precio por galón.',
+                ])
+                ->withInput();
+        }
+
         if (
             $volumenMinimoAlerta >= $capacidadTotal
         ) {
@@ -1278,7 +1300,9 @@ class GasolineraController extends Controller
                     'gasolinera_id' => $gasolinera->id,
                     'nombre' => $validated['nombre'],
                     'capacidad_total' => $validated['capacidad_total'],
-                    'volumen_actual' => $validated['volumen_actual'],
+                    'volumen_actual' => 0,
+                    'valor_inventario_actual' => '0.00000000',
+                    'costo_promedio_galon_actual' => null,
                     'volumen_minimo_alerta' => $validated['volumen_minimo_alerta'],
                     'estado' => 'activo',
                     'fecha_creacion' => now(),
@@ -1294,6 +1318,10 @@ class GasolineraController extends Controller
                     'sentido_movimiento' => 'entrada',
                     'volumen_movimiento' => $volumenActual,
                     'volumen_resultante' => $volumenActual,
+                    'valor_inventario_anterior' => '0.00000000',
+                    'valor_movimiento' => '0.00000000',
+                    'valor_inventario_resultante' => '0.00000000',
+                    'costo_unitario_aplicado' => null,
                     'fecha_hora_movimiento' => now(),
                     'observaciones' => 'Carga inicial registrada al agregar el tanque.',
                     'usuario_registra_id' => Auth::id(),

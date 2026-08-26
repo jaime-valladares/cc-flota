@@ -17,6 +17,8 @@ class Tanque extends Model
         'nombre',
         'capacidad_total',
         'volumen_actual',
+        'valor_inventario_actual',
+        'costo_promedio_galon_actual',
         'volumen_minimo_alerta',
         'estado',
         'fecha_creacion',
@@ -157,6 +159,8 @@ class Tanque extends Model
         return [
             'capacidad_total' => 'decimal:2',
             'volumen_actual' => 'decimal:2',
+            'valor_inventario_actual' => 'decimal:8',
+            'costo_promedio_galon_actual' => 'decimal:8',
             'volumen_minimo_alerta' => 'decimal:2',
 
             'fecha_creacion' => 'datetime',

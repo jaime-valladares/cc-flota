@@ -340,6 +340,20 @@
                                         @enderror
                                     </div>
 
+                                    <div class="cc-field">
+                                        <label>Costo promedio actual por galón</label>
+                                        <input type="text" class="cc-input"
+                                            value="{{ is_null($tanque->costo_promedio_galon_actual) ? '—' : '$'.number_format((float) $tanque->costo_promedio_galon_actual, 8) }}"
+                                            disabled>
+                                    </div>
+
+                                    <div class="cc-field">
+                                        <label>Valor actual del inventario</label>
+                                        <input type="text" class="cc-input"
+                                            value="{{ is_null($tanque->valor_inventario_actual) ? 'Sin costo conocido' : '$'.number_format((float) $tanque->valor_inventario_actual, 2) }}"
+                                            disabled>
+                                    </div>
+
                                 </div>
 
                                 @if ($tanqueActivo)

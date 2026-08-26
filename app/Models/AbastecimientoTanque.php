@@ -18,6 +18,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
     'inventario_anterior',
     'galones_retirados',
+    'costo_promedio_galon_snapshot',
+    'costo_total_snapshot',
     'inventario_resultante',
 
     'quedo_bajo_minimo',
@@ -85,6 +87,8 @@ class AbastecimientoTanque extends Model
 
             'inventario_anterior' => 'decimal:2',
             'galones_retirados' => 'decimal:2',
+            'costo_promedio_galon_snapshot' => 'decimal:8',
+            'costo_total_snapshot' => 'decimal:8',
             'inventario_resultante' => 'decimal:2',
 
             'quedo_bajo_minimo' => 'boolean',

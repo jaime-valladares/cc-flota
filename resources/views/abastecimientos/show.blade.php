@@ -483,6 +483,8 @@
                                                 <th>Tanque</th>
                                                 <th>Inventario anterior</th>
                                                 <th>Galones retirados</th>
+                                                <th>Costo promedio aplicado</th>
+                                                <th>Costo de la salida</th>
                                                 <th>Inventario resultante</th>
                                                 <th>Mínimo</th>
                                                 <th>Condición</th>
@@ -509,6 +511,14 @@
 
                                                     <td>
                                                         {{ number_format((float) $detalleTanque->galones_retirados, 2) }} gal
+                                                    </td>
+
+                                                    <td>
+                                                        {{ is_null($detalleTanque->costo_promedio_galon_snapshot) ? 'Sin dato' : '$'.number_format((float) $detalleTanque->costo_promedio_galon_snapshot, 8) }}
+                                                    </td>
+
+                                                    <td>
+                                                        {{ is_null($detalleTanque->costo_total_snapshot) ? 'Sin dato' : '$'.number_format((float) $detalleTanque->costo_total_snapshot, 2) }}
                                                     </td>
 
                                                     <td>

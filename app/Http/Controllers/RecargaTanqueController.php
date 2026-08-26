@@ -7,6 +7,7 @@ use App\Models\Gasolinera;
 use App\Models\MovimientoInventarioCombustible;
 use App\Models\RecargaCombustible;
 use App\Models\Tanque;
+use App\Support\Decimal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -727,8 +728,8 @@ class RecargaTanqueController extends Controller
                 'El destino de retorno no es válido.',
         ]);
 
-        $precioGalon = round(
-            (float) $validated['precio_galon'],
+        $precioGalon = Decimal::normalizar(
+            (string) $validated['precio_galon'],
             4
         );
 
@@ -809,8 +810,9 @@ class RecargaTanqueController extends Controller
             2
         );
 
-        $totalCompra = round(
-            $totalGalones * $precioGalon,
+        $totalCompra = Decimal::multiplicar(
+            (string) $totalGalones,
+            $precioGalon,
             2
         );
 
@@ -908,15 +910,49 @@ class RecargaTanqueController extends Controller
                     2
                 );
 
-                $subtotalCompra = round(
-                    $volumenMovimiento
-                    * $precioGalon,
+                if (
+                    $volumenAnterior > 0
+                    && (
+                        is_null($tanque->valor_inventario_actual)
+                        || is_null($tanque->costo_promedio_galon_actual)
+                    )
+                ) {
+                    throw ValidationException::withMessages([
+                        "volumenes.{$tanqueId}" =>
+                            "El tanque {$tanque->nombre} tiene inventario sin costo conocido y no puede valorizarse automáticamente.",
+                    ]);
+                }
+
+                $valorAnterior = $volumenAnterior > 0
+                    ? (string) $tanque->valor_inventario_actual
+                    : '0';
+                $valorEntrada = Decimal::multiplicar(
+                    (string) $volumenMovimiento,
+                    $precioGalon,
+                    8
+                );
+                $subtotalCompra = Decimal::normalizar(
+                    $valorEntrada,
                     2
+                );
+                $valorResultante = Decimal::sumar(
+                    $valorAnterior,
+                    $valorEntrada,
+                    8
+                );
+                $costoPromedioResultante = Decimal::dividir(
+                    $valorResultante,
+                    (string) $volumenResultante,
+                    8
                 );
 
                 $tanque->update([
                     'volumen_actual' =>
                         $volumenResultante,
+                    'valor_inventario_actual' =>
+                        $valorResultante,
+                    'costo_promedio_galon_actual' =>
+                        $costoPromedioResultante,
                     'fecha_actualizacion' =>
                         $fechaRecarga,
                     'actualizado_por' =>
@@ -942,6 +978,14 @@ class RecargaTanqueController extends Controller
                         $volumenMovimiento,
                     'volumen_resultante' =>
                         $volumenResultante,
+                    'valor_inventario_anterior' =>
+                        $valorAnterior,
+                    'valor_movimiento' =>
+                        $valorEntrada,
+                    'valor_inventario_resultante' =>
+                        $valorResultante,
+                    'costo_unitario_aplicado' =>
+                        Decimal::normalizar($precioGalon, 8),
                     'subtotal_compra' =>
                         $subtotalCompra,
                     'fecha_hora_movimiento' =>
@@ -1077,7 +1121,27 @@ class RecargaTanqueController extends Controller
                 ) {
                     throw ValidationException::withMessages([
                         'motivo_anulacion' =>
-                            "No se puede anular la recarga porque el tanque {$tanque->nombre} no conserva inventario suficiente para revertirla.",
+                        "No se puede anular la recarga porque el tanque {$tanque->nombre} no conserva inventario suficiente para revertirla.",
+                    ]);
+                }
+
+                $ultimoMovimientoEconomico =
+                    MovimientoInventarioCombustible::query()
+                        ->where('tanque_id', $tanque->id)
+                        ->where('estado', 'registrado')
+                        ->orderByDesc('fecha_hora_movimiento')
+                        ->orderByDesc('id')
+                        ->lockForUpdate()
+                        ->first();
+
+                if (
+                    ! $ultimoMovimientoEconomico
+                    || (int) $ultimoMovimientoEconomico->id
+                        !== (int) $movimiento->id
+                ) {
+                    throw ValidationException::withMessages([
+                        'motivo_anulacion' =>
+                            "No se puede anular la recarga porque el tanque {$tanque->nombre} tiene movimientos económicos posteriores.",
                     ]);
                 }
             }
@@ -1109,9 +1173,27 @@ class RecargaTanqueController extends Controller
                     2
                 );
 
+                $valorAnterior = (string)
+                    $tanque->valor_inventario_actual;
+                $valorMovimiento = (string)
+                    $movimiento->valor_movimiento;
+                $valorResultante = (string)
+                    $movimiento->valor_inventario_anterior;
+                $costoResultante = $volumenResultante > 0
+                    ? Decimal::dividir(
+                        $valorResultante,
+                        (string) $volumenResultante,
+                        8
+                    )
+                    : null;
+
                 $tanque->update([
                     'volumen_actual' =>
                         $volumenResultante,
+                    'valor_inventario_actual' =>
+                        $volumenResultante > 0 ? $valorResultante : '0.00000000',
+                    'costo_promedio_galon_actual' =>
+                        $costoResultante,
                     'fecha_actualizacion' =>
                         $fechaAnulacion,
                     'actualizado_por' =>
@@ -1152,6 +1234,14 @@ class RecargaTanqueController extends Controller
                         $volumenMovimiento,
                     'volumen_resultante' =>
                         $volumenResultante,
+                    'valor_inventario_anterior' =>
+                        $valorAnterior,
+                    'valor_movimiento' =>
+                        $valorMovimiento,
+                    'valor_inventario_resultante' =>
+                        $volumenResultante > 0 ? $valorResultante : '0.00000000',
+                    'costo_unitario_aplicado' =>
+                        $movimiento->costo_unitario_aplicado,
                     'subtotal_compra' =>
                         null,
                     'fecha_hora_movimiento' =>

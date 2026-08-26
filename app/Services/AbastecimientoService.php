@@ -16,6 +16,7 @@ use App\Models\ReemplazoMarchamoEvento;
 use App\Models\Ruta;
 use App\Models\Tanque;
 use App\Models\Unidad;
+use App\Support\Decimal;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -1551,6 +1552,16 @@ class AbastecimientoService
                                     'galones_retirados'
                                 ],
 
+                            'costo_promedio_galon_snapshot' =>
+                                $procesado[
+                                    'costo_promedio_galon_snapshot'
+                                ],
+
+                            'costo_total_snapshot' =>
+                                $procesado[
+                                    'costo_total_snapshot'
+                                ],
+
                             'inventario_resultante' =>
                                 $procesado[
                                     'inventario_resultante_snapshot'
@@ -2294,6 +2305,32 @@ class AbastecimientoService
                 2
             );
 
+            if (
+                $inventarioActual > 0
+                && (
+                    is_null($tanque->valor_inventario_actual)
+                    || is_null($tanque->costo_promedio_galon_actual)
+                )
+            ) {
+                $this->fallar(
+                    'tanques',
+                    "El tanque {$tanque->nombre} tiene inventario sin costo conocido."
+                );
+            }
+
+            if (
+                $detalleAnterior
+                && (
+                    is_null($detalleAnterior->costo_promedio_galon_snapshot)
+                    || is_null($detalleAnterior->costo_total_snapshot)
+                )
+            ) {
+                $this->fallar(
+                    'tanques',
+                    'El abastecimiento histórico no posee snapshots económicos y no puede modificarse.'
+                );
+            }
+
             $diferenciaInventario = round(
                 $galonesAnteriores
                 - $galonesNuevos,
@@ -2331,6 +2368,28 @@ class AbastecimientoService
                 abs($diferenciaInventario)
                 >= 0.005
             ) {
+                $valorInventarioActual = $inventarioActual > 0
+                    ? (string) $tanque->valor_inventario_actual
+                    : '0';
+                $costoAjuste = $diferenciaInventario > 0
+                    ? (string) $detalleAnterior->costo_promedio_galon_snapshot
+                    : (string) $tanque->costo_promedio_galon_actual;
+                $valorAjuste = Decimal::multiplicar(
+                    (string) abs($diferenciaInventario),
+                    $costoAjuste,
+                    8
+                );
+                $valorInventarioResultante = $diferenciaInventario > 0
+                    ? Decimal::sumar($valorInventarioActual, $valorAjuste, 8)
+                    : Decimal::restar($valorInventarioActual, $valorAjuste, 8);
+                $costoPromedioResultante = $inventarioResultanteActual > 0
+                    ? Decimal::dividir(
+                        $valorInventarioResultante,
+                        (string) $inventarioResultanteActual,
+                        8
+                    )
+                    : null;
+
                 $ajustes->push([
                     'tanque' =>
                         $tanque,
@@ -2343,10 +2402,63 @@ class AbastecimientoService
 
                     'inventario_resultante' =>
                         $inventarioResultanteActual,
+
+                    'valor_inventario_anterior' =>
+                        $valorInventarioActual,
+
+                    'valor_ajuste' =>
+                        $valorAjuste,
+
+                    'valor_inventario_resultante' =>
+                        $inventarioResultanteActual > 0
+                            ? $valorInventarioResultante
+                            : '0.00000000',
+
+                    'costo_unitario_aplicado' =>
+                        $costoAjuste,
+
+                    'costo_promedio_resultante' =>
+                        $costoPromedioResultante,
                 ]);
             }
 
             if ($lineaNueva) {
+                if ($detalleAnterior) {
+                    if ($galonesNuevos > $galonesAnteriores) {
+                        $costoAdicional = Decimal::multiplicar(
+                            (string) ($galonesNuevos - $galonesAnteriores),
+                            (string) $tanque->costo_promedio_galon_actual,
+                            8
+                        );
+                        $costoTotalSnapshot = Decimal::sumar(
+                            (string) $detalleAnterior->costo_total_snapshot,
+                            $costoAdicional,
+                            8
+                        );
+                        $costoSnapshot = Decimal::dividir(
+                            $costoTotalSnapshot,
+                            (string) $galonesNuevos,
+                            8
+                        );
+                    } else {
+                        $costoSnapshot = (string)
+                            $detalleAnterior->costo_promedio_galon_snapshot;
+                        $costoTotalSnapshot = Decimal::multiplicar(
+                            (string) $galonesNuevos,
+                            $costoSnapshot,
+                            8
+                        );
+                    }
+                } else {
+                    $costoSnapshot = (string)
+                        $tanque->costo_promedio_galon_actual;
+                    $costoTotalSnapshot = Decimal::multiplicar(
+                        (string) $galonesNuevos,
+                        $costoSnapshot,
+                        8
+                    );
+                }
+
                 $inventarioAnteriorSnapshot =
                     $detalleAnterior
                         ? round(
@@ -2384,6 +2496,12 @@ class AbastecimientoService
 
                     'galones_retirados' =>
                         $galonesNuevos,
+
+                    'costo_promedio_galon_snapshot' =>
+                        $costoSnapshot,
+
+                    'costo_total_snapshot' =>
+                        $costoTotalSnapshot,
 
                     'inventario_resultante_snapshot' =>
                         $inventarioResultanteSnapshot,
@@ -2474,6 +2592,20 @@ class AbastecimientoService
                 2
             );
 
+            if (
+                is_null($detalle->costo_promedio_galon_snapshot)
+                || is_null($detalle->costo_total_snapshot)
+                || (
+                    $inventarioActual > 0
+                    && is_null($tanque->valor_inventario_actual)
+                )
+            ) {
+                $this->fallar(
+                    'tanques',
+                    'El abastecimiento histórico no posee valoración suficiente para devolver su inventario.'
+                );
+            }
+
             $diferenciaInventario = round(
                 (float) $detalle
                     ->galones_retirados,
@@ -2512,6 +2644,39 @@ class AbastecimientoService
 
                 'inventario_resultante' =>
                     $inventarioResultante,
+
+                'valor_inventario_anterior' =>
+                    $inventarioActual > 0
+                        ? (string) $tanque->valor_inventario_actual
+                        : '0',
+
+                'valor_ajuste' =>
+                    (string) $detalle->costo_total_snapshot,
+
+                'valor_inventario_resultante' =>
+                    Decimal::sumar(
+                        $inventarioActual > 0
+                            ? (string) $tanque->valor_inventario_actual
+                            : '0',
+                        (string) $detalle->costo_total_snapshot,
+                        8
+                    ),
+
+                'costo_unitario_aplicado' =>
+                    (string) $detalle->costo_promedio_galon_snapshot,
+
+                'costo_promedio_resultante' =>
+                    Decimal::dividir(
+                        Decimal::sumar(
+                            $inventarioActual > 0
+                                ? (string) $tanque->valor_inventario_actual
+                                : '0',
+                            (string) $detalle->costo_total_snapshot,
+                            8
+                        ),
+                        (string) $inventarioResultante,
+                        8
+                    ),
             ]);
         }
 
@@ -2561,6 +2726,16 @@ class AbastecimientoService
                         'inventario_resultante'
                     ],
 
+                'valor_inventario_actual' =>
+                    $ajuste[
+                        'valor_inventario_resultante'
+                    ],
+
+                'costo_promedio_galon_actual' =>
+                    $ajuste[
+                        'costo_promedio_resultante'
+                    ],
+
                 'fecha_actualizacion' =>
                     $fechaOperacion,
 
@@ -2598,6 +2773,26 @@ class AbastecimientoService
                 'volumen_resultante' =>
                     $ajuste[
                         'inventario_resultante'
+                    ],
+
+                'valor_inventario_anterior' =>
+                    $ajuste[
+                        'valor_inventario_anterior'
+                    ],
+
+                'valor_movimiento' =>
+                    $ajuste[
+                        'valor_ajuste'
+                    ],
+
+                'valor_inventario_resultante' =>
+                    $ajuste[
+                        'valor_inventario_resultante'
+                    ],
+
+                'costo_unitario_aplicado' =>
+                    $ajuste[
+                        'costo_unitario_aplicado'
                     ],
 
                 'subtotal_compra' =>
@@ -2882,6 +3077,19 @@ class AbastecimientoService
                 2
             );
 
+            if (
+                $inventarioAnterior > 0
+                && (
+                    is_null($tanque->valor_inventario_actual)
+                    || is_null($tanque->costo_promedio_galon_actual)
+                )
+            ) {
+                $this->fallar(
+                    "tanques.{$indice}.galones",
+                    "El tanque {$tanque->nombre} tiene inventario sin costo conocido."
+                );
+            }
+
             $galones = $linea['galones'];
 
             if ($galones > $inventarioAnterior) {
@@ -2896,6 +3104,23 @@ class AbastecimientoService
                 - $galones,
                 2
             );
+
+            $valorInventarioAnterior = (string)
+                $tanque->valor_inventario_actual;
+            $costoPromedio = (string)
+                $tanque->costo_promedio_galon_actual;
+            $costoRetiro = Decimal::multiplicar(
+                (string) $galones,
+                $costoPromedio,
+                8
+            );
+            $valorInventarioResultante = $inventarioResultante > 0
+                ? Decimal::restar(
+                    $valorInventarioAnterior,
+                    $costoRetiro,
+                    8
+                )
+                : '0.00000000';
 
             $procesados->push([
                 'tanque' =>
@@ -2912,6 +3137,23 @@ class AbastecimientoService
 
                 'inventario_resultante' =>
                     $inventarioResultante,
+
+                'valor_inventario_anterior' =>
+                    $valorInventarioAnterior,
+
+                'costo_promedio_galon_snapshot' =>
+                    $costoPromedio,
+
+                'costo_total_snapshot' =>
+                    $costoRetiro,
+
+                'valor_inventario_resultante' =>
+                    $valorInventarioResultante,
+
+                'costo_promedio_resultante' =>
+                    $inventarioResultante > 0
+                        ? $costoPromedio
+                        : null,
 
                 'quedo_bajo_minimo' =>
                     $inventarioResultante
@@ -3454,6 +3696,16 @@ class AbastecimientoService
                         'inventario_resultante'
                     ],
 
+                'valor_inventario_actual' =>
+                    $procesado[
+                        'valor_inventario_resultante'
+                    ],
+
+                'costo_promedio_galon_actual' =>
+                    $procesado[
+                        'costo_promedio_resultante'
+                    ],
+
                 'fecha_actualizacion' =>
                     $fechaOperacion,
 
@@ -3488,6 +3740,16 @@ class AbastecimientoService
                 'galones_retirados' =>
                     $procesado[
                         'galones_retirados'
+                    ],
+
+                'costo_promedio_galon_snapshot' =>
+                    $procesado[
+                        'costo_promedio_galon_snapshot'
+                    ],
+
+                'costo_total_snapshot' =>
+                    $procesado[
+                        'costo_total_snapshot'
                     ],
 
                 'inventario_resultante' =>
@@ -3533,6 +3795,26 @@ class AbastecimientoService
                 'volumen_resultante' =>
                     $procesado[
                         'inventario_resultante'
+                    ],
+
+                'valor_inventario_anterior' =>
+                    $procesado[
+                        'valor_inventario_anterior'
+                    ],
+
+                'valor_movimiento' =>
+                    $procesado[
+                        'costo_total_snapshot'
+                    ],
+
+                'valor_inventario_resultante' =>
+                    $procesado[
+                        'valor_inventario_resultante'
+                    ],
+
+                'costo_unitario_aplicado' =>
+                    $procesado[
+                        'costo_promedio_galon_snapshot'
                     ],
 
                 'subtotal_compra' =>
