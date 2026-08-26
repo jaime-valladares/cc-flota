@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Empresa;
+use App\Models\Marchamo;
 use App\Models\Role;
 use App\Models\Unidad;
 use App\Models\User;
@@ -282,6 +283,11 @@ test('bloquea cambio de plantilla cuando existe avance provisional de marchamos'
 
     expect($punto->refresh()->marchamo_actual_id)->not->toBeNull();
 
+    $puntoId = $punto->id;
+    $marchamoId = $punto->marchamo_actual_id;
+    $estadoAsignacion = $punto->estado_asignacion;
+    $cantidadPuntos = $unidad->puntosSeguridad()->count();
+
     $this->actingAs($usuario)
         ->from(route('unidades.edit', $unidad))
         ->put(route('unidades.update', $unidad), datosUnidadEstructural($empresa, [
@@ -295,5 +301,9 @@ test('bloquea cambio de plantilla cuando existe avance provisional de marchamos'
     expect($unidad->cantidad_tanques_con_licencia)->toBe(2)
         ->and($unidad->licencia->plantilla_puntos_seguridad)
         ->toBe('plantilla_2_tanques')
-        ->and($punto->refresh()->marchamo_actual_id)->not->toBeNull();
+        ->and($unidad->puntosSeguridad()->count())->toBe($cantidadPuntos)
+        ->and($punto->refresh()->id)->toBe($puntoId)
+        ->and($punto->marchamo_actual_id)->toBe($marchamoId)
+        ->and($punto->estado_asignacion)->toBe($estadoAsignacion)
+        ->and(Marchamo::findOrFail($marchamoId)->codigo_marchamo)->toBe('7654321');
 });

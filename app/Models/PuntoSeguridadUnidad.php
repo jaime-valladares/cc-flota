@@ -139,6 +139,9 @@ class PuntoSeguridadUnidad extends Model
                 'plantilla_3_tanques' =>
                     'Plantilla 3 tanques',
 
+                'extra' =>
+                    'Punto extra',
+
                 default =>
                     'No definida',
             }

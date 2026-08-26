@@ -16,6 +16,8 @@ use Illuminate\View\View;
 
 class MarchamoAsignacionInicialController extends Controller
 {
+    private const MAXIMO_PUNTOS_EXTRA = 10;
+
     public function index(Request $request): View
     {
         return view(
@@ -445,6 +447,181 @@ class MarchamoAsignacionInicialController extends Controller
             'success',
             'Avance de asignación inicial guardado correctamente.'
         );
+    }
+
+    /**
+     * Agrega un punto permanente de definición extra mientras la asignación
+     * inicial continúa abierta. El marchamo se asigna luego con guardarAvance.
+     */
+    public function agregarExtra(
+        Request $request,
+        Unidad $unidad
+    ): RedirectResponse {
+        $this->autorizarAccesoUnidad($unidad);
+
+        $validated = $request->validate([
+            'nombre_punto' => ['required', 'string', 'max:150'],
+        ], [
+            'nombre_punto.required' => 'Debe ingresar el nombre del punto de seguridad extra.',
+            'nombre_punto.max' => 'El nombre del punto extra no debe exceder 150 caracteres.',
+        ]);
+
+        DB::transaction(function () use ($unidad, $validated): void {
+            $unidadBloqueada = Unidad::query()
+                ->with(['empresa', 'licencia'])
+                ->lockForUpdate()
+                ->findOrFail($unidad->id);
+
+            $this->validarUnidadAsignable($unidadBloqueada);
+
+            $puntos = PuntoSeguridadUnidad::query()
+                ->where('unidad_id', $unidadBloqueada->id)
+                ->lockForUpdate()
+                ->get();
+
+            $extras = $puntos->where('plantilla_origen', 'extra');
+
+            if ($extras->count() >= self::MAXIMO_PUNTOS_EXTRA) {
+                throw ValidationException::withMessages([
+                    'nombre_punto' => 'La unidad ya alcanzó el máximo de 10 puntos de seguridad extra.',
+                ]);
+            }
+
+            $codigosOcupados = $extras->pluck('codigo_punto')->all();
+            $codigo = collect(range(1, self::MAXIMO_PUNTOS_EXTRA))
+                ->map(fn (int $numero): string => sprintf('EXT-%02d', $numero))
+                ->first(fn (string $candidato): bool => ! in_array($candidato, $codigosOcupados, true));
+
+            if (! $codigo) {
+                throw ValidationException::withMessages([
+                    'nombre_punto' => 'No existe un código extra disponible para esta unidad.',
+                ]);
+            }
+
+            PuntoSeguridadUnidad::create([
+                'unidad_id' => $unidadBloqueada->id,
+                'orden' => ((int) $puntos->max('orden')) + 1,
+                'codigo_punto' => $codigo,
+                'grupo' => 'Extra',
+                'subgrupo' => null,
+                'nombre_punto' => trim($validated['nombre_punto']),
+                'descripcion' => null,
+                'posicion_tanque' => 'Extra',
+                'tipo_punto' => 'extra',
+                'requiere_marchamo' => true,
+                'plantilla_origen' => 'extra',
+                'criterio_origen' => 'Punto adicional definido durante asignación inicial',
+                'estado_asignacion' => 'pendiente',
+                'marchamo_actual_id' => null,
+                'estado' => 'activo',
+                'creado_por' => Auth::id(),
+                'actualizado_por' => Auth::id(),
+            ]);
+        });
+
+        return back()->with('success', 'Punto de seguridad extra agregado correctamente.');
+    }
+
+    public function renombrarExtra(
+        Request $request,
+        Unidad $unidad,
+        PuntoSeguridadUnidad $punto
+    ): RedirectResponse {
+        $this->autorizarAccesoUnidad($unidad);
+
+        $validated = $request->validate([
+            'nombre_punto' => ['required', 'string', 'max:150'],
+        ], [
+            'nombre_punto.required' => 'Debe ingresar el nombre del punto de seguridad extra.',
+            'nombre_punto.max' => 'El nombre del punto extra no debe exceder 150 caracteres.',
+        ]);
+
+        DB::transaction(function () use ($unidad, $punto, $validated): void {
+            $unidadBloqueada = Unidad::query()
+                ->with(['empresa', 'licencia'])
+                ->lockForUpdate()
+                ->findOrFail($unidad->id);
+
+            $this->validarUnidadAsignable($unidadBloqueada);
+
+            $puntoBloqueado = PuntoSeguridadUnidad::query()
+                ->whereKey($punto->id)
+                ->where('unidad_id', $unidadBloqueada->id)
+                ->where('plantilla_origen', 'extra')
+                ->lockForUpdate()
+                ->first();
+
+            if (! $puntoBloqueado) {
+                throw ValidationException::withMessages([
+                    'nombre_punto' => 'El punto extra seleccionado no pertenece a esta unidad.',
+                ]);
+            }
+
+            $puntoBloqueado->update([
+                'nombre_punto' => trim($validated['nombre_punto']),
+                'actualizado_por' => Auth::id(),
+            ]);
+        });
+
+        return back()->with('success', 'Nombre del punto extra actualizado correctamente.');
+    }
+
+    public function eliminarExtra(
+        Unidad $unidad,
+        PuntoSeguridadUnidad $punto
+    ): RedirectResponse {
+        $this->autorizarAccesoUnidad($unidad);
+
+        DB::transaction(function () use ($unidad, $punto): void {
+            $unidadBloqueada = Unidad::query()
+                ->with(['empresa', 'licencia'])
+                ->lockForUpdate()
+                ->findOrFail($unidad->id);
+
+            $this->validarUnidadAsignable($unidadBloqueada);
+
+            $puntoBloqueado = PuntoSeguridadUnidad::query()
+                ->whereKey($punto->id)
+                ->where('unidad_id', $unidadBloqueada->id)
+                ->where('plantilla_origen', 'extra')
+                ->lockForUpdate()
+                ->first();
+
+            if (! $puntoBloqueado) {
+                throw ValidationException::withMessages([
+                    'punto_extra' => 'El punto extra seleccionado no pertenece a esta unidad.',
+                ]);
+            }
+
+            $marchamos = Marchamo::query()
+                ->where('punto_seguridad_id', $puntoBloqueado->id)
+                ->lockForUpdate()
+                ->get();
+
+            if ($marchamos->contains(
+                fn (Marchamo $marchamo): bool =>
+                    $marchamo->origen_creacion !== 'asignacion_inicial'
+            )) {
+                throw ValidationException::withMessages([
+                    'punto_extra' => 'El punto extra posee historial consolidado y no puede eliminarse.',
+                ]);
+            }
+
+            $puntoBloqueado->update([
+                'marchamo_actual_id' => null,
+                'estado_asignacion' => 'pendiente',
+                'actualizado_por' => Auth::id(),
+            ]);
+
+            Marchamo::query()
+                ->where('punto_seguridad_id', $puntoBloqueado->id)
+                ->where('origen_creacion', 'asignacion_inicial')
+                ->delete();
+
+            $puntoBloqueado->delete();
+        });
+
+        return back()->with('success', 'Punto de seguridad extra eliminado correctamente.');
     }
 
     public function finalizar(

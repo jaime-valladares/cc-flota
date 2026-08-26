@@ -1017,6 +1017,21 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
         )->name('marchamos.asignacion-inicial.guardar-avance');
 
         Route::post(
+            '/unidades/{unidad}/marchamos/asignacion-inicial/extras',
+            [MarchamoAsignacionInicialController::class, 'agregarExtra']
+        )->name('marchamos.asignacion-inicial.extras.store');
+
+        Route::patch(
+            '/unidades/{unidad}/marchamos/asignacion-inicial/extras/{punto}',
+            [MarchamoAsignacionInicialController::class, 'renombrarExtra']
+        )->name('marchamos.asignacion-inicial.extras.update');
+
+        Route::delete(
+            '/unidades/{unidad}/marchamos/asignacion-inicial/extras/{punto}',
+            [MarchamoAsignacionInicialController::class, 'eliminarExtra']
+        )->name('marchamos.asignacion-inicial.extras.destroy');
+
+        Route::post(
             '/unidades/{unidad}/marchamos/finalizar-asignacion-inicial',
             [MarchamoAsignacionInicialController::class, 'finalizar']
         )->name('marchamos.asignacion-inicial.finalizar');

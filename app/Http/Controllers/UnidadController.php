@@ -1326,26 +1326,46 @@ class UnidadController extends Controller
             ->lockForUpdate()
             ->get();
 
-        $marchamos = Marchamo::query()
-            ->where('unidad_id', $unidad->id)
+        $puntosEstandar = $puntos
+            ->where('plantilla_origen', '!=', 'extra');
+
+        $marchamosEstandar = Marchamo::query()
+            ->whereIn('punto_seguridad_id', $puntosEstandar->pluck('id'))
             ->lockForUpdate()
             ->get();
 
-        $asignacionIniciada = $marchamos->isNotEmpty()
-            || $puntos->contains(
+        $asignacionEstandarIniciada = $marchamosEstandar->isNotEmpty()
+            || $puntosEstandar->contains(
                 fn (PuntoSeguridadUnidad $punto): bool =>
                     ! is_null($punto->marchamo_actual_id)
                     || $punto->estado_asignacion !== 'pendiente'
             );
 
-        if ($asignacionIniciada) {
+        if ($asignacionEstandarIniciada) {
             throw ValidationException::withMessages([
                 'tanques' => 'No puede cambiar la cantidad de tanques cubiertos porque la asignación inicial de marchamos ya tiene avance. Retire primero todos los marchamos provisionales desde la asignación inicial.',
             ]);
         }
 
+        $extras = $puntos
+            ->where('plantilla_origen', 'extra')
+            ->sortBy('orden')
+            ->values();
+
+        /*
+         * Se apartan temporalmente los órdenes extra para evitar colisiones
+         * si la plantilla nueva contiene más puntos que la anterior.
+         */
+        foreach ($extras as $indice => $extra) {
+            $extra->update([
+                'orden' => 60000 + $indice,
+                'actualizado_por' => $usuarioId,
+            ]);
+        }
+
         PuntoSeguridadUnidad::query()
             ->where('unidad_id', $unidad->id)
+            ->where('plantilla_origen', '!=', 'extra')
             ->delete();
 
         $licencia->update([
@@ -1371,6 +1391,18 @@ class UnidadController extends Controller
                 'marchamo_actual_id' => null,
                 'estado' => 'activo',
                 'creado_por' => $usuarioId,
+                'actualizado_por' => $usuarioId,
+            ]);
+        }
+
+        $ultimoOrdenEstandar = (int) PuntoSeguridadUnidad::query()
+            ->where('unidad_id', $unidad->id)
+            ->where('plantilla_origen', '!=', 'extra')
+            ->max('orden');
+
+        foreach ($extras as $indice => $extra) {
+            $extra->update([
+                'orden' => $ultimoOrdenEstandar + $indice + 1,
                 'actualizado_por' => $usuarioId,
             ]);
         }
