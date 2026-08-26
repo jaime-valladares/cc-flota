@@ -26,6 +26,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'fecha_hora_abastecimiento',
     'estado',
     'modelo_medicion',
+    'rendimiento_teorico_km_galon_snapshot',
+    'rendimiento_teorico_gal_hora_snapshot',
 
     /*
     |--------------------------------------------------------------------------
@@ -71,6 +73,11 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'volumen_final_anterior',
     'combustible_consumido_ciclo',
     'combustible_adicional_no_explicado',
+    'consumo_real_ciclo',
+    'consumo_teorico_ciclo',
+    'diferencia_galones_ciclo',
+    'costo_combustible_consumido_ciclo',
+    'valor_remanente_antes_carga_snapshot',
 
     /*
     |--------------------------------------------------------------------------
@@ -86,6 +93,10 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'precio_galon',
     'total_pagado',
     'moneda',
+    'valor_carga_snapshot',
+    'costo_efectivo_carga_snapshot',
+    'valor_abordo_resultante',
+    'costo_promedio_abordo_resultante',
 
     /*
     |--------------------------------------------------------------------------
@@ -94,6 +105,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     */
 
     'total_rutas',
+    'total_viajes',
     'kilometros_teoricos',
     'galones_teoricos',
 
@@ -449,6 +461,11 @@ class Abastecimiento extends Model
             'volumen_final_anterior' => 'decimal:2',
             'combustible_consumido_ciclo' => 'decimal:2',
             'combustible_adicional_no_explicado' => 'decimal:2',
+            'consumo_real_ciclo' => 'decimal:2',
+            'consumo_teorico_ciclo' => 'decimal:8',
+            'diferencia_galones_ciclo' => 'decimal:8',
+            'costo_combustible_consumido_ciclo' => 'decimal:8',
+            'valor_remanente_antes_carga_snapshot' => 'decimal:8',
 
             /*
             |--------------------------------------------------------------------------
@@ -458,6 +475,12 @@ class Abastecimiento extends Model
 
             'precio_galon' => 'decimal:4',
             'total_pagado' => 'decimal:2',
+            'valor_carga_snapshot' => 'decimal:8',
+            'costo_efectivo_carga_snapshot' => 'decimal:8',
+            'valor_abordo_resultante' => 'decimal:8',
+            'costo_promedio_abordo_resultante' => 'decimal:8',
+            'rendimiento_teorico_km_galon_snapshot' => 'decimal:4',
+            'rendimiento_teorico_gal_hora_snapshot' => 'decimal:4',
 
             /*
             |--------------------------------------------------------------------------
@@ -466,6 +489,7 @@ class Abastecimiento extends Model
             */
 
             'total_rutas' => 'integer',
+            'total_viajes' => 'integer',
             'kilometros_teoricos' => 'decimal:2',
             'galones_teoricos' => 'decimal:2',
 

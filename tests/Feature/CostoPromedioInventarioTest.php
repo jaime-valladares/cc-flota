@@ -77,7 +77,7 @@ function prepararUnidadCosto($test, User $usuario, Empresa $empresa): array
         'placa' => 'UNIDAD-COSTO',
         'marca' => 'Prueba',
         'cantidad_tanques' => 1,
-        'tanques' => [['capacidad' => 1000, 'cubierto_por_licencia' => 1]],
+        'tanques' => [['capacidad' => 300, 'cubierto_por_licencia' => 1]],
         'modelo_medicion' => 'kilometros_galon',
         'rendimiento_teorico_km_galon' => 8,
     ])->assertSessionHasNoErrors();
@@ -310,164 +310,14 @@ test('gasolinera externa conserva precio y total sin alterar inventario interno'
         'motorista_id' => $motorista->id, 'ultimo_abastecimiento_id' => null,
         'kilometraje_actual' => 100, 'volumen_inicial' => 0,
         'tipo_origen' => 'externo', 'gasolinera_externa_id' => $externa->id,
-        'galones_externos' => 10, 'precio_galon' => '4.2500',
+        'galones_externos' => 300, 'precio_galon' => '4.2500',
         'rutas' => [], 'marchamos' => [[
             'punto_seguridad_id' => $punto->id, 'nuevo_codigo_marchamo' => '7654321',
         ]],
     ], $usuario->id);
 
     expect($abastecimiento->precio_galon)->toBe('4.2500')
-        ->and($abastecimiento->total_pagado)->toBe('42.50')
+        ->and($abastecimiento->total_pagado)->toBe('1275.00')
         ->and(MovimientoInventarioCombustible::where('abastecimiento_id', $abastecimiento->id)->exists())->toBeFalse()
         ->and($tanques[0]->refresh()->volumen_actual)->toBe('0.00');
-});
-
-test('edicion de salida interna ajusta conjuntamente volumen y valor', function () {
-    [$usuario, $empresa, $gasolinera, $tanques] = contextoInventarioPromedio([
-        ['nombre' => 'A', 'capacidad' => 1000, 'volumen' => 500, 'valor' => '2250.00000000', 'costo' => '4.50000000'],
-    ]);
-    [$unidad, $motorista, $punto] = prepararUnidadCosto($this, $usuario, $empresa);
-    $service = app(AbastecimientoService::class);
-    $abastecimiento = $service->registrar([
-        'empresa_id' => $empresa->id, 'unidad_id' => $unidad->id,
-        'motorista_id' => $motorista->id, 'ultimo_abastecimiento_id' => null,
-        'kilometraje_actual' => 100, 'volumen_inicial' => 0,
-        'tipo_origen' => 'interno', 'gasolinera_interna_id' => $gasolinera->id,
-        'tanques' => [['tanque_id' => $tanques[0]->id, 'galones' => 300]],
-        'rutas' => [], 'marchamos' => [[
-            'punto_seguridad_id' => $punto->id, 'nuevo_codigo_marchamo' => '7654321',
-        ]],
-    ], $usuario->id);
-
-    $punto->refresh();
-    $service->modificar($abastecimiento, [
-        'abastecimiento_version' => $service->versionAbastecimiento($abastecimiento->fresh()),
-        'empresa_id' => $empresa->id, 'unidad_id' => $unidad->id,
-        'motorista_id' => $motorista->id,
-        'kilometraje_actual' => 100, 'volumen_inicial' => 0,
-        'tipo_origen' => 'interno', 'gasolinera_interna_id' => $gasolinera->id,
-        'tanques' => [['tanque_id' => $tanques[0]->id, 'galones' => 200]],
-        'rutas' => [], 'marchamos' => [[
-            'punto_seguridad_id' => $punto->id,
-            'marchamo_actual_id' => $punto->marchamo_actual_id,
-            'nuevo_codigo_marchamo' => '7654322',
-        ]],
-    ], $usuario->id);
-
-    expect($tanques[0]->refresh()->volumen_actual)->toBe('300.00')
-        ->and($tanques[0]->valor_inventario_actual)->toBe('1350.00000000')
-        ->and($tanques[0]->costo_promedio_galon_actual)->toBe('4.50000000')
-        ->and(AbastecimientoTanque::where('abastecimiento_id', $abastecimiento->id)->value('costo_total_snapshot'))
-        ->toBe('900.00000000');
-});
-
-test('edicion historica devuelve galones al costo snapshot sobre el estado actual', function () {
-    [$usuario, $empresa, $gasolinera, $tanques] = contextoInventarioPromedio([
-        ['nombre' => 'A', 'capacidad' => 2000, 'volumen' => 1000, 'valor' => '4000.00000000', 'costo' => '4.00000000'],
-    ]);
-    [$unidad, $motorista, $punto] = prepararUnidadCosto($this, $usuario, $empresa);
-    $service = app(AbastecimientoService::class);
-    $abastecimiento = $service->registrar([
-        'empresa_id' => $empresa->id, 'unidad_id' => $unidad->id,
-        'motorista_id' => $motorista->id, 'ultimo_abastecimiento_id' => null,
-        'kilometraje_actual' => 100, 'volumen_inicial' => 0,
-        'tipo_origen' => 'interno', 'gasolinera_interna_id' => $gasolinera->id,
-        'tanques' => [['tanque_id' => $tanques[0]->id, 'galones' => 100]],
-        'rutas' => [], 'marchamos' => [[
-            'punto_seguridad_id' => $punto->id, 'nuevo_codigo_marchamo' => '7654321',
-        ]],
-    ], $usuario->id);
-    recargarTanques($this, $usuario, $gasolinera, [$tanques[0]->id => 100], '6.0000');
-    $movimientoRecarga = MovimientoInventarioCombustible::where('tipo_movimiento', 'entrada_recarga')->firstOrFail();
-    $snapshotRecarga = $movimientoRecarga->only([
-        'volumen_anterior', 'volumen_movimiento', 'volumen_resultante',
-        'valor_inventario_anterior', 'valor_movimiento', 'valor_inventario_resultante',
-        'costo_unitario_aplicado',
-    ]);
-    expect($tanques[0]->refresh()->volumen_actual)->toBe('1000.00')
-        ->and($tanques[0]->valor_inventario_actual)->toBe('4200.00000000')
-        ->and($tanques[0]->costo_promedio_galon_actual)->toBe('4.20000000');
-
-    $punto->refresh();
-    $service->modificar($abastecimiento, [
-        'abastecimiento_version' => $service->versionAbastecimiento($abastecimiento->fresh()),
-        'empresa_id' => $empresa->id, 'unidad_id' => $unidad->id,
-        'motorista_id' => $motorista->id, 'kilometraje_actual' => 100,
-        'volumen_inicial' => 0, 'tipo_origen' => 'interno',
-        'gasolinera_interna_id' => $gasolinera->id,
-        'tanques' => [['tanque_id' => $tanques[0]->id, 'galones' => 90]],
-        'rutas' => [], 'marchamos' => [[
-            'punto_seguridad_id' => $punto->id,
-            'marchamo_actual_id' => $punto->marchamo_actual_id,
-            'nuevo_codigo_marchamo' => '7654322',
-        ]],
-    ], $usuario->id);
-
-    $ajuste = MovimientoInventarioCombustible::where('tipo_movimiento', 'ajuste_modificacion_abastecimiento')->firstOrFail();
-    $detalle = AbastecimientoTanque::where('abastecimiento_id', $abastecimiento->id)->firstOrFail();
-    expect($tanques[0]->refresh()->volumen_actual)->toBe('1010.00')
-        ->and($tanques[0]->valor_inventario_actual)->toBe('4240.00000000')
-        ->and($tanques[0]->costo_promedio_galon_actual)->toBe('4.19801980')
-        ->and($ajuste->sentido_movimiento)->toBe('entrada')
-        ->and($ajuste->volumen_movimiento)->toBe('10.00')
-        ->and($ajuste->valor_movimiento)->toBe('40.00000000')
-        ->and($ajuste->costo_unitario_aplicado)->toBe('4.00000000')
-        ->and($detalle->galones_retirados)->toBe('90.00')
-        ->and($detalle->costo_promedio_galon_snapshot)->toBe('4.00000000')
-        ->and($detalle->costo_total_snapshot)->toBe('360.00000000')
-        ->and($movimientoRecarga->refresh()->only(array_keys($snapshotRecarga)))->toBe($snapshotRecarga);
-});
-
-test('edicion historica retira galones adicionales al costo vigente', function () {
-    [$usuario, $empresa, $gasolinera, $tanques] = contextoInventarioPromedio([
-        ['nombre' => 'A', 'capacidad' => 2000, 'volumen' => 1000, 'valor' => '4000.00000000', 'costo' => '4.00000000'],
-    ]);
-    [$unidad, $motorista, $punto] = prepararUnidadCosto($this, $usuario, $empresa);
-    $service = app(AbastecimientoService::class);
-    $abastecimiento = $service->registrar([
-        'empresa_id' => $empresa->id, 'unidad_id' => $unidad->id,
-        'motorista_id' => $motorista->id, 'ultimo_abastecimiento_id' => null,
-        'kilometraje_actual' => 100, 'volumen_inicial' => 0,
-        'tipo_origen' => 'interno', 'gasolinera_interna_id' => $gasolinera->id,
-        'tanques' => [['tanque_id' => $tanques[0]->id, 'galones' => 100]],
-        'rutas' => [], 'marchamos' => [[
-            'punto_seguridad_id' => $punto->id, 'nuevo_codigo_marchamo' => '7654321',
-        ]],
-    ], $usuario->id);
-    recargarTanques($this, $usuario, $gasolinera, [$tanques[0]->id => 100], '6.0000');
-    $movimientoRecarga = MovimientoInventarioCombustible::where('tipo_movimiento', 'entrada_recarga')->firstOrFail();
-    $snapshotRecarga = $movimientoRecarga->only([
-        'volumen_anterior', 'volumen_movimiento', 'volumen_resultante',
-        'valor_inventario_anterior', 'valor_movimiento', 'valor_inventario_resultante',
-        'costo_unitario_aplicado',
-    ]);
-
-    $punto->refresh();
-    $service->modificar($abastecimiento, [
-        'abastecimiento_version' => $service->versionAbastecimiento($abastecimiento->fresh()),
-        'empresa_id' => $empresa->id, 'unidad_id' => $unidad->id,
-        'motorista_id' => $motorista->id, 'kilometraje_actual' => 100,
-        'volumen_inicial' => 0, 'tipo_origen' => 'interno',
-        'gasolinera_interna_id' => $gasolinera->id,
-        'tanques' => [['tanque_id' => $tanques[0]->id, 'galones' => 110]],
-        'rutas' => [], 'marchamos' => [[
-            'punto_seguridad_id' => $punto->id,
-            'marchamo_actual_id' => $punto->marchamo_actual_id,
-            'nuevo_codigo_marchamo' => '7654322',
-        ]],
-    ], $usuario->id);
-
-    $ajuste = MovimientoInventarioCombustible::where('tipo_movimiento', 'ajuste_modificacion_abastecimiento')->firstOrFail();
-    $detalle = AbastecimientoTanque::where('abastecimiento_id', $abastecimiento->id)->firstOrFail();
-    expect($tanques[0]->refresh()->volumen_actual)->toBe('990.00')
-        ->and($tanques[0]->valor_inventario_actual)->toBe('4158.00000000')
-        ->and($tanques[0]->costo_promedio_galon_actual)->toBe('4.20000000')
-        ->and($ajuste->sentido_movimiento)->toBe('salida')
-        ->and($ajuste->volumen_movimiento)->toBe('10.00')
-        ->and($ajuste->valor_movimiento)->toBe('42.00000000')
-        ->and($ajuste->costo_unitario_aplicado)->toBe('4.20000000')
-        ->and($detalle->galones_retirados)->toBe('110.00')
-        ->and($detalle->costo_total_snapshot)->toBe('442.00000000')
-        ->and($detalle->costo_promedio_galon_snapshot)->toBe('4.01818182')
-        ->and($movimientoRecarga->refresh()->only(array_keys($snapshotRecarga)))->toBe($snapshotRecarga);
 });

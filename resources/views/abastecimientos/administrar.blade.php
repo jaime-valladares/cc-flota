@@ -877,18 +877,6 @@
                                             )
                                         );
 
-                                        $rutaEditar = route(
-                                            'abastecimientos.edit',
-                                            array_merge(
-                                                $queryParams,
-                                                [
-                                                    'abastecimiento' =>
-                                                        $abastecimiento,
-                                                    'origen_retorno' =>
-                                                        'administrar',
-                                                ]
-                                            )
-                                        );
                                     @endphp
 
                                     <tr>
@@ -1106,14 +1094,6 @@
                                                 class="flex flex-wrap
                                                        items-center gap-2"
                                             >
-                                                <a
-                                                    href="{{ $rutaEditar }}"
-                                                    class="cc-btn-primary
-                                                           cc-btn-result"
-                                                >
-                                                    Modificar
-                                                </a>
-
                                                 <a
                                                     href="{{ $rutaFicha }}"
                                                     class="cc-btn-secondary

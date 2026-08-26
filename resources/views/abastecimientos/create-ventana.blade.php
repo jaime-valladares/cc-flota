@@ -604,37 +604,6 @@
                                     </div>
                                 @endif
 
-                                <div class="cc-field">
-                                    <label for="volumen_inicial">
-                                        Combustible antes de cargar (Galones)
-                                        <span class="cc-required">*</span>
-                                    </label>
-
-                                    <input
-                                        id="volumen_inicial"
-                                        type="number"
-                                        name="volumen_inicial"
-                                        value="{{ old('volumen_inicial') }}"
-                                        class="cc-input"
-                                        min="0"
-                                        max="{{ $unidad->capacidad_cubierta }}"
-                                        step="0.01"
-                                        required
-                                        placeholder="0.00"
-                                        data-volumen-inicial
-                                    >
-
-                                    <div class="cc-table-adaptive-muted mt-1">
-                                        Total estimado en los tanques cubiertos
-                                        de la unidad.
-                                    </div>
-
-                                    @error('volumen_inicial')
-                                        <div class="cc-error">
-                                            {{ $message }}
-                                        </div>
-                                    @enderror
-                                </div>
                             </div>
                         </div>
                     </section>
@@ -1380,7 +1349,7 @@
                         <div class="cc-summary-strip">
                             <div class="cc-summary-strip-item">
                                 <span class="cc-summary-strip-label">
-                                    Combustible inicial
+                                    Remanente inferido antes de carga
                                 </span>
 
                                 <span class="cc-summary-strip-value">
@@ -1599,10 +1568,6 @@
                     '[data-gasolinera-interna]'
                 );
 
-                const volumenInicial = document.querySelector(
-                    '[data-volumen-inicial]'
-                );
-
                 const galonesExternos = document.querySelector(
                     '[data-galones-externos]'
                 );
@@ -1772,17 +1737,16 @@
                 }
 
                 function actualizarResumen() {
-                    const inicial = numero(
-                        volumenInicial?.value
-                    );
-
                     const cargado = galonesCargados();
 
-                    const final = inicial + cargado;
+                    const final = capacidadUnidad;
 
                     document.querySelector(
                         '[data-resumen-inicial]'
-                    ).textContent = inicial.toFixed(2);
+                    ).textContent = Math.max(
+                        0,
+                        capacidadUnidad - cargado
+                    ).toFixed(2);
 
                     document.querySelector(
                         '[data-resumen-cargado]'

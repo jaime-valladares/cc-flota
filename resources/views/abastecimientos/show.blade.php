@@ -361,12 +361,14 @@
                         </div>
 
                         <div class="cc-summary-strip">
+                            @if (is_null($abastecimiento->valor_carga_snapshot))
                             <div class="cc-summary-strip-item">
                                 <span class="cc-summary-strip-label">Volumen inicial</span>
                                 <span class="cc-summary-strip-value">
                                     {{ number_format((float) $abastecimiento->volumen_inicial, 2) }} gal
                                 </span>
                             </div>
+                            @endif
 
                             <div class="cc-summary-strip-item">
                                 <span class="cc-summary-strip-label">Volumen cargado</span>
@@ -405,14 +407,15 @@
                             <div class="cc-detail-item">
                                 <div class="cc-detail-label">Combustible consumido en el ciclo</div>
                                 <div class="cc-detail-value">
-                                    @if (is_null($abastecimiento->combustible_consumido_ciclo))
+                                    @if (is_null($abastecimiento->consumo_real_ciclo) && is_null($abastecimiento->combustible_consumido_ciclo))
                                         —
                                     @else
-                                        {{ number_format((float) $abastecimiento->combustible_consumido_ciclo, 2) }} gal
+                                        {{ number_format((float) ($abastecimiento->consumo_real_ciclo ?? $abastecimiento->combustible_consumido_ciclo), 2) }} gal
                                     @endif
                                 </div>
                             </div>
 
+                            @if (is_null($abastecimiento->valor_carga_snapshot))
                             <div class="cc-detail-item">
                                 <div class="cc-detail-label">Combustible adicional no explicado</div>
                                 <div class="cc-detail-value">
@@ -423,6 +426,7 @@
                                     @endif
                                 </div>
                             </div>
+                            @endif
                         </div>
                     </section>
 

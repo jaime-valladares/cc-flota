@@ -1081,15 +1081,6 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
             ->name('abastecimientos.show');
     });
 
-    Route::middleware('permiso:abastecimientos.modificar')->group(function () {
-        Route::get('/abastecimientos/{abastecimiento}/editar', [AbastecimientoController::class, 'edit'])
-            ->name('abastecimientos.edit');
-        Route::get('/abastecimientos/{abastecimiento}/editar/ventana', [AbastecimientoController::class, 'editVentana'])
-            ->name('abastecimientos.edit.ventana');
-        Route::put('/abastecimientos/{abastecimiento}', [AbastecimientoController::class, 'update'])
-            ->name('abastecimientos.update');
-    });
-
     /*
     |--------------------------------------------------------------------------
     | Empresas

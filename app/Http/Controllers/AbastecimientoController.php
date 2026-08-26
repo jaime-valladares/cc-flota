@@ -1784,9 +1784,7 @@ class AbastecimientoController extends Controller
             && (int) $ultimoAbastecimientoRegistrado->id
                 === (int) $abastecimiento->id;
 
-        $puedeModificarse =
-            $empresaActiva
-            && $esUltimoRegistrado;
+        $puedeModificarse = false;
 
         $parametrosRetorno =
             $this->obtenerParametrosRetorno(

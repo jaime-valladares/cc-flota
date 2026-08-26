@@ -87,13 +87,6 @@ class StoreAbastecimientoRequest extends FormRequest
                 'decimal:0,2',
             ],
 
-            'volumen_inicial' => [
-                'required',
-                'numeric',
-                'gte:0',
-                'decimal:0,2',
-            ],
-
             /*
             |--------------------------------------------------------------------------
             | Tipo de origen
@@ -307,24 +300,6 @@ class StoreAbastecimientoRequest extends FormRequest
 
             /*
             |--------------------------------------------------------------------------
-            | Combustible
-            |--------------------------------------------------------------------------
-            */
-
-            'volumen_inicial.required' =>
-                'Debe ingresar el combustible existente antes de la carga.',
-
-            'volumen_inicial.numeric' =>
-                'El combustible inicial debe ser numérico.',
-
-            'volumen_inicial.gte' =>
-                'El combustible inicial no puede ser negativo.',
-
-            'volumen_inicial.decimal' =>
-                'El combustible inicial puede contener como máximo 2 decimales.',
-
-            /*
-            |--------------------------------------------------------------------------
             | Origen
             |--------------------------------------------------------------------------
             */
@@ -482,13 +457,6 @@ class StoreAbastecimientoRequest extends FormRequest
                 $this->normalizarNumero(
                     $this->input(
                         'horometro_actual'
-                    )
-                ),
-
-            'volumen_inicial' =>
-                $this->normalizarNumero(
-                    $this->input(
-                        'volumen_inicial'
                     )
                 ),
 

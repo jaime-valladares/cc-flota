@@ -17,6 +17,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'cantidad_tanques_con_licencia',
     'capacidad_total',
     'capacidad_cubierta',
+    'valor_combustible_abordo_actual',
+    'costo_promedio_abordo_actual',
     'modelo_medicion',
     'rendimiento_teorico_km_galon',
     'rendimiento_teorico_gal_hora',
@@ -632,6 +634,10 @@ class Unidad extends Model
             'rendimiento_teorico_km_galon' => 'decimal:4',
 
             'rendimiento_teorico_gal_hora' => 'decimal:4',
+
+            'valor_combustible_abordo_actual' => 'decimal:8',
+
+            'costo_promedio_abordo_actual' => 'decimal:8',
 
             'fecha_inactivacion' => 'datetime',
         ];

@@ -34,7 +34,6 @@ class AbastecimientoService
      * ultimo_abastecimiento_id
      * kilometraje_actual
      * horometro_actual (solo para galones_hora)
-     * volumen_inicial
      * tipo_origen
      *
      * Para origen interno:
@@ -239,12 +238,6 @@ class AbastecimientoService
                     );
                 }
 
-                $volumenInicial = $this->numero(
-                    $datos['volumen_inicial'] ?? null,
-                    'volumen_inicial',
-                    'Debe ingresar el combustible existente antes de la carga.'
-                );
-
                 if ($kilometrajeActual < 0) {
                     $this->fallar(
                         'kilometraje_actual',
@@ -259,13 +252,6 @@ class AbastecimientoService
                     $this->fallar(
                         'horometro_actual',
                         'La lectura del horómetro no puede ser negativa.'
-                    );
-                }
-
-                if ($volumenInicial < 0) {
-                    $this->fallar(
-                        'volumen_inicial',
-                        'El combustible inicial no puede ser negativo.'
                     );
                 }
 
@@ -426,21 +412,24 @@ class AbastecimientoService
                     );
                 }
 
-                $volumenFinal = round(
-                    $volumenInicial
-                    + $volumenCargado,
-                    2
-                );
-
-                if (
-                    $volumenFinal
-                    > $capacidadCubierta
+                if (! $abastecimientoAnterior) {
+                    if ($volumenCargado !== $capacidadCubierta) {
+                        $this->fallar(
+                            'volumen_cargado',
+                            'El primer abastecimiento debe cargar exactamente toda la capacidad cubierta de la unidad.'
+                        );
+                    }
+                } elseif (
+                    $volumenCargado <= 0
+                    || $volumenCargado > $capacidadCubierta
                 ) {
                     $this->fallar(
-                        'volumen_inicial',
-                        'El combustible inicial más la carga excede la capacidad cubierta de la unidad.'
+                        'volumen_cargado',
+                        'La carga debe ser mayor que cero y no puede exceder la capacidad cubierta de la unidad.'
                     );
                 }
+
+                $volumenFinal = $capacidadCubierta;
 
                 /*
                 |--------------------------------------------------------------------------
@@ -449,33 +438,10 @@ class AbastecimientoService
                 */
 
                 $volumenFinalAnterior = null;
-                $combustibleConsumido = null;
+                $combustibleConsumido = $abastecimientoAnterior
+                    ? $volumenCargado
+                    : null;
                 $combustibleAdicional = 0.0;
-
-                if ($abastecimientoAnterior) {
-                    $volumenFinalAnterior = round(
-                        (float) $abastecimientoAnterior
-                            ->volumen_final,
-                        2
-                    );
-
-                    if (
-                        $volumenInicial
-                        <= $volumenFinalAnterior
-                    ) {
-                        $combustibleConsumido = round(
-                            $volumenFinalAnterior
-                            - $volumenInicial,
-                            2
-                        );
-                    } else {
-                        $combustibleAdicional = round(
-                            $volumenInicial
-                            - $volumenFinalAnterior,
-                            2
-                        );
-                    }
-                }
 
                 /*
                 |--------------------------------------------------------------------------
@@ -493,6 +459,21 @@ class AbastecimientoService
 
                 $totalRutas =
                     $rutasProcesadas->count();
+
+                $totalViajes = (int) $rutasProcesadas
+                    ->sum('factor_recorrido');
+
+                if (
+                    $modeloMedicion
+                        === Abastecimiento::MODELO_GALONES_VIAJE
+                    && $abastecimientoAnterior
+                    && $diferenciaKilometraje === 0.0
+                ) {
+                    $this->fallar(
+                        'kilometraje_actual',
+                        'Se registraron viajes, pero el kilometraje no avanzó.'
+                    );
+                }
 
                 $kilometrosTeoricos =
                     $totalRutas > 0
@@ -523,49 +504,52 @@ class AbastecimientoService
                 $galonesPorKilometro = null;
                 $kilometrosPorGalon = null;
                 $galonesPorHora = null;
+                $consumoRealCiclo = $abastecimientoAnterior
+                    ? Decimal::normalizar((string) $volumenCargado, 2)
+                    : null;
+                $consumoTeoricoCiclo = null;
+                $diferenciaGalonesCiclo = null;
 
-                if (
-                    ! is_null($combustibleConsumido)
-                    && $combustibleConsumido > 0
-                    && $combustibleAdicional <= 0
-                ) {
-                    if (
-                        in_array(
-                            $modeloMedicion,
-                            [
-                                Abastecimiento::MODELO_KILOMETROS_GALON,
-                                Abastecimiento::MODELO_GALONES_VIAJE,
-                            ],
-                            true
-                        )
-                        && ! is_null($diferenciaKilometraje)
-                        && $diferenciaKilometraje > 0
-                    ) {
-                        $galonesPorKilometro = round(
-                            $combustibleConsumido
-                            / $diferenciaKilometraje,
-                            6
+                if ($abastecimientoAnterior) {
+                    if ($modeloMedicion === Abastecimiento::MODELO_KILOMETROS_GALON) {
+                        $kilometrosPorGalon = $diferenciaKilometraje === 0.0
+                            ? 0.0
+                            : round($volumenCargado > 0
+                                ? $diferenciaKilometraje / $volumenCargado
+                                : 0, 6);
+                        $galonesPorKilometro = $diferenciaKilometraje > 0
+                            ? round($volumenCargado / $diferenciaKilometraje, 6)
+                            : null;
+                        $consumoTeoricoCiclo = Decimal::dividir(
+                            (string) $diferenciaKilometraje,
+                            (string) $abastecimientoAnterior->rendimiento_teorico_km_galon_snapshot,
+                            8
                         );
-
-                        $kilometrosPorGalon = round(
-                            $diferenciaKilometraje
-                            / $combustibleConsumido,
-                            6
+                    } elseif ($modeloMedicion === Abastecimiento::MODELO_GALONES_HORA) {
+                        if ($diferenciaHorometro === 0.0) {
+                            $this->fallar(
+                                'horometro_actual',
+                                'Se consumió combustible, pero el horómetro no avanzó.'
+                            );
+                        }
+                        $galonesPorHora = round($volumenCargado / $diferenciaHorometro, 6);
+                        $consumoTeoricoCiclo = Decimal::multiplicar(
+                            (string) $diferenciaHorometro,
+                            (string) $abastecimientoAnterior->rendimiento_teorico_gal_hora_snapshot,
+                            8
                         );
-                    }
-
-                    if (
-                        $modeloMedicion
-                        === Abastecimiento::MODELO_GALONES_HORA
-                        && ! is_null($diferenciaHorometro)
-                        && $diferenciaHorometro > 0
-                    ) {
-                        $galonesPorHora = round(
-                            $combustibleConsumido
-                            / $diferenciaHorometro,
-                            6
+                    } else {
+                        $consumoTeoricoCiclo = Decimal::normalizar(
+                            (string) ($galonesTeoricos ?? 0),
+                            8
                         );
                     }
+
+                    $diferenciaGalonesCiclo = Decimal::restar(
+                        $consumoTeoricoCiclo,
+                        $consumoRealCiclo,
+                        8
+                    );
                 }
 
                 $diferenciaKilometrosTeoricos = null;
@@ -596,6 +580,84 @@ class AbastecimientoService
                             );
                     }
                 }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Economía agregada a bordo
+                |--------------------------------------------------------------------------
+                */
+
+                $valorCarga = $tipoOrigen === Abastecimiento::ORIGEN_INTERNO
+                    ? $tanquesProcesados->reduce(
+                        fn (string $total, array $detalle): string => Decimal::sumar(
+                            $total,
+                            (string) $detalle['costo_total_snapshot'],
+                            8
+                        ),
+                        '0.00000000'
+                    )
+                    : Decimal::multiplicar(
+                        (string) $volumenCargado,
+                        (string) $precioGalon,
+                        8
+                    );
+
+                $costoEfectivoCarga = Decimal::dividir(
+                    $valorCarga,
+                    (string) $volumenCargado,
+                    8
+                );
+                $costoCombustibleConsumido = null;
+                $valorRemanente = null;
+
+                if (! $abastecimientoAnterior) {
+                    $valorAbordoResultante = $valorCarga;
+                } else {
+                    if (
+                        Decimal::comparar(
+                            (string) $abastecimientoAnterior->capacidad_cubierta_snapshot,
+                            (string) $capacidadCubierta,
+                            2
+                        ) !== 0
+                    ) {
+                        $this->fallar(
+                            'unidad_id',
+                            'La capacidad cubierta cambió durante el ciclo abierto.'
+                        );
+                    }
+
+                    if (
+                        is_null($abastecimientoAnterior->valor_abordo_resultante)
+                        || is_null($abastecimientoAnterior->costo_promedio_abordo_resultante)
+                    ) {
+                        $this->fallar(
+                            'unidad_id',
+                            'El ciclo abierto no posee un inventario económico a bordo conocido.'
+                        );
+                    }
+
+                    $costoCombustibleConsumido = Decimal::multiplicar(
+                        (string) $volumenCargado,
+                        (string) $abastecimientoAnterior->costo_promedio_abordo_resultante,
+                        8
+                    );
+                    $valorRemanente = Decimal::restar(
+                        (string) $abastecimientoAnterior->valor_abordo_resultante,
+                        $costoCombustibleConsumido,
+                        8
+                    );
+                    $valorAbordoResultante = Decimal::sumar(
+                        $valorRemanente,
+                        $valorCarga,
+                        8
+                    );
+                }
+
+                $costoPromedioAbordoResultante = Decimal::dividir(
+                    $valorAbordoResultante,
+                    (string) $capacidadCubierta,
+                    8
+                );
 
                 /*
                 |--------------------------------------------------------------------------
@@ -671,6 +733,12 @@ class AbastecimientoService
                         'modelo_medicion' =>
                             $modeloMedicion,
 
+                        'rendimiento_teorico_km_galon_snapshot' =>
+                            $unidad->rendimiento_teorico_km_galon,
+
+                        'rendimiento_teorico_gal_hora_snapshot' =>
+                            $unidad->rendimiento_teorico_gal_hora,
+
                         /*
                          * Compatibilidad temporal:
                          * los campos lectura_* reflejan kilometraje.
@@ -703,7 +771,7 @@ class AbastecimientoService
                             $diferenciaHorometro,
 
                         'volumen_inicial' =>
-                            $volumenInicial,
+                            0,
 
                         'volumen_cargado' =>
                             $volumenCargado,
@@ -722,6 +790,21 @@ class AbastecimientoService
 
                         'combustible_adicional_no_explicado' =>
                             $combustibleAdicional,
+
+                        'consumo_real_ciclo' =>
+                            $consumoRealCiclo,
+
+                        'consumo_teorico_ciclo' =>
+                            $consumoTeoricoCiclo,
+
+                        'diferencia_galones_ciclo' =>
+                            $diferenciaGalonesCiclo,
+
+                        'costo_combustible_consumido_ciclo' =>
+                            $costoCombustibleConsumido,
+
+                        'valor_remanente_antes_carga_snapshot' =>
+                            $valorRemanente,
 
                         'tipo_origen' =>
                             $tipoOrigen,
@@ -744,8 +827,23 @@ class AbastecimientoService
                         'moneda' =>
                             $moneda,
 
+                        'valor_carga_snapshot' =>
+                            $valorCarga,
+
+                        'costo_efectivo_carga_snapshot' =>
+                            $costoEfectivoCarga,
+
+                        'valor_abordo_resultante' =>
+                            $valorAbordoResultante,
+
+                        'costo_promedio_abordo_resultante' =>
+                            $costoPromedioAbordoResultante,
+
                         'total_rutas' =>
                             $totalRutas,
+
+                        'total_viajes' =>
+                            $totalViajes,
 
                         'kilometros_teoricos' =>
                             $kilometrosTeoricos,
@@ -774,6 +872,13 @@ class AbastecimientoService
                         'total_marchamos_reemplazados' =>
                             $marchamosProcesados->count(),
                     ]);
+
+                $unidad->update([
+                    'valor_combustible_abordo_actual' =>
+                        $valorAbordoResultante,
+                    'costo_promedio_abordo_actual' =>
+                        $costoPromedioAbordoResultante,
+                ]);
 
                 /*
                 |--------------------------------------------------------------------------
@@ -863,6 +968,11 @@ class AbastecimientoService
         array $datos,
         int $usuarioId
     ): Abastecimiento {
+        $this->fallar(
+            'abastecimiento',
+            'Los abastecimientos registrados están congelados y no pueden modificarse.'
+        );
+
         return DB::transaction(
             function () use (
                 $abastecimiento,

@@ -779,6 +779,7 @@ class UnidadController extends Controller
         $this->autorizarAccesoUnidad($unidad);
         $this->validarEmpresaActivaUnidad($unidad);
         $this->validarUnidadEditable($unidad);
+        $this->validarUnidadSinCicloAbierto($unidad);
 
         $data = $this->prepararEdicionUnidad(
             $unidad
@@ -798,6 +799,7 @@ class UnidadController extends Controller
         $this->autorizarAccesoUnidad($unidad);
         $this->validarEmpresaActivaUnidad($unidad);
         $this->validarUnidadEditable($unidad);
+        $this->validarUnidadSinCicloAbierto($unidad);
 
         $data = $this->prepararEdicionUnidad(
             $unidad
@@ -888,6 +890,10 @@ class UnidadController extends Controller
 
             if ($unidadBloqueada->estado !== 'registrada') {
                 abort(403, 'La configuración estructural de una unidad activa no puede modificarse.');
+            }
+
+            if ($unidadBloqueada->abastecimientosRegistrados()->exists()) {
+                abort(403, 'La unidad tiene un ciclo de consumo abierto y su configuración estructural no puede modificarse.');
             }
 
             $this->reconciliarPlantillaLicencia(
@@ -1108,6 +1114,16 @@ class UnidadController extends Controller
                 'success',
                 $mensaje
             );
+    }
+
+    private function validarUnidadSinCicloAbierto(Unidad $unidad): void
+    {
+        if ($unidad->abastecimientosRegistrados()->exists()) {
+            abort(
+                403,
+                'La unidad tiene un ciclo de consumo abierto y su configuración estructural no puede modificarse.'
+            );
+        }
     }
 
     /**

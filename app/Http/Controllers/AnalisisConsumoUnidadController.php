@@ -179,6 +179,7 @@ class AnalisisConsumoUnidadController extends Controller
                 ->with([
                     'empresa',
                     'unidad',
+                    'rutas',
                 ]);
 
             if (! $esUsuarioDieselCop) {
@@ -348,8 +349,13 @@ class AnalisisConsumoUnidadController extends Controller
                         ?: $primero->modelo_medicion
                     );
 
-                    $galones = (float) $ordenados
-                        ->sum('combustible_consumido_ciclo');
+                    $galones = (float) $ordenados->sum(
+                        fn (Abastecimiento $ciclo): float => (float) (
+                            $ciclo->consumo_real_ciclo
+                            ?? $ciclo->combustible_consumido_ciclo
+                            ?? 0
+                        )
+                    );
 
                     $actividad = match ($modelo) {
                         Abastecimiento::MODELO_GALONES_HORA =>
@@ -357,8 +363,10 @@ class AnalisisConsumoUnidadController extends Controller
                                 ->sum('diferencia_horometro'),
 
                         Abastecimiento::MODELO_GALONES_VIAJE =>
-                            (float) $ordenados
-                                ->sum('total_rutas'),
+                            (float) $ordenados->sum(
+                                fn (Abastecimiento $ciclo): int =>
+                                    $this->viajesEfectivos($ciclo)
+                            ),
 
                         default =>
                             (float) $ordenados
@@ -484,7 +492,9 @@ class AnalisisConsumoUnidadController extends Controller
         string $modelo
     ): ?float {
         $galones = (float) (
-            $ciclo->combustible_consumido_ciclo ?? 0
+            $ciclo->consumo_real_ciclo
+            ?? $ciclo->combustible_consumido_ciclo
+            ?? 0
         );
 
         if ($galones <= 0) {
@@ -502,10 +512,10 @@ class AnalisisConsumoUnidadController extends Controller
                     : null,
 
             Abastecimiento::MODELO_GALONES_VIAJE =>
-                (int) ($ciclo->total_rutas ?? 0) > 0
+                $this->viajesEfectivos($ciclo) > 0
                     ? round(
                         $galones
-                        / (int) $ciclo->total_rutas,
+                        / $this->viajesEfectivos($ciclo),
                         6
                     )
                     : null,
@@ -519,6 +529,19 @@ class AnalisisConsumoUnidadController extends Controller
                     )
                     : null,
         };
+    }
+
+    /**
+     * M4 persiste total_viajes. Los ciclos legacy se identifican porque
+     * no poseen consumo_real_ciclo y derivan viajes desde sus detalles.
+     */
+    private function viajesEfectivos(Abastecimiento $ciclo): int
+    {
+        if (! is_null($ciclo->consumo_real_ciclo)) {
+            return (int) $ciclo->total_viajes;
+        }
+
+        return (int) $ciclo->rutas->sum('factor_recorrido');
     }
 
     private function calcularRendimientoConsolidado(
