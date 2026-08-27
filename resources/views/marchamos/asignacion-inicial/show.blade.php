@@ -186,8 +186,6 @@
                     </div>
                 </section>
 
-                @include('marchamos.asignacion-inicial._extras')
-
                 <section class="cc-detail-section mt-6">
                     <div class="cc-detail-section-header">
                         <h5>
@@ -362,6 +360,8 @@
                         </div>
                     </form>
                 </section>
+
+                @include('marchamos.asignacion-inicial._extras')
 
                 <section class="cc-detail-section mt-6">
                     <div class="cc-detail-section-header">

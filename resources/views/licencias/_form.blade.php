@@ -197,9 +197,25 @@
             @endif
         </div>
 
+        <div
+            id="unidad_resumen_panel"
+            class="cc-col-span-2 hidden -mt-2"
+        >
+            <div
+                id="unidad_resumen_identidad"
+                class="text-sm font-semibold text-[var(--cc-text)]"
+            ></div>
+        </div>
+
+        <div class="cc-form-section-slim">
+            <div class="cc-form-section-title">
+                Cobertura de licencia
+            </div>
+        </div>
+
         <div class="cc-field cc-col-span-2">
             <label>
-                Tanques cubiertos por la licencia
+                Tanques disponibles
                 <span class="cc-required">*</span>
             </label>
 
@@ -237,55 +253,20 @@
             @error('tanques_cubiertos.*')
                 <div class="cc-error">{{ $message }}</div>
             @enderror
-        </div>
 
-        <div
-            id="unidad_resumen_panel"
-            class="cc-col-span-2 hidden"
-        >
-            <div class="cc-callout cc-callout-info">
-                <div class="cc-callout-marker"></div>
+            <div
+                id="unidad_resumen"
+                class="mt-4 hidden border-t border-[var(--cc-border)] pt-4 text-sm"
+            >
+                <div
+                    id="unidad_resumen_cobertura"
+                    class="font-semibold text-[var(--cc-text)]"
+                ></div>
 
-                <div class="min-w-0 flex-1">
-                    <div class="cc-callout-title">
-                        Unidad seleccionada
-                    </div>
-
-                    <div
-                        id="unidad_resumen"
-                        class="mt-2 grid gap-3 sm:grid-cols-2"
-                    >
-                        <div class="sm:col-span-2">
-                            <div class="text-xs font-semibold uppercase tracking-wide text-[var(--cc-text-muted)]">
-                                Identidad
-                            </div>
-                            <div
-                                id="unidad_resumen_identidad"
-                                class="mt-1 font-semibold text-[var(--cc-text)]"
-                            ></div>
-                        </div>
-
-                        <div>
-                            <div class="text-xs font-semibold uppercase tracking-wide text-[var(--cc-text-muted)]">
-                                Cobertura
-                            </div>
-                            <div
-                                id="unidad_resumen_cobertura"
-                                class="mt-1 cc-callout-text"
-                            ></div>
-                        </div>
-
-                        <div>
-                            <div class="text-xs font-semibold uppercase tracking-wide text-[var(--cc-text-muted)]">
-                                Plantilla
-                            </div>
-                            <div
-                                id="unidad_resumen_plantilla"
-                                class="mt-1 cc-callout-text"
-                            ></div>
-                        </div>
-                    </div>
-                </div>
+                <div
+                    id="unidad_resumen_plantilla"
+                    class="mt-1 text-[var(--cc-text-muted)]"
+                ></div>
             </div>
         </div>
     @endif
@@ -307,6 +288,7 @@
             name="periodo_vigencia_meses"
             class="cc-input"
             required
+        >
             <option value="">
                 Seleccione un período
             </option>
@@ -344,6 +326,9 @@
             value="{{ $fechaActivacionActual }}"
             class="cc-input"
             required
+            @if (! $esEdicion)
+                min="{{ now()->toDateString() }}"
+            @endif
         >
 
         @error('fecha_activacion')
@@ -439,18 +424,18 @@
 
         function plantillaTexto(tanquesProtegidos) {
             if (tanquesProtegidos === 1) {
-                return '1 tanque · 29 puntos esperados';
+                return 'Plantilla 1 tanque · 29 puntos';
             }
 
             if (tanquesProtegidos === 2) {
-                return '2 tanques · 38 puntos esperados';
+                return 'Plantilla 2 tanques · 38 puntos';
             }
 
             if (tanquesProtegidos === 3) {
-                return '3 tanques · 49 puntos esperados';
+                return 'Plantilla 3 tanques · 49 puntos';
             }
 
-            return 'Pendiente de definición';
+            return 'Plantilla pendiente de definición';
         }
 
         function actualizarResumenUnidad() {
@@ -473,6 +458,7 @@
                 unidadResumenCobertura.textContent = '';
                 unidadResumenPlantilla.textContent = '';
                 unidadResumenPanel.classList.add('hidden');
+                unidadResumen.classList.add('hidden');
 
                 return;
             }
@@ -509,6 +495,7 @@
                 plantillaTexto(tanquesProtegidos);
 
             unidadResumenPanel.classList.remove('hidden');
+            unidadResumen.classList.remove('hidden');
         }
 
         function actualizarTanquesUnidad() {

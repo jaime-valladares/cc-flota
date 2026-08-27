@@ -90,23 +90,13 @@
                             </div>
                         @endif
 
-                        <div class="cc-callout cc-callout-info mb-5">
-                            <div class="cc-callout-marker"></div>
-
+                        <div class="cc-status-strip mb-6">
                             <div>
-                                <div class="cc-callout-title">
-                                    Flujo de habilitación
-                                </div>
-
-                                <div class="cc-callout-text">
-                                    Solo pueden licenciarse unidades
-                                    pertenecientes a empresas activas,
-                                    registradas y sin una licencia previa.
-                                    La creación de la licencia no activa
-                                    automáticamente la unidad: esta permanecerá
-                                    pendiente hasta completar la asignación
-                                    inicial de marchamos.
-                                </div>
+                                <strong>Flujo de habilitación</strong>
+                                <span>
+                                    La unidad permanecerá registrada hasta
+                                    completar la asignación inicial de marchamos.
+                                </span>
                             </div>
                         </div>
 

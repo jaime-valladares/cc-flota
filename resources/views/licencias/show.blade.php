@@ -13,6 +13,21 @@
         && $licencia->estado === 'activa'
         && $licencia->esta_vencida;
 
+    $diasParaVencer = $licencia->fecha_vencimiento
+        ? (int) now()->startOfDay()->diffInDays(
+            $licencia->fecha_vencimiento->copy()->startOfDay(),
+            false
+        )
+        : null;
+
+    $renovacionAnticipadaDisponible =
+        Auth::user()->tienePermiso('licencias.reactivar')
+        && $licencia->estado === 'activa'
+        && ! $licencia->esta_vencida
+        && ! is_null($diasParaVencer)
+        && $diasParaVencer >= 0
+        && $diasParaVencer <= \App\Models\Licencia::DIAS_ALERTA_VENCIMIENTO;
+
     $licenciaReactivable =
         Auth::user()->tienePermiso('licencias.reactivar')
         && $licencia->estado === 'inactiva';
@@ -572,7 +587,7 @@
                                     @if ($unidad)
                                         {{ number_format(
                                             (float) $unidad->capacidad_cubierta,
-                                            2
+                                            1
                                         ) }}
                                         galones
                                     @else
@@ -743,6 +758,12 @@
                             </div>
                         </div>
                     </section>
+                @endif
+
+                @if ($renovacionAnticipadaDisponible)
+                    @include('licencias.partials.renovacion-anticipada', [
+                        'returnTo' => null,
+                    ])
                 @endif
 
                 @if (

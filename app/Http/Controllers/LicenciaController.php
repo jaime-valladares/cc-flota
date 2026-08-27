@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Empresa;
 use App\Models\Licencia;
+use App\Models\LicenciaRenovacion;
 use App\Models\PuntoSeguridadUnidad;
 use App\Models\Unidad;
 use App\Models\UnidadTanque;
@@ -720,7 +721,10 @@ class LicenciaController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate(
-            $this->reglasValidacionCrearLicencia($request)
+            $this->reglasValidacionCrearLicencia($request),
+            [
+                'fecha_activacion.after_or_equal' => 'La fecha de activación debe ser hoy o una fecha futura.',
+            ]
         );
 
         $unidad = Unidad::query()
@@ -1305,6 +1309,92 @@ class LicenciaController extends Controller
     }
 
     /**
+     * Extiende anticipadamente una licencia dentro de sus últimos 30 días.
+     */
+    public function renovar(
+        Request $request,
+        Licencia $licencia
+    ): RedirectResponse {
+        $this->validarEmpresaActivaLicencia($licencia);
+
+        $validated = $request->validate([
+            'periodo_agregado_meses' => [
+                'required',
+                'integer',
+                Rule::in(array_keys($this->periodosVigencia())),
+            ],
+        ]);
+
+        DB::transaction(function () use ($licencia, $validated): void {
+            $licenciaBloqueada = Licencia::query()
+                ->with(['empresa', 'unidad'])
+                ->lockForUpdate()
+                ->findOrFail($licencia->id);
+
+            $this->validarEmpresaActivaLicencia($licenciaBloqueada);
+
+            if ($licenciaBloqueada->estado !== 'activa') {
+                throw ValidationException::withMessages([
+                    'periodo_agregado_meses' => 'La licencia debe estar administrativamente activa para renovarse.',
+                ]);
+            }
+
+            if ($this->licenciaEstaVencida($licenciaBloqueada)) {
+                throw ValidationException::withMessages([
+                    'periodo_agregado_meses' => 'La renovación anticipada no está disponible para licencias vencidas.',
+                ]);
+            }
+
+            $vencimientoAnterior = $licenciaBloqueada
+                ->fecha_vencimiento
+                ?->copy()
+                ->startOfDay();
+
+            $diasRestantes = $vencimientoAnterior
+                ? (int) now()->startOfDay()->diffInDays($vencimientoAnterior, false)
+                : null;
+
+            if (
+                is_null($diasRestantes)
+                || $diasRestantes < 0
+                || $diasRestantes > Licencia::DIAS_ALERTA_VENCIMIENTO
+            ) {
+                throw ValidationException::withMessages([
+                    'periodo_agregado_meses' => 'La licencia sólo puede renovarse cuando faltan 30 días o menos para su vencimiento.',
+                ]);
+            }
+
+            $periodoAgregado = (int) $validated['periodo_agregado_meses'];
+            $nuevoVencimiento = $vencimientoAnterior
+                ->copy()
+                ->addMonthsNoOverflow($periodoAgregado);
+
+            $licenciaBloqueada->update([
+                'periodo_vigencia_meses' => $periodoAgregado,
+                'fecha_vencimiento' => $nuevoVencimiento->toDateString(),
+                'actualizado_por' => Auth::id(),
+            ]);
+
+            LicenciaRenovacion::create([
+                'licencia_id' => $licenciaBloqueada->id,
+                'fecha_vencimiento_anterior' => $vencimientoAnterior->toDateString(),
+                'periodo_agregado_meses' => $periodoAgregado,
+                'fecha_vencimiento_nueva' => $nuevoVencimiento->toDateString(),
+                'renovado_por' => Auth::id(),
+            ]);
+        });
+
+        $queryParams = $this->parametrosRetorno($request);
+        $ruta = $request->input('return_to') === 'ventana'
+            ? 'licencias.show.ventana'
+            : 'licencias.show';
+
+        return redirect()
+            ->route($ruta, array_merge($queryParams, ['licencia' => $licencia]))
+            ->with('success', 'Licencia renovada anticipadamente.');
+    }
+
+    /**
      * Reglas para crear una licencia.
      */
     private function reglasValidacionCrearLicencia(
@@ -1358,6 +1448,7 @@ class LicenciaController extends Controller
             'fecha_activacion' => [
                 'required',
                 'date',
+                'after_or_equal:today',
             ],
             'tanques_cubiertos' => [
                 'required',
@@ -1463,6 +1554,13 @@ class LicenciaController extends Controller
             'empresa',
             'unidad',
         ]);
+
+        if (
+            ! is_null(Auth::user()?->empresa_id)
+            && (int) Auth::user()->empresa_id !== (int) $licencia->empresa_id
+        ) {
+            abort(403, 'La licencia no pertenece al alcance de su empresa.');
+        }
 
         if (
             ! $licencia->empresa

@@ -76,6 +76,20 @@ function asignarTodosLosMarchamos(TestCase $test, User $usuario, Unidad $unidad)
         ->assertSessionHasNoErrors();
 }
 
+test('registro de marchamos aparece antes de puntos extra en vista normal y ventana', function () {
+    [$usuario, $unidad] = prepararUnidadParaExtras($this);
+
+    $this->actingAs($usuario)
+        ->get(route('marchamos.asignacion-inicial.show', $unidad))
+        ->assertOk()
+        ->assertSeeInOrder(['Registro de marchamos', 'Puntos de seguridad extra']);
+
+    $this->actingAs($usuario)
+        ->get(route('marchamos.asignacion-inicial.show.ventana', $unidad))
+        ->assertOk()
+        ->assertSeeInOrder(['Registro de marchamos', 'Puntos de seguridad extra']);
+});
+
 test('unidad con cero extras finaliza normalmente', function () {
     [$usuario, $unidad] = prepararUnidadParaExtras($this);
     asignarTodosLosMarchamos($this, $usuario, $unidad);

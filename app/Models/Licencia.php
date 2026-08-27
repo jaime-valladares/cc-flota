@@ -65,6 +65,13 @@ class Licencia extends Model
             ->orderBy('numero_tanque_snapshot');
     }
 
+    /** Historial de extensiones anticipadas de vigencia. */
+    public function renovaciones(): HasMany
+    {
+        return $this->hasMany(LicenciaRenovacion::class, 'licencia_id')
+            ->latest();
+    }
+
     /** Cantidad contractual derivada del detalle normalizado. */
     protected function cantidadTanquesCubiertos(): Attribute
     {

@@ -1,24 +1,24 @@
 <?php
 
+use App\Http\Controllers\AbastecimientoController;
+use App\Http\Controllers\AnalisisConsumoUnidadController;
+use App\Http\Controllers\AnalisisOperativoController;
+use App\Http\Controllers\AnalisisRendimientoController;
+use App\Http\Controllers\AnalisisRutaController;
+use App\Http\Controllers\AuditoriaAbastecimientoController;
+use App\Http\Controllers\AuditoriaMarchamoController;
 use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\GasolineraController;
 use App\Http\Controllers\GasolineraExternaController;
-use App\Http\Controllers\PuntoRutaController;
-use App\Http\Controllers\RutaController;
 use App\Http\Controllers\LicenciaController;
-use App\Http\Controllers\RecargaTanqueController;
-use App\Http\Controllers\AbastecimientoController;
-use App\Http\Controllers\AnalisisOperativoController;
-use App\Http\Controllers\AnalisisConsumoUnidadController;
-use App\Http\Controllers\AnalisisRendimientoController;
-use App\Http\Controllers\AnalisisRutaController;
-use App\Http\Controllers\AuditoriaMarchamoController;
-use App\Http\Controllers\AuditoriaAbastecimientoController;
 use App\Http\Controllers\MarchamoAsignacionInicialController;
 use App\Http\Controllers\MarchamoController;
 use App\Http\Controllers\MarchamoReemplazoController;
 use App\Http\Controllers\MotoristaController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PuntoRutaController;
+use App\Http\Controllers\RecargaTanqueController;
+use App\Http\Controllers\RutaController;
 use App\Http\Controllers\TanqueController;
 use App\Http\Controllers\UnidadController;
 use App\Http\Controllers\UsuarioController;
@@ -552,7 +552,7 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
         ->middleware('permiso:gasolineras_externas.reactivar')
         ->name('gasolineras-externas.reactivar');
 
-        /*
+    /*
     |--------------------------------------------------------------------------
     | Puntos de ruta
     |--------------------------------------------------------------------------
@@ -651,7 +651,6 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
     )
         ->middleware('permiso:puntos_ruta.reactivar')
         ->name('puntos-ruta.reactivar');
-
 
     /*
     |--------------------------------------------------------------------------
@@ -851,7 +850,6 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
         ->middleware('permiso:motoristas.reactivar')
         ->name('motoristas.reactivar');
 
-
     /*
     |--------------------------------------------------------------------------
     | Licencias
@@ -914,6 +912,10 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
     Route::patch('/licencias/{licencia}/reactivar', [LicenciaController::class, 'reactivar'])
         ->middleware('permiso:licencias.reactivar')
         ->name('licencias.reactivar');
+
+    Route::patch('/licencias/{licencia}/renovar', [LicenciaController::class, 'renovar'])
+        ->middleware('permiso:licencias.reactivar')
+        ->name('licencias.renovar');
 
     /*
     |--------------------------------------------------------------------------

@@ -159,6 +159,43 @@ test('licencia futura permanece pendiente y no habilita marchamos', function () 
         ->assertForbidden();
 });
 
+test('nueva licencia permite fecha de activacion de hoy', function () {
+    $usuario = usuarioLicenciaTanques();
+    $empresa = empresaLicenciaTanques('LT-FECHA-HOY');
+    $unidad = crearUnidadFisica($this, $usuario, $empresa, 'LT-FECHA-HOY');
+
+    $this->actingAs($usuario)
+        ->post(route('licencias.store'), datosLicenciaTanques(
+            $empresa,
+            $unidad,
+            $unidad->tanquesUnidad()->pluck('id')->all(),
+            ['fecha_activacion' => now()->toDateString()]
+        ))
+        ->assertSessionHasNoErrors();
+
+    expect($unidad->refresh()->licencia->condicion_vigencia)->toBe('vigente');
+});
+
+test('nueva licencia rechaza en backend una fecha de activacion historica', function () {
+    $usuario = usuarioLicenciaTanques();
+    $empresa = empresaLicenciaTanques('LT-FECHA-AYER');
+    $unidad = crearUnidadFisica($this, $usuario, $empresa, 'LT-FECHA-AYER');
+
+    $this->actingAs($usuario)
+        ->from(route('licencias.create', ['empresa_id' => $empresa->id]))
+        ->post(route('licencias.store'), datosLicenciaTanques(
+            $empresa,
+            $unidad,
+            $unidad->tanquesUnidad()->pluck('id')->all(),
+            ['fecha_activacion' => now()->subDay()->toDateString()]
+        ))
+        ->assertSessionHasErrors([
+            'fecha_activacion' => 'La fecha de activación debe ser hoy o una fecha futura.',
+        ]);
+
+    expect(Licencia::where('unidad_id', $unidad->id)->exists())->toBeFalse();
+});
+
 test('mantiene unicidad de licencia por unidad', function () {
     $usuario = usuarioLicenciaTanques();
     $empresa = empresaLicenciaTanques('LT-UNICA');
