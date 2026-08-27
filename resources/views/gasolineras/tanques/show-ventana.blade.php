@@ -161,7 +161,7 @@
                                 </span>
 
                                 <span class="cc-summary-strip-value">
-                                    {{ number_format($capacidadTotal, 2) }} gal
+                                    {{ number_format($capacidadTotal, 1) }} gal
                                 </span>
                             </div>
 
@@ -171,7 +171,7 @@
                                 </span>
 
                                 <span class="cc-summary-strip-value">
-                                    {{ number_format($volumenActual, 2) }} gal
+                                    {{ number_format($volumenActual, 1) }} gal
                                 </span>
                             </div>
 
@@ -193,7 +193,7 @@
                                 <span
                                     class="cc-summary-strip-value {{ $bajoAlerta ? 'cc-summary-strip-value-danger' : 'cc-summary-strip-value-success' }}"
                                 >
-                                    {{ number_format($volumenMinimoAlerta, 2) }} gal
+                                    {{ number_format($volumenMinimoAlerta, 1) }} gal
                                 </span>
                             </div>
                         </div>
@@ -341,7 +341,7 @@
                                                     id="volumen_actual_visible"
                                                     type="text"
                                                     class="cc-input"
-                                                    value="{{ number_format($volumenActual, 2) }}"
+                                                    value="{{ number_format($volumenActual, 1) }}"
                                                     disabled
                                                 >
                                             </div>
@@ -375,7 +375,7 @@
                                             <div class="cc-field">
                                                 <label>Costo promedio actual por galón</label>
                                                 <input type="text" class="cc-input"
-                                                    value="{{ is_null($tanque->costo_promedio_galon_actual) ? '—' : '$'.number_format((float) $tanque->costo_promedio_galon_actual, 8) }}"
+                                                    value="{{ is_null($tanque->costo_promedio_galon_actual) ? '—' : '$'.number_format((float) $tanque->costo_promedio_galon_actual, 2) }}"
                                                     disabled>
                                             </div>
 
@@ -646,18 +646,18 @@
                                                                 </span>
 
                                                                 <div class="cc-table-adaptive-muted">
-                                                                    {{ number_format((float) $movimiento->volumen_movimiento, 2) }}
+                                                                    {{ number_format((float) $movimiento->volumen_movimiento, 1) }}
                                                                     gal
                                                                 </div>
                                                             </td>
 
                                                             <td>
-                                                                {{ number_format((float) $movimiento->volumen_anterior, 2) }}
+                                                                {{ number_format((float) $movimiento->volumen_anterior, 1) }}
                                                                 gal
                                                             </td>
 
                                                             <td class="cc-table-adaptive-strong">
-                                                                {{ number_format((float) $movimiento->volumen_resultante, 2) }}
+                                                                {{ number_format((float) $movimiento->volumen_resultante, 1) }}
                                                                 gal
                                                             </td>
 

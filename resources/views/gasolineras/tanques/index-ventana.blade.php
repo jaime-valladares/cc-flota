@@ -501,7 +501,7 @@
                                                     </div>
 
                                                     <div class="cc-admin-result-value">
-                                                        {{ number_format($volumenActual, 2) }} gal
+                                                        {{ number_format($volumenActual, 1) }} gal
                                                     </div>
 
                                                     <div class="cc-admin-result-value-muted">
@@ -515,7 +515,7 @@
                                                     </div>
 
                                                     <div class="cc-admin-result-value">
-                                                        {{ number_format($espacioDisponible, 2) }} gal
+                                                        {{ number_format($espacioDisponible, 1) }} gal
                                                     </div>
 
                                                     <div class="cc-admin-result-value-muted">
@@ -529,11 +529,11 @@
                                                     </div>
 
                                                     <div class="cc-admin-result-value {{ $bajoAlerta ? 'text-[var(--cc-danger)]' : '' }}">
-                                                        {{ number_format($volumenMinimoAlerta, 2) }} gal
+                                                        {{ number_format($volumenMinimoAlerta, 1) }} gal
                                                     </div>
 
                                                     <div class="cc-admin-result-value-muted">
-                                                        Capacidad {{ number_format($capacidadTotal, 2) }} gal
+                                                        Capacidad {{ number_format($capacidadTotal, 1) }} gal
                                                     </div>
                                                 </div>
 

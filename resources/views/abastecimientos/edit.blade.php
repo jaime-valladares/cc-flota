@@ -388,7 +388,7 @@
                                 @if (is_null($kilometrajeAnterior))
                                     Sin registro
                                 @else
-                                    {{ number_format($kilometrajeAnterior, 2) }}
+                                    {{ number_format($kilometrajeAnterior, 1) }}
                                     km
                                 @endif
                             </span>
@@ -413,7 +413,7 @@
                                     @if (is_null($horometroAnterior))
                                         Sin registro
                                     @else
-                                        {{ number_format($horometroAnterior, 2) }}
+                                        {{ number_format($horometroAnterior, 1) }}
                                         h
                                     @endif
                                 </span>

@@ -604,7 +604,7 @@
                                         </div>
 
                                         <div class="cc-detail-value">
-                                            {{ number_format((float) $unidad->capacidad_total, 2) }}
+                                            {{ number_format((float) $unidad->capacidad_total, 1) }}
                                             galones
                                         </div>
                                     </div>
@@ -614,7 +614,7 @@
                                                 Tanque {{ $tanqueUnidad->numero }}
                                             </div>
                                             <div class="cc-detail-value">
-                                                {{ number_format((float) $tanqueUnidad->capacidad, 2) }} galones
+                                                {{ number_format((float) $tanqueUnidad->capacidad, 1) }} galones
                                             </div>
                                         </div>
                                     @endforeach
@@ -642,14 +642,14 @@
                                     <div class="cc-detail-item">
                                         <div class="cc-detail-label">Km/Gal teórico</div>
                                         <div class="cc-detail-value">
-                                            {{ is_null($unidad->rendimiento_teorico_km_galon) ? 'No definido' : number_format((float) $unidad->rendimiento_teorico_km_galon, 4) }}
+                                            {{ is_null($unidad->rendimiento_teorico_km_galon) ? 'No definido' : number_format((float) $unidad->rendimiento_teorico_km_galon, 1) }}
                                         </div>
                                     </div>
                                     @if ($unidad->modelo_medicion === 'galones_hora')
                                         <div class="cc-detail-item">
                                             <div class="cc-detail-label">Gal/Hora teórico</div>
                                             <div class="cc-detail-value">
-                                                {{ is_null($unidad->rendimiento_teorico_gal_hora) ? 'No definido' : number_format((float) $unidad->rendimiento_teorico_gal_hora, 4) }}
+                                                {{ is_null($unidad->rendimiento_teorico_gal_hora) ? 'No definido' : number_format((float) $unidad->rendimiento_teorico_gal_hora, 1) }}
                                             </div>
                                         </div>
                                     @endif
