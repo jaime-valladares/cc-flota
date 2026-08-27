@@ -203,7 +203,7 @@
         >
             <div
                 id="unidad_resumen_identidad"
-                class="text-sm font-semibold text-[var(--cc-text)]"
+                class="text-xs font-medium leading-5 text-[var(--cc-text-muted)]"
             ></div>
         </div>
 
@@ -225,9 +225,10 @@
                     class="hidden cc-grid cc-grid-compact gap-3"
                 >
                     @foreach ($unidad->tanquesUnidad as $tanqueUnidad)
-                        <label class="cc-checkbox-option">
+                        <label class="!mb-0 flex items-start gap-2 !text-sm !font-medium">
                             <input
                                 type="checkbox"
+                                class="mt-0.5"
                                 name="tanques_cubiertos[]"
                                 value="{{ $tanqueUnidad->id }}"
                                 data-tanque-licencia
@@ -237,14 +238,14 @@
                                 disabled
                             >
                             Tanque {{ $tanqueUnidad->numero }} —
-                            {{ number_format((float) $tanqueUnidad->capacidad, 1) }} gal
+                            {{ number_format((float) $tanqueUnidad->capacidad, 2) }} gal
                         </label>
                     @endforeach
                 </div>
             @endforeach
 
-            <div class="cc-field-help">
-                Seleccione los tanques incluidos en la cobertura de la licencia.
+            <div class="mt-1 text-xs leading-5 text-[var(--cc-text-muted)]">
+                Seleccione uno o más tanques.
             </div>
 
             @error('tanques_cubiertos')
@@ -256,16 +257,16 @@
 
             <div
                 id="unidad_resumen"
-                class="mt-4 hidden border-t border-[var(--cc-border)] pt-4 text-sm"
+                class="mt-2 hidden border-t border-[var(--cc-border)] pt-2 text-xs leading-5"
             >
                 <div
                     id="unidad_resumen_cobertura"
-                    class="font-semibold text-[var(--cc-text)]"
+                    class="font-medium text-[var(--cc-text)]"
                 ></div>
 
                 <div
                     id="unidad_resumen_plantilla"
-                    class="mt-1 text-[var(--cc-text-muted)]"
+                    class="text-[var(--cc-text-muted)]"
                 ></div>
             </div>
         </div>
@@ -344,13 +345,13 @@
     </div>
 
     <div class="cc-col-span-2">
-        <div class="cc-status-strip cc-status-strip-active">
+        <div class="cc-status-strip cc-status-strip-active !px-4 !py-3">
             <div>
-                <strong>
+                <strong class="block">
                     Fecha de vencimiento estimada
                 </strong>
 
-                <span id="fecha_vencimiento_preview">
+                <span id="fecha_vencimiento_preview" class="mt-1 block">
                     Seleccione la fecha de activación y el período de
                     vigencia.
                 </span>
@@ -489,7 +490,7 @@
 
             unidadResumenCobertura.textContent =
                 `${tanquesProtegidos} de ${totalTanques} tanques · `
-                + `${capacidadCubierta.toFixed(1)} gal cubiertos`;
+                + `${capacidadCubierta.toFixed(2)} gal cubiertos`;
 
             unidadResumenPlantilla.textContent =
                 plantillaTexto(tanquesProtegidos);

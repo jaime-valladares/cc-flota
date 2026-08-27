@@ -125,7 +125,7 @@
                                 </span>
 
                                 <span class="cc-summary-strip-value">
-                                    {{ number_format($totalCapacidad, 1) }} gal
+                                    {{ number_format($totalCapacidad, 2) }} gal
                                 </span>
                             </div>
 
@@ -135,7 +135,7 @@
                                 </span>
 
                                 <span class="cc-summary-strip-value">
-                                    {{ number_format($totalInventario, 1) }} gal
+                                    {{ number_format($totalInventario, 2) }} gal
                                 </span>
                             </div>
 
@@ -145,7 +145,7 @@
                                 </span>
 
                                 <span class="cc-summary-strip-value">
-                                    {{ number_format($totalDisponible, 1) }} gal
+                                    {{ number_format($totalDisponible, 2) }} gal
                                 </span>
                             </div>
 
@@ -219,10 +219,10 @@
                                                         name="precio_galon"
                                                         value="{{ old('precio_galon') }}"
                                                         class="cc-input"
-                                                        min="0.0001"
-                                                        step="0.0001"
+                                                        min="0.01"
+                                                        step="0.01"
                                                         required
-                                                        placeholder="Ej. 4.2500"
+                                                        placeholder="Ej. 4.25"
                                                         data-precio-galon
                                                     >
 
@@ -366,7 +366,7 @@
                                                                     </div>
 
                                                                     <div class="cc-admin-result-value">
-                                                                        {{ number_format($volumenActual, 1) }} gal
+                                                                        {{ number_format($volumenActual, 2) }} gal
                                                                     </div>
 
                                                                     <div class="cc-admin-result-value-muted">
@@ -380,7 +380,7 @@
                                                                     </div>
 
                                                                     <div class="cc-admin-result-value">
-                                                                        {{ number_format($capacidadDisponible, 1) }} gal
+                                                                        {{ number_format($capacidadDisponible, 2) }} gal
                                                                     </div>
 
                                                                     <div class="cc-admin-result-value-muted">
@@ -394,7 +394,7 @@
                                                                     </div>
 
                                                                     <div class="cc-admin-result-value">
-                                                                        {{ number_format($capacidadTotal, 1) }} gal
+                                                                        {{ number_format($capacidadTotal, 2) }} gal
                                                                     </div>
 
                                                                     <div class="cc-admin-result-value-muted">
@@ -451,7 +451,7 @@
                                                                             id="resultado_{{ $tanque->id }}"
                                                                             type="text"
                                                                             class="cc-input"
-                                                                            value="{{ number_format($volumenActual, 1) }} gal"
+                                                                            value="{{ number_format($volumenActual, 2) }} gal"
                                                                             disabled
                                                                             data-volumen-resultante
                                                                         >
@@ -570,7 +570,7 @@
                                                             </td>
 
                                                             <td>
-                                                                {{ number_format((float) $recarga->total_galones, 1) }}
+                                                                {{ number_format((float) $recarga->total_galones, 2) }}
                                                                 gal
                                                             </td>
 

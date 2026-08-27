@@ -540,7 +540,7 @@
                                             </div>
 
                                             <div class="cc-admin-result-value">
-                                                {{ number_format($volumenActual, 1) }} gal
+                                                {{ number_format($volumenActual, 2) }} gal
                                             </div>
 
                                             <div class="cc-admin-result-value-muted">
@@ -554,7 +554,7 @@
                                             </div>
 
                                             <div class="cc-admin-result-value">
-                                                {{ number_format($capacidadTotal, 1) }} gal
+                                                {{ number_format($capacidadTotal, 2) }} gal
                                             </div>
 
                                             <div class="cc-admin-result-value-muted">

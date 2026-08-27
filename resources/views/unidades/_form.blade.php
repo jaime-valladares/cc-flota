@@ -321,8 +321,8 @@
             type="number"
             class="cc-input"
             value="{{ old('rendimiento_teorico_km_galon', $unidad->rendimiento_teorico_km_galon ?? '') }}"
-            min="0.0001"
-            step="0.0001"
+            min="0.01"
+            step="0.01"
             required
         >
         @error('rendimiento_teorico_km_galon')
@@ -340,8 +340,8 @@
             type="number"
             class="cc-input"
             value="{{ old('rendimiento_teorico_gal_hora', $unidad->rendimiento_teorico_gal_hora ?? '') }}"
-            min="0.0001"
-            step="0.0001"
+            min="0.01"
+            step="0.01"
         >
         @error('rendimiento_teorico_gal_hora')
             <div class="cc-error">{{ $message }}</div>

@@ -264,7 +264,7 @@
                                 @if (is_null($kilometrajeAnterior))
                                     Sin registro
                                 @else
-                                    {{ number_format($kilometrajeAnterior, 1) }}
+                                    {{ number_format($kilometrajeAnterior, 2) }}
                                     km
                                 @endif
                             </span>
@@ -280,7 +280,7 @@
                                     @if (is_null($horometroAnterior))
                                         Sin registro
                                     @else
-                                        {{ number_format($horometroAnterior, 1) }}
+                                        {{ number_format($horometroAnterior, 2) }}
                                         h
                                     @endif
                                 </span>
@@ -978,9 +978,9 @@
                                         name="precio_galon"
                                         value="{{ old('precio_galon') }}"
                                         class="cc-input"
-                                        min="0.0001"
-                                        step="0.0001"
-                                        placeholder="0.0000"
+                                        min="0.01"
+                                        step="0.01"
+                                        placeholder="0.00"
                                         data-campo-externo
                                         data-precio-galon
                                     >
@@ -1399,7 +1399,7 @@
                                         number_format(
                                             (float)
                                             $ruta->kilometros_estimados,
-                                            1
+                                            2
                                         )
                                     }}
                                     km
@@ -1408,7 +1408,7 @@
                                         number_format(
                                             (float)
                                             $ruta->galones_estimados,
-                                            1
+                                            2
                                         )
                                     }}
                                     gal
@@ -1486,6 +1486,10 @@
 
                 const precioGalon = document.querySelector(
                     '[data-precio-galon]'
+                );
+
+                const volumenInicial = document.querySelector(
+                    '[data-volumen-inicial]'
                 );
 
                 function numero(valor) {

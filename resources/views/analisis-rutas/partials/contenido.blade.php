@@ -2464,7 +2464,7 @@
                             'right';
 
                         context.fillText(
-                            value.toFixed(1),
+                            value.toFixed(2),
                             padding.left - 8,
                             y
                         );

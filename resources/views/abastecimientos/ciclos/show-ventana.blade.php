@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Consultar ciclos · CC-Flota</title>
+    <title>Ficha del ciclo · CC-Flota</title>
     @include('layouts.partials.favicon')
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,9 +14,9 @@
 <body class="antialiased">
     <main class="min-h-screen" style="background: var(--cc-bg-main);">
         <div class="cc-page-wrapper">
-            <div class="cc-window-container" style="width: 100%; max-width: 90rem;">
+            <div class="cc-window-container" style="width: 100%; max-width: 80rem;">
                 <div class="cc-card">
-                    @include('abastecimientos.ciclos.consulta-contenido', ['modoVentana' => true])
+                    @include('abastecimientos.ciclos.show-contenido', ['modoVentana' => true])
                 </div>
             </div>
         </div>

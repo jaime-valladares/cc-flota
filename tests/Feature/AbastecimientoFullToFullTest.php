@@ -129,6 +129,212 @@ function registrarInternoM4(
     ], $usuario->id);
 }
 
+test('validacion fallida conserva el estado visual y los datos del origen interno', function () {
+    [$usuario, $empresa, $gasolinera, $tanque, $unidad, $motorista] = contextoFullToFull($this);
+    $punto = $unidad->puntosSeguridad()
+        ->where('tipo_punto', 'tapón')
+        ->where('subgrupo', 'Depósito')
+        ->firstOrFail();
+    $rutaFormulario = route('abastecimientos.create', $unidad);
+
+    $respuesta = $this->actingAs($usuario)
+        ->from($rutaFormulario)
+        ->post(route('abastecimientos.store', $unidad), [
+            'empresa_id' => $empresa->id,
+            'unidad_id' => $unidad->id,
+            'motorista_id' => $motorista->id,
+            'kilometraje_actual' => '25000.50',
+            'tipo_origen' => 'interno',
+            'gasolinera_interna_id' => $gasolinera->id,
+            'tanques' => [[
+                'tanque_id' => $tanque->id,
+                'galones' => '125.50',
+            ]],
+            'marchamos' => [[
+                'punto_seguridad_id' => $punto->id,
+                'nuevo_codigo_marchamo' => '123',
+            ]],
+        ]);
+
+    $respuesta->assertRedirect($rutaFormulario)
+        ->assertSessionHasErrors('marchamos.0.nuevo_codigo_marchamo')
+        ->assertSessionHasInput('tipo_origen', 'interno')
+        ->assertSessionHasInput('motorista_id', $motorista->id)
+        ->assertSessionHasInput('kilometraje_actual', '25000.50')
+        ->assertSessionHasInput('gasolinera_interna_id', $gasolinera->id)
+        ->assertSessionHasInput('tanques.0.galones', '125.50')
+        ->assertSessionHasInput('marchamos.0.nuevo_codigo_marchamo', '123');
+
+    $this->get($rutaFormulario)
+        ->assertOk()
+        ->assertSee('value="interno"', false)
+        ->assertSee('value="125.50"', false)
+        ->assertSee('value="25000.50"', false)
+        ->assertSee('const volumenInicial', false)
+        ->assertSee('actualizarOrigen();', false);
+});
+
+test('validacion fallida conserva el estado visual y los datos del origen externo', function () {
+    [$usuario, $empresa, , , $unidad, $motorista] = contextoFullToFull($this, 'galones_hora');
+    $externa = GasolineraExterna::create([
+        'empresa_id' => $empresa->id,
+        'compania' => 'Externa persistente',
+        'direccion' => 'Prueba',
+        'estado' => 'activa',
+        'fecha_creacion' => now(),
+        'creado_por' => $usuario->id,
+    ]);
+    $punto = $unidad->puntosSeguridad()
+        ->where('tipo_punto', 'tapón')
+        ->where('subgrupo', 'Depósito')
+        ->firstOrFail();
+    $rutaFormulario = route('abastecimientos.create', $unidad);
+
+    $respuesta = $this->actingAs($usuario)
+        ->from($rutaFormulario)
+        ->post(route('abastecimientos.store', $unidad), [
+            'empresa_id' => $empresa->id,
+            'unidad_id' => $unidad->id,
+            'motorista_id' => $motorista->id,
+            'kilometraje_actual' => '301.25',
+            'horometro_actual' => '40.75',
+            'tipo_origen' => 'externo',
+            'gasolinera_externa_id' => $externa->id,
+            'galones_externos' => '150.25',
+            'precio_galon' => '3.70',
+            'marchamos' => [[
+                'punto_seguridad_id' => $punto->id,
+                'nuevo_codigo_marchamo' => 'invalido',
+            ]],
+        ]);
+
+    $respuesta->assertRedirect($rutaFormulario)
+        ->assertSessionHasErrors('marchamos.0.nuevo_codigo_marchamo')
+        ->assertSessionHasInput('tipo_origen', 'externo')
+        ->assertSessionHasInput('motorista_id', $motorista->id)
+        ->assertSessionHasInput('kilometraje_actual', '301.25')
+        ->assertSessionHasInput('horometro_actual', '40.75')
+        ->assertSessionHasInput('gasolinera_externa_id', $externa->id)
+        ->assertSessionHasInput('galones_externos', '150.25')
+        ->assertSessionHasInput('precio_galon', '3.70')
+        ->assertSessionHasInput('marchamos.0.nuevo_codigo_marchamo', 'invalido');
+
+    $this->get($rutaFormulario)
+        ->assertOk()
+        ->assertSee('value="externo"', false)
+        ->assertSee('value="150.25"', false)
+        ->assertSee('value="3.70"', false)
+        ->assertSee('value="40.75"', false)
+        ->assertSee('step="0.01"', false)
+        ->assertSee('actualizarOrigen();', false);
+});
+
+test('consulta de ciclos deriva uno en proceso desde un unico abastecimiento', function () {
+    $contexto = contextoFullToFull($this);
+    $apertura = registrarInternoM4($contexto, 500, 100, null, '7654301');
+
+    $this->actingAs($contexto[0])
+        ->get(route('abastecimientos.administrar'))
+        ->assertOk()
+        ->assertSee('Consultar ciclos')
+        ->assertSee('En proceso')
+        ->assertSee('Pendiente')
+        ->assertSee('500.00 gal iniciales')
+        ->assertSee(route('abastecimientos.ciclos.show', $apertura), false);
+
+    $this->actingAs($contexto[0])
+        ->get(route('abastecimientos.ciclos.show', $apertura))
+        ->assertOk()
+        ->assertSee('Ficha del ciclo')
+        ->assertSee('Empresa:')
+        ->assertSee('Estado:')
+        ->assertSee('Cierre:')
+        ->assertSee('Combustible consumido:')
+        ->assertSee('Costo por kilómetro:')
+        ->assertSee('Pendiente')
+        ->assertSee('Cierre pendiente')
+        ->assertSee('Ver ficha de abastecimiento');
+});
+
+test('dos abastecimientos producen un ciclo completo y otro en proceso con extremos correctos', function () {
+    $contexto = contextoFullToFull($this);
+    $apertura = registrarInternoM4($contexto, 500, 100, null, '7654301');
+    $cierre = registrarInternoM4($contexto, 100, 1100, $apertura->id, '7654302');
+
+    $this->actingAs($contexto[0])
+        ->get(route('abastecimientos.administrar', ['estado_ciclo' => 'completo']))
+        ->assertOk()
+        ->assertSee('Completo')
+        ->assertSee('1,000.00 km')
+        ->assertSee('100.00 gal')
+        ->assertDontSee('Cierre pendiente');
+
+    $this->actingAs($contexto[0])
+        ->get(route('abastecimientos.administrar', ['estado_ciclo' => 'en_proceso']))
+        ->assertOk()
+        ->assertSee('En proceso')
+        ->assertSee(route('abastecimientos.ciclos.show', $cierre), false)
+        ->assertDontSee(route('abastecimientos.ciclos.show', $apertura), false);
+
+    $this->actingAs($contexto[0])
+        ->get(route('abastecimientos.ciclos.show', $apertura))
+        ->assertOk()
+        ->assertSee('Completo')
+        ->assertSee('1,000.00 km')
+        ->assertSee('Costo consumido:')
+        ->assertSee('Costo por kilómetro:')
+        ->assertSee('$0.50/km')
+        ->assertSee(route('abastecimientos.show', $apertura), false)
+        ->assertSee(route('abastecimientos.show', $cierre), false);
+});
+
+test('tres abastecimientos producen dos ciclos completos y uno en proceso y respetan filtros', function () {
+    $contexto = contextoFullToFull($this);
+    $primero = registrarInternoM4($contexto, 500, 100, null, '7654301');
+    $segundo = registrarInternoM4($contexto, 100, 1100, $primero->id, '7654302');
+    $tercero = registrarInternoM4($contexto, 100, 2100, $segundo->id, '7654303');
+
+    $respuesta = $this->actingAs($contexto[0])->get(route('abastecimientos.administrar', [
+        'empresa_id' => $contexto[1]->id,
+        'unidad_id' => $contexto[4]->id,
+    ]));
+
+    $respuesta->assertOk()
+        ->assertSee(route('abastecimientos.ciclos.show', $primero), false)
+        ->assertSee(route('abastecimientos.ciclos.show', $segundo), false)
+        ->assertSee(route('abastecimientos.ciclos.show', $tercero), false);
+
+    expect($primero->refresh()->cierreCiclo?->is($segundo))->toBeTrue()
+        ->and($segundo->refresh()->cierreCiclo?->is($tercero))->toBeTrue()
+        ->and($tercero->refresh()->cierreCiclo)->toBeNull();
+});
+
+test('costo por kilometro conserva precision interna y presenta dos decimales', function () {
+    $contexto = contextoFullToFull($this);
+    $contexto[3]->update([
+        'valor_inventario_actual' => '8500.00000000',
+        'costo_promedio_galon_actual' => '4.25000000',
+    ]);
+    $apertura = registrarInternoM4($contexto, 500, 100, null, '7654301');
+    $cierre = registrarInternoM4($contexto, 270, 2500, $apertura->id, '7654302');
+
+    expect($cierre->costo_combustible_consumido_ciclo)->toBe('1147.50000000')
+        ->and($cierre->diferencia_kilometraje)->toBe('2400.00')
+        ->and($cierre->costo_unitario_ciclo)->toBe('0.47812500');
+
+    $this->actingAs($contexto[0])
+        ->get(route('abastecimientos.ciclos.show', $apertura))
+        ->assertOk()
+        ->assertSee('Lectura final:')
+        ->assertSee('2,500.00 km')
+        ->assertSee('Combustible consumido:')
+        ->assertSee('270.00 gal')
+        ->assertSee('Costo consumido:')
+        ->assertSee('$1,147.50')
+        ->assertSee('Costo por kilómetro:')
+        ->assertSee('$0.48/km');
+});
+
 test('linea base exige carga exactamente igual a capacidad cubierta', function () {
     $contexto = contextoFullToFull($this);
 
@@ -141,6 +347,7 @@ test('linea base exige carga exactamente igual a capacidad cubierta', function (
     expect($primero->abastecimiento_anterior_id)->toBeNull()
         ->and($primero->volumen_final)->toBe('500.00')
         ->and($primero->consumo_real_ciclo)->toBeNull()
+        ->and($primero->costo_unitario_ciclo)->toBeNull()
         ->and($primero->valor_carga_snapshot)->toBe('2500.00000000')
         ->and($primero->costo_promedio_abordo_resultante)->toBe('5.00000000')
         ->and($contexto[4]->refresh()->valor_combustible_abordo_actual)->toBe('2500.00000000');
@@ -195,6 +402,7 @@ test('cierre km gal usa carga como consumo y mezcla remanente sin revalorizar', 
 
     expect($segundo->abastecimiento_anterior_id)->toBe($primero->id)
         ->and($segundo->consumo_real_ciclo)->toBe('400.00')
+        ->and($segundo->costo_unitario_ciclo)->toBe('2.00000000')
         ->and($segundo->kilometros_por_galon)->toBe('2.500000')
         ->and($segundo->consumo_teorico_ciclo)->toBe('100.00000000')
         ->and($segundo->diferencia_galones_ciclo)->toBe('-300.00000000')
@@ -210,6 +418,7 @@ test('distancia cero en km gal persiste rendimiento cero y sobreconsumo', functi
     $segundo = registrarInternoM4($contexto, 100, 100, $primero->id, '7654302');
 
     expect($segundo->kilometros_por_galon)->toBe('0.000000')
+        ->and($segundo->costo_unitario_ciclo)->toBeNull()
         ->and($segundo->consumo_teorico_ciclo)->toBe('0.00000000')
         ->and($segundo->diferencia_galones_ciclo)->toBe('-100.00000000');
 });
@@ -226,6 +435,7 @@ test('galones hora exige avance y usa el teorico de apertura', function () {
         $contexto, 100, 100, $primero->id, '7654302', 120
     );
     expect($segundo->galones_por_hora)->toBe('5.000000')
+        ->and($segundo->costo_unitario_ciclo)->toBe('25.00000000')
         ->and($segundo->consumo_teorico_ciclo)->toBe('100.00000000')
         ->and($segundo->diferencia_galones_ciclo)->toBe('0.00000000');
 });
@@ -266,6 +476,7 @@ test('galones viaje usa factores y bloquea viajes sin avance', function () {
     );
     expect($segundo->total_rutas)->toBe(2)
         ->and($segundo->total_viajes)->toBe(3)
+        ->and($segundo->costo_unitario_ciclo)->toBe('166.66666667')
         ->and($segundo->consumo_teorico_ciclo)->toBe('60.00000000')
         ->and($segundo->diferencia_galones_ciclo)->toBe('-40.00000000');
 });

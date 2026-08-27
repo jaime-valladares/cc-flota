@@ -587,7 +587,7 @@
                                     @if ($unidad)
                                         {{ number_format(
                                             (float) $unidad->capacidad_cubierta,
-                                            1
+                                            2
                                         ) }}
                                         galones
                                     @else

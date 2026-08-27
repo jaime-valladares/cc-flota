@@ -117,8 +117,7 @@ class AbastecimientoController extends Controller
             )
         )
             ->filter(
-                fn ($valor) =>
-                    ! is_null($valor)
+                fn ($valor) => ! is_null($valor)
                     && $valor !== ''
             )
             ->all();
@@ -130,8 +129,7 @@ class AbastecimientoController extends Controller
                     : 'abastecimientos.create',
                 array_merge(
                     [
-                        'unidad' =>
-                            $abastecimiento->unidad_id,
+                        'unidad' => $abastecimiento->unidad_id,
                     ],
                     $parametrosNavegacion
                 )
@@ -194,10 +192,7 @@ class AbastecimientoController extends Controller
     ): View {
         return view(
             'abastecimientos.administrar',
-            $this->prepararListadoAbastecimientos(
-                $request,
-                true
-            )
+            $this->prepararListadoCiclos($request)
         );
     }
 
@@ -209,11 +204,175 @@ class AbastecimientoController extends Controller
     ): View {
         return view(
             'abastecimientos.administrar-ventana',
-            $this->prepararListadoAbastecimientos(
-                $request,
-                true
-            )
+            $this->prepararListadoCiclos($request)
         );
+    }
+
+    /**
+     * Ficha del ciclo identificado por el abastecimiento que lo abre.
+     */
+    public function showCiclo(Abastecimiento $abastecimiento): View
+    {
+        return view(
+            'abastecimientos.ciclos.show',
+            $this->prepararFichaCiclo($abastecimiento)
+        );
+    }
+
+    /**
+     * Ficha del ciclo en ventana independiente.
+     */
+    public function showCicloVentana(Abastecimiento $abastecimiento): View
+    {
+        return view(
+            'abastecimientos.ciclos.show-ventana',
+            $this->prepararFichaCiclo($abastecimiento)
+        );
+    }
+
+    /**
+     * Deriva ciclos desde la cadena inmutable de abastecimientos registrados.
+     */
+    private function prepararListadoCiclos(Request $request): array
+    {
+        $user = Auth::user();
+        $esUsuarioDieselCop = is_null($user->empresa_id);
+        $empresaUsuario = $esUsuarioDieselCop
+            ? null
+            : Empresa::find($user->empresa_id);
+
+        $validated = $request->validate([
+            'empresa_ids' => ['nullable', 'array'],
+            'empresa_ids.*' => ['integer', 'distinct', 'exists:empresas,id'],
+            'unidad_ids' => ['nullable', 'array'],
+            'unidad_ids.*' => ['integer', 'distinct', 'exists:unidades,id'],
+            'empresa_id' => ['nullable', 'integer', 'exists:empresas,id'],
+            'unidad_id' => ['nullable', 'integer', 'exists:unidades,id'],
+            'modelo_medicion' => ['nullable', Rule::in([
+                Abastecimiento::MODELO_KILOMETROS_GALON,
+                Abastecimiento::MODELO_GALONES_HORA,
+                Abastecimiento::MODELO_GALONES_VIAJE,
+            ])],
+            'estado_ciclo' => ['nullable', Rule::in(['en_proceso', 'completo'])],
+            'fecha_desde' => ['nullable', 'date_format:Y-m-d'],
+            'fecha_hasta' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:fecha_desde'],
+        ]);
+
+        $empresaIds = $this->normalizarIdsSeleccionados(
+            $validated['empresa_ids'] ?? [],
+            $validated['empresa_id'] ?? null
+        );
+        $unidadIds = $this->normalizarIdsSeleccionados(
+            $validated['unidad_ids'] ?? [],
+            $validated['unidad_id'] ?? null
+        );
+
+        if (! $esUsuarioDieselCop) {
+            $empresaIds = [(int) $user->empresa_id];
+        }
+
+        $modeloMedicion = $validated['modelo_medicion'] ?? null;
+        $estadoCiclo = $validated['estado_ciclo'] ?? null;
+        $fechaDesde = $validated['fecha_desde'] ?? null;
+        $fechaHasta = $validated['fecha_hasta'] ?? null;
+
+        $query = Abastecimiento::query()
+            ->registrados()
+            ->with(['empresa', 'unidad', 'cierreCiclo']);
+
+        if (! $esUsuarioDieselCop) {
+            $query->where('empresa_id', $user->empresa_id);
+        }
+
+        if (! empty($empresaIds)) {
+            $query->whereIn('empresa_id', $empresaIds);
+        }
+
+        if (! empty($unidadIds)) {
+            $query->whereIn('unidad_id', $unidadIds);
+        }
+
+        if ($modeloMedicion) {
+            $query->where('modelo_medicion', $modeloMedicion);
+        }
+
+        if ($fechaDesde) {
+            $query->whereDate('fecha_hora_abastecimiento', '>=', $fechaDesde);
+        }
+
+        if ($fechaHasta) {
+            $query->whereDate('fecha_hora_abastecimiento', '<=', $fechaHasta);
+        }
+
+        $resumenQuery = clone $query;
+        $totalCiclos = (clone $resumenQuery)->count();
+        $totalCompletos = (clone $resumenQuery)->whereHas('cierreCiclo')->count();
+        $totalEnProceso = $totalCiclos - $totalCompletos;
+        $totalUnidades = (clone $resumenQuery)->distinct()->count('unidad_id');
+
+        if ($estadoCiclo === 'completo') {
+            $query->whereHas('cierreCiclo');
+        } elseif ($estadoCiclo === 'en_proceso') {
+            $query->whereDoesntHave('cierreCiclo');
+        }
+
+        $ciclos = $query
+            ->orderByDesc('fecha_hora_abastecimiento')
+            ->orderByDesc('id')
+            ->paginate(10)
+            ->withQueryString();
+
+        $empresasSelector = $this->obtenerEmpresasSelectorAbastecimientos(
+            $esUsuarioDieselCop,
+            $empresaUsuario,
+            false
+        );
+        $unidadesSelector = $this->obtenerUnidadesSelectorAbastecimientos(
+            $esUsuarioDieselCop,
+            $user->empresa_id,
+            $empresaIds,
+            false
+        );
+
+        return compact(
+            'ciclos',
+            'empresasSelector',
+            'unidadesSelector',
+            'empresaIds',
+            'unidadIds',
+            'modeloMedicion',
+            'estadoCiclo',
+            'fechaDesde',
+            'fechaHasta',
+            'esUsuarioDieselCop',
+            'empresaUsuario',
+            'totalCiclos',
+            'totalCompletos',
+            'totalEnProceso',
+            'totalUnidades'
+        );
+    }
+
+    /**
+     * Prepara una ficha sin recalcular métricas materializadas por M4.
+     */
+    private function prepararFichaCiclo(Abastecimiento $abastecimiento): array
+    {
+        $this->autorizarAccesoAbastecimiento($abastecimiento);
+
+        abort_unless($abastecimiento->estaRegistrado(), 404);
+
+        $abastecimiento->load([
+            'empresa',
+            'unidad',
+            'cierreCiclo.empresa',
+            'cierreCiclo.unidad',
+        ]);
+
+        return [
+            'apertura' => $abastecimiento,
+            'cierre' => $abastecimiento->cierreCiclo,
+        ];
     }
 
     /*
@@ -313,11 +472,9 @@ class AbastecimientoController extends Controller
                     : 'abastecimientos.show',
                 array_merge(
                     [
-                        'abastecimiento' =>
-                            $abastecimientoActualizado->id,
+                        'abastecimiento' => $abastecimientoActualizado->id,
 
-                        'origen_retorno' =>
-                            'administrar',
+                        'origen_retorno' => 'administrar',
                     ],
                     $parametrosRetorno
                 )
@@ -500,59 +657,41 @@ class AbastecimientoController extends Controller
                 ],
             ],
             [
-                'empresa_ids.array' =>
-                    'La selección de empresas no es válida.',
+                'empresa_ids.array' => 'La selección de empresas no es válida.',
 
-                'empresa_ids.*.integer' =>
-                    'Una de las empresas seleccionadas no es válida.',
+                'empresa_ids.*.integer' => 'Una de las empresas seleccionadas no es válida.',
 
-                'empresa_ids.*.distinct' =>
-                    'No debe seleccionar una empresa más de una vez.',
+                'empresa_ids.*.distinct' => 'No debe seleccionar una empresa más de una vez.',
 
-                'empresa_ids.*.exists' =>
-                    'Una de las empresas seleccionadas no existe.',
+                'empresa_ids.*.exists' => 'Una de las empresas seleccionadas no existe.',
 
-                'unidad_ids.array' =>
-                    'La selección de unidades no es válida.',
+                'unidad_ids.array' => 'La selección de unidades no es válida.',
 
-                'unidad_ids.*.integer' =>
-                    'Una de las unidades seleccionadas no es válida.',
+                'unidad_ids.*.integer' => 'Una de las unidades seleccionadas no es válida.',
 
-                'unidad_ids.*.distinct' =>
-                    'No debe seleccionar una unidad más de una vez.',
+                'unidad_ids.*.distinct' => 'No debe seleccionar una unidad más de una vez.',
 
-                'unidad_ids.*.exists' =>
-                    'Una de las unidades seleccionadas no existe.',
+                'unidad_ids.*.exists' => 'Una de las unidades seleccionadas no existe.',
 
-                'motorista_ids.array' =>
-                    'La selección de motoristas no es válida.',
+                'motorista_ids.array' => 'La selección de motoristas no es válida.',
 
-                'motorista_ids.*.integer' =>
-                    'Uno de los motoristas seleccionados no es válido.',
+                'motorista_ids.*.integer' => 'Uno de los motoristas seleccionados no es válido.',
 
-                'motorista_ids.*.distinct' =>
-                    'No debe seleccionar un motorista más de una vez.',
+                'motorista_ids.*.distinct' => 'No debe seleccionar un motorista más de una vez.',
 
-                'motorista_ids.*.exists' =>
-                    'Uno de los motoristas seleccionados no existe.',
+                'motorista_ids.*.exists' => 'Uno de los motoristas seleccionados no existe.',
 
-                'tipo_origen.in' =>
-                    'El origen seleccionado no es válido.',
+                'tipo_origen.in' => 'El origen seleccionado no es válido.',
 
-                'modelo_medicion.in' =>
-                    'El modelo de medición seleccionado no es válido.',
+                'modelo_medicion.in' => 'El modelo de medición seleccionado no es válido.',
 
-                'estado.in' =>
-                    'El estado seleccionado no es válido.',
+                'estado.in' => 'El estado seleccionado no es válido.',
 
-                'fecha_desde.date_format' =>
-                    'La fecha inicial no posee un formato válido.',
+                'fecha_desde.date_format' => 'La fecha inicial no posee un formato válido.',
 
-                'fecha_hasta.date_format' =>
-                    'La fecha final no posee un formato válido.',
+                'fecha_hasta.date_format' => 'La fecha final no posee un formato válido.',
 
-                'fecha_hasta.after_or_equal' =>
-                    'La fecha final no puede ser anterior a la fecha inicial.',
+                'fecha_hasta.after_or_equal' => 'La fecha final no puede ser anterior a la fecha inicial.',
             ]
         );
 
@@ -681,8 +820,7 @@ class AbastecimientoController extends Controller
                         ->getCollection()
                         ->pluck('unidad_id')
                         ->map(
-                            fn ($id): int =>
-                                (int) $id
+                            fn ($id): int => (int) $id
                         )
                         ->unique()
                         ->values()
@@ -734,71 +872,49 @@ class AbastecimientoController extends Controller
             );
 
         return [
-            'abastecimientos' =>
-                $abastecimientos,
+            'abastecimientos' => $abastecimientos,
 
-            'empresasSelector' =>
-                $empresasSelector,
+            'empresasSelector' => $empresasSelector,
 
-            'unidadesSelector' =>
-                $unidadesSelector,
+            'unidadesSelector' => $unidadesSelector,
 
-            'motoristasSelector' =>
-                $motoristasSelector,
+            'motoristasSelector' => $motoristasSelector,
 
-            'empresaIds' =>
-                $empresaIds,
+            'empresaIds' => $empresaIds,
 
-            'unidadIds' =>
-                $unidadIds,
+            'unidadIds' => $unidadIds,
 
-            'motoristaIds' =>
-                $motoristaIds,
+            'motoristaIds' => $motoristaIds,
 
-            'tipoOrigen' =>
-                $tipoOrigen,
+            'tipoOrigen' => $tipoOrigen,
 
-            'modeloMedicion' =>
-                $modeloMedicion,
+            'modeloMedicion' => $modeloMedicion,
 
-            'estado' =>
-                $estado,
+            'estado' => $estado,
 
-            'fechaDesde' =>
-                $fechaDesde,
+            'fechaDesde' => $fechaDesde,
 
-            'fechaHasta' =>
-                $fechaHasta,
+            'fechaHasta' => $fechaHasta,
 
-            'hayFiltros' =>
-                $hayFiltros,
+            'hayFiltros' => $hayFiltros,
 
-            'esUsuarioDieselCop' =>
-                $esUsuarioDieselCop,
+            'esUsuarioDieselCop' => $esUsuarioDieselCop,
 
-            'empresaUsuario' =>
-                $empresaUsuario,
+            'empresaUsuario' => $empresaUsuario,
 
-            'soloAdministrables' =>
-                $soloAdministrables,
+            'soloAdministrables' => $soloAdministrables,
 
-            'ultimosIdsPorUnidad' =>
-                $ultimosIdsPorUnidad,
+            'ultimosIdsPorUnidad' => $ultimosIdsPorUnidad,
 
-            'totalAbastecimientos' =>
-                $resumen['total'],
+            'totalAbastecimientos' => $resumen['total'],
 
-            'totalRegistrados' =>
-                $resumen['registrados'],
+            'totalRegistrados' => $resumen['registrados'],
 
-            'totalAnulados' =>
-                $resumen['anulados'],
+            'totalAnulados' => $resumen['anulados'],
 
-            'totalInternos' =>
-                $resumen['internos'],
+            'totalInternos' => $resumen['internos'],
 
-            'totalExternos' =>
-                $resumen['externos'],
+            'totalExternos' => $resumen['externos'],
         ];
     }
 
@@ -927,11 +1043,10 @@ class AbastecimientoController extends Controller
             )
             ->whereHas(
                 'empresa',
-                fn (Builder $empresaQuery) =>
-                    $empresaQuery->where(
-                        'estado',
-                        'activa'
-                    )
+                fn (Builder $empresaQuery) => $empresaQuery->where(
+                    'estado',
+                    'activa'
+                )
             )
             ->whereNotExists(
                 function ($subquery) {
@@ -1106,8 +1221,7 @@ class AbastecimientoController extends Controller
                             ->value('id');
 
                     return [
-                        $unidadId =>
-                            $ultimoId
+                        $unidadId => $ultimoId
                                 ? (int) $ultimoId
                                 : null,
                     ];
@@ -1148,40 +1262,35 @@ class AbastecimientoController extends Controller
         }
 
         return [
-            'total' =>
-                (clone $base)->count(),
+            'total' => (clone $base)->count(),
 
-            'registrados' =>
-                (clone $base)
-                    ->where(
-                        'estado',
-                        Abastecimiento::ESTADO_REGISTRADO
-                    )
-                    ->count(),
+            'registrados' => (clone $base)
+                ->where(
+                    'estado',
+                    Abastecimiento::ESTADO_REGISTRADO
+                )
+                ->count(),
 
-            'anulados' =>
-                (clone $base)
-                    ->where(
-                        'estado',
-                        Abastecimiento::ESTADO_ANULADO
-                    )
-                    ->count(),
+            'anulados' => (clone $base)
+                ->where(
+                    'estado',
+                    Abastecimiento::ESTADO_ANULADO
+                )
+                ->count(),
 
-            'internos' =>
-                (clone $base)
-                    ->where(
-                        'tipo_origen',
-                        Abastecimiento::ORIGEN_INTERNO
-                    )
-                    ->count(),
+            'internos' => (clone $base)
+                ->where(
+                    'tipo_origen',
+                    Abastecimiento::ORIGEN_INTERNO
+                )
+                ->count(),
 
-            'externos' =>
-                (clone $base)
-                    ->where(
-                        'tipo_origen',
-                        Abastecimiento::ORIGEN_EXTERNO
-                    )
-                    ->count(),
+            'externos' => (clone $base)
+                ->where(
+                    'tipo_origen',
+                    Abastecimiento::ORIGEN_EXTERNO
+                )
+                ->count(),
         ];
     }
 
@@ -1198,8 +1307,7 @@ class AbastecimientoController extends Controller
                 $empresaUsuario,
             ])
                 ->filter(
-                    fn (?Empresa $empresa): bool =>
-                        ! is_null($empresa)
+                    fn (?Empresa $empresa): bool => ! is_null($empresa)
                         && (
                             ! $soloAdministrables
                             || $empresa->estado === 'activa'
@@ -1211,11 +1319,10 @@ class AbastecimientoController extends Controller
         return Empresa::query()
             ->when(
                 $soloAdministrables,
-                fn (Builder $query) =>
-                    $query->where(
-                        'estado',
-                        'activa'
-                    )
+                fn (Builder $query) => $query->where(
+                    'estado',
+                    'activa'
+                )
             )
             ->whereHas(
                 'abastecimientos',
@@ -1261,31 +1368,27 @@ class AbastecimientoController extends Controller
             )
             ->when(
                 ! $esUsuarioDieselCop,
-                fn (Builder $query) =>
-                    $query->where(
-                        'empresa_id',
-                        $empresaUsuarioId
-                    )
+                fn (Builder $query) => $query->where(
+                    'empresa_id',
+                    $empresaUsuarioId
+                )
             )
             ->when(
                 ! empty($empresaIds),
-                fn (Builder $query) =>
-                    $query->whereIn(
-                        'empresa_id',
-                        $empresaIds
-                    )
+                fn (Builder $query) => $query->whereIn(
+                    'empresa_id',
+                    $empresaIds
+                )
             )
             ->when(
                 $soloAdministrables,
-                fn (Builder $query) =>
-                    $query->whereHas(
-                        'empresa',
-                        fn (Builder $empresaQuery) =>
-                            $empresaQuery->where(
-                                'estado',
-                                'activa'
-                            )
+                fn (Builder $query) => $query->whereHas(
+                    'empresa',
+                    fn (Builder $empresaQuery) => $empresaQuery->where(
+                        'estado',
+                        'activa'
                     )
+                )
             )
             ->orderBy('empresa_id')
             ->orderBy('placa')
@@ -1318,31 +1421,27 @@ class AbastecimientoController extends Controller
             )
             ->when(
                 ! $esUsuarioDieselCop,
-                fn (Builder $query) =>
-                    $query->where(
-                        'empresa_id',
-                        $empresaUsuarioId
-                    )
+                fn (Builder $query) => $query->where(
+                    'empresa_id',
+                    $empresaUsuarioId
+                )
             )
             ->when(
                 ! empty($empresaIds),
-                fn (Builder $query) =>
-                    $query->whereIn(
-                        'empresa_id',
-                        $empresaIds
-                    )
+                fn (Builder $query) => $query->whereIn(
+                    'empresa_id',
+                    $empresaIds
+                )
             )
             ->when(
                 $soloAdministrables,
-                fn (Builder $query) =>
-                    $query->whereHas(
-                        'empresa',
-                        fn (Builder $empresaQuery) =>
-                            $empresaQuery->where(
-                                'estado',
-                                'activa'
-                            )
+                fn (Builder $query) => $query->whereHas(
+                    'empresa',
+                    fn (Builder $empresaQuery) => $empresaQuery->where(
+                        'estado',
+                        'activa'
                     )
+                )
             )
             ->orderBy('empresa_id')
             ->orderBy('nombres')
@@ -1413,8 +1512,7 @@ class AbastecimientoController extends Controller
         }
 
         foreach (
-            $eventoMarchamos->detalles
-            as $detalle
+            $eventoMarchamos->detalles as $detalle
         ) {
             $punto =
                 $detalle->puntoSeguridad;
@@ -1455,51 +1553,49 @@ class AbastecimientoController extends Controller
         $gasolinerasInternas =
             Gasolinera::query()
                 ->with([
-                    'tanques' =>
-                        function ($query) use (
+                    'tanques' => function ($query) use (
+                        $abastecimiento
+                    ) {
+                        $tanquesOriginales =
                             $abastecimiento
-                        ) {
-                            $tanquesOriginales =
-                                $abastecimiento
-                                    ->tanques
-                                    ->pluck('tanque_id')
-                                    ->map(
-                                        fn ($id): int =>
-                                            (int) $id
-                                    )
-                                    ->all();
+                                ->tanques
+                                ->pluck('tanque_id')
+                                ->map(
+                                    fn ($id): int => (int) $id
+                                )
+                                ->all();
 
-                            $query
-                                ->where(
-                                    function ($tanqueQuery) use (
-                                        $tanquesOriginales
+                        $query
+                            ->where(
+                                function ($tanqueQuery) use (
+                                    $tanquesOriginales
+                                ) {
+                                    $tanqueQuery
+                                        ->where(
+                                            'estado',
+                                            'activo'
+                                        )
+                                        ->where(
+                                            'volumen_actual',
+                                            '>',
+                                            0
+                                        );
+
+                                    if (
+                                        ! empty(
+                                            $tanquesOriginales
+                                        )
                                     ) {
                                         $tanqueQuery
-                                            ->where(
-                                                'estado',
-                                                'activo'
-                                            )
-                                            ->where(
-                                                'volumen_actual',
-                                                '>',
-                                                0
-                                            );
-
-                                        if (
-                                            ! empty(
+                                            ->orWhereIn(
+                                                'id',
                                                 $tanquesOriginales
-                                            )
-                                        ) {
-                                            $tanqueQuery
-                                                ->orWhereIn(
-                                                    'id',
-                                                    $tanquesOriginales
-                                                );
-                                        }
+                                            );
                                     }
-                                )
-                                ->orderBy('nombre');
-                        },
+                                }
+                            )
+                            ->orderBy('nombre');
+                    },
                 ])
                 ->where(
                     'empresa_id',
@@ -1519,8 +1615,7 @@ class AbastecimientoController extends Controller
                                 ->tanques
                                 ->pluck('tanque_id')
                                 ->map(
-                                    fn ($id): int =>
-                                        (int) $id
+                                    fn ($id): int => (int) $id
                                 )
                                 ->all();
 
@@ -1598,19 +1693,17 @@ class AbastecimientoController extends Controller
                 )
                 ->whereHas(
                     'puntoOrigen',
-                    fn (Builder $query) =>
-                        $query->where(
-                            'estado',
-                            'activo'
-                        )
+                    fn (Builder $query) => $query->where(
+                        'estado',
+                        'activo'
+                    )
                 )
                 ->whereHas(
                     'puntoDestino',
-                    fn (Builder $query) =>
-                        $query->where(
-                            'estado',
-                            'activo'
-                        )
+                    fn (Builder $query) => $query->where(
+                        'estado',
+                        'activo'
+                    )
                 )
                 ->orderBy('ruta')
                 ->get();
@@ -1622,34 +1715,25 @@ class AbastecimientoController extends Controller
             );
 
         return [
-            'abastecimiento' =>
-                $abastecimiento,
+            'abastecimiento' => $abastecimiento,
 
-            'unidad' =>
-                $unidad,
+            'unidad' => $unidad,
 
-            'motoristas' =>
-                $motoristas,
+            'motoristas' => $motoristas,
 
-            'gasolinerasInternas' =>
-                $gasolinerasInternas,
+            'gasolinerasInternas' => $gasolinerasInternas,
 
-            'gasolinerasExternas' =>
-                $gasolinerasExternas,
+            'gasolinerasExternas' => $gasolinerasExternas,
 
-            'rutas' =>
-                $rutas,
+            'rutas' => $rutas,
 
-            'eventoMarchamos' =>
-                $eventoMarchamos,
+            'eventoMarchamos' => $eventoMarchamos,
 
-            'detallesMarchamos' =>
-                $eventoMarchamos
-                    ->detalles
-                    ->values(),
+            'detallesMarchamos' => $eventoMarchamos
+                ->detalles
+                ->values(),
 
-            'requiereRutas' =>
-                $abastecimiento->modelo_medicion
+            'requiereRutas' => $abastecimiento->modelo_medicion
                 === Abastecimiento::MODELO_GALONES_VIAJE
                 && ! is_null(
                     $abastecimiento
@@ -1657,20 +1741,16 @@ class AbastecimientoController extends Controller
                 ),
 
             'tiposOrigen' => [
-                Abastecimiento::ORIGEN_INTERNO =>
-                    'Gasolinera interna',
+                Abastecimiento::ORIGEN_INTERNO => 'Gasolinera interna',
 
-                Abastecimiento::ORIGEN_EXTERNO =>
-                    'Gasolinera externa',
+                Abastecimiento::ORIGEN_EXTERNO => 'Gasolinera externa',
             ],
 
-            'abastecimientoVersion' =>
-                $service->versionAbastecimiento(
-                    $abastecimiento
-                ),
+            'abastecimientoVersion' => $service->versionAbastecimiento(
+                $abastecimiento
+            ),
 
-            'parametrosRetorno' =>
-                $parametrosRetorno,
+            'parametrosRetorno' => $parametrosRetorno,
         ];
     }
 
@@ -1811,26 +1891,19 @@ class AbastecimientoController extends Controller
         }
 
         return [
-            'abastecimiento' =>
-                $abastecimiento,
+            'abastecimiento' => $abastecimiento,
 
-            'ultimoAbastecimientoRegistrado' =>
-                $ultimoAbastecimientoRegistrado,
+            'ultimoAbastecimientoRegistrado' => $ultimoAbastecimientoRegistrado,
 
-            'esUltimoRegistrado' =>
-                $esUltimoRegistrado,
+            'esUltimoRegistrado' => $esUltimoRegistrado,
 
-            'puedeModificarse' =>
-                $puedeModificarse,
+            'puedeModificarse' => $puedeModificarse,
 
-            'empresaActiva' =>
-                $empresaActiva,
+            'empresaActiva' => $empresaActiva,
 
-            'parametrosRetorno' =>
-                $parametrosRetorno,
+            'parametrosRetorno' => $parametrosRetorno,
 
-            'origenRetorno' =>
-                $origenRetorno,
+            'origenRetorno' => $origenRetorno,
         ];
     }
 
@@ -1889,23 +1962,17 @@ class AbastecimientoController extends Controller
                 ],
             ],
             [
-                'empresa_ids.array' =>
-                    'La selección de empresas no es válida.',
+                'empresa_ids.array' => 'La selección de empresas no es válida.',
 
-                'empresa_ids.*.exists' =>
-                    'Una de las empresas seleccionadas no existe.',
+                'empresa_ids.*.exists' => 'Una de las empresas seleccionadas no existe.',
 
-                'empresa_ids.*.distinct' =>
-                    'No debe seleccionar una empresa más de una vez.',
+                'empresa_ids.*.distinct' => 'No debe seleccionar una empresa más de una vez.',
 
-                'unidad_ids.array' =>
-                    'La selección de unidades no es válida.',
+                'unidad_ids.array' => 'La selección de unidades no es válida.',
 
-                'unidad_ids.*.distinct' =>
-                    'No debe seleccionar una unidad más de una vez.',
+                'unidad_ids.*.distinct' => 'No debe seleccionar una unidad más de una vez.',
 
-                'unidad_ids.*.exists' =>
-                    'Una de las unidades seleccionadas no existe.',
+                'unidad_ids.*.exists' => 'Una de las unidades seleccionadas no existe.',
             ]
         );
 
@@ -1928,12 +1995,10 @@ class AbastecimientoController extends Controller
             ?? []
         )
             ->filter(
-                fn ($id): bool =>
-                    filled($id)
+                fn ($id): bool => filled($id)
             )
             ->map(
-                fn ($id): int =>
-                    (int) $id
+                fn ($id): int => (int) $id
             )
             ->unique()
             ->values();
@@ -2043,15 +2108,15 @@ class AbastecimientoController extends Controller
                                                 'nombre_legal',
                                                 'like',
                                                 '%'
-                                                . $busquedaEmpresa
-                                                . '%'
+                                                .$busquedaEmpresa
+                                                .'%'
                                             )
                                             ->orWhere(
                                                 'nombre_comercial',
                                                 'like',
                                                 '%'
-                                                . $busquedaEmpresa
-                                                . '%'
+                                                .$busquedaEmpresa
+                                                .'%'
                                             );
                                     }
                                 );
@@ -2079,8 +2144,8 @@ class AbastecimientoController extends Controller
                             'placa',
                             'like',
                             '%'
-                            . $busquedaPlaca
-                            . '%'
+                            .$busquedaPlaca
+                            .'%'
                         );
                     }
                 )
@@ -2103,35 +2168,25 @@ class AbastecimientoController extends Controller
             ->withQueryString();
 
         return [
-            'empresas' =>
-                $empresas,
+            'empresas' => $empresas,
 
-            'unidadesSelector' =>
-                $unidadesSelector,
+            'unidadesSelector' => $unidadesSelector,
 
-            'unidades' =>
-                $unidades,
+            'unidades' => $unidades,
 
-            'busquedaEmpresa' =>
-                $busquedaEmpresa,
+            'busquedaEmpresa' => $busquedaEmpresa,
 
-            'busquedaPlaca' =>
-                $busquedaPlaca,
+            'busquedaPlaca' => $busquedaPlaca,
 
-            'empresaIds' =>
-                $empresaIds->all(),
+            'empresaIds' => $empresaIds->all(),
 
-            'unidadIds' =>
-                $unidadIds->all(),
+            'unidadIds' => $unidadIds->all(),
 
-            'hayFiltros' =>
-                $hayFiltros,
+            'hayFiltros' => $hayFiltros,
 
-            'consultaEjecutada' =>
-                $consultaEjecutada,
+            'consultaEjecutada' => $consultaEjecutada,
 
-            'esUsuarioDieselCop' =>
-                $esUsuarioDieselCop,
+            'esUsuarioDieselCop' => $esUsuarioDieselCop,
         ];
     }
 
@@ -2302,20 +2357,19 @@ class AbastecimientoController extends Controller
         $gasolinerasInternas =
             Gasolinera::query()
                 ->with([
-                    'tanques' =>
-                        function ($query) {
-                            $query
-                                ->where(
-                                    'estado',
-                                    'activo'
-                                )
-                                ->where(
-                                    'volumen_actual',
-                                    '>',
-                                    0
-                                )
-                                ->orderBy('nombre');
-                        },
+                    'tanques' => function ($query) {
+                        $query
+                            ->where(
+                                'estado',
+                                'activo'
+                            )
+                            ->where(
+                                'volumen_actual',
+                                '>',
+                                0
+                            )
+                            ->orderBy('nombre');
+                    },
                 ])
                 ->where(
                     'empresa_id',
@@ -2403,43 +2457,32 @@ class AbastecimientoController extends Controller
         );
 
         return [
-            'unidad' =>
-                $unidad,
+            'unidad' => $unidad,
 
-            'ultimoAbastecimiento' =>
-                $ultimoAbastecimiento,
+            'ultimoAbastecimiento' => $ultimoAbastecimiento,
 
-            'esPrimerAbastecimiento' =>
-                is_null($ultimoAbastecimiento),
+            'esPrimerAbastecimiento' => is_null($ultimoAbastecimiento),
 
-            'motoristas' =>
-                $motoristas,
+            'motoristas' => $motoristas,
 
-            'gasolinerasInternas' =>
-                $gasolinerasInternas,
+            'gasolinerasInternas' => $gasolinerasInternas,
 
-            'gasolinerasExternas' =>
-                $gasolinerasExternas,
+            'gasolinerasExternas' => $gasolinerasExternas,
 
-            'rutas' =>
-                $rutas,
+            'rutas' => $rutas,
 
-            'tapones' =>
-                $tapones,
+            'tapones' => $tapones,
 
-            'requiereRutas' =>
-                $unidad->modelo_medicion
+            'requiereRutas' => $unidad->modelo_medicion
                 === Abastecimiento::MODELO_GALONES_VIAJE
                 && ! is_null(
                     $ultimoAbastecimiento
                 ),
 
             'tiposOrigen' => [
-                Abastecimiento::ORIGEN_INTERNO =>
-                    'Gasolinera interna',
+                Abastecimiento::ORIGEN_INTERNO => 'Gasolinera interna',
 
-                Abastecimiento::ORIGEN_EXTERNO =>
-                    'Gasolinera externa',
+                Abastecimiento::ORIGEN_EXTERNO => 'Gasolinera externa',
             ],
         ];
     }
@@ -2550,9 +2593,9 @@ class AbastecimientoController extends Controller
             abort(
                 403,
                 'La unidad no cumple actualmente todas las condiciones necesarias para recibir combustible: '
-                . $unidad
+                .$unidad
                     ->disponibilidad_operativa_texto
-                . '.'
+                .'.'
             );
         }
 
@@ -2630,15 +2673,13 @@ class AbastecimientoController extends Controller
 
         return collect($ids)
             ->filter(
-                fn ($id): bool =>
-                    filter_var(
-                        $id,
-                        FILTER_VALIDATE_INT
-                    ) !== false
+                fn ($id): bool => filter_var(
+                    $id,
+                    FILTER_VALIDATE_INT
+                ) !== false
             )
             ->map(
-                fn ($id): int =>
-                    (int) $id
+                fn ($id): int => (int) $id
             )
             ->unique()
             ->values()
@@ -2654,23 +2695,20 @@ class AbastecimientoController extends Controller
     ): array {
         $permitidos = $idsPermitidos
             ->map(
-                fn ($id): int =>
-                    (int) $id
+                fn ($id): int => (int) $id
             )
             ->all();
 
         return collect($ids)
             ->filter(
-                fn ($id): bool =>
-                    in_array(
-                        (int) $id,
-                        $permitidos,
-                        true
-                    )
+                fn ($id): bool => in_array(
+                    (int) $id,
+                    $permitidos,
+                    true
+                )
             )
             ->map(
-                fn ($id): int =>
-                    (int) $id
+                fn ($id): int => (int) $id
             )
             ->values()
             ->all();

@@ -389,8 +389,8 @@ class AbastecimientoService
 
                     $origenNombre = trim(
                         $gasolineraExterna->compania
-                        . ' — '
-                        . $gasolineraExterna->direccion
+                        .' — '
+                        .$gasolineraExterna->direccion
                     );
                 }
 
@@ -659,6 +659,14 @@ class AbastecimientoService
                     8
                 );
 
+                $costoUnitarioCiclo = $this->calcularCostoUnitarioCiclo(
+                    $modeloMedicion,
+                    $costoCombustibleConsumido,
+                    $diferenciaKilometraje,
+                    $diferenciaHorometro,
+                    $totalViajes
+                );
+
                 /*
                 |--------------------------------------------------------------------------
                 | Marchamos
@@ -685,199 +693,140 @@ class AbastecimientoService
 
                 $motoristaNombre = trim(
                     $motorista->nombres
-                    . ' '
-                    . $motorista->apellidos
+                    .' '
+                    .$motorista->apellidos
                 );
 
                 $abastecimiento =
                     Abastecimiento::create([
-                        'empresa_id' =>
-                            $empresaId,
+                        'empresa_id' => $empresaId,
 
-                        'unidad_id' =>
-                            $unidad->id,
+                        'unidad_id' => $unidad->id,
 
-                        'motorista_id' =>
-                            $motorista->id,
+                        'motorista_id' => $motorista->id,
 
-                        'abastecimiento_anterior_id' =>
-                            $abastecimientoAnterior?->id,
+                        'abastecimiento_anterior_id' => $abastecimientoAnterior?->id,
 
-                        'registrado_por' =>
-                            $usuarioId,
+                        'registrado_por' => $usuarioId,
 
-                        'empresa_nombre_snapshot' =>
-                            $empresaNombre,
+                        'empresa_nombre_snapshot' => $empresaNombre,
 
-                        'unidad_placa_snapshot' =>
-                            $unidad->placa,
+                        'unidad_placa_snapshot' => $unidad->placa,
 
-                        'unidad_marca_snapshot' =>
-                            $unidad->marca,
+                        'unidad_marca_snapshot' => $unidad->marca,
 
-                        'unidad_modelo_snapshot' =>
-                            null,
+                        'unidad_modelo_snapshot' => null,
 
-                        'motorista_nombre_snapshot' =>
-                            $motoristaNombre,
+                        'motorista_nombre_snapshot' => $motoristaNombre,
 
-                        'motorista_licencia_snapshot' =>
-                            $motorista->licencia,
+                        'motorista_licencia_snapshot' => $motorista->licencia,
 
-                        'fecha_hora_abastecimiento' =>
-                            $fechaOperacion,
+                        'fecha_hora_abastecimiento' => $fechaOperacion,
 
-                        'estado' =>
-                            Abastecimiento::ESTADO_REGISTRADO,
+                        'estado' => Abastecimiento::ESTADO_REGISTRADO,
 
-                        'modelo_medicion' =>
-                            $modeloMedicion,
+                        'modelo_medicion' => $modeloMedicion,
 
-                        'rendimiento_teorico_km_galon_snapshot' =>
-                            $unidad->rendimiento_teorico_km_galon,
+                        'rendimiento_teorico_km_galon_snapshot' => $unidad->rendimiento_teorico_km_galon,
 
-                        'rendimiento_teorico_gal_hora_snapshot' =>
-                            $unidad->rendimiento_teorico_gal_hora,
+                        'rendimiento_teorico_gal_hora_snapshot' => $unidad->rendimiento_teorico_gal_hora,
 
                         /*
                          * Compatibilidad temporal:
                          * los campos lectura_* reflejan kilometraje.
                          */
-                        'lectura_actual' =>
-                            $kilometrajeActual,
+                        'lectura_actual' => $kilometrajeActual,
 
-                        'lectura_anterior' =>
-                            $kilometrajeAnterior,
+                        'lectura_anterior' => $kilometrajeAnterior,
 
-                        'diferencia_lectura' =>
-                            $diferenciaKilometraje,
+                        'diferencia_lectura' => $diferenciaKilometraje,
 
-                        'kilometraje_actual' =>
-                            $kilometrajeActual,
+                        'kilometraje_actual' => $kilometrajeActual,
 
-                        'kilometraje_anterior' =>
-                            $kilometrajeAnterior,
+                        'kilometraje_anterior' => $kilometrajeAnterior,
 
-                        'diferencia_kilometraje' =>
-                            $diferenciaKilometraje,
+                        'diferencia_kilometraje' => $diferenciaKilometraje,
 
-                        'horometro_actual' =>
-                            $horometroActual,
+                        'horometro_actual' => $horometroActual,
 
-                        'horometro_anterior' =>
-                            $horometroAnterior,
+                        'horometro_anterior' => $horometroAnterior,
 
-                        'diferencia_horometro' =>
-                            $diferenciaHorometro,
+                        'diferencia_horometro' => $diferenciaHorometro,
 
-                        'volumen_inicial' =>
-                            0,
+                        'volumen_inicial' => 0,
 
-                        'volumen_cargado' =>
-                            $volumenCargado,
+                        'volumen_cargado' => $volumenCargado,
 
-                        'volumen_final' =>
-                            $volumenFinal,
+                        'volumen_final' => $volumenFinal,
 
-                        'capacidad_cubierta_snapshot' =>
-                            $capacidadCubierta,
+                        'capacidad_cubierta_snapshot' => $capacidadCubierta,
 
-                        'volumen_final_anterior' =>
-                            $volumenFinalAnterior,
+                        'volumen_final_anterior' => $volumenFinalAnterior,
 
-                        'combustible_consumido_ciclo' =>
-                            $combustibleConsumido,
+                        'combustible_consumido_ciclo' => $combustibleConsumido,
 
-                        'combustible_adicional_no_explicado' =>
-                            $combustibleAdicional,
+                        'combustible_adicional_no_explicado' => $combustibleAdicional,
 
-                        'consumo_real_ciclo' =>
-                            $consumoRealCiclo,
+                        'consumo_real_ciclo' => $consumoRealCiclo,
 
-                        'consumo_teorico_ciclo' =>
-                            $consumoTeoricoCiclo,
+                        'consumo_teorico_ciclo' => $consumoTeoricoCiclo,
 
-                        'diferencia_galones_ciclo' =>
-                            $diferenciaGalonesCiclo,
+                        'diferencia_galones_ciclo' => $diferenciaGalonesCiclo,
 
-                        'costo_combustible_consumido_ciclo' =>
-                            $costoCombustibleConsumido,
+                        'costo_combustible_consumido_ciclo' => $costoCombustibleConsumido,
 
-                        'valor_remanente_antes_carga_snapshot' =>
-                            $valorRemanente,
+                        'costo_unitario_ciclo' => $costoUnitarioCiclo,
 
-                        'tipo_origen' =>
-                            $tipoOrigen,
+                        'valor_remanente_antes_carga_snapshot' => $valorRemanente,
 
-                        'gasolinera_interna_id' =>
-                            $gasolineraInterna?->id,
+                        'tipo_origen' => $tipoOrigen,
 
-                        'gasolinera_externa_id' =>
-                            $gasolineraExterna?->id,
+                        'gasolinera_interna_id' => $gasolineraInterna?->id,
 
-                        'origen_nombre_snapshot' =>
-                            $origenNombre,
+                        'gasolinera_externa_id' => $gasolineraExterna?->id,
 
-                        'precio_galon' =>
-                            $precioGalon,
+                        'origen_nombre_snapshot' => $origenNombre,
 
-                        'total_pagado' =>
-                            $totalPagado,
+                        'precio_galon' => $precioGalon,
 
-                        'moneda' =>
-                            $moneda,
+                        'total_pagado' => $totalPagado,
 
-                        'valor_carga_snapshot' =>
-                            $valorCarga,
+                        'moneda' => $moneda,
 
-                        'costo_efectivo_carga_snapshot' =>
-                            $costoEfectivoCarga,
+                        'valor_carga_snapshot' => $valorCarga,
 
-                        'valor_abordo_resultante' =>
-                            $valorAbordoResultante,
+                        'costo_efectivo_carga_snapshot' => $costoEfectivoCarga,
 
-                        'costo_promedio_abordo_resultante' =>
-                            $costoPromedioAbordoResultante,
+                        'valor_abordo_resultante' => $valorAbordoResultante,
 
-                        'total_rutas' =>
-                            $totalRutas,
+                        'costo_promedio_abordo_resultante' => $costoPromedioAbordoResultante,
 
-                        'total_viajes' =>
-                            $totalViajes,
+                        'total_rutas' => $totalRutas,
 
-                        'kilometros_teoricos' =>
-                            $kilometrosTeoricos,
+                        'total_viajes' => $totalViajes,
 
-                        'galones_teoricos' =>
-                            $galonesTeoricos,
+                        'kilometros_teoricos' => $kilometrosTeoricos,
 
-                        'galones_por_kilometro' =>
-                            $galonesPorKilometro,
+                        'galones_teoricos' => $galonesTeoricos,
 
-                        'kilometros_por_galon' =>
-                            $kilometrosPorGalon,
+                        'galones_por_kilometro' => $galonesPorKilometro,
 
-                        'galones_por_hora' =>
-                            $galonesPorHora,
+                        'kilometros_por_galon' => $kilometrosPorGalon,
 
-                        'diferencia_kilometros_teoricos' =>
-                            $diferenciaKilometrosTeoricos,
+                        'galones_por_hora' => $galonesPorHora,
 
-                        'diferencia_galones_teoricos' =>
-                            $diferenciaGalonesTeoricos,
+                        'diferencia_kilometros_teoricos' => $diferenciaKilometrosTeoricos,
 
-                        'total_tapones_abiertos' =>
-                            $marchamosProcesados->count(),
+                        'diferencia_galones_teoricos' => $diferenciaGalonesTeoricos,
 
-                        'total_marchamos_reemplazados' =>
-                            $marchamosProcesados->count(),
+                        'total_tapones_abiertos' => $marchamosProcesados->count(),
+
+                        'total_marchamos_reemplazados' => $marchamosProcesados->count(),
                     ]);
 
                 $unidad->update([
-                    'valor_combustible_abordo_actual' =>
-                        $valorAbordoResultante,
-                    'costo_promedio_abordo_actual' =>
-                        $costoPromedioAbordoResultante,
+                    'valor_combustible_abordo_actual' => $valorAbordoResultante,
+                    'costo_promedio_abordo_actual' => $costoPromedioAbordoResultante,
                 ]);
 
                 /*
@@ -905,14 +854,12 @@ class AbastecimientoService
                 */
 
                 foreach (
-                    $rutasProcesadas
-                    as $rutaProcesada
+                    $rutasProcesadas as $rutaProcesada
                 ) {
                     AbastecimientoRuta::create(
                         array_merge(
                             [
-                                'abastecimiento_id' =>
-                                    $abastecimiento->id,
+                                'abastecimiento_id' => $abastecimiento->id,
                             ],
                             $rutaProcesada
                         )
@@ -945,7 +892,6 @@ class AbastecimientoService
             3
         );
     }
-
 
     /**
      * Modifica de forma atómica el último abastecimiento registrado
@@ -1403,8 +1349,8 @@ class AbastecimientoService
 
                     $origenNombre = trim(
                         $gasolineraExterna->compania
-                        . ' — '
-                        . $gasolineraExterna->direccion
+                        .' — '
+                        .$gasolineraExterna->direccion
                     );
                 }
 
@@ -1627,58 +1573,45 @@ class AbastecimientoService
                     === Abastecimiento::ORIGEN_INTERNO
                 ) {
                     foreach (
-                        $tanquesProcesados
-                        as $procesado
+                        $tanquesProcesados as $procesado
                     ) {
                         /** @var Tanque $tanque */
                         $tanque = $procesado['tanque'];
 
                         AbastecimientoTanque::create([
-                            'abastecimiento_id' =>
-                                $abastecimientoBloqueado->id,
+                            'abastecimiento_id' => $abastecimientoBloqueado->id,
 
-                            'tanque_id' =>
-                                $tanque->id,
+                            'tanque_id' => $tanque->id,
 
-                            'orden' =>
-                                $procesado['orden'],
+                            'orden' => $procesado['orden'],
 
-                            'tanque_nombre_snapshot' =>
-                                $tanque->nombre,
+                            'tanque_nombre_snapshot' => $tanque->nombre,
 
-                            'capacidad_total_snapshot' =>
-                                $tanque->capacidad_total,
+                            'capacidad_total_snapshot' => $tanque->capacidad_total,
 
-                            'volumen_minimo_alerta_snapshot' =>
-                                $tanque->volumen_minimo_alerta,
+                            'volumen_minimo_alerta_snapshot' => $tanque->volumen_minimo_alerta,
 
-                            'inventario_anterior' =>
-                                $procesado[
+                            'inventario_anterior' => $procesado[
                                     'inventario_anterior_snapshot'
                                 ],
 
-                            'galones_retirados' =>
-                                $procesado[
+                            'galones_retirados' => $procesado[
                                     'galones_retirados'
                                 ],
 
-                            'costo_promedio_galon_snapshot' =>
-                                $procesado[
+                            'costo_promedio_galon_snapshot' => $procesado[
                                     'costo_promedio_galon_snapshot'
                                 ],
 
-                            'costo_total_snapshot' =>
-                                $procesado[
+                            'costo_total_snapshot' => $procesado[
                                     'costo_total_snapshot'
                                 ],
 
-                            'inventario_resultante' =>
-                                $procesado[
+                            'inventario_resultante' => $procesado[
                                     'inventario_resultante_snapshot'
                                 ],
 
-                            'quedo_bajo_minimo' =>
-                                $procesado[
+                            'quedo_bajo_minimo' => $procesado[
                                     'quedo_bajo_minimo'
                                 ],
                         ]);
@@ -1693,14 +1626,12 @@ class AbastecimientoService
                     ->delete();
 
                 foreach (
-                    $rutasProcesadas
-                    as $rutaProcesada
+                    $rutasProcesadas as $rutaProcesada
                 ) {
                     AbastecimientoRuta::create(
                         array_merge(
                             [
-                                'abastecimiento_id' =>
-                                    $abastecimientoBloqueado->id,
+                                'abastecimiento_id' => $abastecimientoBloqueado->id,
                             ],
                             $rutaProcesada
                         )
@@ -1714,21 +1645,18 @@ class AbastecimientoService
                 */
 
                 foreach (
-                    $marchamosProcesados
-                    as $procesado
+                    $marchamosProcesados as $procesado
                 ) {
                     /** @var Marchamo $marchamoActual */
                     $marchamoActual =
                         $procesado['marchamo_actual'];
 
                     $marchamoActual->update([
-                        'codigo_marchamo' =>
-                            $procesado[
+                        'codigo_marchamo' => $procesado[
                                 'nuevo_codigo_marchamo'
                             ],
 
-                        'actualizado_por' =>
-                            $usuarioId,
+                        'actualizado_por' => $usuarioId,
                     ]);
                 }
 
@@ -1746,131 +1674,92 @@ class AbastecimientoService
 
                 $motoristaNombre = trim(
                     $motorista->nombres
-                    . ' '
-                    . $motorista->apellidos
+                    .' '
+                    .$motorista->apellidos
                 );
 
                 $abastecimientoBloqueado->update([
-                    'motorista_id' =>
-                        $motorista->id,
+                    'motorista_id' => $motorista->id,
 
-                    'empresa_nombre_snapshot' =>
-                        $empresaNombre,
+                    'empresa_nombre_snapshot' => $empresaNombre,
 
-                    'unidad_placa_snapshot' =>
-                        $unidad->placa,
+                    'unidad_placa_snapshot' => $unidad->placa,
 
-                    'unidad_marca_snapshot' =>
-                        $unidad->marca,
+                    'unidad_marca_snapshot' => $unidad->marca,
 
-                    'motorista_nombre_snapshot' =>
-                        $motoristaNombre,
+                    'motorista_nombre_snapshot' => $motoristaNombre,
 
-                    'motorista_licencia_snapshot' =>
-                        $motorista->licencia,
+                    'motorista_licencia_snapshot' => $motorista->licencia,
 
                     /*
                      * La fecha_hora_abastecimiento no cambia.
                      */
 
-                    'lectura_actual' =>
-                        $kilometrajeActual,
+                    'lectura_actual' => $kilometrajeActual,
 
-                    'lectura_anterior' =>
-                        $kilometrajeAnterior,
+                    'lectura_anterior' => $kilometrajeAnterior,
 
-                    'diferencia_lectura' =>
-                        $diferenciaKilometraje,
+                    'diferencia_lectura' => $diferenciaKilometraje,
 
-                    'kilometraje_actual' =>
-                        $kilometrajeActual,
+                    'kilometraje_actual' => $kilometrajeActual,
 
-                    'kilometraje_anterior' =>
-                        $kilometrajeAnterior,
+                    'kilometraje_anterior' => $kilometrajeAnterior,
 
-                    'diferencia_kilometraje' =>
-                        $diferenciaKilometraje,
+                    'diferencia_kilometraje' => $diferenciaKilometraje,
 
-                    'horometro_actual' =>
-                        $horometroActual,
+                    'horometro_actual' => $horometroActual,
 
-                    'horometro_anterior' =>
-                        $horometroAnterior,
+                    'horometro_anterior' => $horometroAnterior,
 
-                    'diferencia_horometro' =>
-                        $diferenciaHorometro,
+                    'diferencia_horometro' => $diferenciaHorometro,
 
-                    'volumen_inicial' =>
-                        $volumenInicial,
+                    'volumen_inicial' => $volumenInicial,
 
-                    'volumen_cargado' =>
-                        $volumenCargado,
+                    'volumen_cargado' => $volumenCargado,
 
-                    'volumen_final' =>
-                        $volumenFinal,
+                    'volumen_final' => $volumenFinal,
 
-                    'capacidad_cubierta_snapshot' =>
-                        $capacidadCubierta,
+                    'capacidad_cubierta_snapshot' => $capacidadCubierta,
 
-                    'volumen_final_anterior' =>
-                        $volumenFinalAnterior,
+                    'volumen_final_anterior' => $volumenFinalAnterior,
 
-                    'combustible_consumido_ciclo' =>
-                        $combustibleConsumido,
+                    'combustible_consumido_ciclo' => $combustibleConsumido,
 
-                    'combustible_adicional_no_explicado' =>
-                        $combustibleAdicional,
+                    'combustible_adicional_no_explicado' => $combustibleAdicional,
 
-                    'tipo_origen' =>
-                        $tipoOrigen,
+                    'tipo_origen' => $tipoOrigen,
 
-                    'gasolinera_interna_id' =>
-                        $gasolineraInterna?->id,
+                    'gasolinera_interna_id' => $gasolineraInterna?->id,
 
-                    'gasolinera_externa_id' =>
-                        $gasolineraExterna?->id,
+                    'gasolinera_externa_id' => $gasolineraExterna?->id,
 
-                    'origen_nombre_snapshot' =>
-                        $origenNombre,
+                    'origen_nombre_snapshot' => $origenNombre,
 
-                    'precio_galon' =>
-                        $precioGalon,
+                    'precio_galon' => $precioGalon,
 
-                    'total_pagado' =>
-                        $totalPagado,
+                    'total_pagado' => $totalPagado,
 
-                    'moneda' =>
-                        $moneda,
+                    'moneda' => $moneda,
 
-                    'total_rutas' =>
-                        $totalRutas,
+                    'total_rutas' => $totalRutas,
 
-                    'kilometros_teoricos' =>
-                        $kilometrosTeoricos,
+                    'kilometros_teoricos' => $kilometrosTeoricos,
 
-                    'galones_teoricos' =>
-                        $galonesTeoricos,
+                    'galones_teoricos' => $galonesTeoricos,
 
-                    'galones_por_kilometro' =>
-                        $galonesPorKilometro,
+                    'galones_por_kilometro' => $galonesPorKilometro,
 
-                    'kilometros_por_galon' =>
-                        $kilometrosPorGalon,
+                    'kilometros_por_galon' => $kilometrosPorGalon,
 
-                    'galones_por_hora' =>
-                        $galonesPorHora,
+                    'galones_por_hora' => $galonesPorHora,
 
-                    'diferencia_kilometros_teoricos' =>
-                        $diferenciaKilometrosTeoricos,
+                    'diferencia_kilometros_teoricos' => $diferenciaKilometrosTeoricos,
 
-                    'diferencia_galones_teoricos' =>
-                        $diferenciaGalonesTeoricos,
+                    'diferencia_galones_teoricos' => $diferenciaGalonesTeoricos,
 
-                    'total_tapones_abiertos' =>
-                        $marchamosProcesados->count(),
+                    'total_tapones_abiertos' => $marchamosProcesados->count(),
 
-                    'total_marchamos_reemplazados' =>
-                        $marchamosProcesados->count(),
+                    'total_marchamos_reemplazados' => $marchamosProcesados->count(),
                 ]);
 
                 return $abastecimientoBloqueado->fresh([
@@ -1926,8 +1815,7 @@ class AbastecimientoService
             )
             ->where(
                 'origen_evento',
-                ReemplazoMarchamoEvento::
-                    ORIGEN_ABASTECIMIENTO
+                ReemplazoMarchamoEvento::ORIGEN_ABASTECIMIENTO
             )
             ->where(
                 'estado',
@@ -1965,31 +1853,28 @@ class AbastecimientoService
             ->map(
                 function ($linea): array {
                     return [
-                        'punto_seguridad_id' =>
-                            (int) (
-                                $linea[
-                                    'punto_seguridad_id'
-                                ]
-                                ?? 0
-                            ),
+                        'punto_seguridad_id' => (int) (
+                            $linea[
+                                'punto_seguridad_id'
+                            ]
+                            ?? 0
+                        ),
 
-                        'marchamo_actual_id' =>
-                            (int) (
-                                $linea[
-                                    'marchamo_actual_id'
-                                ]
-                                ?? 0
-                            ),
+                        'marchamo_actual_id' => (int) (
+                            $linea[
+                                'marchamo_actual_id'
+                            ]
+                            ?? 0
+                        ),
 
-                        'nuevo_codigo_marchamo' =>
-                            trim(
-                                (string) (
-                                    $linea[
-                                        'nuevo_codigo_marchamo'
-                                    ]
-                                    ?? ''
-                                )
-                            ),
+                        'nuevo_codigo_marchamo' => trim(
+                            (string) (
+                                $linea[
+                                    'nuevo_codigo_marchamo'
+                                ]
+                                ?? ''
+                            )
+                        ),
                     ];
                 }
             )
@@ -2152,17 +2037,13 @@ class AbastecimientoService
                 }
 
                 return [
-                    'punto' =>
-                        $punto,
+                    'punto' => $punto,
 
-                    'detalle' =>
-                        $detalle,
+                    'detalle' => $detalle,
 
-                    'marchamo_actual' =>
-                        $marchamoActual,
+                    'marchamo_actual' => $marchamoActual,
 
-                    'nuevo_codigo_marchamo' =>
-                        $linea[
+                    'nuevo_codigo_marchamo' => $linea[
                             'nuevo_codigo_marchamo'
                         ],
                 ];
@@ -2206,7 +2087,7 @@ class AbastecimientoService
             $this->fallar(
                 'marchamos',
                 'Los siguientes códigos ya existen en el sistema: '
-                . $codigosExistentes
+                .$codigosExistentes
                     ->unique()
                     ->implode(', ')
             );
@@ -2261,26 +2142,23 @@ class AbastecimientoService
             ->map(
                 function ($linea): array {
                     return [
-                        'tanque_id' =>
-                            (int) (
-                                $linea['tanque_id']
+                        'tanque_id' => (int) (
+                            $linea['tanque_id']
+                            ?? 0
+                        ),
+
+                        'galones' => round(
+                            (float) (
+                                $linea['galones']
                                 ?? 0
                             ),
-
-                        'galones' =>
-                            round(
-                                (float) (
-                                    $linea['galones']
-                                    ?? 0
-                                ),
-                                2
-                            ),
+                            2
+                        ),
                     ];
                 }
             )
             ->filter(
-                fn (array $linea): bool =>
-                    $linea['tanque_id'] > 0
+                fn (array $linea): bool => $linea['tanque_id'] > 0
                     && $linea['galones'] > 0
             )
             ->values();
@@ -2347,8 +2225,7 @@ class AbastecimientoService
         }
 
         foreach (
-            $lineas
-            as $indice => $linea
+            $lineas as $indice => $linea
         ) {
             $tanque = $tanques->get(
                 $linea['tanque_id']
@@ -2373,8 +2250,7 @@ class AbastecimientoService
         $ajustes = collect();
 
         foreach (
-            $idsTanques
-            as $tanqueId
+            $idsTanques as $tanqueId
         ) {
             /** @var Tanque $tanque */
             $tanque = $tanques->get(
@@ -2501,34 +2377,25 @@ class AbastecimientoService
                     : null;
 
                 $ajustes->push([
-                    'tanque' =>
-                        $tanque,
+                    'tanque' => $tanque,
 
-                    'inventario_anterior' =>
-                        $inventarioActual,
+                    'inventario_anterior' => $inventarioActual,
 
-                    'diferencia_inventario' =>
-                        $diferenciaInventario,
+                    'diferencia_inventario' => $diferenciaInventario,
 
-                    'inventario_resultante' =>
-                        $inventarioResultanteActual,
+                    'inventario_resultante' => $inventarioResultanteActual,
 
-                    'valor_inventario_anterior' =>
-                        $valorInventarioActual,
+                    'valor_inventario_anterior' => $valorInventarioActual,
 
-                    'valor_ajuste' =>
-                        $valorAjuste,
+                    'valor_ajuste' => $valorAjuste,
 
-                    'valor_inventario_resultante' =>
-                        $inventarioResultanteActual > 0
+                    'valor_inventario_resultante' => $inventarioResultanteActual > 0
                             ? $valorInventarioResultante
                             : '0.00000000',
 
-                    'costo_unitario_aplicado' =>
-                        $costoAjuste,
+                    'costo_unitario_aplicado' => $costoAjuste,
 
-                    'costo_promedio_resultante' =>
-                        $costoPromedioResultante,
+                    'costo_promedio_resultante' => $costoPromedioResultante,
                 ]);
             }
 
@@ -2591,33 +2458,24 @@ class AbastecimientoService
                     );
 
                 $procesados->push([
-                    'tanque' =>
-                        $tanque,
+                    'tanque' => $tanque,
 
-                    'orden' =>
-                        $lineas->search(
-                            fn (array $linea): bool =>
-                                (int) $linea['tanque_id']
-                                === (int) $tanqueId
-                        ) + 1,
+                    'orden' => $lineas->search(
+                        fn (array $linea): bool => (int) $linea['tanque_id']
+                            === (int) $tanqueId
+                    ) + 1,
 
-                    'inventario_anterior_snapshot' =>
-                        $inventarioAnteriorSnapshot,
+                    'inventario_anterior_snapshot' => $inventarioAnteriorSnapshot,
 
-                    'galones_retirados' =>
-                        $galonesNuevos,
+                    'galones_retirados' => $galonesNuevos,
 
-                    'costo_promedio_galon_snapshot' =>
-                        $costoSnapshot,
+                    'costo_promedio_galon_snapshot' => $costoSnapshot,
 
-                    'costo_total_snapshot' =>
-                        $costoTotalSnapshot,
+                    'costo_total_snapshot' => $costoTotalSnapshot,
 
-                    'inventario_resultante_snapshot' =>
-                        $inventarioResultanteSnapshot,
+                    'inventario_resultante_snapshot' => $inventarioResultanteSnapshot,
 
-                    'quedo_bajo_minimo' =>
-                        $inventarioResultanteSnapshot
+                    'quedo_bajo_minimo' => $inventarioResultanteSnapshot
                         <= (float) $tanque
                             ->volumen_minimo_alerta,
                 ]);
@@ -2689,8 +2547,7 @@ class AbastecimientoService
         $ajustes = collect();
 
         foreach (
-            $detallesAnteriores
-            as $detalle
+            $detallesAnteriores as $detalle
         ) {
             /** @var Tanque $tanque */
             $tanque = $tanques->get(
@@ -2743,27 +2600,31 @@ class AbastecimientoService
             }
 
             $ajustes->push([
-                'tanque' =>
-                    $tanque,
+                'tanque' => $tanque,
 
-                'inventario_anterior' =>
-                    $inventarioActual,
+                'inventario_anterior' => $inventarioActual,
 
-                'diferencia_inventario' =>
-                    $diferenciaInventario,
+                'diferencia_inventario' => $diferenciaInventario,
 
-                'inventario_resultante' =>
-                    $inventarioResultante,
+                'inventario_resultante' => $inventarioResultante,
 
-                'valor_inventario_anterior' =>
-                    $inventarioActual > 0
+                'valor_inventario_anterior' => $inventarioActual > 0
                         ? (string) $tanque->valor_inventario_actual
                         : '0',
 
-                'valor_ajuste' =>
-                    (string) $detalle->costo_total_snapshot,
+                'valor_ajuste' => (string) $detalle->costo_total_snapshot,
 
-                'valor_inventario_resultante' =>
+                'valor_inventario_resultante' => Decimal::sumar(
+                    $inventarioActual > 0
+                        ? (string) $tanque->valor_inventario_actual
+                        : '0',
+                    (string) $detalle->costo_total_snapshot,
+                    8
+                ),
+
+                'costo_unitario_aplicado' => (string) $detalle->costo_promedio_galon_snapshot,
+
+                'costo_promedio_resultante' => Decimal::dividir(
                     Decimal::sumar(
                         $inventarioActual > 0
                             ? (string) $tanque->valor_inventario_actual
@@ -2771,22 +2632,9 @@ class AbastecimientoService
                         (string) $detalle->costo_total_snapshot,
                         8
                     ),
-
-                'costo_unitario_aplicado' =>
-                    (string) $detalle->costo_promedio_galon_snapshot,
-
-                'costo_promedio_resultante' =>
-                    Decimal::dividir(
-                        Decimal::sumar(
-                            $inventarioActual > 0
-                                ? (string) $tanque->valor_inventario_actual
-                                : '0',
-                            (string) $detalle->costo_total_snapshot,
-                            8
-                        ),
-                        (string) $inventarioResultante,
-                        8
-                    ),
+                    (string) $inventarioResultante,
+                    8
+                ),
             ]);
         }
 
@@ -2807,8 +2655,7 @@ class AbastecimientoService
         int $usuarioId
     ): void {
         foreach (
-            $ajustes
-            as $ajuste
+            $ajustes as $ajuste
         ) {
             /** @var Tanque $tanque */
             $tanque = $ajuste['tanque'];
@@ -2831,98 +2678,74 @@ class AbastecimientoService
                     : 'salida';
 
             $tanque->update([
-                'volumen_actual' =>
-                    $ajuste[
+                'volumen_actual' => $ajuste[
                         'inventario_resultante'
                     ],
 
-                'valor_inventario_actual' =>
-                    $ajuste[
+                'valor_inventario_actual' => $ajuste[
                         'valor_inventario_resultante'
                     ],
 
-                'costo_promedio_galon_actual' =>
-                    $ajuste[
+                'costo_promedio_galon_actual' => $ajuste[
                         'costo_promedio_resultante'
                     ],
 
-                'fecha_actualizacion' =>
-                    $fechaOperacion,
+                'fecha_actualizacion' => $fechaOperacion,
 
-                'actualizado_por' =>
-                    $usuarioId,
+                'actualizado_por' => $usuarioId,
             ]);
 
             MovimientoInventarioCombustible::create([
-                'empresa_id' =>
-                    $abastecimiento->empresa_id,
+                'empresa_id' => $abastecimiento->empresa_id,
 
-                'tanque_id' =>
-                    $tanque->id,
+                'tanque_id' => $tanque->id,
 
-                'abastecimiento_id' =>
-                    $abastecimiento->id,
+                'abastecimiento_id' => $abastecimiento->id,
 
-                'recarga_combustible_id' =>
-                    null,
+                'recarga_combustible_id' => null,
 
-                'tipo_movimiento' =>
-                    'ajuste_modificacion_abastecimiento',
+                'tipo_movimiento' => 'ajuste_modificacion_abastecimiento',
 
-                'volumen_anterior' =>
-                    $ajuste[
+                'volumen_anterior' => $ajuste[
                         'inventario_anterior'
                     ],
 
-                'sentido_movimiento' =>
-                    $sentido,
+                'sentido_movimiento' => $sentido,
 
-                'volumen_movimiento' =>
-                    abs($diferencia),
+                'volumen_movimiento' => abs($diferencia),
 
-                'volumen_resultante' =>
-                    $ajuste[
+                'volumen_resultante' => $ajuste[
                         'inventario_resultante'
                     ],
 
-                'valor_inventario_anterior' =>
-                    $ajuste[
+                'valor_inventario_anterior' => $ajuste[
                         'valor_inventario_anterior'
                     ],
 
-                'valor_movimiento' =>
-                    $ajuste[
+                'valor_movimiento' => $ajuste[
                         'valor_ajuste'
                     ],
 
-                'valor_inventario_resultante' =>
-                    $ajuste[
+                'valor_inventario_resultante' => $ajuste[
                         'valor_inventario_resultante'
                     ],
 
-                'costo_unitario_aplicado' =>
-                    $ajuste[
+                'costo_unitario_aplicado' => $ajuste[
                         'costo_unitario_aplicado'
                     ],
 
-                'subtotal_compra' =>
-                    null,
+                'subtotal_compra' => null,
 
-                'fecha_hora_movimiento' =>
-                    $fechaOperacion,
+                'fecha_hora_movimiento' => $fechaOperacion,
 
-                'observaciones' =>
-                    'Ajuste generado por modificación del abastecimiento #'
-                    . $abastecimiento->id,
+                'observaciones' => 'Ajuste generado por modificación del abastecimiento #'
+                    .$abastecimiento->id,
 
-                'usuario_registra_id' =>
-                    $usuarioId,
+                'usuario_registra_id' => $usuarioId,
 
-                'estado' =>
-                    'registrado',
+                'estado' => 'registrado',
 
-                'fecha_creacion' =>
-                    $fechaOperacion,
+                'fecha_creacion' => $fechaOperacion,
             ]);
         }
     }
@@ -3108,19 +2931,16 @@ class AbastecimientoService
         )
             ->map(function ($linea) {
                 return [
-                    'tanque_id' =>
-                        (int) ($linea['tanque_id'] ?? 0),
+                    'tanque_id' => (int) ($linea['tanque_id'] ?? 0),
 
-                    'galones' =>
-                        round(
-                            (float) ($linea['galones'] ?? 0),
-                            2
-                        ),
+                    'galones' => round(
+                        (float) ($linea['galones'] ?? 0),
+                        2
+                    ),
                 ];
             })
             ->filter(
-                fn (array $linea): bool =>
-                    $linea['tanque_id'] > 0
+                fn (array $linea): bool => $linea['tanque_id'] > 0
                     && $linea['galones'] > 0
             )
             ->values();
@@ -3175,8 +2995,7 @@ class AbastecimientoService
         $procesados = collect();
 
         foreach (
-            $lineas
-            as $indice => $linea
+            $lineas as $indice => $linea
         ) {
             $tanque = $tanques->get(
                 $linea['tanque_id']
@@ -3233,40 +3052,29 @@ class AbastecimientoService
                 : '0.00000000';
 
             $procesados->push([
-                'tanque' =>
-                    $tanque,
+                'tanque' => $tanque,
 
-                'orden' =>
-                    $indice + 1,
+                'orden' => $indice + 1,
 
-                'inventario_anterior' =>
-                    $inventarioAnterior,
+                'inventario_anterior' => $inventarioAnterior,
 
-                'galones_retirados' =>
-                    $galones,
+                'galones_retirados' => $galones,
 
-                'inventario_resultante' =>
-                    $inventarioResultante,
+                'inventario_resultante' => $inventarioResultante,
 
-                'valor_inventario_anterior' =>
-                    $valorInventarioAnterior,
+                'valor_inventario_anterior' => $valorInventarioAnterior,
 
-                'costo_promedio_galon_snapshot' =>
-                    $costoPromedio,
+                'costo_promedio_galon_snapshot' => $costoPromedio,
 
-                'costo_total_snapshot' =>
-                    $costoRetiro,
+                'costo_total_snapshot' => $costoRetiro,
 
-                'valor_inventario_resultante' =>
-                    $valorInventarioResultante,
+                'valor_inventario_resultante' => $valorInventarioResultante,
 
-                'costo_promedio_resultante' =>
-                    $inventarioResultante > 0
+                'costo_promedio_resultante' => $inventarioResultante > 0
                         ? $costoPromedio
                         : null,
 
-                'quedo_bajo_minimo' =>
-                    $inventarioResultante
+                'quedo_bajo_minimo' => $inventarioResultante
                     <= (float) $tanque
                         ->volumen_minimo_alerta,
             ]);
@@ -3518,50 +3326,37 @@ class AbastecimientoService
                 );
 
                 return [
-                    'ruta_id' =>
-                        $ruta->id,
+                    'ruta_id' => $ruta->id,
 
-                    'orden' =>
-                        $indice + 1,
+                    'orden' => $indice + 1,
 
-                    'tipo_recorrido' =>
-                        $tipo,
+                    'tipo_recorrido' => $tipo,
 
-                    'factor_recorrido' =>
-                        $factor,
+                    'factor_recorrido' => $factor,
 
-                    'ruta_nombre_snapshot' =>
-                        $ruta->ruta,
+                    'ruta_nombre_snapshot' => $ruta->ruta,
 
-                    'punto_origen_id' =>
-                        $ruta->punto_origen_id,
+                    'punto_origen_id' => $ruta->punto_origen_id,
 
-                    'punto_destino_id' =>
-                        $ruta->punto_destino_id,
+                    'punto_destino_id' => $ruta->punto_destino_id,
 
-                    'punto_origen_nombre_snapshot' =>
-                        $ruta->puntoOrigen->nombre,
+                    'punto_origen_nombre_snapshot' => $ruta->puntoOrigen->nombre,
 
-                    'punto_destino_nombre_snapshot' =>
-                        $ruta->puntoDestino->nombre,
+                    'punto_destino_nombre_snapshot' => $ruta->puntoDestino->nombre,
 
-                    'kilometros_base_snapshot' =>
-                        $kilometrosBase,
+                    'kilometros_base_snapshot' => $kilometrosBase,
 
-                    'galones_base_snapshot' =>
-                        $galonesBase,
+                    'galones_base_snapshot' => $galonesBase,
 
-                    'kilometros_aplicados' =>
-                        round(
-                            $kilometrosBase * $factor,
-                            2
-                        ),
+                    'kilometros_aplicados' => round(
+                        $kilometrosBase * $factor,
+                        2
+                    ),
 
-                    'galones_aplicados' =>
-                        round(
-                            $galonesBase * $factor,
-                            2
-                        ),
+                    'galones_aplicados' => round(
+                        $galonesBase * $factor,
+                        2
+                    ),
                 ];
             }
         );
@@ -3580,26 +3375,23 @@ class AbastecimientoService
         )
             ->map(function ($linea) {
                 return [
-                    'punto_seguridad_id' =>
-                        (int) (
-                            $linea['punto_seguridad_id']
-                            ?? 0
-                        ),
+                    'punto_seguridad_id' => (int) (
+                        $linea['punto_seguridad_id']
+                        ?? 0
+                    ),
 
-                    'nuevo_codigo_marchamo' =>
-                        trim(
-                            (string) (
-                                $linea[
-                                    'nuevo_codigo_marchamo'
-                                ]
-                                ?? ''
-                            )
-                        ),
+                    'nuevo_codigo_marchamo' => trim(
+                        (string) (
+                            $linea[
+                                'nuevo_codigo_marchamo'
+                            ]
+                            ?? ''
+                        )
+                    ),
                 ];
             })
             ->filter(
-                fn (array $linea): bool =>
-                    $linea['punto_seguridad_id'] > 0
+                fn (array $linea): bool => $linea['punto_seguridad_id'] > 0
             )
             ->values();
 
@@ -3625,8 +3417,7 @@ class AbastecimientoService
         }
 
         foreach (
-            $lineas
-            as $indice => $linea
+            $lineas as $indice => $linea
         ) {
             if (
                 ! preg_match(
@@ -3669,7 +3460,7 @@ class AbastecimientoService
             $this->fallar(
                 'marchamos',
                 'Los siguientes códigos ya existen en el sistema: '
-                . $codigosExistentes
+                .$codigosExistentes
                     ->unique()
                     ->implode(', ')
             );
@@ -3769,14 +3560,11 @@ class AbastecimientoService
                 }
 
                 return [
-                    'punto' =>
-                        $punto,
+                    'punto' => $punto,
 
-                    'marchamo_anterior' =>
-                        $marchamoAnterior,
+                    'marchamo_anterior' => $marchamoAnterior,
 
-                    'nuevo_codigo_marchamo' =>
-                        $linea[
+                    'nuevo_codigo_marchamo' => $linea[
                             'nuevo_codigo_marchamo'
                         ],
                 ];
@@ -3794,156 +3582,119 @@ class AbastecimientoService
         int $usuarioId
     ): void {
         foreach (
-            $tanquesProcesados
-            as $procesado
+            $tanquesProcesados as $procesado
         ) {
             /** @var Tanque $tanque */
             $tanque = $procesado['tanque'];
 
             $tanque->update([
-                'volumen_actual' =>
-                    $procesado[
+                'volumen_actual' => $procesado[
                         'inventario_resultante'
                     ],
 
-                'valor_inventario_actual' =>
-                    $procesado[
+                'valor_inventario_actual' => $procesado[
                         'valor_inventario_resultante'
                     ],
 
-                'costo_promedio_galon_actual' =>
-                    $procesado[
+                'costo_promedio_galon_actual' => $procesado[
                         'costo_promedio_resultante'
                     ],
 
-                'fecha_actualizacion' =>
-                    $fechaOperacion,
+                'fecha_actualizacion' => $fechaOperacion,
 
-                'actualizado_por' =>
-                    $usuarioId,
+                'actualizado_por' => $usuarioId,
             ]);
 
             AbastecimientoTanque::create([
-                'abastecimiento_id' =>
-                    $abastecimiento->id,
+                'abastecimiento_id' => $abastecimiento->id,
 
-                'tanque_id' =>
-                    $tanque->id,
+                'tanque_id' => $tanque->id,
 
-                'orden' =>
-                    $procesado['orden'],
+                'orden' => $procesado['orden'],
 
-                'tanque_nombre_snapshot' =>
-                    $tanque->nombre,
+                'tanque_nombre_snapshot' => $tanque->nombre,
 
-                'capacidad_total_snapshot' =>
-                    $tanque->capacidad_total,
+                'capacidad_total_snapshot' => $tanque->capacidad_total,
 
-                'volumen_minimo_alerta_snapshot' =>
-                    $tanque->volumen_minimo_alerta,
+                'volumen_minimo_alerta_snapshot' => $tanque->volumen_minimo_alerta,
 
-                'inventario_anterior' =>
-                    $procesado[
+                'inventario_anterior' => $procesado[
                         'inventario_anterior'
                     ],
 
-                'galones_retirados' =>
-                    $procesado[
+                'galones_retirados' => $procesado[
                         'galones_retirados'
                     ],
 
-                'costo_promedio_galon_snapshot' =>
-                    $procesado[
+                'costo_promedio_galon_snapshot' => $procesado[
                         'costo_promedio_galon_snapshot'
                     ],
 
-                'costo_total_snapshot' =>
-                    $procesado[
+                'costo_total_snapshot' => $procesado[
                         'costo_total_snapshot'
                     ],
 
-                'inventario_resultante' =>
-                    $procesado[
+                'inventario_resultante' => $procesado[
                         'inventario_resultante'
                     ],
 
-                'quedo_bajo_minimo' =>
-                    $procesado[
+                'quedo_bajo_minimo' => $procesado[
                         'quedo_bajo_minimo'
                     ],
             ]);
 
             MovimientoInventarioCombustible::create([
-                'empresa_id' =>
-                    $abastecimiento->empresa_id,
+                'empresa_id' => $abastecimiento->empresa_id,
 
-                'tanque_id' =>
-                    $tanque->id,
+                'tanque_id' => $tanque->id,
 
-                'abastecimiento_id' =>
-                    $abastecimiento->id,
+                'abastecimiento_id' => $abastecimiento->id,
 
-                'recarga_combustible_id' =>
-                    null,
+                'recarga_combustible_id' => null,
 
-                'tipo_movimiento' =>
-                    'salida_abastecimiento',
+                'tipo_movimiento' => 'salida_abastecimiento',
 
-                'volumen_anterior' =>
-                    $procesado[
+                'volumen_anterior' => $procesado[
                         'inventario_anterior'
                     ],
 
-                'sentido_movimiento' =>
-                    'salida',
+                'sentido_movimiento' => 'salida',
 
-                'volumen_movimiento' =>
-                    $procesado[
+                'volumen_movimiento' => $procesado[
                         'galones_retirados'
                     ],
 
-                'volumen_resultante' =>
-                    $procesado[
+                'volumen_resultante' => $procesado[
                         'inventario_resultante'
                     ],
 
-                'valor_inventario_anterior' =>
-                    $procesado[
+                'valor_inventario_anterior' => $procesado[
                         'valor_inventario_anterior'
                     ],
 
-                'valor_movimiento' =>
-                    $procesado[
+                'valor_movimiento' => $procesado[
                         'costo_total_snapshot'
                     ],
 
-                'valor_inventario_resultante' =>
-                    $procesado[
+                'valor_inventario_resultante' => $procesado[
                         'valor_inventario_resultante'
                     ],
 
-                'costo_unitario_aplicado' =>
-                    $procesado[
+                'costo_unitario_aplicado' => $procesado[
                         'costo_promedio_galon_snapshot'
                     ],
 
-                'subtotal_compra' =>
-                    null,
+                'subtotal_compra' => null,
 
-                'fecha_hora_movimiento' =>
-                    $fechaOperacion,
+                'fecha_hora_movimiento' => $fechaOperacion,
 
-                'observaciones' =>
-                    null,
+                'observaciones' => null,
 
-                'usuario_registra_id' =>
-                    $usuarioId,
+                'usuario_registra_id' => $usuarioId,
 
-                'estado' =>
-                    'registrado',
+                'estado' => 'registrado',
 
-                'fecha_creacion' =>
-                    $fechaOperacion,
+                'fecha_creacion' => $fechaOperacion,
             ]);
         }
     }
@@ -3958,39 +3709,27 @@ class AbastecimientoService
         int $usuarioId
     ): void {
         $evento = ReemplazoMarchamoEvento::create([
-            'empresa_id' =>
-                $abastecimiento->empresa_id,
+            'empresa_id' => $abastecimiento->empresa_id,
 
-            'unidad_id' =>
-                $abastecimiento->unidad_id,
+            'unidad_id' => $abastecimiento->unidad_id,
 
-            'abastecimiento_id' =>
-                $abastecimiento->id,
+            'abastecimiento_id' => $abastecimiento->id,
 
-            'motivo_reemplazo' =>
-                ReemplazoMarchamoEvento::
-                    MOTIVO_APERTURA_ABASTECIMIENTO,
+            'motivo_reemplazo' => ReemplazoMarchamoEvento::MOTIVO_APERTURA_ABASTECIMIENTO,
 
-            'cantidad_reemplazos' =>
-                $marchamosProcesados->count(),
+            'cantidad_reemplazos' => $marchamosProcesados->count(),
 
-            'origen_evento' =>
-                ReemplazoMarchamoEvento::
-                    ORIGEN_ABASTECIMIENTO,
+            'origen_evento' => ReemplazoMarchamoEvento::ORIGEN_ABASTECIMIENTO,
 
-            'estado' =>
-                'registrado',
+            'estado' => 'registrado',
 
-            'fecha_registro' =>
-                $fechaOperacion,
+            'fecha_registro' => $fechaOperacion,
 
-            'registrado_por' =>
-                $usuarioId,
+            'registrado_por' => $usuarioId,
         ]);
 
         foreach (
-            $marchamosProcesados
-            as $procesado
+            $marchamosProcesados as $procesado
         ) {
             /** @var PuntoSeguridadUnidad $punto */
             $punto = $procesado['punto'];
@@ -4006,90 +3745,97 @@ class AbastecimientoService
              * pero únicamente un marchamo activo con activo_actual = 1.
              */
             $marchamoAnterior->update([
-                'estado' =>
-                    'reemplazado',
+                'estado' => 'reemplazado',
 
-                'activo_actual' =>
-                    null,
+                'activo_actual' => null,
 
-                'fecha_desactivacion' =>
-                    $fechaOperacion,
+                'fecha_desactivacion' => $fechaOperacion,
 
-                'motivo_desactivacion' =>
-                    'Apertura por abastecimiento',
+                'motivo_desactivacion' => 'Apertura por abastecimiento',
 
-                'actualizado_por' =>
-                    $usuarioId,
+                'actualizado_por' => $usuarioId,
             ]);
 
             $marchamoNuevo = Marchamo::create([
-                'empresa_id' =>
-                    $abastecimiento->empresa_id,
+                'empresa_id' => $abastecimiento->empresa_id,
 
-                'unidad_id' =>
-                    $abastecimiento->unidad_id,
+                'unidad_id' => $abastecimiento->unidad_id,
 
-                'punto_seguridad_id' =>
-                    $punto->id,
+                'punto_seguridad_id' => $punto->id,
 
-                'codigo_marchamo' =>
-                    $procesado[
+                'codigo_marchamo' => $procesado[
                         'nuevo_codigo_marchamo'
                     ],
 
-                'fecha_activacion' =>
-                    $fechaOperacion,
+                'fecha_activacion' => $fechaOperacion,
 
-                'estado' =>
-                    'activo',
+                'estado' => 'activo',
 
-                'activo_actual' =>
-                    true,
+                'activo_actual' => true,
 
-                'fecha_desactivacion' =>
-                    null,
+                'fecha_desactivacion' => null,
 
-                'motivo_desactivacion' =>
-                    null,
+                'motivo_desactivacion' => null,
 
-                'origen_creacion' =>
-                    'abastecimiento',
+                'origen_creacion' => 'abastecimiento',
 
-                'creado_por' =>
-                    $usuarioId,
+                'creado_por' => $usuarioId,
 
-                'actualizado_por' =>
-                    $usuarioId,
+                'actualizado_por' => $usuarioId,
             ]);
 
             $punto->update([
-                'marchamo_actual_id' =>
-                    $marchamoNuevo->id,
+                'marchamo_actual_id' => $marchamoNuevo->id,
 
-                'estado_asignacion' =>
-                    'asignado',
+                'estado_asignacion' => 'asignado',
 
-                'actualizado_por' =>
-                    $usuarioId,
+                'actualizado_por' => $usuarioId,
             ]);
 
             ReemplazoMarchamoDetalle::create([
-                'reemplazo_evento_id' =>
-                    $evento->id,
+                'reemplazo_evento_id' => $evento->id,
 
-                'punto_seguridad_id' =>
-                    $punto->id,
+                'punto_seguridad_id' => $punto->id,
 
-                'marchamo_anterior_id' =>
-                    $marchamoAnterior->id,
+                'marchamo_anterior_id' => $marchamoAnterior->id,
 
-                'marchamo_nuevo_id' =>
-                    $marchamoNuevo->id,
+                'marchamo_nuevo_id' => $marchamoNuevo->id,
 
-                'fecha_registro' =>
-                    $fechaOperacion,
+                'fecha_registro' => $fechaOperacion,
             ]);
         }
+    }
+
+    /**
+     * Materializa el costo por unidad operativa del ciclo que se cierra.
+     */
+    private function calcularCostoUnitarioCiclo(
+        string $modeloMedicion,
+        ?string $costoConsumido,
+        ?float $diferenciaKilometraje,
+        ?float $diferenciaHorometro,
+        int $totalViajes
+    ): ?string {
+        if (is_null($costoConsumido)) {
+            return null;
+        }
+
+        $divisor = match ($modeloMedicion) {
+            Abastecimiento::MODELO_KILOMETROS_GALON => $diferenciaKilometraje,
+            Abastecimiento::MODELO_GALONES_HORA => $diferenciaHorometro,
+            Abastecimiento::MODELO_GALONES_VIAJE => $totalViajes,
+            default => null,
+        };
+
+        if (is_null($divisor) || $divisor <= 0) {
+            return null;
+        }
+
+        return Decimal::dividir(
+            $costoConsumido,
+            (string) $divisor,
+            8
+        );
     }
 
     /**

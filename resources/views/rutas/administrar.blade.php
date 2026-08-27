@@ -450,7 +450,7 @@
                                                 <div class="cc-result-value">
                                                     {{ number_format(
                                                         (float) $ruta->kilometros_estimados,
-                                                        1
+                                                        2
                                                     ) }} km
                                                 </div>
                                             </div>
@@ -463,7 +463,7 @@
                                                 <div class="cc-result-value">
                                                     {{ number_format(
                                                         (float) $ruta->galones_estimados,
-                                                        1
+                                                        2
                                                     ) }} gal
                                                 </div>
                                             </div>

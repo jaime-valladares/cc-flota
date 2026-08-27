@@ -359,7 +359,7 @@
                                     @if (is_null($abastecimiento->kilometraje_anterior))
                                         —
                                     @else
-                                        {{ number_format((float) $abastecimiento->kilometraje_anterior, 1) }} km
+                                        {{ number_format((float) $abastecimiento->kilometraje_anterior, 2) }} km
                                     @endif
                                 </div>
                             </div>
@@ -367,7 +367,7 @@
                             <div class="cc-detail-item">
                                 <div class="cc-detail-label">Kilometraje actual</div>
                                 <div class="cc-detail-value">
-                                    {{ number_format((float) $abastecimiento->kilometraje_actual, 1) }} km
+                                    {{ number_format((float) $abastecimiento->kilometraje_actual, 2) }} km
                                 </div>
                             </div>
 
@@ -377,7 +377,7 @@
                                     @if (is_null($abastecimiento->diferencia_kilometraje))
                                         —
                                     @else
-                                        {{ number_format((float) $abastecimiento->diferencia_kilometraje, 1) }} km
+                                        {{ number_format((float) $abastecimiento->diferencia_kilometraje, 2) }} km
                                     @endif
                                 </div>
                             </div>
@@ -389,7 +389,7 @@
                                         @if (is_null($abastecimiento->horometro_anterior))
                                             —
                                         @else
-                                            {{ number_format((float) $abastecimiento->horometro_anterior, 1) }} h
+                                            {{ number_format((float) $abastecimiento->horometro_anterior, 2) }} h
                                         @endif
                                     </div>
                                 </div>
@@ -397,7 +397,7 @@
                                 <div class="cc-detail-item">
                                     <div class="cc-detail-label">Horómetro actual</div>
                                     <div class="cc-detail-value">
-                                        {{ number_format((float) $abastecimiento->horometro_actual, 1) }} h
+                                        {{ number_format((float) $abastecimiento->horometro_actual, 2) }} h
                                     </div>
                                 </div>
 
@@ -407,7 +407,7 @@
                                         @if (is_null($abastecimiento->diferencia_horometro))
                                             —
                                         @else
-                                            {{ number_format((float) $abastecimiento->diferencia_horometro, 1) }} h
+                                            {{ number_format((float) $abastecimiento->diferencia_horometro, 2) }} h
                                         @endif
                                     </div>
                                 </div>
@@ -459,7 +459,7 @@
                             <div class="cc-summary-strip-item">
                                 <span class="cc-summary-strip-label">Volumen inicial</span>
                                 <span class="cc-summary-strip-value">
-                                    {{ number_format((float) $abastecimiento->volumen_inicial, 1) }} gal
+                                    {{ number_format((float) $abastecimiento->volumen_inicial, 2) }} gal
                                 </span>
                             </div>
                             @endif
@@ -467,21 +467,21 @@
                             <div class="cc-summary-strip-item">
                                 <span class="cc-summary-strip-label">Volumen cargado</span>
                                 <span class="cc-summary-strip-value">
-                                    {{ number_format((float) $abastecimiento->volumen_cargado, 1) }} gal
+                                    {{ number_format((float) $abastecimiento->volumen_cargado, 2) }} gal
                                 </span>
                             </div>
 
                             <div class="cc-summary-strip-item">
                                 <span class="cc-summary-strip-label">Volumen final</span>
                                 <span class="cc-summary-strip-value">
-                                    {{ number_format((float) $abastecimiento->volumen_final, 1) }} gal
+                                    {{ number_format((float) $abastecimiento->volumen_final, 2) }} gal
                                 </span>
                             </div>
 
                             <div class="cc-summary-strip-item">
                                 <span class="cc-summary-strip-label">Capacidad cubierta</span>
                                 <span class="cc-summary-strip-value">
-                                    {{ number_format((float) $abastecimiento->capacidad_cubierta_snapshot, 1) }} gal
+                                    {{ number_format((float) $abastecimiento->capacidad_cubierta_snapshot, 2) }} gal
                                 </span>
                             </div>
                         </div>
@@ -493,7 +493,7 @@
                                     @if (is_null($abastecimiento->volumen_final_anterior))
                                         —
                                     @else
-                                        {{ number_format((float) $abastecimiento->volumen_final_anterior, 1) }} gal
+                                        {{ number_format((float) $abastecimiento->volumen_final_anterior, 2) }} gal
                                     @endif
                                 </div>
                             </div>
@@ -504,7 +504,7 @@
                                     @if (is_null($abastecimiento->consumo_real_ciclo) && is_null($abastecimiento->combustible_consumido_ciclo))
                                         —
                                     @else
-                                        {{ number_format((float) ($abastecimiento->consumo_real_ciclo ?? $abastecimiento->combustible_consumido_ciclo), 1) }} gal
+                                        {{ number_format((float) ($abastecimiento->consumo_real_ciclo ?? $abastecimiento->combustible_consumido_ciclo), 2) }} gal
                                     @endif
                                 </div>
                             </div>
@@ -516,7 +516,7 @@
                                     @if (is_null($abastecimiento->combustible_adicional_no_explicado))
                                         —
                                     @else
-                                        {{ number_format((float) $abastecimiento->combustible_adicional_no_explicado, 1) }} gal
+                                        {{ number_format((float) $abastecimiento->combustible_adicional_no_explicado, 2) }} gal
                                     @endif
                                 </div>
                             </div>
@@ -604,11 +604,11 @@
                                                     </td>
 
                                                     <td>
-                                                        {{ number_format((float) $detalleTanque->inventario_anterior, 1) }} gal
+                                                        {{ number_format((float) $detalleTanque->inventario_anterior, 2) }} gal
                                                     </td>
 
                                                     <td>
-                                                        {{ number_format((float) $detalleTanque->galones_retirados, 1) }} gal
+                                                        {{ number_format((float) $detalleTanque->galones_retirados, 2) }} gal
                                                     </td>
 
                                                     <td>
@@ -620,11 +620,11 @@
                                                     </td>
 
                                                     <td>
-                                                        {{ number_format((float) $detalleTanque->inventario_resultante, 1) }} gal
+                                                        {{ number_format((float) $detalleTanque->inventario_resultante, 2) }} gal
                                                     </td>
 
                                                     <td>
-                                                        {{ number_format((float) $detalleTanque->volumen_minimo_alerta_snapshot, 1) }} gal
+                                                        {{ number_format((float) $detalleTanque->volumen_minimo_alerta_snapshot, 2) }} gal
                                                     </td>
 
                                                     <td>
@@ -689,15 +689,15 @@
                                                     </td>
 
                                                     <td>
-                                                        {{ number_format((float) $movimiento->volumen_anterior, 1) }} gal
+                                                        {{ number_format((float) $movimiento->volumen_anterior, 2) }} gal
                                                     </td>
 
                                                     <td>
-                                                        {{ number_format((float) $movimiento->volumen_movimiento, 1) }} gal
+                                                        {{ number_format((float) $movimiento->volumen_movimiento, 2) }} gal
                                                     </td>
 
                                                     <td>
-                                                        {{ number_format((float) $movimiento->volumen_resultante, 1) }} gal
+                                                        {{ number_format((float) $movimiento->volumen_resultante, 2) }} gal
                                                     </td>
 
                                                     <td>
@@ -767,10 +767,10 @@
                                                     <td>{{ $detalleRuta->tipo_recorrido_texto }}</td>
                                                     <td>{{ $detalleRuta->factor_recorrido }}</td>
                                                     <td>
-                                                        {{ number_format((float) $detalleRuta->kilometros_aplicados, 1) }} km
+                                                        {{ number_format((float) $detalleRuta->kilometros_aplicados, 2) }} km
                                                     </td>
                                                     <td>
-                                                        {{ number_format((float) $detalleRuta->galones_aplicados, 1) }} gal
+                                                        {{ number_format((float) $detalleRuta->galones_aplicados, 2) }} gal
                                                     </td>
                                                 </tr>
                                             @endforeach
@@ -790,14 +790,14 @@
                                 <div class="cc-summary-strip-item">
                                     <span class="cc-summary-strip-label">Kilómetros teóricos</span>
                                     <span class="cc-summary-strip-value">
-                                        {{ number_format((float) $abastecimiento->kilometros_teoricos, 1) }} km
+                                        {{ number_format((float) $abastecimiento->kilometros_teoricos, 2) }} km
                                     </span>
                                 </div>
 
                                 <div class="cc-summary-strip-item">
                                     <span class="cc-summary-strip-label">Galones teóricos</span>
                                     <span class="cc-summary-strip-value">
-                                        {{ number_format((float) $abastecimiento->galones_teoricos, 1) }} gal
+                                        {{ number_format((float) $abastecimiento->galones_teoricos, 2) }} gal
                                     </span>
                                 </div>
                             </div>
@@ -818,7 +818,7 @@
                                         @if (is_null($abastecimiento->kilometros_por_galon))
                                             —
                                         @else
-                                            {{ number_format((float) $abastecimiento->kilometros_por_galon, 1) }}
+                                            {{ number_format((float) $abastecimiento->kilometros_por_galon, 2) }}
                                         @endif
                                     </div>
                                 </div>
@@ -829,7 +829,7 @@
                                         @if (is_null($abastecimiento->galones_por_kilometro))
                                             —
                                         @else
-                                            {{ number_format((float) $abastecimiento->galones_por_kilometro, 1) }}
+                                            {{ number_format((float) $abastecimiento->galones_por_kilometro, 2) }}
                                         @endif
                                     </div>
                                 </div>
@@ -840,7 +840,7 @@
                                         @if (is_null($abastecimiento->galones_por_hora))
                                             —
                                         @else
-                                            {{ number_format((float) $abastecimiento->galones_por_hora, 1) }}
+                                            {{ number_format((float) $abastecimiento->galones_por_hora, 2) }}
                                         @endif
                                     </div>
                                 </div>
@@ -851,7 +851,7 @@
                                         @if (is_null($abastecimiento->diferencia_kilometros_teoricos))
                                             —
                                         @else
-                                            {{ number_format((float) $abastecimiento->diferencia_kilometros_teoricos, 1) }} km
+                                            {{ number_format((float) $abastecimiento->diferencia_kilometros_teoricos, 2) }} km
                                         @endif
                                     </div>
                                 </div>
@@ -862,7 +862,7 @@
                                         @if (is_null($abastecimiento->diferencia_galones_teoricos))
                                             —
                                         @else
-                                            {{ number_format((float) $abastecimiento->diferencia_galones_teoricos, 1) }} gal
+                                            {{ number_format((float) $abastecimiento->diferencia_galones_teoricos, 2) }} gal
                                         @endif
                                     </div>
                                 </div>

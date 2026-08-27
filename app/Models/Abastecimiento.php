@@ -77,6 +77,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'consumo_teorico_ciclo',
     'diferencia_galones_ciclo',
     'costo_combustible_consumido_ciclo',
+    'costo_unitario_ciclo',
     'valor_remanente_antes_carga_snapshot',
 
     /*
@@ -240,6 +241,17 @@ class Abastecimiento extends Model
             Abastecimiento::class,
             'abastecimiento_anterior_id'
         );
+    }
+
+    /**
+     * Evento registrado que cierra el ciclo abierto por este abastecimiento.
+     */
+    public function cierreCiclo(): HasOne
+    {
+        return $this->hasOne(
+            Abastecimiento::class,
+            'abastecimiento_anterior_id'
+        )->where('estado', self::ESTADO_REGISTRADO);
     }
 
     /*
@@ -465,6 +477,7 @@ class Abastecimiento extends Model
             'consumo_teorico_ciclo' => 'decimal:8',
             'diferencia_galones_ciclo' => 'decimal:8',
             'costo_combustible_consumido_ciclo' => 'decimal:8',
+            'costo_unitario_ciclo' => 'decimal:8',
             'valor_remanente_antes_carga_snapshot' => 'decimal:8',
 
             /*

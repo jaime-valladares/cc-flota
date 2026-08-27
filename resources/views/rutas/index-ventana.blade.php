@@ -495,14 +495,14 @@
                                                 <td class="cc-table-adaptive-nowrap">
                                                     {{ number_format(
                                                         (float) $ruta->kilometros_estimados,
-                                                        1
+                                                        2
                                                     ) }} km
                                                 </td>
 
                                                 <td class="cc-table-adaptive-nowrap">
                                                     {{ number_format(
                                                         (float) $ruta->galones_estimados,
-                                                        1
+                                                        2
                                                     ) }} gal
                                                 </td>
 

@@ -979,8 +979,8 @@
                                     </a>
                                 @endif
                                 @if ($usuarioAutenticado->tienePermiso('abastecimientos.administrar'))
-                                    <a href="{{ route('abastecimientos.administrar') }}" class="cc-sidebar-sublink {{ request()->routeIs('abastecimientos.administrar*') || request()->routeIs('abastecimientos.edit*') ? 'cc-sidebar-sublink-active' : '' }}">
-                                        Administrar abastecimientos
+                                    <a href="{{ route('abastecimientos.administrar') }}" class="cc-sidebar-sublink {{ request()->routeIs('abastecimientos.administrar*') || request()->routeIs('abastecimientos.ciclos.*') ? 'cc-sidebar-sublink-active' : '' }}">
+                                        Consultar ciclos
                                     </a>
                                 @endif
                                 @if ($usuarioAutenticado->tienePermiso('abastecimientos.registrar'))

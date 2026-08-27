@@ -105,7 +105,7 @@
                             </span>
 
                             <span class="cc-summary-strip-value">
-                                {{ number_format($capacidadTotal, 1) }} gal
+                                {{ number_format($capacidadTotal, 2) }} gal
                             </span>
                         </div>
 
@@ -115,7 +115,7 @@
                             </span>
 
                             <span class="cc-summary-strip-value">
-                                {{ number_format($volumenActual, 1) }} gal
+                                {{ number_format($volumenActual, 2) }} gal
                             </span>
                         </div>
 
@@ -315,9 +315,9 @@
                                                         </div>
 
                                                         <div class="cc-result-value-muted">
-                                                            {{ number_format((float) $tanque->volumen_actual, 1) }}
+                                                            {{ number_format((float) $tanque->volumen_actual, 2) }}
                                                             gal disponibles de
-                                                            {{ number_format((float) $tanque->capacidad_total, 1) }}
+                                                            {{ number_format((float) $tanque->capacidad_total, 2) }}
                                                             gal.
                                                         </div>
                                                     </div>
@@ -328,7 +328,7 @@
                                                         </div>
 
                                                         <div class="cc-result-value">
-                                                            {{ number_format((float) $tanque->volumen_minimo_alerta, 1) }}
+                                                            {{ number_format((float) $tanque->volumen_minimo_alerta, 2) }}
                                                             gal
                                                         </div>
                                                     </div>

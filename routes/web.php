@@ -1073,6 +1073,10 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
             ->name('abastecimientos.administrar');
         Route::get('/abastecimientos/administrar/ventana', [AbastecimientoController::class, 'administrarVentana'])
             ->name('abastecimientos.administrar.ventana');
+        Route::get('/abastecimientos/ciclos/{abastecimiento}/ficha', [AbastecimientoController::class, 'showCiclo'])
+            ->name('abastecimientos.ciclos.show');
+        Route::get('/abastecimientos/ciclos/{abastecimiento}/ficha/ventana', [AbastecimientoController::class, 'showCicloVentana'])
+            ->name('abastecimientos.ciclos.show.ventana');
     });
 
     /* Rutas dinámicas: deben permanecer después de todas las rutas fijas. */
