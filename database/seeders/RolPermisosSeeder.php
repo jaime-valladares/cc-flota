@@ -22,7 +22,6 @@ class RolPermisosSeeder extends Seeder
                 'analisis.consultar',
 
                 'abastecimientos.consultar',
-                'abastecimientos.modificar',
 
                 'motoristas.consultar',
                 'motoristas.administrar',
@@ -172,7 +171,6 @@ class RolPermisosSeeder extends Seeder
 
                 'abastecimientos.consultar',
                 'abastecimientos.registrar',
-                'abastecimientos.modificar',
 
                 'motoristas.consultar',
                 'motoristas.administrar',
@@ -250,7 +248,6 @@ class RolPermisosSeeder extends Seeder
                 'analisis.consultar',
 
                 'abastecimientos.consultar',
-                'abastecimientos.modificar',
 
                 'motoristas.consultar',
                 'motoristas.administrar',

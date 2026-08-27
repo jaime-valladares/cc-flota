@@ -729,10 +729,10 @@ class PermisosSeeder extends Seeder
                 'codigo' => 'abastecimientos.modificar',
                 'modulo' => 'abastecimientos',
                 'accion' => 'modificar',
-                'nombre' => 'Modificar abastecimientos',
-                'descripcion' => 'Permite modificar atómicamente el último abastecimiento vigente de una unidad.',
+                'nombre' => 'Modificar abastecimientos (legacy)',
+                'descripcion' => 'Permiso legacy conservado como registro histórico; no controla ninguna función activa.',
                 'alcance' => 'ambos',
-                'estado' => 'activo',
+                'estado' => 'inactivo',
             ],
 
             // -------------------------------------------------------------
