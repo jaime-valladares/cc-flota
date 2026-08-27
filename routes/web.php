@@ -18,6 +18,7 @@ use App\Http\Controllers\MotoristaController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PuntoRutaController;
 use App\Http\Controllers\RecargaTanqueController;
+use App\Http\Controllers\Reportes\FichaUnidadController;
 use App\Http\Controllers\RutaController;
 use App\Http\Controllers\TanqueController;
 use App\Http\Controllers\UnidadController;
@@ -1298,6 +1299,24 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
             '/analisis/rutas/ventana',
             [AnalisisRutaController::class, 'indexVentana']
         )->name('analisis.rutas.index.ventana');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Reportes - ficha completa de la unidad
+    |--------------------------------------------------------------------------
+    */
+
+    Route::middleware('permiso:reportes.unidades.ficha')->group(function () {
+        Route::get(
+            '/reportes/unidades',
+            [FichaUnidadController::class, 'index']
+        )->name('reportes.unidades.index');
+
+        Route::get(
+            '/reportes/unidades/{unidad}',
+            [FichaUnidadController::class, 'show']
+        )->name('reportes.unidades.show');
     });
 
 });

@@ -432,6 +432,7 @@
                 || request()->routeIs(
                     'analisis.rutas.*'
                 );
+            $reportesActivo = request()->routeIs('reportes.*');
         @endphp
 
         <div class="cc-admin-shell">
@@ -995,40 +996,6 @@
                         Control
                     </div>
 
-                    <!-- Auditoría -->
-                    @if ($usuarioAutenticado->tienePermiso('auditoria.consultar'))
-                        <div class="cc-sidebar-group">
-                            <div
-                                id="ccAuditoriaToggle"
-                                class="cc-sidebar-parent cc-sidebar-collapsible-parent {{ $auditoriaActivo ? 'cc-sidebar-parent-active' : '' }}"
-                                role="button"
-                                tabindex="0"
-                                aria-expanded="false"
-                                aria-controls="ccAuditoriaSubnav"
-                            >
-                                <span>Auditoría</span>
-                                <span class="cc-sidebar-collapse-icon" aria-hidden="true">▼</span>
-                            </div>
-
-                            <div id="ccAuditoriaSubnav" class="cc-sidebar-subnav cc-sidebar-subnav-collapsed">
-                                <a href="{{ route('analisis.panel-operativo') }}"
-                                   class="cc-sidebar-sublink {{ request()->routeIs('analisis.panel-operativo*') ? 'cc-sidebar-sublink-active' : '' }}">
-                                    Control operativo de flota
-                                </a>
-
-                                <a href="{{ route('auditoria.abastecimientos.index') }}"
-                                   class="cc-sidebar-sublink {{ request()->routeIs('auditoria.abastecimientos.*') ? 'cc-sidebar-sublink-active' : '' }}">
-                                    Auditoría de Abastecimientos
-                                </a>
-
-                                <a href="{{ route('auditoria.marchamos.index') }}"
-                                   class="cc-sidebar-sublink {{ request()->routeIs('auditoria.marchamos.*') ? 'cc-sidebar-sublink-active' : '' }}">
-                                    Auditoría de Marchamos
-                                </a>
-                            </div>
-                        </div>
-                    @endif
-
                     <!-- Análisis -->
                     @if ($usuarioAutenticado->tienePermiso('analisis.consultar'))
                         <div class="cc-sidebar-group">
@@ -1058,6 +1025,66 @@
                                 <a href="{{ route('analisis.rutas.index') }}"
                                    class="cc-sidebar-sublink {{ request()->routeIs('analisis.rutas.*') ? 'cc-sidebar-sublink-active' : '' }}">
                                     Análisis de Rutas
+                                </a>
+                            </div>
+                        </div>
+                    @endif
+
+                    <!-- Reportes -->
+                    @if ($usuarioAutenticado->tienePermiso('reportes.unidades.ficha'))
+                        <div class="cc-sidebar-group">
+                            <div
+                                id="ccReportesToggle"
+                                class="cc-sidebar-parent cc-sidebar-collapsible-parent {{ $reportesActivo ? 'cc-sidebar-parent-active' : '' }}"
+                                role="button"
+                                tabindex="0"
+                                aria-expanded="false"
+                                aria-controls="ccReportesSubnav"
+                            >
+                                <span>Reportes</span>
+                                <span class="cc-sidebar-collapse-icon" aria-hidden="true">▼</span>
+                            </div>
+
+                            <div id="ccReportesSubnav" class="cc-sidebar-subnav cc-sidebar-subnav-collapsed">
+                                <a
+                                    href="{{ route('reportes.unidades.index') }}"
+                                    class="cc-sidebar-sublink {{ request()->routeIs('reportes.unidades.*') ? 'cc-sidebar-sublink-active' : '' }}"
+                                >
+                                    Ficha completa de la unidad
+                                </a>
+                            </div>
+                        </div>
+                    @endif
+
+                    <!-- Auditoría -->
+                    @if ($usuarioAutenticado->tienePermiso('auditoria.consultar'))
+                        <div class="cc-sidebar-group">
+                            <div
+                                id="ccAuditoriaToggle"
+                                class="cc-sidebar-parent cc-sidebar-collapsible-parent {{ $auditoriaActivo ? 'cc-sidebar-parent-active' : '' }}"
+                                role="button"
+                                tabindex="0"
+                                aria-expanded="false"
+                                aria-controls="ccAuditoriaSubnav"
+                            >
+                                <span>Auditoría</span>
+                                <span class="cc-sidebar-collapse-icon" aria-hidden="true">▼</span>
+                            </div>
+
+                            <div id="ccAuditoriaSubnav" class="cc-sidebar-subnav cc-sidebar-subnav-collapsed">
+                                <a href="{{ route('analisis.panel-operativo') }}"
+                                   class="cc-sidebar-sublink {{ request()->routeIs('analisis.panel-operativo*') ? 'cc-sidebar-sublink-active' : '' }}">
+                                    Control operativo de flota
+                                </a>
+
+                                <a href="{{ route('auditoria.abastecimientos.index') }}"
+                                   class="cc-sidebar-sublink {{ request()->routeIs('auditoria.abastecimientos.*') ? 'cc-sidebar-sublink-active' : '' }}">
+                                    Auditoría de Abastecimientos
+                                </a>
+
+                                <a href="{{ route('auditoria.marchamos.index') }}"
+                                   class="cc-sidebar-sublink {{ request()->routeIs('auditoria.marchamos.*') ? 'cc-sidebar-sublink-active' : '' }}">
+                                    Auditoría de Marchamos
                                 </a>
                             </div>
                         </div>
@@ -1276,6 +1303,7 @@
                     ['abastecimientos', 'ccAbastecimientosToggle', 'ccAbastecimientosSubnav'],
                     ['auditoria', 'ccAuditoriaToggle', 'ccAuditoriaSubnav'],
                     ['analisis', 'ccAnalisisToggle', 'ccAnalisisSubnav'],
+                    ['reportes', 'ccReportesToggle', 'ccReportesSubnav'],
                 ];
 
                 let gruposAbiertos = [];

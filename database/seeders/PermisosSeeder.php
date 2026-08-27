@@ -823,6 +823,19 @@ class PermisosSeeder extends Seeder
                 'estado' => 'activo',
             ],
 
+            // -------------------------------------------------------------
+            // Reportes
+            // -------------------------------------------------------------
+            [
+                'codigo' => 'reportes.unidades.ficha',
+                'modulo' => 'reportes',
+                'accion' => 'unidades.ficha',
+                'nombre' => 'Consultar ficha completa de la unidad',
+                'descripcion' => 'Permite seleccionar una unidad y consultar la infraestructura de su ficha completa según el alcance empresarial autorizado.',
+                'alcance' => 'ambos',
+                'estado' => 'activo',
+            ],
+
         ];
 
         foreach ($permisos as $permiso) {

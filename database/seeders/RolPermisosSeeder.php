@@ -18,6 +18,7 @@ class RolPermisosSeeder extends Seeder
             'DIESEL_SUPER_ADMIN' => 'ALL',
 
             'DIESEL_ADMIN' => [
+                'reportes.unidades.ficha',
                 'auditoria.consultar',
                 'analisis.consultar',
 
@@ -138,6 +139,7 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'DIESEL_AUDITOR' => [
+                'reportes.unidades.ficha',
                 'auditoria.consultar',
                 'analisis.consultar',
 
@@ -166,6 +168,7 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_ADMIN' => [
+                'reportes.unidades.ficha',
                 'auditoria.consultar',
                 'analisis.consultar',
 
@@ -244,6 +247,7 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_SUPERVISOR' => [
+                'reportes.unidades.ficha',
                 'auditoria.consultar',
                 'analisis.consultar',
 
@@ -341,6 +345,7 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_AUDITOR' => [
+                'reportes.unidades.ficha',
                 'auditoria.consultar',
                 'analisis.consultar',
 
