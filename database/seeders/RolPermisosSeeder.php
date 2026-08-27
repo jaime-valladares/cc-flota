@@ -22,7 +22,6 @@ class RolPermisosSeeder extends Seeder
                 'analisis.consultar',
 
                 'abastecimientos.consultar',
-                'abastecimientos.administrar',
                 'abastecimientos.modificar',
 
                 'motoristas.consultar',
@@ -90,19 +89,11 @@ class RolPermisosSeeder extends Seeder
                 'empresas.inactivar',
                 'empresas.reactivar',
 
-
-
-
                 'puntos_seguridad.ver',
                 'puntos_seguridad.crear',
                 'puntos_seguridad.actualizar',
                 'puntos_seguridad.inactivar',
                 'puntos_seguridad.reactivar',
-
-
-
-
-
 
                 'reemplazos.ver',
                 'reemplazos.crear',
@@ -138,16 +129,12 @@ class RolPermisosSeeder extends Seeder
 
                 'empresas.consultar',
 
-
                 'puntos_seguridad.ver',
                 'puntos_seguridad.crear',
                 'puntos_seguridad.actualizar',
 
-
                 'reemplazos.ver',
                 'reemplazos.crear',
-
-
 
             ],
 
@@ -184,7 +171,6 @@ class RolPermisosSeeder extends Seeder
                 'analisis.consultar',
 
                 'abastecimientos.consultar',
-                'abastecimientos.administrar',
                 'abastecimientos.registrar',
                 'abastecimientos.modificar',
 
@@ -249,12 +235,6 @@ class RolPermisosSeeder extends Seeder
                 'usuarios.inactivar',
                 'usuarios.reactivar',
 
-
-
-
-
-
-
                 'reemplazos.ver',
                 'reemplazos.crear',
                 'reemplazos.corregir',
@@ -263,7 +243,6 @@ class RolPermisosSeeder extends Seeder
                 'inventario.ver',
                 'inventario.ajustar',
 
-
             ],
 
             'EMPRESA_SUPERVISOR' => [
@@ -271,7 +250,6 @@ class RolPermisosSeeder extends Seeder
                 'analisis.consultar',
 
                 'abastecimientos.consultar',
-                'abastecimientos.administrar',
                 'abastecimientos.modificar',
 
                 'motoristas.consultar',
@@ -329,15 +307,10 @@ class RolPermisosSeeder extends Seeder
                 'usuarios.inactivar',
                 'usuarios.reactivar',
 
-
-
-
-
                 'reemplazos.ver',
                 'reemplazos.crear',
 
                 'inventario.ver',
-
 
             ],
 
@@ -363,14 +336,10 @@ class RolPermisosSeeder extends Seeder
 
                 'unidades.consultar',
 
-
-
-
                 'reemplazos.ver',
                 'reemplazos.crear',
 
                 'inventario.ver',
-
 
             ],
 
@@ -418,7 +387,7 @@ class RolPermisosSeeder extends Seeder
 
                 if (! empty($codigosFaltantes)) {
                     throw new \RuntimeException(
-                        'Permisos no encontrados para el rol ' . $codigoRol . ': ' . implode(', ', $codigosFaltantes)
+                        'Permisos no encontrados para el rol '.$codigoRol.': '.implode(', ', $codigosFaltantes)
                     );
                 }
             }

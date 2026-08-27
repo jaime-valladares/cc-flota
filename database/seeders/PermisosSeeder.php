@@ -711,10 +711,10 @@ class PermisosSeeder extends Seeder
                 'codigo' => 'abastecimientos.administrar',
                 'modulo' => 'abastecimientos',
                 'accion' => 'administrar',
-                'nombre' => 'Administrar abastecimientos',
-                'descripcion' => 'Permite acceder al listado de abastecimientos vigentes administrables.',
+                'nombre' => 'Administrar abastecimientos (legacy)',
+                'descripcion' => 'Permiso legacy conservado como registro histórico; no controla ninguna función activa.',
                 'alcance' => 'ambos',
-                'estado' => 'activo',
+                'estado' => 'inactivo',
             ],
             [
                 'codigo' => 'abastecimientos.registrar',

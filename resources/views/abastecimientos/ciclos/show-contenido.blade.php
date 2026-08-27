@@ -57,7 +57,7 @@
         @if (! $modoVentana)
             <a href="{{ route('abastecimientos.ciclos.show.ventana', $apertura) }}" target="_blank" rel="noopener noreferrer" class="cc-btn-secondary">Abrir en nueva pestaña</a>
         @endif
-        <a href="{{ $modoVentana ? route('abastecimientos.administrar.ventana') : route('abastecimientos.administrar') }}" class="cc-btn-secondary">Volver a ciclos</a>
+        <a href="{{ $modoVentana ? route('abastecimientos.ciclos.ventana') : route('abastecimientos.ciclos.index') }}" class="cc-btn-secondary">Volver a ciclos</a>
     </div>
 </div>
 

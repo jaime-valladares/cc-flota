@@ -21,13 +21,13 @@
             $parametrosRetorno
         )
         : route(
-            'abastecimientos.administrar.ventana',
+            'abastecimientos.ciclos.ventana',
             $parametrosRetorno
         );
 
     $textoRetorno = $origenRetorno === 'consulta'
         ? 'Volver a consulta'
-        : 'Volver a administrar';
+        : 'Volver a ciclos';
 
     $rutaSistema = route(
         'abastecimientos.show',

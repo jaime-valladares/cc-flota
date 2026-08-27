@@ -1066,17 +1066,24 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
             ->name('abastecimientos.consulta');
         Route::get('/abastecimientos/consulta/ventana', [AbastecimientoController::class, 'consultaVentana'])
             ->name('abastecimientos.consulta.ventana');
-    });
-
-    Route::middleware('permiso:abastecimientos.administrar')->group(function () {
-        Route::get('/abastecimientos/administrar', [AbastecimientoController::class, 'administrar'])
-            ->name('abastecimientos.administrar');
-        Route::get('/abastecimientos/administrar/ventana', [AbastecimientoController::class, 'administrarVentana'])
-            ->name('abastecimientos.administrar.ventana');
+        Route::get('/abastecimientos/ciclos', [AbastecimientoController::class, 'ciclos'])
+            ->name('abastecimientos.ciclos.index');
+        Route::get('/abastecimientos/ciclos/ventana', [AbastecimientoController::class, 'ciclosVentana'])
+            ->name('abastecimientos.ciclos.ventana');
         Route::get('/abastecimientos/ciclos/{abastecimiento}/ficha', [AbastecimientoController::class, 'showCiclo'])
             ->name('abastecimientos.ciclos.show');
         Route::get('/abastecimientos/ciclos/{abastecimiento}/ficha/ventana', [AbastecimientoController::class, 'showCicloVentana'])
             ->name('abastecimientos.ciclos.show.ventana');
+        Route::get(
+            '/abastecimientos/administrar',
+            fn () => redirect()->route('abastecimientos.ciclos.index')
+        )
+            ->name('abastecimientos.administrar');
+        Route::get(
+            '/abastecimientos/administrar/ventana',
+            fn () => redirect()->route('abastecimientos.ciclos.ventana')
+        )
+            ->name('abastecimientos.administrar.ventana');
     });
 
     /* Rutas dinámicas: deben permanecer después de todas las rutas fijas. */

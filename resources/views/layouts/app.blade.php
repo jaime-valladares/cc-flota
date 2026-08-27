@@ -964,7 +964,6 @@
                     <!-- Abastecimientos -->
                     @if ($usuarioAutenticado->tieneAlgunPermiso([
                         'abastecimientos.consultar',
-                        'abastecimientos.administrar',
                         'abastecimientos.registrar',
                     ]))
                         <div class="cc-sidebar-group">
@@ -978,8 +977,8 @@
                                         Consultar abastecimientos
                                     </a>
                                 @endif
-                                @if ($usuarioAutenticado->tienePermiso('abastecimientos.administrar'))
-                                    <a href="{{ route('abastecimientos.administrar') }}" class="cc-sidebar-sublink {{ request()->routeIs('abastecimientos.administrar*') || request()->routeIs('abastecimientos.ciclos.*') ? 'cc-sidebar-sublink-active' : '' }}">
+                                @if ($usuarioAutenticado->tienePermiso('abastecimientos.consultar'))
+                                    <a href="{{ route('abastecimientos.ciclos.index') }}" class="cc-sidebar-sublink {{ request()->routeIs('abastecimientos.ciclos.*') ? 'cc-sidebar-sublink-active' : '' }}">
                                         Consultar ciclos
                                     </a>
                                 @endif

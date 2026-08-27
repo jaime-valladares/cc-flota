@@ -17,11 +17,11 @@
 
     $rutaRetorno = $origenRetorno === 'consulta'
         ? route('abastecimientos.consulta', $parametrosRetorno)
-        : route('abastecimientos.administrar', $parametrosRetorno);
+        : route('abastecimientos.ciclos.index', $parametrosRetorno);
 
     $textoRetorno = $origenRetorno === 'consulta'
         ? 'Volver a consulta'
-        : 'Volver a administrar';
+        : 'Volver a ciclos';
 
     $empresaNombre = $abastecimiento->empresa_nombre_snapshot
         ?: (

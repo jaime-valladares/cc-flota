@@ -180,30 +180,30 @@ class AbastecimientoController extends Controller
 
     /*
     |--------------------------------------------------------------------------
-    | Administración
+    | Consulta de ciclos
     |--------------------------------------------------------------------------
     */
 
     /**
-     * Administración de abastecimientos vigentes.
+     * Consulta de ciclos de abastecimiento.
      */
-    public function administrar(
+    public function ciclos(
         Request $request
     ): View {
         return view(
-            'abastecimientos.administrar',
+            'abastecimientos.ciclos.index',
             $this->prepararListadoCiclos($request)
         );
     }
 
     /**
-     * Administración en ventana independiente.
+     * Consulta de ciclos en ventana independiente.
      */
-    public function administrarVentana(
+    public function ciclosVentana(
         Request $request
     ): View {
         return view(
-            'abastecimientos.administrar-ventana',
+            'abastecimientos.ciclos.index-ventana',
             $this->prepararListadoCiclos($request)
         );
     }
@@ -242,12 +242,15 @@ class AbastecimientoController extends Controller
             : Empresa::find($user->empresa_id);
 
         $validated = $request->validate([
+            'consultar' => ['nullable', 'boolean'],
             'empresa_ids' => ['nullable', 'array'],
             'empresa_ids.*' => ['integer', 'distinct', 'exists:empresas,id'],
             'unidad_ids' => ['nullable', 'array'],
             'unidad_ids.*' => ['integer', 'distinct', 'exists:unidades,id'],
             'empresa_id' => ['nullable', 'integer', 'exists:empresas,id'],
             'unidad_id' => ['nullable', 'integer', 'exists:unidades,id'],
+            'motorista_id' => ['nullable', 'integer', 'exists:motoristas,id'],
+            'buscar' => ['nullable', 'string', 'max:120'],
             'modelo_medicion' => ['nullable', Rule::in([
                 Abastecimiento::MODELO_KILOMETROS_GALON,
                 Abastecimiento::MODELO_GALONES_HORA,
@@ -257,6 +260,8 @@ class AbastecimientoController extends Controller
             'fecha_desde' => ['nullable', 'date_format:Y-m-d'],
             'fecha_hasta' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:fecha_desde'],
         ]);
+
+        $consultado = ($validated['consultar'] ?? null) == 1;
 
         $empresaIds = $this->normalizarIdsSeleccionados(
             $validated['empresa_ids'] ?? [],
@@ -273,12 +278,25 @@ class AbastecimientoController extends Controller
 
         $modeloMedicion = $validated['modelo_medicion'] ?? null;
         $estadoCiclo = $validated['estado_ciclo'] ?? null;
+        $motoristaId = isset($validated['motorista_id'])
+            ? (int) $validated['motorista_id']
+            : null;
+        $buscar = trim($validated['buscar'] ?? '');
         $fechaDesde = $validated['fecha_desde'] ?? null;
         $fechaHasta = $validated['fecha_hasta'] ?? null;
 
         $query = Abastecimiento::query()
             ->registrados()
-            ->with(['empresa', 'unidad', 'cierreCiclo']);
+            ->with([
+                'empresa',
+                'unidad',
+                'motorista',
+                'cierreCiclo.motorista',
+            ]);
+
+        if (! $consultado) {
+            $query->whereRaw('1 = 0');
+        }
 
         if (! $esUsuarioDieselCop) {
             $query->where('empresa_id', $user->empresa_id);
@@ -294,6 +312,56 @@ class AbastecimientoController extends Controller
 
         if ($modeloMedicion) {
             $query->where('modelo_medicion', $modeloMedicion);
+        }
+
+        if ($motoristaId) {
+            $query->where(function (Builder $participacion) use ($motoristaId): void {
+                $participacion
+                    ->where('motorista_id', $motoristaId)
+                    ->orWhereHas(
+                        'cierreCiclo',
+                        fn (Builder $cierre) => $cierre->where(
+                            'motorista_id',
+                            $motoristaId
+                        )
+                    );
+            });
+        }
+
+        if ($buscar !== '') {
+            $termino = '%'.$buscar.'%';
+
+            $query->where(function (Builder $coincidencia) use ($termino): void {
+                $coincidencia
+                    ->where('empresa_nombre_snapshot', 'like', $termino)
+                    ->orWhere('unidad_placa_snapshot', 'like', $termino)
+                    ->orWhere('unidad_marca_snapshot', 'like', $termino)
+                    ->orWhere('motorista_nombre_snapshot', 'like', $termino)
+                    ->orWhereHas('empresa', function (Builder $empresa) use ($termino): void {
+                        $empresa
+                            ->where('nombre_legal', 'like', $termino)
+                            ->orWhere('nombre_comercial', 'like', $termino);
+                    })
+                    ->orWhereHas('unidad', function (Builder $unidad) use ($termino): void {
+                        $unidad
+                            ->where('placa', 'like', $termino)
+                            ->orWhere('marca', 'like', $termino);
+                    })
+                    ->orWhereHas('motorista', function (Builder $motorista) use ($termino): void {
+                        $motorista
+                            ->where('nombres', 'like', $termino)
+                            ->orWhere('apellidos', 'like', $termino);
+                    })
+                    ->orWhereHas('cierreCiclo', function (Builder $cierre) use ($termino): void {
+                        $cierre
+                            ->where('motorista_nombre_snapshot', 'like', $termino)
+                            ->orWhereHas('motorista', function (Builder $motorista) use ($termino): void {
+                                $motorista
+                                    ->where('nombres', 'like', $termino)
+                                    ->orWhere('apellidos', 'like', $termino);
+                            });
+                    });
+            });
         }
 
         if ($fechaDesde) {
@@ -333,15 +401,38 @@ class AbastecimientoController extends Controller
             $empresaIds,
             false
         );
+        $motoristasSelector = Motorista::query()
+            ->where('estado', 'activo')
+            ->when(
+                ! $esUsuarioDieselCop,
+                fn (Builder $motoristas) => $motoristas->where(
+                    'empresa_id',
+                    $user->empresa_id
+                )
+            )
+            ->when(
+                ! empty($empresaIds),
+                fn (Builder $motoristas) => $motoristas->whereIn(
+                    'empresa_id',
+                    $empresaIds
+                )
+            )
+            ->orderBy('empresa_id')
+            ->orderBy('nombres')
+            ->orderBy('apellidos')
+            ->get();
 
         return compact(
             'ciclos',
             'empresasSelector',
             'unidadesSelector',
+            'motoristasSelector',
             'empresaIds',
             'unidadIds',
             'modeloMedicion',
             'estadoCiclo',
+            'motoristaId',
+            'buscar',
             'fechaDesde',
             'fechaHasta',
             'esUsuarioDieselCop',
@@ -349,7 +440,8 @@ class AbastecimientoController extends Controller
             'totalCiclos',
             'totalCompletos',
             'totalEnProceso',
-            'totalUnidades'
+            'totalUnidades',
+            'consultado'
         );
     }
 
