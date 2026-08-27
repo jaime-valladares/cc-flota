@@ -14,7 +14,7 @@
 <body class="antialiased">
     <main class="min-h-screen" style="background: var(--cc-bg-main);">
         <div class="cc-page-wrapper">
-            <div class="cc-window-container" style="width: 100%; max-width: 90rem;">
+            <div class="cc-window-container" style="width: 100%; max-width: 80rem;">
                 <div class="cc-card">
                     @include('abastecimientos.ciclos.consulta-contenido', ['modoVentana' => true])
                 </div>
