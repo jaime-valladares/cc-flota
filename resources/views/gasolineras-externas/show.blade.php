@@ -179,7 +179,7 @@
                                 </div>
 
                                 <div class="cc-detail-value">
-                                    {{ $gasolineraExterna->creadoPor?->name ?? '—' }}
+                                    {{ $gasolineraExterna->creadoPor ? trim($gasolineraExterna->creadoPor->name . ' ' . ($gasolineraExterna->creadoPor->apellido ?? '')) : '—' }}
                                 </div>
                             </div>
 
@@ -201,7 +201,7 @@
                                 </div>
 
                                 <div class="cc-detail-value">
-                                    {{ $gasolineraExterna->actualizadoPor?->name ?? '—' }}
+                                    {{ $gasolineraExterna->actualizadoPor ? trim($gasolineraExterna->actualizadoPor->name . ' ' . ($gasolineraExterna->actualizadoPor->apellido ?? '')) : '—' }}
                                 </div>
                             </div>
 
@@ -223,7 +223,7 @@
                                 </div>
 
                                 <div class="cc-detail-value">
-                                    {{ $gasolineraExterna->inactivadoPor?->name ?? '—' }}
+                                    {{ $gasolineraExterna->inactivadoPor ? trim($gasolineraExterna->inactivadoPor->name . ' ' . ($gasolineraExterna->inactivadoPor->apellido ?? '')) : '—' }}
                                 </div>
                             </div>
 

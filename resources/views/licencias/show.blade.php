@@ -251,7 +251,7 @@
                     <section class="cc-detail-section">
                         <div class="cc-detail-section-header">
                             <h5>
-                                Unidad licenciada
+                                Unidad con licencia
                             </h5>
 
                             <p>
@@ -614,7 +614,9 @@
                                 </div>
 
                                 <div class="cc-detail-value">
-                                    {{ $licencia->creadoPor->name ?? 'No registrado' }}
+                                    {{ $licencia->creadoPor
+                                        ? trim($licencia->creadoPor->name . ' ' . ($licencia->creadoPor->apellido ?? ''))
+                                        : 'No registrado' }}
                                 </div>
                             </div>
 
@@ -634,7 +636,9 @@
                                 </div>
 
                                 <div class="cc-detail-value">
-                                    {{ $licencia->actualizadoPor->name ?? 'No registrado' }}
+                                    {{ $licencia->actualizadoPor
+                                        ? trim($licencia->actualizadoPor->name . ' ' . ($licencia->actualizadoPor->apellido ?? ''))
+                                        : 'No registrado' }}
                                 </div>
                             </div>
 
@@ -655,7 +659,9 @@
                                     </div>
 
                                     <div class="cc-detail-value">
-                                        {{ $licencia->inactivadoPor->name ?? 'No registrado' }}
+                                        {{ $licencia->inactivadoPor
+                                            ? trim($licencia->inactivadoPor->name . ' ' . ($licencia->inactivadoPor->apellido ?? ''))
+                                            : 'No registrado' }}
                                     </div>
                                 </div>
 

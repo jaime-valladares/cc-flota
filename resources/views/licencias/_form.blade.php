@@ -206,7 +206,7 @@
             @foreach ($unidades as $unidad)
                 <div
                     data-tanques-unidad="{{ $unidad->id }}"
-                    class="hidden cc-grid cc-grid-compact"
+                    class="hidden cc-grid cc-grid-compact gap-3"
                 >
                     @foreach ($unidad->tanquesUnidad as $tanqueUnidad)
                         <label class="cc-checkbox-option">
@@ -221,14 +221,14 @@
                                 disabled
                             >
                             Tanque {{ $tanqueUnidad->numero }} —
-                            {{ number_format((float) $tanqueUnidad->capacidad, 2) }} gal
+                            {{ number_format((float) $tanqueUnidad->capacidad, 1) }} gal
                         </label>
                     @endforeach
                 </div>
             @endforeach
 
             <div class="cc-field-help">
-                La selección define la cobertura contractual de esta licencia.
+                Seleccione los tanques incluidos en la cobertura de la licencia.
             </div>
 
             @error('tanques_cubiertos')
@@ -246,15 +246,45 @@
             <div class="cc-callout cc-callout-info">
                 <div class="cc-callout-marker"></div>
 
-                <div>
+                <div class="min-w-0 flex-1">
                     <div class="cc-callout-title">
                         Unidad seleccionada
                     </div>
 
                     <div
                         id="unidad_resumen"
-                        class="cc-callout-text"
-                    ></div>
+                        class="mt-2 grid gap-3 sm:grid-cols-2"
+                    >
+                        <div class="sm:col-span-2">
+                            <div class="text-xs font-semibold uppercase tracking-wide text-[var(--cc-text-muted)]">
+                                Identidad
+                            </div>
+                            <div
+                                id="unidad_resumen_identidad"
+                                class="mt-1 font-semibold text-[var(--cc-text)]"
+                            ></div>
+                        </div>
+
+                        <div>
+                            <div class="text-xs font-semibold uppercase tracking-wide text-[var(--cc-text-muted)]">
+                                Cobertura
+                            </div>
+                            <div
+                                id="unidad_resumen_cobertura"
+                                class="mt-1 cc-callout-text"
+                            ></div>
+                        </div>
+
+                        <div>
+                            <div class="text-xs font-semibold uppercase tracking-wide text-[var(--cc-text-muted)]">
+                                Plantilla
+                            </div>
+                            <div
+                                id="unidad_resumen_plantilla"
+                                class="mt-1 cc-callout-text"
+                            ></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -277,7 +307,6 @@
             name="periodo_vigencia_meses"
             class="cc-input"
             required
-        >
             <option value="">
                 Seleccione un período
             </option>
@@ -390,6 +419,15 @@
         const unidadResumen =
             document.getElementById('unidad_resumen');
 
+        const unidadResumenIdentidad =
+            document.getElementById('unidad_resumen_identidad');
+
+        const unidadResumenCobertura =
+            document.getElementById('unidad_resumen_cobertura');
+
+        const unidadResumenPlantilla =
+            document.getElementById('unidad_resumen_plantilla');
+
         const periodoInput =
             document.getElementById('periodo_vigencia_meses');
 
@@ -401,24 +439,27 @@
 
         function plantillaTexto(tanquesProtegidos) {
             if (tanquesProtegidos === 1) {
-                return 'Plantilla de 1 tanque · 29 puntos esperados';
+                return '1 tanque · 29 puntos esperados';
             }
 
             if (tanquesProtegidos === 2) {
-                return 'Plantilla de 2 tanques · 38 puntos esperados';
+                return '2 tanques · 38 puntos esperados';
             }
 
             if (tanquesProtegidos === 3) {
-                return 'Plantilla de 3 tanques · 49 puntos esperados';
+                return '3 tanques · 49 puntos esperados';
             }
 
-            return 'Plantilla pendiente de definición';
+            return 'Pendiente de definición';
         }
 
         function actualizarResumenUnidad() {
             if (
                 ! unidadSelect
                 || ! unidadResumen
+                || ! unidadResumenIdentidad
+                || ! unidadResumenCobertura
+                || ! unidadResumenPlantilla
                 || ! unidadResumenPanel
             ) {
                 return;
@@ -428,7 +469,9 @@
                 unidadSelect.options[unidadSelect.selectedIndex];
 
             if (! option || ! option.value) {
-                unidadResumen.textContent = '';
+                unidadResumenIdentidad.textContent = '';
+                unidadResumenCobertura.textContent = '';
+                unidadResumenPlantilla.textContent = '';
                 unidadResumenPanel.classList.add('hidden');
 
                 return;
@@ -455,12 +498,15 @@
                 0
             );
 
-            unidadResumen.textContent =
-                `${placa} · ${marca} · `
-                + `${tanquesProtegidos} de ${totalTanques} `
-                + `tanques protegidos · `
-                + `${capacidadCubierta.toFixed(2)} galones cubiertos · `
-                + `${plantillaTexto(tanquesProtegidos)}.`;
+            unidadResumenIdentidad.textContent =
+                `${placa} · ${marca}`;
+
+            unidadResumenCobertura.textContent =
+                `${tanquesProtegidos} de ${totalTanques} tanques · `
+                + `${capacidadCubierta.toFixed(1)} gal cubiertos`;
+
+            unidadResumenPlantilla.textContent =
+                plantillaTexto(tanquesProtegidos);
 
             unidadResumenPanel.classList.remove('hidden');
         }

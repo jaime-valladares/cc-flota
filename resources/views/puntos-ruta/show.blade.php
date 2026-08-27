@@ -269,7 +269,7 @@
                                 </div>
 
                                 <div class="cc-detail-value">
-                                    {{ $puntoRuta->creadoPor?->name ?? '—' }}
+                                    {{ $puntoRuta->creadoPor ? trim($puntoRuta->creadoPor->name . ' ' . ($puntoRuta->creadoPor->apellido ?? '')) : '—' }}
                                 </div>
                             </div>
 
@@ -291,7 +291,7 @@
                                 </div>
 
                                 <div class="cc-detail-value">
-                                    {{ $puntoRuta->actualizadoPor?->name ?? '—' }}
+                                    {{ $puntoRuta->actualizadoPor ? trim($puntoRuta->actualizadoPor->name . ' ' . ($puntoRuta->actualizadoPor->apellido ?? '')) : '—' }}
                                 </div>
                             </div>
 
@@ -313,7 +313,7 @@
                                 </div>
 
                                 <div class="cc-detail-value">
-                                    {{ $puntoRuta->inactivadoPor?->name ?? '—' }}
+                                    {{ $puntoRuta->inactivadoPor ? trim($puntoRuta->inactivadoPor->name . ' ' . ($puntoRuta->inactivadoPor->apellido ?? '')) : '—' }}
                                 </div>
                             </div>
 

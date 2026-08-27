@@ -184,7 +184,9 @@
                                 </div>
 
                                 <div class="cc-detail-value">
-                                    {{ $motorista->creadoPor?->name ?? '—' }}
+                                    {{ $motorista->creadoPor
+                                        ? trim($motorista->creadoPor->name . ' ' . ($motorista->creadoPor->apellido ?? ''))
+                                        : '—' }}
                                 </div>
                             </div>
 
@@ -206,7 +208,9 @@
                                 </div>
 
                                 <div class="cc-detail-value">
-                                    {{ $motorista->actualizadoPor?->name ?? '—' }}
+                                    {{ $motorista->actualizadoPor
+                                        ? trim($motorista->actualizadoPor->name . ' ' . ($motorista->actualizadoPor->apellido ?? ''))
+                                        : '—' }}
                                 </div>
                             </div>
 
@@ -228,7 +232,9 @@
                                 </div>
 
                                 <div class="cc-detail-value">
-                                    {{ $motorista->inactivadoPor?->name ?? '—' }}
+                                    {{ $motorista->inactivadoPor
+                                        ? trim($motorista->inactivadoPor->name . ' ' . ($motorista->inactivadoPor->apellido ?? ''))
+                                        : '—' }}
                                 </div>
                             </div>
 
