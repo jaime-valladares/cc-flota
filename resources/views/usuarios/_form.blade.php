@@ -297,6 +297,17 @@
     const rolSelect = document.getElementById('rol_id');
     const telefonoInput = document.getElementById('telefono');
 
+    const opcionesRol = rolSelect
+        ? Array.from(rolSelect.options).map(function (option) {
+            return {
+                value: option.value,
+                text: option.text,
+                alcance: option.dataset.alcance || '',
+                selected: option.selected,
+            };
+        })
+        : [];
+
     function actualizarFormularioUsuario() {
         if (! tipoUsuarioSelect || ! empresaSelect || ! rolSelect) {
             return;
@@ -321,20 +332,43 @@
             }
         }
 
-        Array.from(rolSelect.options).forEach(function (option) {
-            const alcance = option.dataset.alcance;
+        const rolSeleccionado = rolSelect.value;
 
-            if (! alcance || ! tipoUsuario) {
-                option.hidden = false;
+        rolSelect.innerHTML = '';
+
+        opcionesRol.forEach(function (optionData) {
+            if (
+                optionData.alcance
+                && tipoUsuario
+                && optionData.alcance !== tipoUsuario
+            ) {
                 return;
             }
 
-            option.hidden = alcance !== tipoUsuario;
+            const option = document.createElement('option');
 
-            if (option.selected && option.hidden) {
-                rolSelect.value = '';
+            option.value = optionData.value;
+            option.textContent = optionData.text;
+
+            if (optionData.alcance) {
+                option.dataset.alcance = optionData.alcance;
             }
+
+            if (optionData.value === rolSeleccionado) {
+                option.selected = true;
+            }
+
+            rolSelect.appendChild(option);
         });
+
+        if (
+            rolSeleccionado
+            && ! Array.from(rolSelect.options).some(
+                option => option.value === rolSeleccionado
+            )
+        ) {
+            rolSelect.value = '';
+        }
     }
 
     tipoUsuarioSelect?.addEventListener(
