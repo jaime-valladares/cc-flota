@@ -32,13 +32,13 @@ class EmpresaController extends Controller
 
     /**
      * Muestra la administración de empresas.
+     *
+     * Tanto empresas activas como inactivas pueden aparecer.
+     * Las acciones disponibles dependerán del estado de cada empresa.
      */
     public function administrar(Request $request)
     {
-        $data = $this->prepararConsultaEmpresas(
-            $request,
-            true
-        );
+        $data = $this->prepararConsultaEmpresas($request);
 
         return view('empresas.administrar', $data);
     }
@@ -48,10 +48,7 @@ class EmpresaController extends Controller
      */
     public function administrarVentana(Request $request)
     {
-        $data = $this->prepararConsultaEmpresas(
-            $request,
-            true
-        );
+        $data = $this->prepararConsultaEmpresas($request);
 
         return view('empresas.administrar-ventana', $data);
     }
@@ -59,10 +56,8 @@ class EmpresaController extends Controller
     /**
      * Prepara los datos de consulta y administración de empresas.
      */
-    private function prepararConsultaEmpresas(
-        Request $request,
-        bool $modoAdministracion = false
-    ): array {
+    private function prepararConsultaEmpresas(Request $request): array
+    {
         $user = Auth::user();
 
         $esUsuarioDieselCop = is_null($user->empresa_id);
@@ -178,23 +173,11 @@ class EmpresaController extends Controller
 
         $empresasSelector = $esUsuarioDieselCop
             ? Empresa::query()
-                ->when(
-                    $modoAdministracion,
-                    fn (Builder $query) =>
-                        $query->where('estado', 'activa')
-                )
                 ->orderBy('nombre_comercial')
                 ->orderBy('nombre_legal')
                 ->get()
             : collect([$empresaUsuario])
                 ->filter()
-                ->when(
-                    $modoAdministracion,
-                    fn ($empresas) => $empresas->where(
-                        'estado',
-                        'activa'
-                    )
-                )
                 ->values();
 
         /*
@@ -204,10 +187,6 @@ class EmpresaController extends Controller
         */
 
         $query = Empresa::query();
-
-        if ($modoAdministracion) {
-            $query->where('estado', 'activa');
-        }
 
         if ($hayFiltros) {
             $this->aplicarFiltrosEmpresa(
@@ -238,10 +217,6 @@ class EmpresaController extends Controller
         */
 
         $baseResumen = Empresa::query();
-
-        if ($modoAdministracion) {
-            $baseResumen->where('estado', 'activa');
-        }
 
         if (! $esUsuarioDieselCop) {
             $baseResumen->where('id', $user->empresa_id);
