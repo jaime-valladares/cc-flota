@@ -1314,6 +1314,16 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
         )->name('reportes.unidades.index');
 
         Route::get(
+            '/reportes/unidades/ventana',
+            [FichaUnidadController::class, 'ventana']
+        )->name('reportes.unidades.ventana');
+
+        Route::get(
+            '/reportes/unidades/{unidad}/ventana',
+            [FichaUnidadController::class, 'showVentana']
+        )->name('reportes.unidades.show.ventana');
+
+        Route::get(
             '/reportes/unidades/{unidad}',
             [FichaUnidadController::class, 'show']
         )->name('reportes.unidades.show');
