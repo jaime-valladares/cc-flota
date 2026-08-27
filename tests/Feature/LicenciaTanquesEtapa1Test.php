@@ -85,6 +85,41 @@ test('unidad se crea sin campos ni cobertura contractual y queda elegible', func
         ->assertSee('LT-001');
 });
 
+test('formulario oculta tanques hasta seleccionar unidad y restaura solo la cobertura de old', function () {
+    $usuario = usuarioLicenciaTanques();
+    $empresa = empresaLicenciaTanques('LT-FILTRO-TANQUES');
+    $unidadA = crearUnidadFisica($this, $usuario, $empresa, 'LT-FILTRO-A');
+    $unidadB = crearUnidadFisica($this, $usuario, $empresa, 'LT-FILTRO-B');
+    $tanqueA = $unidadA->tanquesUnidad->first();
+
+    $sinUnidad = $this->actingAs($usuario)
+        ->get(route('licencias.create', ['empresa_id' => $empresa->id]));
+
+    $sinUnidad->assertOk()
+        ->assertSee('Seleccione una unidad para ver sus tanques.')
+        ->assertSee('actualizarTanquesUnidad(true);', false)
+        ->assertSee('input.checked = false;', false);
+
+    expect($sinUnidad->getContent())
+        ->toMatch('/data-tanques-unidad="'.$unidadA->id.'"[\s\S]*?style="display: none;"/')
+        ->toMatch('/data-tanques-unidad="'.$unidadB->id.'"[\s\S]*?style="display: none;"/');
+
+    $conOld = $this->withSession([
+        '_old_input' => [
+            'empresa_id' => $empresa->id,
+            'unidad_id' => $unidadA->id,
+            'tanques_cubiertos' => [$tanqueA->id],
+        ],
+    ])->get(route('licencias.create', ['empresa_id' => $empresa->id]));
+
+    $conOld->assertOk();
+
+    expect($conOld->getContent())
+        ->toMatch('/data-tanques-unidad="'.$unidadA->id.'"[\s\S]*?style=""/')
+        ->toMatch('/data-tanques-unidad="'.$unidadB->id.'"[\s\S]*?style="display: none;"/')
+        ->toMatch('/value="'.$tanqueA->id.'"[\s\S]*?checked/');
+});
+
 test('licencia exige cobertura y rechaza tanques de otra unidad o empresa', function () {
     $usuario = usuarioLicenciaTanques();
     $empresaA = empresaLicenciaTanques('LT-EMP-A');

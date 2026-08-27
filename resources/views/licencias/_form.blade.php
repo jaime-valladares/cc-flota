@@ -222,7 +222,8 @@
             @foreach ($unidades as $unidad)
                 <div
                     data-tanques-unidad="{{ $unidad->id }}"
-                    class="hidden cc-grid cc-grid-compact gap-3"
+                    class="cc-grid cc-grid-compact gap-3"
+                    style="{{ (string) $unidadActual === (string) $unidad->id ? '' : 'display: none;' }}"
                 >
                     @foreach ($unidad->tanquesUnidad as $tanqueUnidad)
                         <label class="!mb-0 flex items-start gap-2 !text-sm !font-medium">
@@ -244,7 +245,19 @@
                 </div>
             @endforeach
 
-            <div class="mt-1 text-xs leading-5 text-[var(--cc-text-muted)]">
+            <div
+                data-tanques-unidad-vacia
+                class="mt-1 text-xs leading-5 text-[var(--cc-text-muted)]"
+                style="{{ filled($unidadActual) ? 'display: none;' : '' }}"
+            >
+                Seleccione una unidad para ver sus tanques.
+            </div>
+
+            <div
+                data-tanques-unidad-ayuda
+                class="mt-1 text-xs leading-5 text-[var(--cc-text-muted)]"
+                style="{{ filled($unidadActual) ? '' : 'display: none;' }}"
+            >
                 Seleccione uno o más tanques.
             </div>
 
@@ -414,6 +427,12 @@
         const unidadResumenPlantilla =
             document.getElementById('unidad_resumen_plantilla');
 
+        const tanquesUnidadVacia =
+            document.querySelector('[data-tanques-unidad-vacia]');
+
+        const tanquesUnidadAyuda =
+            document.querySelector('[data-tanques-unidad-ayuda]');
+
         const periodoInput =
             document.getElementById('periodo_vigencia_meses');
 
@@ -499,16 +518,29 @@
             unidadResumen.classList.remove('hidden');
         }
 
-        function actualizarTanquesUnidad() {
+        function actualizarTanquesUnidad(limpiarSeleccion = false) {
             const unidadId = unidadSelect?.value || '';
 
             document.querySelectorAll('[data-tanques-unidad]').forEach(function (panel) {
                 const activo = panel.dataset.tanquesUnidad === unidadId;
-                panel.classList.toggle('hidden', ! activo);
+                panel.style.display = activo ? '' : 'none';
+
                 panel.querySelectorAll('[data-tanque-licencia]').forEach(function (input) {
+                    if (limpiarSeleccion || ! activo) {
+                        input.checked = false;
+                    }
+
                     input.disabled = ! activo;
                 });
             });
+
+            if (tanquesUnidadVacia) {
+                tanquesUnidadVacia.style.display = unidadId ? 'none' : '';
+            }
+
+            if (tanquesUnidadAyuda) {
+                tanquesUnidadAyuda.style.display = unidadId ? '' : 'none';
+            }
 
             actualizarResumenUnidad();
         }
@@ -648,7 +680,9 @@
 
         unidadSelect?.addEventListener(
             'change',
-            actualizarTanquesUnidad
+            function () {
+                actualizarTanquesUnidad(true);
+            }
         );
 
         document.querySelectorAll('[data-tanque-licencia]').forEach(function (input) {
@@ -665,7 +699,7 @@
             calcularFechaVencimientoPreview
         );
 
-        actualizarTanquesUnidad();
+        actualizarTanquesUnidad(false);
         calcularFechaVencimientoPreview();
     });
 </script>
