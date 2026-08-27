@@ -452,6 +452,7 @@ test('limpiar ciclos vuelve a estado inicial sin filtros ni resultados', functio
         $documento = new DOMDocument;
         @$documento->loadHTML($respuestaFiltrada->getContent());
         $xpath = new DOMXPath($documento);
+        /** @var DOMElement|null $enlaceLimpiar */
         $enlaceLimpiar = $xpath->query('//a[@data-ciclos-limpiar]')?->item(0);
         $formulariosAncestros = $enlaceLimpiar
             ? $xpath->query('ancestor::form', $enlaceLimpiar)->length
