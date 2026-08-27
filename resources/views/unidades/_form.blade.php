@@ -234,9 +234,6 @@
                 $persistido = $tanquesPersistidos->get($indice);
                 $enviado = $tanquesFormulario->get($indice, []);
                 $capacidad = $enviado['capacidad'] ?? $persistido?->capacidad;
-                $cubierto = array_key_exists('cubierto_por_licencia', $enviado)
-                    ? (bool) $enviado['cubierto_por_licencia']
-                    : (bool) ($persistido?->cubierto_por_licencia ?? ($indice === 0));
             @endphp
             <div class="cc-field" data-unidad-tanque="{{ $indice + 1 }}">
                 <label for="tanque_{{ $indice }}_capacidad">
@@ -254,17 +251,6 @@
                     step="0.01"
                     data-capacidad-tanque
                 >
-                <input type="hidden" name="tanques[{{ $indice }}][cubierto_por_licencia]" value="0">
-                <label class="cc-checkbox-option">
-                    <input
-                        type="checkbox"
-                        name="tanques[{{ $indice }}][cubierto_por_licencia]"
-                        value="1"
-                        data-cobertura-tanque
-                        @checked($cubierto)
-                    >
-                    Cubierto por licencia
-                </label>
                 @error("tanques.$indice.capacidad")
                     <div class="cc-error">{{ $message }}</div>
                 @enderror
@@ -279,14 +265,6 @@
     <div class="cc-field">
         <label>Capacidad total de la unidad</label>
         <input id="capacidad_total_calculada" type="text" class="cc-input" readonly>
-    </div>
-    <div class="cc-field">
-        <label>Tanques cubiertos por licencia</label>
-        <input id="tanques_cubiertos_calculados" type="text" class="cc-input" readonly>
-    </div>
-    <div class="cc-field">
-        <label>Capacidad cubierta por licencia</label>
-        <input id="capacidad_cubierta_calculada" type="text" class="cc-input" readonly>
     </div>
 
     <div class="cc-form-section-slim">
@@ -430,13 +408,10 @@
     function actualizarEstructura() {
         const cantidad = Number(cantidadTanquesInput?.value || 0);
         let capacidadTotal = 0;
-        let capacidadCubierta = 0;
-        let tanquesCubiertos = 0;
 
         filasTanques.forEach(function (fila, indice) {
             const visible = indice < cantidad;
             const capacidad = fila.querySelector('[data-capacidad-tanque]');
-            const cobertura = fila.querySelector('[data-cobertura-tanque]');
 
             fila.hidden = !visible;
             fila.querySelectorAll('input[name]').forEach(function (input) {
@@ -451,18 +426,10 @@
             const galones = Number(capacidad.value || 0);
             capacidadTotal += galones;
 
-            if (cobertura.checked) {
-                tanquesCubiertos++;
-                capacidadCubierta += galones;
-            }
         });
 
         document.getElementById('capacidad_total_calculada').value =
             capacidadTotal.toFixed(2) + ' gal';
-        document.getElementById('tanques_cubiertos_calculados').value =
-            String(tanquesCubiertos);
-        document.getElementById('capacidad_cubierta_calculada').value =
-            capacidadCubierta.toFixed(2) + ' gal';
     }
 
     function actualizarGalHora() {

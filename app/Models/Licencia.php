@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'empresa_id',
@@ -55,6 +56,35 @@ class Licencia extends Model
     public function unidad(): BelongsTo
     {
         return $this->belongsTo(Unidad::class);
+    }
+
+    /** Tanques físicos incluidos contractualmente en esta licencia. */
+    public function tanquesCubiertos(): HasMany
+    {
+        return $this->hasMany(LicenciaTanque::class, 'licencia_id')
+            ->orderBy('numero_tanque_snapshot');
+    }
+
+    /** Cantidad contractual derivada del detalle normalizado. */
+    protected function cantidadTanquesCubiertos(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): int => $this->relationLoaded('tanquesCubiertos')
+                ? $this->tanquesCubiertos->count()
+                : $this->tanquesCubiertos()->count()
+        );
+    }
+
+    /** Capacidad contractual derivada de los snapshots de la licencia. */
+    protected function capacidadCubierta(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): float => round((float) (
+                $this->relationLoaded('tanquesCubiertos')
+                    ? $this->tanquesCubiertos->sum('capacidad_snapshot')
+                    : $this->tanquesCubiertos()->sum('capacidad_snapshot')
+            ), 2)
+        );
     }
 
     /**
@@ -185,11 +215,9 @@ class Licencia extends Model
                 $this->condicion_vigencia
             ) {
                 'inactiva' => 'Inactiva',
-                'pendiente_activacion' =>
-                    'Pendiente de activación',
+                'pendiente_activacion' => 'Pendiente de activación',
                 'vigente' => 'Vigente',
-                'proxima_vencer' =>
-                    'Próxima a vencer',
+                'proxima_vencer' => 'Próxima a vencer',
                 'vencida' => 'Vencida',
                 default => 'No definida',
             }
@@ -221,8 +249,7 @@ class Licencia extends Model
     protected function estaPendienteActivacion(): Attribute
     {
         return Attribute::make(
-            get: fn (): bool =>
-                $this->condicion_vigencia
+            get: fn (): bool => $this->condicion_vigencia
                 === 'pendiente_activacion'
         );
     }
@@ -233,8 +260,7 @@ class Licencia extends Model
     protected function estaVencida(): Attribute
     {
         return Attribute::make(
-            get: fn (): bool =>
-                $this->condicion_vigencia
+            get: fn (): bool => $this->condicion_vigencia
                 === 'vencida'
         );
     }
@@ -245,8 +271,7 @@ class Licencia extends Model
     protected function estaProximaVencer(): Attribute
     {
         return Attribute::make(
-            get: fn (): bool =>
-                $this->condicion_vigencia
+            get: fn (): bool => $this->condicion_vigencia
                 === 'proxima_vencer'
         );
     }
@@ -257,8 +282,7 @@ class Licencia extends Model
     protected function estaInactiva(): Attribute
     {
         return Attribute::make(
-            get: fn (): bool =>
-                $this->estado === 'inactiva'
+            get: fn (): bool => $this->estado === 'inactiva'
         );
     }
 
@@ -367,8 +391,7 @@ class Licencia extends Model
     protected function habilitaOperacion(): Attribute
     {
         return Attribute::make(
-            get: fn (): bool =>
-                $this->esta_vigente
+            get: fn (): bool => $this->esta_vigente
         );
     }
 
@@ -383,20 +406,15 @@ class Licencia extends Model
                 $this->condicion_vigencia
             ) {
                 'vigente',
-                'proxima_vencer' =>
-                    'La licencia habilita la operación contractual de la unidad.',
+                'proxima_vencer' => 'La licencia habilita la operación contractual de la unidad.',
 
-                'pendiente_activacion' =>
-                    'La licencia todavía no habilita la operación porque su fecha de activación no ha iniciado.',
+                'pendiente_activacion' => 'La licencia todavía no habilita la operación porque su fecha de activación no ha iniciado.',
 
-                'vencida' =>
-                    'La licencia no habilita la operación porque está vencida.',
+                'vencida' => 'La licencia no habilita la operación porque está vencida.',
 
-                'inactiva' =>
-                    'La licencia no habilita la operación porque fue inactivada administrativamente.',
+                'inactiva' => 'La licencia no habilita la operación porque fue inactivada administrativamente.',
 
-                default =>
-                    'No es posible determinar la habilitación operativa de la licencia.',
+                default => 'No es posible determinar la habilitación operativa de la licencia.',
             }
         );
     }
@@ -427,12 +445,9 @@ class Licencia extends Model
             get: fn () => match (
                 $this->plantilla_puntos_seguridad
             ) {
-                'plantilla_1_tanque' =>
-                    'Plantilla 1 tanque',
-                'plantilla_2_tanques' =>
-                    'Plantilla 2 tanques',
-                'plantilla_3_tanques' =>
-                    'Plantilla 3 tanques',
+                'plantilla_1_tanque' => 'Plantilla 1 tanque',
+                'plantilla_2_tanques' => 'Plantilla 2 tanques',
+                'plantilla_3_tanques' => 'Plantilla 3 tanques',
                 default => 'No definida',
             }
         );

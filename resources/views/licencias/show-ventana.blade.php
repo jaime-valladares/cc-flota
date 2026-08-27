@@ -179,60 +179,69 @@
                                 </div>
                             </div>
 
-                            <div class="cc-profile-status flex flex-wrap justify-end gap-2">
-                                @if ($licencia->estado === 'activa')
-                                    <span class="cc-badge cc-badge-active">
-                                        {{ $licencia->estado_texto }}
+                            <div class="cc-profile-status flex flex-wrap justify-end gap-4">
+                                <div class="flex flex-col items-end gap-1">
+                                    <span class="text-xs font-semibold text-[var(--cc-text-muted)]">
+                                        Estado administrativo
                                     </span>
-                                @else
-                                    <span class="cc-badge cc-badge-inactive">
-                                        {{ $licencia->estado_texto }}
-                                    </span>
-                                @endif
 
-                                @if ($licencia->esta_vigente)
-                                    <span class="cc-badge cc-badge-active">
-                                        {{ $licencia->condicion_vigencia_texto }}
+                                    @if ($licencia->estado === 'activa')
+                                        <span class="cc-badge cc-badge-active">
+                                            {{ $licencia->estado_texto }}
+                                        </span>
+                                    @else
+                                        <span class="cc-badge cc-badge-inactive">
+                                            {{ $licencia->estado_texto }}
+                                        </span>
+                                    @endif
+                                </div>
+
+                                <div class="flex flex-col items-end gap-1">
+                                    <span class="text-xs font-semibold text-[var(--cc-text-muted)]">
+                                        Condición
                                     </span>
-                                @elseif ($condicionAdvertencia)
-                                    <span class="cc-badge cc-badge-warning">
-                                        {{ $licencia->condicion_vigencia_texto }}
-                                    </span>
-                                @else
-                                    <span class="cc-badge cc-badge-danger">
-                                        {{ $licencia->condicion_vigencia_texto }}
-                                    </span>
-                                @endif
+
+                                    @if ($licencia->esta_vigente)
+                                        <span class="cc-badge cc-badge-active">
+                                            {{ $licencia->condicion_vigencia_texto }}
+                                        </span>
+                                    @elseif ($condicionAdvertencia)
+                                        <span class="cc-badge cc-badge-warning">
+                                            {{ $licencia->condicion_vigencia_texto }}
+                                        </span>
+                                    @else
+                                        <span class="cc-badge cc-badge-danger">
+                                            {{ $licencia->condicion_vigencia_texto }}
+                                        </span>
+                                    @endif
+                                </div>
                             </div>
                         </div>
 
                         @if ($licencia->esta_vigente)
-                            <div class="cc-alert-success">
-                                <div class="font-bold">
-                                    Licencia vigente
-                                </div>
+                            <div class="cc-status-strip cc-status-strip-active">
+                                <div>
+                                    <strong>
+                                        Licencia vigente
+                                    </strong>
 
-                                <div class="mt-1">
-                                    {{ $licencia->habilitacion_operacion_texto }}
-                                </div>
-
-                                <div class="mt-2">
-                                    {{ $licencia->vencimiento_relativo_texto }}
+                                    <span>
+                                        Vence el {{ $licencia->fecha_vencimiento?->format('d/m/Y') ?? 'día no registrado' }}
+                                        · {{ $licencia->vencimiento_relativo_texto }}
+                                    </span>
                                 </div>
                             </div>
                         @elseif ($licencia->esta_pendiente_activacion)
-                            <div class="cc-alert-warning">
-                                <div class="font-bold">
-                                    Licencia pendiente de activación
-                                </div>
+                            <div class="cc-status-strip cc-status-strip-warning">
+                                <div>
+                                    <strong>
+                                        Licencia pendiente de activación
+                                    </strong>
 
-                                <div class="mt-1">
-                                    {{ $licencia->habilitacion_operacion_texto }}
-                                </div>
-
-                                <div class="mt-2">
-                                    La vigencia inicia el
-                                    {{ $licencia->fecha_activacion?->format('d/m/Y') ?? 'día no registrado' }}.
+                                    <span>
+                                        Activación programada:
+                                        {{ $licencia->fecha_activacion?->format('d/m/Y') ?? 'día no registrado' }}
+                                    </span>
                                 </div>
                             </div>
                         @elseif ($licencia->esta_vencida)

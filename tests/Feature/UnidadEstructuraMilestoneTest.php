@@ -46,7 +46,7 @@ function datosUnidadEstructural(Empresa $empresa, array $tanques, array $extra =
     ], $extra);
 }
 
-test('deriva totales para una unidad de un tanque cubierto', function () {
+test('deriva estructura física sin cobertura contractual', function () {
     $empresa = empresaEstructuraUnidad();
 
     $this->actingAs(usuarioEstructuraUnidad())
@@ -58,13 +58,13 @@ test('deriva totales para una unidad de un tanque cubierto', function () {
     $unidad = Unidad::firstOrFail();
 
     expect((float) $unidad->capacidad_total)->toBe(300.0)
-        ->and((float) $unidad->capacidad_cubierta)->toBe(300.0)
+        ->and((float) $unidad->capacidad_cubierta)->toBe(0.0)
         ->and($unidad->total_tanques)->toBe(1)
-        ->and($unidad->cantidad_tanques_con_licencia)->toBe(1)
+        ->and($unidad->cantidad_tanques_con_licencia)->toBe(0)
         ->and($unidad->tanquesUnidad)->toHaveCount(1);
 });
 
-test('deriva suma y cobertura parcial para dos tanques', function () {
+test('deriva suma física sin interpretar flags legacy enviados', function () {
     $empresa = empresaEstructuraUnidad();
 
     $this->actingAs(usuarioEstructuraUnidad())
@@ -77,8 +77,8 @@ test('deriva suma y cobertura parcial para dos tanques', function () {
     $unidad = Unidad::firstOrFail();
 
     expect((float) $unidad->capacidad_total)->toBe(500.0)
-        ->and((float) $unidad->capacidad_cubierta)->toBe(300.0)
-        ->and($unidad->cantidad_tanques_con_licencia)->toBe(1);
+        ->and((float) $unidad->capacidad_cubierta)->toBe(0.0)
+        ->and($unidad->cantidad_tanques_con_licencia)->toBe(0);
 });
 
 test('deriva suma para tres tanques', function () {
@@ -95,7 +95,7 @@ test('deriva suma para tres tanques', function () {
     expect((float) Unidad::firstOrFail()->capacidad_total)->toBe(600.0);
 });
 
-test('rechaza capacidad no positiva y cobertura vacia', function () {
+test('rechaza capacidad no positiva y no exige cobertura al registrar', function () {
     $empresa = empresaEstructuraUnidad();
     $usuario = usuarioEstructuraUnidad();
 
@@ -111,7 +111,7 @@ test('rechaza capacidad no positiva y cobertura vacia', function () {
         ->post(route('unidades.store'), datosUnidadEstructural($empresa, [
             ['capacidad' => 100, 'cubierto_por_licencia' => 0],
         ]))
-        ->assertSessionHasErrors('tanques');
+        ->assertSessionHasNoErrors();
 });
 
 test('valida rendimientos teoricos segun modelo', function () {
@@ -205,6 +205,7 @@ test('licencia selecciona plantilla desde cobertura derivada', function () {
         ->post(route('licencias.store'), [
             'empresa_id' => $empresa->id,
             'unidad_id' => $unidad->id,
+            'tanques_cubiertos' => $unidad->tanquesUnidad()->take(2)->pluck('id')->all(),
             'periodo_vigencia_meses' => 12,
             'fecha_activacion' => now()->toDateString(),
         ])
@@ -214,7 +215,7 @@ test('licencia selecciona plantilla desde cobertura derivada', function () {
         ->toBe('plantilla_2_tanques');
 });
 
-test('reconcilia licencia y puntos si cambia cobertura sin avance de marchamos', function () {
+test('editar unidad no cambia cobertura contractual ni plantilla', function () {
     $empresa = empresaEstructuraUnidad();
     $usuario = usuarioEstructuraUnidad();
 
@@ -230,6 +231,7 @@ test('reconcilia licencia y puntos si cambia cobertura sin avance de marchamos',
         ->post(route('licencias.store'), [
             'empresa_id' => $empresa->id,
             'unidad_id' => $unidad->id,
+            'tanques_cubiertos' => $unidad->tanquesUnidad()->pluck('id')->all(),
             'periodo_vigencia_meses' => 12,
             'fecha_activacion' => now()->toDateString(),
         ]);
@@ -243,17 +245,17 @@ test('reconcilia licencia y puntos si cambia cobertura sin avance de marchamos',
 
     $unidad->refresh();
 
-    expect($unidad->cantidad_tanques_con_licencia)->toBe(1)
+    expect($unidad->cantidad_tanques_con_licencia)->toBe(2)
         ->and($unidad->licencia->plantilla_puntos_seguridad)
-        ->toBe('plantilla_1_tanque')
+        ->toBe('plantilla_2_tanques')
         ->and($unidad->puntosSeguridad)->toHaveCount(
-            PlantillasPuntosSeguridad::cantidadEsperada('plantilla_1_tanque')
+            PlantillasPuntosSeguridad::cantidadEsperada('plantilla_2_tanques')
         )
         ->and($unidad->puntosSeguridad->pluck('plantilla_origen')->unique()->all())
-        ->toBe(['plantilla_1_tanque']);
+        ->toBe(['plantilla_2_tanques']);
 });
 
-test('bloquea cambio de plantilla cuando existe avance provisional de marchamos', function () {
+test('bloquea cambio de cantidad física cuando ya existe licencia', function () {
     $empresa = empresaEstructuraUnidad();
     $usuario = usuarioEstructuraUnidad();
 
@@ -269,6 +271,7 @@ test('bloquea cambio de plantilla cuando existe avance provisional de marchamos'
         ->post(route('licencias.store'), [
             'empresa_id' => $empresa->id,
             'unidad_id' => $unidad->id,
+            'tanques_cubiertos' => $unidad->tanquesUnidad()->pluck('id')->all(),
             'periodo_vigencia_meses' => 12,
             'fecha_activacion' => now()->toDateString(),
         ]);
@@ -292,9 +295,8 @@ test('bloquea cambio de plantilla cuando existe avance provisional de marchamos'
         ->from(route('unidades.edit', $unidad))
         ->put(route('unidades.update', $unidad), datosUnidadEstructural($empresa, [
             ['capacidad' => 100, 'cubierto_por_licencia' => 1],
-            ['capacidad' => 200, 'cubierto_por_licencia' => 0],
         ]))
-        ->assertSessionHasErrors('tanques');
+        ->assertSessionHasErrors('cantidad_tanques');
 
     $unidad->refresh();
 

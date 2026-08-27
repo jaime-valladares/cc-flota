@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AnalisisConsumoUnidadController;
 use App\Models\Empresa;
 use App\Models\Gasolinera;
 use App\Models\GasolineraExterna;
@@ -11,9 +12,8 @@ use App\Models\Tanque;
 use App\Models\Unidad;
 use App\Models\User;
 use App\Services\AbastecimientoService;
-use App\Http\Controllers\AnalisisConsumoUnidadController;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
 
 function contextoFullToFull($test, string $modelo = 'kilometros_galon'): array
@@ -70,6 +70,7 @@ function contextoFullToFull($test, string $modelo = 'kilometros_galon'): array
     $test->actingAs($usuario)->post(route('licencias.store'), [
         'empresa_id' => $empresa->id,
         'unidad_id' => $unidad->id,
+        'tanques_cubiertos' => $unidad->tanquesUnidad()->pluck('id')->all(),
         'periodo_vigencia_meses' => 12,
         'fecha_activacion' => now()->toDateString(),
     ])->assertSessionHasNoErrors();
@@ -105,8 +106,7 @@ function registrarInternoM4(
     string $codigo,
     ?float $horometro = null,
     array $rutas = []
-)
-{
+) {
     [$usuario, $empresa, $gasolinera, $tanque, $unidad, $motorista] = $contexto;
     $punto = $unidad->puntosSeguridad()
         ->where('tipo_punto', 'tapón')->where('subgrupo', 'Depósito')->firstOrFail();

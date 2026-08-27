@@ -576,8 +576,8 @@
                                                 Disponibilidad
                                             </th>
 
-                                            <th style="width: 8rem;">
-                                                Estado
+                                            <th style="width: 12rem;">
+                                                Estado administrativo
                                             </th>
                                         </tr>
                                     </thead>

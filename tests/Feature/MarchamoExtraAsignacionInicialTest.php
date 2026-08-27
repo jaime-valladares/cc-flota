@@ -49,6 +49,7 @@ function prepararUnidadParaExtras(TestCase $test, ?array $tanques = null): array
     $test->actingAs($usuario)->post(route('licencias.store'), [
         'empresa_id' => $empresa->id,
         'unidad_id' => $unidad->id,
+        'tanques_cubiertos' => $unidad->tanquesUnidad()->pluck('id')->all(),
         'periodo_vigencia_meses' => 12,
         'fecha_activacion' => now()->toDateString(),
     ])->assertSessionHasNoErrors();
@@ -109,8 +110,7 @@ test('agrega uno y varios extras con codigos y orden automaticos', function () {
         ->toBe(['EXT-01', 'EXT-02', 'EXT-03'])
         ->and($extras->pluck('orden')->all())
         ->toBe([$ordenEstandar + 1, $ordenEstandar + 2, $ordenEstandar + 3])
-        ->and($extras->every(fn ($punto) =>
-            $punto->posicion_tanque === 'Extra'
+        ->and($extras->every(fn ($punto) => $punto->posicion_tanque === 'Extra'
             && $punto->tipo_punto === 'extra'
             && $punto->requiere_marchamo
         ))->toBeTrue();
@@ -305,7 +305,7 @@ test('finaliza con extra cubierto y luego bloquea agregar renombrar y eliminar',
         ->and(Marchamo::findOrFail($marchamoAnteriorId)->estado)->toBe('reemplazado');
 });
 
-test('reconcilia plantilla con marchamo provisional extra y lo conserva intacto', function () {
+test('edición física conserva contrato y marchamo provisional extra intactos', function () {
     [$usuario, $unidad, $empresa] = prepararUnidadParaExtras($this, [
         ['capacidad' => 100, 'cubierto_por_licencia' => 1],
         ['capacidad' => 200, 'cubierto_por_licencia' => 1],
@@ -356,5 +356,5 @@ test('reconcilia plantilla con marchamo provisional extra y lo conserva intacto'
         ->and($extra->marchamoActual->codigo_marchamo)->toBe('8765432')
         ->and($extra->orden)->toBe($ultimoEstandar + 1)
         ->and($unidad->refresh()->licencia->plantilla_puntos_seguridad)
-        ->toBe('plantilla_1_tanque');
+        ->toBe('plantilla_2_tanques');
 });

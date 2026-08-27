@@ -4,17 +4,14 @@ use App\Models\AbastecimientoTanque;
 use App\Models\Empresa;
 use App\Models\Gasolinera;
 use App\Models\GasolineraExterna;
-use App\Models\Marchamo;
 use App\Models\Motorista;
 use App\Models\MovimientoInventarioCombustible;
-use App\Models\PuntoSeguridadUnidad;
 use App\Models\RecargaCombustible;
 use App\Models\Role;
 use App\Models\Tanque;
 use App\Models\Unidad;
 use App\Models\User;
 use App\Services\AbastecimientoService;
-use Illuminate\Validation\ValidationException;
 
 function contextoInventarioPromedio(array $tanques = [['nombre' => 'A', 'capacidad' => 20000]]): array
 {
@@ -86,6 +83,7 @@ function prepararUnidadCosto($test, User $usuario, Empresa $empresa): array
     $test->actingAs($usuario)->post(route('licencias.store'), [
         'empresa_id' => $empresa->id,
         'unidad_id' => $unidad->id,
+        'tanques_cubiertos' => $unidad->tanquesUnidad()->pluck('id')->all(),
         'periodo_vigencia_meses' => 12,
         'fecha_activacion' => now()->toDateString(),
     ])->assertSessionHasNoErrors();

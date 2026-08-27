@@ -4,10 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Empresa;
 use App\Models\Licencia;
-use App\Models\Marchamo;
-use App\Models\PuntoSeguridadUnidad;
 use App\Models\Unidad;
-use App\Support\PlantillasPuntosSeguridad;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -678,9 +675,10 @@ class UnidadController extends Controller
                 'placa' => trim($validated['placa']),
                 'marca' => $validated['marca'] ?? null,
                 'total_tanques' => $estructura['total_tanques'],
-                'cantidad_tanques_con_licencia' => $estructura['cantidad_tanques_con_licencia'],
+                // Compatibilidad temporal: una unidad nueva aún no tiene cobertura contractual.
+                'cantidad_tanques_con_licencia' => 0,
                 'capacidad_total' => $estructura['capacidad_total'],
-                'capacidad_cubierta' => $estructura['capacidad_cubierta'],
+                'capacidad_cubierta' => 0,
                 'modelo_medicion' => $validated['modelo_medicion'],
                 'rendimiento_teorico_km_galon' => $validated['rendimiento_teorico_km_galon'],
                 'rendimiento_teorico_gal_hora' => $validated['modelo_medicion'] === 'galones_hora'
@@ -896,19 +894,30 @@ class UnidadController extends Controller
                 abort(403, 'La unidad tiene un ciclo de consumo abierto y su configuración estructural no puede modificarse.');
             }
 
-            $this->reconciliarPlantillaLicencia(
-                $unidadBloqueada,
-                $estructura['cantidad_tanques_con_licencia'],
-                (int) $user->id
-            );
+            $licenciaExistente = Licencia::query()
+                ->where('unidad_id', $unidadBloqueada->id)
+                ->lockForUpdate()
+                ->first();
+
+            $tanquesExistentes = $unidadBloqueada
+                ->tanquesUnidad()
+                ->lockForUpdate()
+                ->get();
+
+            if (
+                $licenciaExistente
+                && $tanquesExistentes->count() !== $estructura['total_tanques']
+            ) {
+                throw ValidationException::withMessages([
+                    'cantidad_tanques' => 'No puede cambiar la cantidad de tanques físicos mientras exista una licencia asociada.',
+                ]);
+            }
 
             $unidadBloqueada->update([
                 'placa' => trim($validated['placa']),
                 'marca' => $validated['marca'] ?? null,
                 'total_tanques' => $estructura['total_tanques'],
-                'cantidad_tanques_con_licencia' => $estructura['cantidad_tanques_con_licencia'],
                 'capacidad_total' => $estructura['capacidad_total'],
-                'capacidad_cubierta' => $estructura['capacidad_cubierta'],
                 'modelo_medicion' => $validated['modelo_medicion'],
                 'rendimiento_teorico_km_galon' => $validated['rendimiento_teorico_km_galon'],
                 'rendimiento_teorico_gal_hora' => $validated['modelo_medicion'] === 'galones_hora'
@@ -917,10 +926,20 @@ class UnidadController extends Controller
                 'actualizado_por' => $user->id,
             ]);
 
-            $unidadBloqueada->tanquesUnidad()->delete();
-            $unidadBloqueada->tanquesUnidad()->createMany(
-                $estructura['tanques']
-            );
+            if ($licenciaExistente) {
+                foreach ($estructura['tanques'] as $tanque) {
+                    $tanquesExistentes
+                        ->firstWhere('numero', $tanque['numero'])
+                        ?->update(['capacidad' => $tanque['capacidad']]);
+                }
+            } else {
+                $unidadBloqueada->tanquesUnidad()->delete();
+                $unidadBloqueada->tanquesUnidad()->createMany($estructura['tanques']);
+                $unidadBloqueada->update([
+                    'cantidad_tanques_con_licencia' => 0,
+                    'capacidad_cubierta' => 0,
+                ]);
+            }
         });
 
         $queryParams = $this->parametrosRetorno(
@@ -1188,11 +1207,6 @@ class UnidadController extends Controller
                 'gt:0',
                 'max:99999999.99',
             ],
-            'tanques.*.cubierto_por_licencia' => [
-                'required',
-                'boolean',
-            ],
-
             'modelo_medicion' => [
                 'required',
                 Rule::in(
@@ -1281,147 +1295,16 @@ class UnidadController extends Controller
                 return [
                     'numero' => $indice + 1,
                     'capacidad' => round((float) $tanque['capacidad'], 2),
-                    'cubierto_por_licencia' => filter_var(
-                        $tanque['cubierto_por_licencia'],
-                        FILTER_VALIDATE_BOOLEAN
-                    ),
+                    // Columna legacy no autoritativa; las nuevas coberturas viven en licencia_tanques.
+                    'cubierto_por_licencia' => false,
                 ];
             });
 
-        $cubiertos = $tanques->where('cubierto_por_licencia', true);
-
-        if ($cubiertos->isEmpty()) {
-            throw ValidationException::withMessages([
-                'tanques' => 'Debe seleccionar al menos un tanque cubierto por la licencia.',
-            ]);
-        }
-
         return [
             'total_tanques' => $tanques->count(),
-            'cantidad_tanques_con_licencia' => $cubiertos->count(),
             'capacidad_total' => round($tanques->sum('capacidad'), 2),
-            'capacidad_cubierta' => round($cubiertos->sum('capacidad'), 2),
             'tanques' => $tanques->all(),
         ];
-    }
-
-    /**
-     * Mantiene alineadas licencia y puntos cuando cambia la cantidad de
-     * tanques cubiertos. Una plantilla solo puede regenerarse si la
-     * asignación inicial no tiene ningún avance que preservar.
-     */
-    private function reconciliarPlantillaLicencia(
-        Unidad $unidad,
-        int $cantidadCubiertaNueva,
-        int $usuarioId
-    ): void {
-        $licencia = Licencia::query()
-            ->where('unidad_id', $unidad->id)
-            ->lockForUpdate()
-            ->first();
-
-        if (! $licencia) {
-            return;
-        }
-
-        $plantillaNueva = match ($cantidadCubiertaNueva) {
-            1 => 'plantilla_1_tanque',
-            2 => 'plantilla_2_tanques',
-            3 => 'plantilla_3_tanques',
-            default => throw ValidationException::withMessages([
-                'tanques' => 'La cantidad de tanques cubiertos no permite seleccionar una plantilla válida.',
-            ]),
-        };
-
-        if ($licencia->plantilla_puntos_seguridad === $plantillaNueva) {
-            return;
-        }
-
-        $puntos = PuntoSeguridadUnidad::query()
-            ->where('unidad_id', $unidad->id)
-            ->lockForUpdate()
-            ->get();
-
-        $puntosEstandar = $puntos
-            ->where('plantilla_origen', '!=', 'extra');
-
-        $marchamosEstandar = Marchamo::query()
-            ->whereIn('punto_seguridad_id', $puntosEstandar->pluck('id'))
-            ->lockForUpdate()
-            ->get();
-
-        $asignacionEstandarIniciada = $marchamosEstandar->isNotEmpty()
-            || $puntosEstandar->contains(
-                fn (PuntoSeguridadUnidad $punto): bool =>
-                    ! is_null($punto->marchamo_actual_id)
-                    || $punto->estado_asignacion !== 'pendiente'
-            );
-
-        if ($asignacionEstandarIniciada) {
-            throw ValidationException::withMessages([
-                'tanques' => 'No puede cambiar la cantidad de tanques cubiertos porque la asignación inicial de marchamos ya tiene avance. Retire primero todos los marchamos provisionales desde la asignación inicial.',
-            ]);
-        }
-
-        $extras = $puntos
-            ->where('plantilla_origen', 'extra')
-            ->sortBy('orden')
-            ->values();
-
-        /*
-         * Se apartan temporalmente los órdenes extra para evitar colisiones
-         * si la plantilla nueva contiene más puntos que la anterior.
-         */
-        foreach ($extras as $indice => $extra) {
-            $extra->update([
-                'orden' => 60000 + $indice,
-                'actualizado_por' => $usuarioId,
-            ]);
-        }
-
-        PuntoSeguridadUnidad::query()
-            ->where('unidad_id', $unidad->id)
-            ->where('plantilla_origen', '!=', 'extra')
-            ->delete();
-
-        $licencia->update([
-            'plantilla_puntos_seguridad' => $plantillaNueva,
-            'actualizado_por' => $usuarioId,
-        ]);
-
-        foreach (PlantillasPuntosSeguridad::porPlantilla($plantillaNueva) as $punto) {
-            PuntoSeguridadUnidad::create([
-                'unidad_id' => $unidad->id,
-                'orden' => $punto['orden_visual'] ?? $punto['orden'] ?? null,
-                'codigo_punto' => $punto['codigo_punto'] ?? null,
-                'grupo' => $punto['grupo'] ?? null,
-                'subgrupo' => $punto['subgrupo'] ?? null,
-                'nombre_punto' => $punto['nombre_punto'] ?? $punto['nombre'] ?? 'Punto sin nombre',
-                'descripcion' => null,
-                'posicion_tanque' => $punto['posicion_tanque'] ?? null,
-                'tipo_punto' => $punto['tipo_punto'] ?? null,
-                'requiere_marchamo' => (bool) ($punto['requiere_marchamo'] ?? true),
-                'plantilla_origen' => $plantillaNueva,
-                'criterio_origen' => $punto['criterio_origen'] ?? null,
-                'estado_asignacion' => 'pendiente',
-                'marchamo_actual_id' => null,
-                'estado' => 'activo',
-                'creado_por' => $usuarioId,
-                'actualizado_por' => $usuarioId,
-            ]);
-        }
-
-        $ultimoOrdenEstandar = (int) PuntoSeguridadUnidad::query()
-            ->where('unidad_id', $unidad->id)
-            ->where('plantilla_origen', '!=', 'extra')
-            ->max('orden');
-
-        foreach ($extras as $indice => $extra) {
-            $extra->update([
-                'orden' => $ultimoOrdenEstandar + $indice + 1,
-                'actualizado_por' => $usuarioId,
-            ]);
-        }
     }
 
     /**

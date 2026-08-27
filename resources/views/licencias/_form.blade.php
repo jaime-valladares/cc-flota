@@ -25,6 +25,8 @@
     );
 
     $empresaFija = ! $esUsuarioDieselCop;
+    $tanquesCubiertosActuales = collect(old('tanques_cubiertos', []))
+        ->map(fn ($id) => (string) $id);
 @endphp
 
 <div class="cc-grid cc-grid-compact">
@@ -161,13 +163,6 @@
                             data-placa="{{ $unidad->placa }}"
                             data-marca="{{ $unidad->marca ?: 'Sin marca registrada' }}"
                             data-total-tanques="{{ $unidad->total_tanques }}"
-                            data-tanques-protegidos="{{ $unidad->cantidad_tanques_con_licencia }}"
-                            data-capacidad-cubierta="{{ number_format(
-                                (float) $unidad->capacidad_cubierta,
-                                2,
-                                '.',
-                                ''
-                            ) }}"
                             @selected(
                                 (string) $unidadActual
                                 === (string) $unidad->id
@@ -200,6 +195,48 @@
                     para registrar una nueva licencia.
                 </div>
             @endif
+        </div>
+
+        <div class="cc-field cc-col-span-2">
+            <label>
+                Tanques cubiertos por la licencia
+                <span class="cc-required">*</span>
+            </label>
+
+            @foreach ($unidades as $unidad)
+                <div
+                    data-tanques-unidad="{{ $unidad->id }}"
+                    class="hidden cc-grid cc-grid-compact"
+                >
+                    @foreach ($unidad->tanquesUnidad as $tanqueUnidad)
+                        <label class="cc-checkbox-option">
+                            <input
+                                type="checkbox"
+                                name="tanques_cubiertos[]"
+                                value="{{ $tanqueUnidad->id }}"
+                                data-tanque-licencia
+                                data-numero="{{ $tanqueUnidad->numero }}"
+                                data-capacidad="{{ number_format((float) $tanqueUnidad->capacidad, 2, '.', '') }}"
+                                @checked($tanquesCubiertosActuales->contains((string) $tanqueUnidad->id))
+                                disabled
+                            >
+                            Tanque {{ $tanqueUnidad->numero }} —
+                            {{ number_format((float) $tanqueUnidad->capacidad, 2) }} gal
+                        </label>
+                    @endforeach
+                </div>
+            @endforeach
+
+            <div class="cc-field-help">
+                La selección define la cobertura contractual de esta licencia.
+            </div>
+
+            @error('tanques_cubiertos')
+                <div class="cc-error">{{ $message }}</div>
+            @enderror
+            @error('tanques_cubiertos.*')
+                <div class="cc-error">{{ $message }}</div>
+            @enderror
         </div>
 
         <div
@@ -406,20 +443,40 @@
             const totalTanques =
                 Number(option.dataset.totalTanques || 0);
 
-            const tanquesProtegidos =
-                Number(option.dataset.tanquesProtegidos || 0);
-
-            const capacidadCubierta =
-                option.dataset.capacidadCubierta || '0.00';
+            const panelTanques = document.querySelector(
+                `[data-tanques-unidad="${option.value}"]`
+            );
+            const seleccionados = panelTanques
+                ? Array.from(panelTanques.querySelectorAll('[data-tanque-licencia]:checked'))
+                : [];
+            const tanquesProtegidos = seleccionados.length;
+            const capacidadCubierta = seleccionados.reduce(
+                (total, tanque) => total + Number(tanque.dataset.capacidad || 0),
+                0
+            );
 
             unidadResumen.textContent =
                 `${placa} · ${marca} · `
                 + `${tanquesProtegidos} de ${totalTanques} `
                 + `tanques protegidos · `
-                + `${capacidadCubierta} galones cubiertos · `
+                + `${capacidadCubierta.toFixed(2)} galones cubiertos · `
                 + `${plantillaTexto(tanquesProtegidos)}.`;
 
             unidadResumenPanel.classList.remove('hidden');
+        }
+
+        function actualizarTanquesUnidad() {
+            const unidadId = unidadSelect?.value || '';
+
+            document.querySelectorAll('[data-tanques-unidad]').forEach(function (panel) {
+                const activo = panel.dataset.tanquesUnidad === unidadId;
+                panel.classList.toggle('hidden', ! activo);
+                panel.querySelectorAll('[data-tanque-licencia]').forEach(function (input) {
+                    input.disabled = ! activo;
+                });
+            });
+
+            actualizarResumenUnidad();
         }
 
         function formatearFecha(fecha) {
@@ -557,8 +614,12 @@
 
         unidadSelect?.addEventListener(
             'change',
-            actualizarResumenUnidad
+            actualizarTanquesUnidad
         );
+
+        document.querySelectorAll('[data-tanque-licencia]').forEach(function (input) {
+            input.addEventListener('change', actualizarResumenUnidad);
+        });
 
         periodoInput?.addEventListener(
             'change',
@@ -570,7 +631,7 @@
             calcularFechaVencimientoPreview
         );
 
-        actualizarResumenUnidad();
+        actualizarTanquesUnidad();
         calcularFechaVencimientoPreview();
     });
 </script>

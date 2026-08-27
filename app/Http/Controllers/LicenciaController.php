@@ -6,6 +6,7 @@ use App\Models\Empresa;
 use App\Models\Licencia;
 use App\Models\PuntoSeguridadUnidad;
 use App\Models\Unidad;
+use App\Models\UnidadTanque;
 use App\Support\PlantillasPuntosSeguridad;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -13,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class LicenciaController extends Controller
@@ -664,6 +666,7 @@ class LicenciaController extends Controller
             ->with([
                 'empresa',
                 'licencia',
+                'tanquesUnidad',
             ])
             ->where(
                 'estado',
@@ -776,20 +779,24 @@ class LicenciaController extends Controller
                 ]);
         }
 
-        $tanquesUnidad = $unidad->tanquesUnidad()->get();
-        $tanquesCubiertos = $tanquesUnidad
-            ->where('cubierto_por_licencia', true);
+        $tanqueIds = collect($validated['tanques_cubiertos'])
+            ->map(fn ($id): int => (int) $id)
+            ->unique()
+            ->values();
+
+        $tanquesCubiertos = $unidad->tanquesUnidad()
+            ->whereIn('id', $tanqueIds)
+            ->orderBy('numero')
+            ->get();
 
         if (
-            $tanquesUnidad->count() !== (int) $unidad->total_tanques
-            || $tanquesCubiertos->count()
-                !== (int) $unidad->cantidad_tanques_con_licencia
-            || $tanquesCubiertos->isEmpty()
+            $tanquesCubiertos->isEmpty()
+            || $tanquesCubiertos->count() !== $tanqueIds->count()
         ) {
             return back()
                 ->withInput()
                 ->withErrors([
-                    'unidad_id' => 'La estructura de tanques de la unidad está incompleta o no coincide con su cobertura derivada.',
+                    'tanques_cubiertos' => 'Todos los tanques seleccionados deben pertenecer a la unidad indicada.',
                 ]);
         }
 
@@ -802,7 +809,7 @@ class LicenciaController extends Controller
         ];
 
         $plantilla = $this->plantillaDesdeTanquesProtegidos(
-            (int) $unidad->cantidad_tanques_con_licencia
+            $tanquesCubiertos->count()
         );
 
         $licencia = DB::transaction(
@@ -810,11 +817,52 @@ class LicenciaController extends Controller
                 $unidad,
                 $fechaActivacion,
                 $periodoVigencia,
-                $plantilla
+                $plantilla,
+                $tanqueIds
             ): Licencia {
+                $unidadBloqueada = Unidad::query()
+                    ->with('empresa')
+                    ->lockForUpdate()
+                    ->findOrFail($unidad->id);
+
+                if (
+                    $unidadBloqueada->estado !== 'registrada'
+                    || ! $unidadBloqueada->empresa
+                    || $unidadBloqueada->empresa->estado !== 'activa'
+                    || Licencia::query()->where('unidad_id', $unidadBloqueada->id)->exists()
+                ) {
+                    throw ValidationException::withMessages([
+                        'unidad_id' => 'La unidad dejó de ser elegible para registrar una licencia.',
+                    ]);
+                }
+
+                $tanquesBloqueados = UnidadTanque::query()
+                    ->where('unidad_id', $unidadBloqueada->id)
+                    ->whereIn('id', $tanqueIds)
+                    ->orderBy('numero')
+                    ->lockForUpdate()
+                    ->get();
+
+                if ($tanquesBloqueados->count() !== $tanqueIds->count()) {
+                    throw ValidationException::withMessages([
+                        'tanques_cubiertos' => 'La selección de tanques cambió o no pertenece a la unidad.',
+                    ]);
+                }
+
+                if ($unidadBloqueada->puntosSeguridad()->exists()) {
+                    throw ValidationException::withMessages([
+                        'unidad_id' => 'Esta unidad ya tiene puntos de seguridad generados.',
+                    ]);
+                }
+
+                $capacidadCubierta = round(
+                    (float) $tanquesBloqueados->sum('capacidad'),
+                    2
+                );
+
                 $licenciaCreada = Licencia::create([
-                    'empresa_id' => $unidad->empresa_id,
-                    'unidad_id' => $unidad->id,
+                    'empresa_id' => $unidadBloqueada->empresa_id,
+                    'unidad_id' => $unidadBloqueada->id,
                     'periodo_vigencia_meses' => $periodoVigencia,
                     'fecha_activacion' => $fechaActivacion->toDateString(),
                     'fecha_vencimiento' => $fechaActivacion
@@ -829,13 +877,34 @@ class LicenciaController extends Controller
                     'actualizado_por' => Auth::id(),
                 ]);
 
+                $licenciaCreada->tanquesCubiertos()->createMany(
+                    $tanquesBloqueados->map(fn (UnidadTanque $tanque): array => [
+                        'unidad_tanque_id' => $tanque->id,
+                        'numero_tanque_snapshot' => $tanque->numero,
+                        'capacidad_snapshot' => $tanque->capacidad,
+                    ])->all()
+                );
+
+                // Caché legacy para M4 durante la transición; no es fuente contractual.
+                $unidadBloqueada->update([
+                    'cantidad_tanques_con_licencia' => $tanquesBloqueados->count(),
+                    'capacidad_cubierta' => $capacidadCubierta,
+                    'actualizado_por' => Auth::id(),
+                ]);
+                $unidadBloqueada->tanquesUnidad()->update([
+                    'cubierto_por_licencia' => false,
+                ]);
+                UnidadTanque::query()
+                    ->whereIn('id', $tanqueIds)
+                    ->update(['cubierto_por_licencia' => true]);
+
                 foreach (
                     PlantillasPuntosSeguridad::porPlantilla(
                         $plantilla
                     ) as $punto
                 ) {
                     PuntoSeguridadUnidad::create([
-                        'unidad_id' => $unidad->id,
+                        'unidad_id' => $unidadBloqueada->id,
                         'orden' => $punto['orden_visual']
                             ?? $punto['orden']
                             ?? null,
@@ -1289,6 +1358,21 @@ class LicenciaController extends Controller
             'fecha_activacion' => [
                 'required',
                 'date',
+            ],
+            'tanques_cubiertos' => [
+                'required',
+                'array',
+                'min:1',
+                'max:3',
+            ],
+            'tanques_cubiertos.*' => [
+                'required',
+                'integer',
+                'distinct',
+                Rule::exists('unidad_tanques', 'id')->where(
+                    'unidad_id',
+                    (int) $request->input('unidad_id')
+                ),
             ],
         ];
     }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class UnidadTanque extends Model
 {
@@ -19,6 +20,11 @@ class UnidadTanque extends Model
     public function unidad(): BelongsTo
     {
         return $this->belongsTo(Unidad::class, 'unidad_id');
+    }
+
+    public function detallesLicencia(): HasMany
+    {
+        return $this->hasMany(LicenciaTanque::class, 'unidad_tanque_id');
     }
 
     protected function casts(): array
