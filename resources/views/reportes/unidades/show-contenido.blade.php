@@ -15,6 +15,7 @@
         <h1 class="cc-title cc-title-compact">Ficha completa de la unidad</h1>
         <div class="flex flex-wrap items-center justify-end gap-3">
             <a href="{{ $rutaRegreso }}" class="cc-btn-secondary cc-btn-wide">Volver al reporte</a>
+            <a href="{{ route('reportes.unidades.show.pdf', $unidad) }}" class="cc-btn-secondary cc-btn-wide">Descargar PDF</a>
             @unless ($esVentana)
                 <a href="{{ route('reportes.unidades.show.ventana', array_merge(['unidad' => $unidad->id], $queryParams)) }}" target="_blank" rel="noopener noreferrer" class="cc-btn-secondary cc-btn-wide">Abrir en nueva pestaña</a>
             @endunless
@@ -56,7 +57,7 @@
         <section class="cc-detail-section" data-report-section="tanques">
             <div class="cc-detail-section-header"><h5>Tanques físicos</h5></div>
             <div class="cc-table-shell"><table class="cc-table">
-                <thead><tr><th>Número</th><th class="text-right">Capacidad</th><th>Cubierto por licencia</th></tr></thead>
+                <thead><tr><th style="width: 20%;">Tanque</th><th class="text-right" style="width: 30%;">Capacidad</th><th style="width: 50%;">Cubierto por licencia</th></tr></thead>
                 <tbody>
                     @forelse ($unidad->tanquesUnidad as $tanque)
                         <tr><td>Tanque {{ $tanque->numero }}</td><td class="text-right">{{ number_format((float) $tanque->capacidad, 2) }} gal</td><td>{{ $tanque->cubierto_por_licencia ? 'Sí' : 'No' }}</td></tr>

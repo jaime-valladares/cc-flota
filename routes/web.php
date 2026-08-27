@@ -1319,6 +1319,16 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
         )->name('reportes.unidades.ventana');
 
         Route::get(
+            '/reportes/unidades/pdf',
+            [FichaUnidadController::class, 'pdf']
+        )->name('reportes.unidades.pdf');
+
+        Route::get(
+            '/reportes/unidades/{unidad}/pdf',
+            [FichaUnidadController::class, 'showPdf']
+        )->name('reportes.unidades.show.pdf');
+
+        Route::get(
             '/reportes/unidades/{unidad}/ventana',
             [FichaUnidadController::class, 'showVentana']
         )->name('reportes.unidades.show.ventana');

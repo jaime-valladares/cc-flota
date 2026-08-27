@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Empresa;
 use App\Models\Unidad;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Response;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
@@ -46,12 +48,106 @@ class FichaUnidadController extends Controller
         );
     }
 
+    public function pdf(Request $request): Response
+    {
+        abort_unless($request->boolean('consultar'), 404);
+
+        /** @var User $usuario */
+        $usuario = Auth::user();
+        $filtros = $this->validarFiltros($request, $usuario);
+        $unidades = $this->consultaResultados($usuario, $filtros)
+            ->orderBy('empresa_id')
+            ->orderBy('placa')
+            ->get();
+
+        $unidades->each(fn (Unidad $unidad) => $this->agregarRendimientoTeorico($unidad));
+
+        return Pdf::loadView('reportes.unidades.pdf-general', [
+            'unidades' => $unidades,
+            'resumen' => [
+                'resultados' => $unidades->count(),
+                'registradas' => $unidades->where('estado', 'registrada')->count(),
+                'activas' => $unidades->where('estado', 'activa')->count(),
+                'operables' => $unidades->filter(fn (Unidad $unidad): bool => $unidad->es_operable)->count(),
+            ],
+            'filtrosAplicados' => $this->describirFiltros($filtros, $usuario),
+            'alcance' => $usuario->esDieselCop()
+                ? 'Todas las empresas autorizadas'
+                : $unidades->first()?->empresa?->nombre_comercial
+                    ?? $unidades->first()?->empresa?->nombre_legal
+                    ?? 'Empresa del usuario',
+            'generadoEn' => now(),
+            'logoPath' => public_path('images/cc-flota/logo.png'),
+        ])->setPaper('a4', 'landscape')->download(
+            'reporte-unidades-'.now()->format('Y-m-d').'.pdf'
+        );
+    }
+
+    public function showPdf(Unidad $unidad): Response
+    {
+        $datos = $this->prepararFicha($unidad);
+
+        return Pdf::loadView('reportes.unidades.pdf-ficha', $datos + [
+            'generadoEn' => now(),
+            'logoPath' => public_path('images/cc-flota/logo.png'),
+        ])->setPaper('a4', 'portrait')->download(
+            'ficha-unidad-'.$this->sanitizarNombreArchivo($unidad->placa).'-'.now()->format('Y-m-d').'.pdf'
+        );
+    }
+
     private function prepararReporte(Request $request): array
     {
         /** @var User $usuario */
         $usuario = Auth::user();
         $esDieselCop = $usuario->esDieselCop();
+        $filtros = $this->validarFiltros($request, $usuario);
+        extract($filtros);
+        $hayConsulta = $request->boolean('consultar');
 
+        $hayFiltros = $busqueda !== ''
+            || ($esDieselCop && $empresaIds !== [])
+            || $unidadIds !== []
+            || ! is_null($estado)
+            || ! is_null($disponibilidad)
+            || ! is_null($modeloMedicion);
+
+        $empresas = Empresa::query()
+            ->when(! $esDieselCop, fn (Builder $query) => $query->whereKey($usuario->empresa_id))
+            ->orderByRaw('COALESCE(nombre_comercial, nombre_legal)')
+            ->get();
+
+        $selectorQuery = Unidad::query()
+            ->select(['id', 'empresa_id', 'placa'])
+            ->with(['empresa:id,nombre_comercial,nombre_legal'])
+            ->when(! $esDieselCop, fn (Builder $query) => $query->where('empresa_id', $usuario->empresa_id));
+
+        if ($empresaIds !== []) {
+            $selectorQuery->whereIn('empresa_id', $empresaIds);
+        }
+
+        $unidadesSelector = $selectorQuery->orderBy('empresa_id')->orderBy('placa')->get();
+
+        if (! $hayConsulta) {
+            $unidades = new LengthAwarePaginator([], 0, self::POR_PAGINA, 1, ['path' => $request->url()]);
+            $resumen = ['total' => 0, 'registradas' => 0, 'activas' => 0, 'inactivas' => 0, 'operables' => 0];
+
+            return compact('unidades', 'empresas', 'unidadesSelector', 'empresaIds', 'unidadIds', 'busqueda', 'estado', 'disponibilidad', 'modeloMedicion', 'esDieselCop', 'hayConsulta', 'hayFiltros', 'resumen')
+                + ['modelosMedicion' => $this->modelosMedicion()];
+        }
+
+        $resultadosQuery = $this->consultaResultados($usuario, $filtros);
+        $resumen = $this->resumir(clone $resultadosQuery);
+        $unidades = $resultadosQuery->orderBy('empresa_id')->orderBy('placa')
+            ->paginate(self::POR_PAGINA)->withQueryString();
+
+        $unidades->getCollection()->each(fn (Unidad $unidad) => $this->agregarRendimientoTeorico($unidad));
+
+        return compact('unidades', 'empresas', 'unidadesSelector', 'empresaIds', 'unidadIds', 'busqueda', 'estado', 'disponibilidad', 'modeloMedicion', 'esDieselCop', 'hayConsulta', 'hayFiltros', 'resumen')
+            + ['modelosMedicion' => $this->modelosMedicion()];
+    }
+
+    private function validarFiltros(Request $request, User $usuario): array
+    {
         $validated = $request->validate([
             'busqueda' => ['nullable', 'string', 'max:150'],
             'empresa_ids' => ['nullable', 'array'],
@@ -78,89 +174,21 @@ class FichaUnidadController extends Controller
         $estado = $validated['estado'] ?? null;
         $disponibilidad = $validated['disponibilidad'] ?? null;
         $modeloMedicion = $validated['modelo_medicion'] ?? null;
-        $hayConsulta = $request->boolean('consultar');
 
-        if (! $esDieselCop) {
+        if (! $usuario->esDieselCop()) {
             $empresaIds = [(int) $usuario->empresa_id];
         }
 
-        $hayFiltros = $busqueda !== ''
-            || ($esDieselCop && $empresaIds !== [])
-            || $unidadIds !== []
-            || ! is_null($estado)
-            || ! is_null($disponibilidad)
-            || ! is_null($modeloMedicion);
+        return compact('busqueda', 'empresaIds', 'unidadIds', 'estado', 'disponibilidad', 'modeloMedicion');
+    }
 
-        $empresas = Empresa::query()
-            ->when(
-                ! $esDieselCop,
-                fn (Builder $query) => $query->whereKey($usuario->empresa_id)
-            )
-            ->orderByRaw('COALESCE(nombre_comercial, nombre_legal)')
-            ->get();
-
-        $baseQuery = Unidad::query()
+    private function consultaResultados(User $usuario, array $filtros): Builder
+    {
+        extract($filtros);
+        $resultadosQuery = Unidad::query()
             ->with(['empresa', 'licencia', 'puntosSeguridad'])
-            ->when(
-                ! $esDieselCop,
-                fn (Builder $query) => $query->where('empresa_id', $usuario->empresa_id)
-            );
+            ->when(! $usuario->esDieselCop(), fn (Builder $query) => $query->where('empresa_id', $usuario->empresa_id));
 
-        $selectorQuery = Unidad::query()
-            ->select(['id', 'empresa_id', 'placa'])
-            ->with([
-                'empresa:id,nombre_comercial,nombre_legal',
-            ])
-            ->when(
-                ! $esDieselCop,
-                fn (Builder $query) => $query->where('empresa_id', $usuario->empresa_id)
-            );
-
-        if ($empresaIds !== []) {
-            $selectorQuery->whereIn('empresa_id', $empresaIds);
-        }
-
-        $unidadesSelector = $selectorQuery
-            ->orderBy('empresa_id')
-            ->orderBy('placa')
-            ->get();
-
-        if (! $hayConsulta) {
-            $unidades = new LengthAwarePaginator(
-                [],
-                0,
-                self::POR_PAGINA,
-                1,
-                ['path' => $request->url()]
-            );
-            $resumen = [
-                'total' => 0,
-                'registradas' => 0,
-                'activas' => 0,
-                'inactivas' => 0,
-                'operables' => 0,
-            ];
-
-            return compact(
-                'unidades',
-                'empresas',
-                'unidadesSelector',
-                'empresaIds',
-                'unidadIds',
-                'busqueda',
-                'estado',
-                'disponibilidad',
-                'modeloMedicion',
-                'esDieselCop',
-                'hayConsulta',
-                'hayFiltros',
-                'resumen'
-            ) + [
-                'modelosMedicion' => $this->modelosMedicion(),
-            ];
-        }
-
-        $resultadosQuery = clone $baseQuery;
         $this->aplicarFiltrosConsulta(
             $resultadosQuery,
             $busqueda,
@@ -188,34 +216,7 @@ class FichaUnidadController extends Controller
             }
         }
 
-        $resumen = $this->resumir(clone $resultadosQuery);
-        $unidades = $resultadosQuery
-            ->orderBy('empresa_id')
-            ->orderBy('placa')
-            ->paginate(self::POR_PAGINA)
-            ->withQueryString();
-
-        $unidades->getCollection()->each(
-            fn (Unidad $unidad) => $this->agregarRendimientoTeorico($unidad)
-        );
-
-        return compact(
-            'unidades',
-            'empresas',
-            'unidadesSelector',
-            'empresaIds',
-            'unidadIds',
-            'busqueda',
-            'estado',
-            'disponibilidad',
-            'modeloMedicion',
-            'esDieselCop',
-            'hayConsulta',
-            'hayFiltros',
-            'resumen'
-        ) + [
-            'modelosMedicion' => $this->modelosMedicion(),
-        ];
+        return $resultadosQuery;
     }
 
     private function aplicarFiltrosConsulta(
@@ -290,6 +291,49 @@ class FichaUnidadController extends Controller
         ];
     }
 
+    private function describirFiltros(array $filtros, User $usuario): array
+    {
+        $descripcion = [];
+
+        if ($filtros['busqueda'] !== '') {
+            $descripcion['Búsqueda'] = $filtros['busqueda'];
+        }
+
+        if ($filtros['empresaIds'] !== []) {
+            $descripcion['Empresa'] = Empresa::query()
+                ->whereIn('id', $filtros['empresaIds'])
+                ->orderByRaw('COALESCE(nombre_comercial, nombre_legal)')
+                ->get()
+                ->map(fn (Empresa $empresa) => $empresa->nombre_comercial ?: $empresa->nombre_legal)
+                ->implode(', ');
+        }
+
+        if ($filtros['unidadIds'] !== []) {
+            $descripcion['Nombre / Placa'] = Unidad::query()
+                ->whereIn('id', $filtros['unidadIds'])
+                ->when(! $usuario->esDieselCop(), fn (Builder $query) => $query->where('empresa_id', $usuario->empresa_id))
+                ->orderBy('placa')
+                ->pluck('placa')
+                ->implode(', ');
+        }
+
+        if ($filtros['estado']) {
+            $descripcion['Estado'] = ucfirst($filtros['estado']);
+        }
+
+        if ($filtros['disponibilidad']) {
+            $descripcion['Disponibilidad'] = $filtros['disponibilidad'] === 'operable'
+                ? 'Operable'
+                : 'No operable';
+        }
+
+        if ($filtros['modeloMedicion']) {
+            $descripcion['Modelo'] = $this->modelosMedicion()[$filtros['modeloMedicion']];
+        }
+
+        return $descripcion;
+    }
+
     private function prepararFicha(Unidad $unidad): array
     {
         /** @var User $usuario */
@@ -316,11 +360,18 @@ class FichaUnidadController extends Controller
             'galones_hora' => is_null($unidad->rendimiento_teorico_gal_hora)
                 ? 'Dato pendiente'
                 : number_format((float) $unidad->rendimiento_teorico_gal_hora, 2).' gal/hora',
-            'galones_viaje' => 'Según ruta',
+            'galones_viaje' => 'Según ruta (gal/viaje)',
             default => 'Dato pendiente',
         };
 
         $unidad->setAttribute('rendimiento_teorico_reporte', $rendimiento);
+    }
+
+    private function sanitizarNombreArchivo(string $valor): string
+    {
+        $nombre = preg_replace('/[^A-Za-z0-9_-]+/', '-', $valor) ?? 'unidad';
+
+        return trim($nombre, '-') ?: 'unidad';
     }
 
     private function autorizarUnidad(User $usuario, Unidad $unidad): void

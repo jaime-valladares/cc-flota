@@ -9,6 +9,7 @@
     $rutaAlterna = $esVentana
         ? route('reportes.unidades.index', request()->query())
         : route('reportes.unidades.ventana', request()->query());
+    $rutaPdf = route('reportes.unidades.pdf', request()->except('page'));
 @endphp
 
 <section class="cc-card" style="position: relative; isolation: isolate;">
@@ -17,13 +18,14 @@
             <h1 class="cc-title cc-title-compact">Reporte de unidades</h1>
         </div>
 
-        <a
-            href="{{ $rutaAlterna }}"
-            @unless ($esVentana) target="_blank" rel="noopener noreferrer" @endunless
-            class="cc-btn-secondary cc-btn-wide"
-        >
-            {{ $esVentana ? 'Volver al sistema' : 'Abrir en nueva pestaña' }}
-        </a>
+        <div class="flex flex-wrap items-center justify-end gap-3">
+            @if ($hayConsulta)
+                <a href="{{ $rutaPdf }}" class="cc-btn-secondary cc-btn-wide">Descargar PDF</a>
+            @endif
+            <a href="{{ $rutaAlterna }}" @unless ($esVentana) target="_blank" rel="noopener noreferrer" @endunless class="cc-btn-secondary cc-btn-wide">
+                {{ $esVentana ? 'Volver al sistema' : 'Abrir en nueva pestaña' }}
+            </a>
+        </div>
     </header>
 
     @if ($hayConsulta)
