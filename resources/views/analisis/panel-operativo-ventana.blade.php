@@ -46,10 +46,9 @@
         class="min-h-screen"
         style="background: var(--cc-bg-main);"
     >
-        <div class="cc-page-wrapper">
+        <div class="cc-page-wrapper cc-va-scope cc-va-analytics">
             <div
-                class="cc-window-container"
-                style="max-width: 80rem;"
+                class="cc-window-container cc-operational-container"
             >
                 @include(
                     'analisis.partials.panel-operativo-contenido',

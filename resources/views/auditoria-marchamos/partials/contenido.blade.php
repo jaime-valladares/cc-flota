@@ -67,529 +67,12 @@
 
 @endphp
 
-<style>
-    .cc-audit-header {
-        display: grid !important;
-        grid-template-columns:
-            minmax(0, 1fr) auto !important;
-        align-items: start !important;
-        gap: 1rem !important;
-    }
-
-    .cc-audit-header > div:last-child {
-        display: flex;
-        justify-content: flex-end;
-        min-width: 0;
-    }
-
-    .cc-audit-summary {
-        display: grid !important;
-        grid-template-columns:
-            repeat(6, minmax(0, 1fr)) !important;
-        width: 100%;
-        margin-bottom: 1.25rem;
-    }
-
-    .cc-audit-summary .cc-summary-strip-item {
-        display: flex !important;
-        min-width: 0;
-        min-height: 5.7rem;
-        flex-direction: column !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: .4rem !important;
-        padding: 1rem .75rem !important;
-        text-align: center !important;
-    }
-
-    .cc-audit-summary .cc-summary-strip-label,
-    .cc-audit-summary .cc-summary-strip-value {
-        width: 100%;
-        margin: 0 !important;
-        text-align: center !important;
-    }
-
-    .cc-audit-summary .cc-summary-strip-value {
-        overflow-wrap: anywhere;
-    }
-
-    .cc-audit-panorama {
-        display: grid;
-        grid-template-columns:
-            repeat(2, minmax(0, 1fr));
-        gap: 1rem;
-        margin-bottom: 1.25rem;
-    }
-
-    .cc-audit-panel {
-        min-width: 0;
-        padding: 1rem;
-        border: 1px solid var(--cc-border);
-        border-radius: 1rem;
-        background: var(--cc-bg-card);
-    }
-
-    .cc-audit-panel-title {
-        margin: 0 0 .25rem;
-        color: var(--cc-text-main);
-        font-size: .95rem;
-        font-weight: 800;
-    }
-
-    .cc-audit-panel-subtitle {
-        margin-bottom: .8rem;
-        color: var(--cc-text-muted);
-        font-size: .78rem;
-    }
-
-    .cc-audit-metric-list {
-        display: grid;
-        gap: .6rem;
-    }
-
-    .cc-audit-metric-row {
-        display: grid;
-        grid-template-columns:
-            minmax(0, 1fr) auto;
-        align-items: center;
-        gap: .8rem;
-    }
-
-    .cc-audit-metric-label {
-        color: var(--cc-text-main);
-        font-size: .78rem;
-        font-weight: 700;
-    }
-
-    .cc-audit-metric-value {
-        min-width: 2.4rem;
-        padding: .3rem .55rem;
-        border-radius: 999px;
-        background: var(--cc-bg-soft);
-        color: var(--cc-text-main);
-        font-size: .78rem;
-        font-weight: 800;
-        text-align: center;
-    }
-
-    .cc-audit-chart-card {
-        margin-bottom: 1.25rem;
-        padding: 1rem;
-        border: 1px solid var(--cc-border);
-        border-radius: 1rem;
-        background: var(--cc-bg-card);
-    }
-
-    .cc-audit-chart-title {
-        margin: 0;
-        color: var(--cc-text-main);
-        font-size: .95rem;
-        font-weight: 800;
-    }
-
-    .cc-audit-chart-subtitle {
-        margin-top: .2rem;
-        color: var(--cc-text-muted);
-        font-size: .78rem;
-    }
-
-    .cc-audit-chart-area {
-        min-height: 21rem;
-        margin-top: .85rem;
-    }
-
-    .cc-audit-chart-canvas {
-        display: block;
-        width: 100%;
-        height: 21rem;
-    }
-
-    .cc-audit-chart-controls {
-        display: grid;
-        grid-template-columns:
-            minmax(11rem, auto) minmax(0, 1fr);
-        align-items: end;
-        gap: 1rem;
-        margin-top: .9rem;
-    }
-
-    .cc-audit-chart-grouping {
-        display: grid;
-        gap: .35rem;
-    }
-
-    .cc-audit-chart-grouping label {
-        color: var(--cc-text-main);
-        font-size: .72rem;
-        font-weight: 800;
-        text-transform: uppercase;
-    }
-
-    .cc-audit-chart-toolbar {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: flex-end;
-        gap: .5rem;
-    }
-
-    .cc-audit-chart-status {
-        margin-left: auto;
-        color: var(--cc-text-muted);
-        font-size: .75rem;
-        font-weight: 800;
-        white-space: nowrap;
-    }
-
-    .cc-audit-chart-navigator {
-        display: grid;
-        grid-template-columns:
-            auto minmax(10rem, 1fr) auto;
-        align-items: center;
-        gap: .75rem;
-        margin-top: .75rem;
-    }
-
-    .cc-audit-chart-navigator-label {
-        color: var(--cc-text-muted);
-        font-size: .72rem;
-        font-weight: 700;
-    }
-
-    .cc-audit-chart-range {
-        width: 100%;
-        accent-color: var(--cc-primary);
-    }
-
-    .cc-audit-chart-detail {
-        min-height: 1.25rem;
-        margin-top: .75rem;
-        color: var(--cc-text-main);
-        font-size: .8rem;
-        font-weight: 650;
-    }
-
-    .cc-audit-chart-legend {
-        display: flex;
-        flex-wrap: wrap;
-        gap: .65rem 1rem;
-        margin-top: .75rem;
-    }
-
-    .cc-audit-chart-legend-item {
-        display: inline-flex;
-        align-items: center;
-        gap: .4rem;
-        color: var(--cc-text-muted);
-        font-size: .72rem;
-        font-weight: 700;
-    }
-
-    .cc-audit-chart-legend-swatch {
-        width: .8rem;
-        height: .8rem;
-        border-radius: .2rem;
-    }
-
-    .cc-audit-chart-table-panel[hidden] {
-        display: none;
-    }
-
-    .cc-audit-chart-table-panel {
-        margin-top: .85rem;
-        overflow-x: auto;
-        border: 1px solid var(--cc-border);
-        border-radius: .8rem;
-    }
-
-    .cc-audit-chart-table {
-        width: 100%;
-        min-width: 58rem;
-        border-collapse: collapse;
-        background: var(--cc-bg-card);
-    }
-
-    .cc-audit-chart-table th,
-    .cc-audit-chart-table td {
-        padding: .65rem .75rem;
-        border-bottom: 1px solid var(--cc-border);
-        font-size: .76rem;
-        white-space: nowrap;
-    }
-
-    .cc-audit-chart-table th {
-        background: var(--cc-bg-soft);
-        color: var(--cc-text-main);
-        font-size: .69rem;
-        font-weight: 800;
-        text-align: center;
-        text-transform: uppercase;
-    }
-
-    .cc-audit-chart-table td:nth-child(n+3) {
-        text-align: right;
-    }
-
-    .cc-audit-chart-table tbody tr:last-child td {
-        border-bottom: 0;
-    }
-
-    .cc-audit-chart-empty {
-        display: flex;
-        min-height: 12rem;
-        align-items: center;
-        justify-content: center;
-        margin-top: .85rem;
-        padding: 1.5rem;
-        border: 1px dashed var(--cc-border);
-        border-radius: .8rem;
-        color: var(--cc-text-muted);
-        font-size: .84rem;
-        text-align: center;
-    }
-
-    .cc-audit-sort-link {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: .4rem;
-        width: 100%;
-        color: inherit;
-        text-decoration: none;
-        white-space: nowrap;
-    }
-
-    .cc-audit-sort-icon {
-        font-size: .78rem;
-        opacity: .72;
-    }
-
-    .cc-audit-nowrap {
-        white-space: nowrap;
-    }
-
-    .cc-audit-number {
-        text-align: right;
-        white-space: nowrap;
-    }
-
-    .cc-audit-badge {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: .35rem .65rem;
-        border-radius: 999px;
-        font-size: .72rem;
-        font-weight: 800;
-        white-space: nowrap;
-    }
-
-    .cc-audit-badge-success {
-        background: rgba(22, 163, 74, .12);
-        color: #166534;
-    }
-
-    .cc-audit-badge-danger {
-        background: rgba(220, 38, 38, .12);
-        color: #991b1b;
-    }
-
-    .cc-audit-badge-warning {
-        background: rgba(217, 119, 6, .14);
-        color: #92400e;
-    }
-
-    .cc-audit-badge-info {
-        background: rgba(37, 99, 235, .12);
-        color: #1d4ed8;
-    }
-
-    .cc-audit-badge-muted {
-        background: rgba(100, 116, 139, .14);
-        color: #475569;
-    }
-
-    .cc-audit-detail-row[hidden] {
-        display: none;
-    }
-
-    .cc-audit-detail-cell {
-        padding: 0 !important;
-        background: var(--cc-bg-soft);
-    }
-
-    .cc-audit-detail-panel {
-        padding: 1rem;
-        border-top: 1px solid var(--cc-border);
-        border-bottom: 1px solid var(--cc-border);
-    }
-
-    .cc-audit-detail-heading {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 1rem;
-        margin-bottom: .75rem;
-    }
-
-    .cc-audit-detail-title {
-        color: var(--cc-text-main);
-        font-size: .88rem;
-        font-weight: 800;
-    }
-
-    .cc-audit-detail-note {
-        color: var(--cc-text-muted);
-        font-size: .72rem;
-        line-height: 1.4;
-        text-align: right;
-    }
-
-    .cc-audit-detail-table-wrapper {
-        overflow-x: auto;
-    }
-
-    .cc-audit-detail-table {
-        width: 100%;
-        min-width: 60rem;
-        border-collapse: collapse;
-        background: var(--cc-bg-card);
-    }
-
-    .cc-audit-detail-table th,
-    .cc-audit-detail-table td {
-        padding: .7rem .75rem;
-        border: 1px solid var(--cc-border);
-        vertical-align: middle;
-    }
-
-    .cc-audit-detail-table th {
-        background: var(--cc-bg-soft);
-        color: var(--cc-text-main);
-        font-size: .7rem;
-        font-weight: 800;
-        text-align: center;
-        text-transform: uppercase;
-        white-space: nowrap;
-    }
-
-    .cc-audit-detail-table td {
-        font-size: .78rem;
-    }
-
-    .cc-audit-actions {
-        justify-content: flex-end !important;
-    }
-
-    .cc-card .cc-filter-panel,
-    .cc-card .cc-filter-panel-inline {
-        overflow: visible;
-    }
-
-    .cc-card .cc-filter-multiselect {
-        position: relative;
-        z-index: 1;
-    }
-
-    .cc-card .cc-filter-multiselect.is-open {
-        z-index: 1000;
-    }
-
-    .cc-card .cc-filter-multiselect-menu {
-        z-index: 1001;
-    }
-
-    @media (max-width: 1180px) {
-        .cc-audit-summary {
-            grid-template-columns:
-                repeat(4, minmax(0, 1fr)) !important;
-        }
-    }
-
-    @media (max-width: 900px) {
-        .cc-audit-summary {
-            grid-template-columns:
-                repeat(2, minmax(0, 1fr)) !important;
-        }
-
-        .cc-audit-panorama {
-            grid-template-columns: minmax(0, 1fr);
-        }
-    }
-
-    @media (max-width: 760px) {
-        .cc-audit-chart-controls {
-            grid-template-columns: minmax(0, 1fr);
-        }
-
-        .cc-audit-chart-toolbar {
-            display: grid;
-            grid-template-columns:
-                repeat(2, minmax(0, 1fr));
-        }
-
-        .cc-audit-chart-toolbar > * {
-            width: 100%;
-        }
-
-        .cc-audit-chart-status {
-            grid-column: 1 / -1;
-            margin-left: 0;
-            text-align: center;
-        }
-
-        .cc-audit-chart-navigator {
-            grid-template-columns: minmax(0, 1fr);
-        }
-
-        .cc-audit-header {
-            grid-template-columns:
-                minmax(0, 1fr) !important;
-        }
-
-        .cc-audit-header > div:last-child {
-            width: 100%;
-            justify-content: stretch;
-        }
-
-        .cc-audit-header > div:last-child > a {
-            width: 100%;
-        }
-
-        .cc-audit-actions {
-            display: grid !important;
-            grid-template-columns:
-                repeat(2, minmax(0, 1fr)) !important;
-            gap: .75rem !important;
-        }
-
-        .cc-audit-actions > * {
-            width: 100% !important;
-        }
-
-        .cc-audit-detail-heading {
-            flex-direction: column;
-        }
-
-        .cc-audit-detail-note {
-            text-align: left;
-        }
-    }
-
-    @media (max-width: 430px) {
-        .cc-audit-summary,
-        .cc-audit-actions {
-            grid-template-columns:
-                minmax(0, 1fr) !important;
-        }
-    }
-</style>
 
 <div class="cc-card">
     <div
         class="cc-card-header
                cc-card-header-compact
-               cc-audit-header"
+               cc-audit-header cc-analytics-header"
     >
         <div>
             <h3 class="cc-title cc-title-compact">
@@ -613,7 +96,7 @@
 
     @if ($errors->any())
         <div class="cc-alert cc-alert-danger">
-            <div class="font-bold">
+            <div class="cc-alert-title">
                 No fue posible completar la consulta.
             </div>
 
@@ -1082,7 +565,7 @@
             ];
         @endphp
 
-        <div class="cc-summary-strip cc-audit-summary">
+        <div class="cc-summary-strip cc-audit-summary cc-analytics-summary">
             @foreach ($tarjetas as $tarjeta)
                 <div class="cc-summary-strip-item">
                     <span class="cc-summary-strip-label">
@@ -1096,12 +579,12 @@
             @endforeach
         </div>
 
-        <section class="cc-audit-chart-card">
-            <h4 class="cc-audit-chart-title">
+        <section class="cc-audit-chart-card cc-analytics-chart">
+            <h4 class="cc-audit-chart-title cc-analytics-chart-title">
                 Distribución de reemplazos por categoría
             </h4>
 
-            <div class="cc-audit-chart-subtitle">
+            <div class="cc-audit-chart-subtitle cc-analytics-chart-subtitle">
                 Porcentaje de marchamos reemplazados dentro del
                 período y filtros seleccionados.
             </div>
@@ -1138,7 +621,7 @@
                         </select>
                     </div>
 
-                    <div class="cc-audit-chart-toolbar">
+                    <div class="cc-audit-chart-toolbar cc-analytics-chart-toolbar">
                         <button
                             type="button"
                             class="cc-btn-secondary"
@@ -1197,7 +680,7 @@
                     </div>
                 </div>
 
-                <div class="cc-audit-chart-area">
+                <div class="cc-audit-chart-area cc-analytics-chart-stage">
                     <canvas
                         class="cc-audit-chart-canvas"
                         data-audit-category-chart
@@ -1215,11 +698,11 @@
                 </div>
 
                 <div
-                    class="cc-audit-chart-legend"
+                    class="cc-audit-chart-legend cc-analytics-chart-legend"
                     data-chart-legend
                 ></div>
 
-                <div class="cc-audit-chart-navigator">
+                <div class="cc-audit-chart-navigator cc-analytics-chart-navigator">
                     <span class="cc-audit-chart-navigator-label">
                         Inicio
                     </span>
@@ -1265,7 +748,7 @@
                     id="grafico-auditoria-categorias"
                 >@json($graficoAuditoria)</script>
             @else
-                <div class="cc-audit-chart-empty">
+                <div class="cc-audit-chart-empty cc-analytics-chart-empty">
                     No hay información suficiente para construir
                     el gráfico.
                 </div>
@@ -1404,16 +887,16 @@
                                 colspan="8"
                                 class="cc-audit-detail-cell"
                             >
-                                <div class="cc-audit-detail-panel">
-                                    <div class="cc-audit-detail-heading">
+                                <div class="cc-audit-detail-panel cc-analytics-panel">
+                                    <div class="cc-audit-detail-heading cc-analytics-panel-header">
                                         <div
-                                            class="cc-audit-detail-title"
+                                            class="cc-audit-detail-title cc-analytics-panel-title"
                                         >
                                             Evento #{{ $evento['id'] }}
                                         </div>
 
                                         <div
-                                            class="cc-audit-detail-note"
+                                            class="cc-audit-detail-note cc-analytics-panel-subtitle"
                                         >
                                             {{
                                                 $evento[

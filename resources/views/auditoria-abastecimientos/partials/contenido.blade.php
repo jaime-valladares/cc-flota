@@ -66,236 +66,9 @@
     };
 @endphp
 
-<style>
-    .cc-aud-abast-header {
-        display: grid !important;
-        grid-template-columns: minmax(0, 1fr) auto !important;
-        align-items: start !important;
-        gap: 1rem !important;
-    }
-
-    .cc-aud-abast-summary {
-        display: grid !important;
-        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-        gap: 1rem !important;
-        margin-bottom: 1.25rem;
-    }
-
-    .cc-aud-abast-kpi {
-        display: flex;
-        min-width: 0;
-        min-height: 7rem;
-        flex-direction: column;
-        justify-content: space-between;
-        gap: .8rem;
-        padding: 1rem 1.1rem;
-        border: 1px solid var(--cc-border);
-        border-radius: 1rem;
-        background:
-            linear-gradient(
-                180deg,
-                rgba(255, 255, 255, .98),
-                rgba(248, 250, 252, .98)
-            );
-    }
-
-    .cc-aud-abast-kpi-label {
-        color: var(--cc-text-muted);
-        font-size: .72rem;
-        font-weight: 800;
-        letter-spacing: .07em;
-        line-height: 1.3;
-        text-transform: uppercase;
-    }
-
-    .cc-aud-abast-kpi-value {
-        color: var(--cc-text-main);
-        font-family: "Plus Jakarta Sans", sans-serif;
-        font-size: clamp(1.15rem, 1.45vw, 1.4rem);
-        font-weight: 800;
-        line-height: 1.05;
-        overflow-wrap: anywhere;
-    }
-
-    .cc-aud-abast-kpi-meta {
-        color: var(--cc-text-muted);
-        font-size: .76rem;
-        line-height: 1.35;
-    }
-
-    .cc-aud-abast-charts {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 1rem;
-        margin-bottom: 1.25rem;
-    }
-
-    .cc-aud-abast-chart-card {
-        min-width: 0;
-        padding: 1rem;
-        border: 1px solid var(--cc-border);
-        border-radius: 1rem;
-        background: var(--cc-bg-card);
-    }
-
-    .cc-aud-abast-chart-head {
-        margin-bottom: .8rem;
-    }
-
-    .cc-aud-abast-chart-title {
-        margin: 0 0 .2rem;
-        color: var(--cc-text-main);
-        font-size: .96rem;
-        font-weight: 800;
-    }
-
-    .cc-aud-abast-chart-subtitle {
-        color: var(--cc-text-muted);
-        font-size: .78rem;
-        line-height: 1.35;
-    }
-
-    .cc-aud-abast-chart-controls {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: flex-end;
-        gap: .45rem;
-        margin-top: .8rem;
-    }
-
-    .cc-aud-abast-chart-controls button {
-        padding: .48rem .7rem;
-        border: 1px solid var(--cc-border);
-        border-radius: .65rem;
-        background: var(--cc-bg-card);
-        color: var(--cc-text-main);
-        font-size: .72rem;
-        font-weight: 800;
-        white-space: nowrap;
-    }
-
-    .cc-aud-abast-chart-controls button:disabled {
-        cursor: not-allowed;
-        opacity: .45;
-    }
-
-    .cc-aud-abast-chart-stage {
-        position: relative;
-        min-height: 19rem;
-        border: 1px solid var(--cc-border);
-        border-radius: .85rem;
-        background: var(--cc-bg-soft);
-        overflow: hidden;
-    }
-
-    .cc-aud-abast-chart-canvas {
-        display: block;
-        width: 100%;
-        height: 19rem;
-    }
-
-    .cc-aud-abast-chart-legend {
-        display: flex;
-        flex-wrap: wrap;
-        gap: .9rem;
-        margin-top: .75rem;
-        color: var(--cc-text-muted);
-        font-size: .74rem;
-    }
-
-    .cc-aud-abast-legend-item {
-        display: inline-flex;
-        align-items: center;
-        gap: .4rem;
-    }
-
-    .cc-aud-abast-legend-dot {
-        width: .65rem;
-        height: .65rem;
-        border-radius: .2rem;
-    }
-
-    .cc-aud-abast-chart-range {
-        margin-top: .65rem;
-        color: var(--cc-text-muted);
-        font-size: .72rem;
-        text-align: right;
-    }
-
-    .cc-aud-abast-chart-empty {
-        display: flex;
-        min-height: 19rem;
-        align-items: center;
-        justify-content: center;
-        padding: 2rem;
-        color: var(--cc-text-muted);
-        text-align: center;
-    }
-
-    .cc-aud-abast-sort-link {
-        display: inline-flex;
-        width: 100%;
-        align-items: center;
-        justify-content: center;
-        gap: .4rem;
-        color: inherit;
-        text-decoration: none;
-        white-space: nowrap;
-    }
-
-    .cc-card .cc-filter-panel,
-    .cc-card .cc-filter-panel-inline {
-        overflow: visible;
-    }
-
-    .cc-card .cc-filter-multiselect {
-        position: relative;
-        z-index: 1;
-    }
-
-    .cc-card .cc-filter-multiselect.is-open {
-        z-index: 1000;
-    }
-
-    .cc-card .cc-filter-multiselect-menu {
-        z-index: 1001;
-    }
-
-    @media (max-width: 1050px) {
-        .cc-aud-abast-summary {
-            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        }
-
-        .cc-aud-abast-charts {
-            grid-template-columns: minmax(0, 1fr);
-        }
-    }
-
-    @media (max-width: 760px) {
-        .cc-aud-abast-header {
-            grid-template-columns: minmax(0, 1fr) !important;
-        }
-
-        .cc-aud-abast-header > div:last-child,
-        .cc-aud-abast-header > div:last-child > a {
-            width: 100%;
-        }
-
-        .cc-aud-abast-chart-controls {
-            width: 100%;
-            justify-content: flex-start;
-        }
-    }
-
-    @media (max-width: 520px) {
-        .cc-aud-abast-summary {
-            grid-template-columns: minmax(0, 1fr) !important;
-        }
-    }
-</style>
 
 <div class="cc-card">
-    <div class="cc-card-header cc-card-header-compact cc-aud-abast-header">
+    <div class="cc-card-header cc-card-header-compact cc-aud-abast-header cc-analytics-header">
         <div>
             <h3 class="cc-title cc-title-compact">
                 Auditoría de Abastecimientos
@@ -318,7 +91,7 @@
 
     @if ($errors->any())
         <div class="cc-alert cc-alert-danger">
-            <div class="font-bold">
+            <div class="cc-alert-title">
                 No fue posible completar la auditoría.
             </div>
 
@@ -722,40 +495,40 @@
             ];
         @endphp
 
-        <div class="cc-aud-abast-summary">
+        <div class="cc-aud-abast-summary cc-analytics-kpi-grid">
             @foreach ($tarjetas as $tarjeta)
-                <div class="cc-aud-abast-kpi">
-                    <div class="cc-aud-abast-kpi-label">
+                <div class="cc-aud-abast-kpi cc-analytics-kpi">
+                    <div class="cc-aud-abast-kpi-label cc-analytics-kpi-label">
                         {{ $tarjeta['etiqueta'] }}
                     </div>
 
-                    <div class="cc-aud-abast-kpi-value">
+                    <div class="cc-aud-abast-kpi-value cc-analytics-kpi-value">
                         {{ $tarjeta['valor'] }}
                     </div>
 
-                    <div class="cc-aud-abast-kpi-meta">
+                    <div class="cc-aud-abast-kpi-meta cc-analytics-kpi-meta">
                         {{ $tarjeta['meta'] }}
                     </div>
                 </div>
             @endforeach
         </div>
 
-        <div class="cc-aud-abast-charts">
-            <section class="cc-aud-abast-chart-card">
-                <div class="cc-aud-abast-chart-head">
+        <div class="cc-aud-abast-charts cc-analytics-grid">
+            <section class="cc-aud-abast-chart-card cc-analytics-chart">
+                <div class="cc-aud-abast-chart-head cc-analytics-chart-header">
                     <div>
-                        <h4 class="cc-aud-abast-chart-title">
+                        <h4 class="cc-aud-abast-chart-title cc-analytics-chart-title">
                             Galones abastecidos por fecha
                         </h4>
 
-                        <div class="cc-aud-abast-chart-subtitle">
+                        <div class="cc-aud-abast-chart-subtitle cc-analytics-chart-subtitle">
                             Comparación diaria entre origen interno y externo.
                         </div>
                     </div>
 
                 </div>
 
-                <div class="cc-aud-abast-chart-stage">
+                <div class="cc-aud-abast-chart-stage cc-analytics-chart-stage">
                     @if ($graficos['tendencia'] !== [])
                         <canvas
                             id="chart-tendencia"
@@ -769,13 +542,13 @@
                             id="data-chart-tendencia"
                         >@json($graficos['tendencia'])</script>
                     @else
-                        <div class="cc-aud-abast-chart-empty">
+                        <div class="cc-aud-abast-chart-empty cc-analytics-chart-empty">
                             No hay información suficiente para construir el gráfico.
                         </div>
                     @endif
                 </div>
 
-                    <div class="cc-aud-abast-chart-controls">
+                    <div class="cc-aud-abast-chart-controls cc-analytics-chart-toolbar">
                         <button type="button" data-chart-prev="chart-tendencia">
                             Anterior
                         </button>
@@ -793,7 +566,7 @@
                         </button>
                     </div>
 
-                <div class="cc-aud-abast-chart-legend">
+                <div class="cc-aud-abast-chart-legend cc-analytics-chart-legend">
                     <span class="cc-aud-abast-legend-item">
                         <span
                             class="cc-aud-abast-legend-dot"
@@ -812,26 +585,26 @@
                 </div>
 
                 <div
-                    class="cc-aud-abast-chart-range"
+                    class="cc-aud-abast-chart-range cc-analytics-chart-navigator"
                     data-chart-range-label="chart-tendencia"
                 ></div>
             </section>
 
-            <section class="cc-aud-abast-chart-card">
-                <div class="cc-aud-abast-chart-head">
+            <section class="cc-aud-abast-chart-card cc-analytics-chart">
+                <div class="cc-aud-abast-chart-head cc-analytics-chart-header">
                     <div>
-                        <h4 class="cc-aud-abast-chart-title">
+                        <h4 class="cc-aud-abast-chart-title cc-analytics-chart-title">
                             Unidades con mayor volumen abastecido
                         </h4>
 
-                        <div class="cc-aud-abast-chart-subtitle">
+                        <div class="cc-aud-abast-chart-subtitle cc-analytics-chart-subtitle">
                             Ranking de unidades por galones acumulados.
                         </div>
                     </div>
 
                 </div>
 
-                <div class="cc-aud-abast-chart-stage">
+                <div class="cc-aud-abast-chart-stage cc-analytics-chart-stage">
                     @if ($graficos['unidades'] !== [])
                         <canvas
                             id="chart-unidades"
@@ -845,13 +618,13 @@
                             id="data-chart-unidades"
                         >@json($graficos['unidades'])</script>
                     @else
-                        <div class="cc-aud-abast-chart-empty">
+                        <div class="cc-aud-abast-chart-empty cc-analytics-chart-empty">
                             No hay información suficiente para construir el gráfico.
                         </div>
                     @endif
                 </div>
 
-                    <div class="cc-aud-abast-chart-controls">
+                    <div class="cc-aud-abast-chart-controls cc-analytics-chart-toolbar">
                         <button type="button" data-chart-prev="chart-unidades">
                             Anterior
                         </button>
@@ -869,7 +642,7 @@
                         </button>
                     </div>
 
-                <div class="cc-aud-abast-chart-legend">
+                <div class="cc-aud-abast-chart-legend cc-analytics-chart-legend">
                     <span class="cc-aud-abast-legend-item">
                         <span
                             class="cc-aud-abast-legend-dot"
@@ -880,7 +653,7 @@
                 </div>
 
                 <div
-                    class="cc-aud-abast-chart-range"
+                    class="cc-aud-abast-chart-range cc-analytics-chart-navigator"
                     data-chart-range-label="chart-unidades"
                 ></div>
             </section>
@@ -905,19 +678,18 @@
         </section>
     @else
         <div
-            class="mb-4 flex justify-end
-                   text-sm text-[var(--cc-text-muted)]"
+            class="cc-result-count"
         >
             Mostrando
-            <span class="mx-1 font-bold text-[var(--cc-text-main)]">
+            <span class="cc-result-count-value">
                 {{ $abastecimientosAuditados->firstItem() }}
             </span>
             -
-            <span class="mx-1 font-bold text-[var(--cc-text-main)]">
+            <span class="cc-result-count-value">
                 {{ $abastecimientosAuditados->lastItem() }}
             </span>
             de
-            <span class="ml-1 font-bold text-[var(--cc-text-main)]">
+            <span class="cc-result-count-value">
                 {{ $abastecimientosAuditados->total() }}
             </span>
         </div>

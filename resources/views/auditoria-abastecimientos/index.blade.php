@@ -1,8 +1,7 @@
 <x-app-layout>
-    <div class="cc-page-wrapper">
+    <div class="cc-page-wrapper cc-va-scope cc-va-analytics">
         <div
-            class="cc-content-container"
-            style="max-width: 80rem;"
+            class="cc-content-container cc-operational-container"
         >
             @include(
                 'auditoria-abastecimientos.partials.contenido',
