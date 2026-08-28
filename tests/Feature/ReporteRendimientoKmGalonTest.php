@@ -112,7 +112,7 @@ test('ReporteRendimientoKmGalon tenant limita listado filtros manipulados y deta
     prepararReporteKmGalon($this); $a=empresaKmGalon('TA'); $b=empresaKmGalon('TB'); $global=usuarioKmGalon(User::ROL_DIESEL_ADMIN);
     $ma=motoristaKmGalon($a,'TA'); $mb=motoristaKmGalon($b,'TB'); $ua=unidadKmGalon($a,'KM-TA'); $ub=unidadKmGalon($b,'KM-TB'); $ca=cicloKmGalon($a,$ua,$ma,$ma,$global,'2026-08-10'); $cb=cicloKmGalon($b,$ub,$mb,$mb,$global,'2026-08-11'); $user=usuarioKmGalon(User::ROL_EMPRESA_ADMIN,$a);
     $this->actingAs($user)->get(route('reportes.rendimiento-km-galon.index',['consultar'=>1]))->assertSee('data-report-cycle-row="'.$ca->id.'"',false)->assertDontSee('data-report-cycle-row="'.$cb->id.'"',false);
-    $this->actingAs($user)->get(route('reportes.rendimiento-km-galon.index',['consultar'=>1,'empresa_ids'=>[$b->id],'unidad_ids'=>[$ub->id],'motorista_ids'=>[$mb->id]]))->assertOk()->assertDontSee('data-report-cycle-row="'.$cb->id.'"',false);
+    $this->actingAs($user)->get(route('reportes.rendimiento-km-galon.index',['consultar'=>1,'empresa_ids'=>[$b->id],'unidad_ids'=>[$ub->id],'motorista_ids'=>[$mb->id]]))->assertForbidden();
     $this->actingAs($user)->get(route('reportes.rendimiento-km-galon.show',$ca))->assertOk();
     $this->actingAs($user)->get(route('reportes.rendimiento-km-galon.show',$cb))->assertForbidden();
 });

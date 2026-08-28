@@ -19,6 +19,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PuntoRutaController;
 use App\Http\Controllers\RecargaTanqueController;
 use App\Http\Controllers\Reportes\FichaUnidadController;
+use App\Http\Controllers\Reportes\RendimientoGalonesHoraController;
+use App\Http\Controllers\Reportes\RendimientoGalonesViajeController;
 use App\Http\Controllers\Reportes\RendimientoKmGalonController;
 use App\Http\Controllers\RutaController;
 use App\Http\Controllers\TanqueController;
@@ -1349,6 +1351,16 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
             ->name('reportes.rendimiento-km-galon.show.ventana');
         Route::get('/reportes/rendimiento-km-galon/{ciclo}', [RendimientoKmGalonController::class, 'show'])
             ->name('reportes.rendimiento-km-galon.show');
+
+        Route::get('/reportes/rendimiento-galones-hora', [RendimientoGalonesHoraController::class, 'index'])->name('reportes.rendimiento-galones-hora.index');
+        Route::get('/reportes/rendimiento-galones-hora/ventana', [RendimientoGalonesHoraController::class, 'ventana'])->name('reportes.rendimiento-galones-hora.ventana');
+        Route::get('/reportes/rendimiento-galones-hora/{ciclo}/ventana', [RendimientoGalonesHoraController::class, 'showVentana'])->name('reportes.rendimiento-galones-hora.show.ventana');
+        Route::get('/reportes/rendimiento-galones-hora/{ciclo}', [RendimientoGalonesHoraController::class, 'show'])->name('reportes.rendimiento-galones-hora.show');
+
+        Route::get('/reportes/rendimiento-galones-viaje', [RendimientoGalonesViajeController::class, 'index'])->name('reportes.rendimiento-galones-viaje.index');
+        Route::get('/reportes/rendimiento-galones-viaje/ventana', [RendimientoGalonesViajeController::class, 'ventana'])->name('reportes.rendimiento-galones-viaje.ventana');
+        Route::get('/reportes/rendimiento-galones-viaje/{ciclo}/ventana', [RendimientoGalonesViajeController::class, 'showVentana'])->name('reportes.rendimiento-galones-viaje.show.ventana');
+        Route::get('/reportes/rendimiento-galones-viaje/{ciclo}', [RendimientoGalonesViajeController::class, 'show'])->name('reportes.rendimiento-galones-viaje.show');
     });
 
 });

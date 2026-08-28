@@ -1055,6 +1055,14 @@
                                     <a href="{{ route('reportes.rendimiento-km-galon.index') }}" class="cc-sidebar-sublink {{ request()->routeIs('reportes.rendimiento-km-galon.*') ? 'cc-sidebar-sublink-active' : '' }}">
                                         Rendimiento km/gal
                                     </a>
+
+                                    <a href="{{ route('reportes.rendimiento-galones-hora.index') }}" class="cc-sidebar-sublink {{ request()->routeIs('reportes.rendimiento-galones-hora.*') ? 'cc-sidebar-sublink-active' : '' }}">
+                                        Rendimiento gal/hora
+                                    </a>
+
+                                    <a href="{{ route('reportes.rendimiento-galones-viaje.index') }}" class="cc-sidebar-sublink {{ request()->routeIs('reportes.rendimiento-galones-viaje.*') ? 'cc-sidebar-sublink-active' : '' }}">
+                                        Rendimiento gal/viaje
+                                    </a>
                                 @endif
                             </div>
                         </div>
