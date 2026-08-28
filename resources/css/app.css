@@ -6764,15 +6764,8 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
 }
 
 
-/* Análisis de consumo de unidades — excepciones semánticas migradas desde Blade. */
-    .cc-consumo-header {
-        display: grid !important;
-        grid-template-columns: minmax(0, 1fr) auto !important;
-        align-items: start !important;
-        gap: 1rem !important;
-    }
-
-    .cc-consumo-summary {
+/* Gráfico analítico interactivo: navegación, zoom y tabla de datos. */
+    .cc-va-analytics .cc-analytics-summary.cc-analytics-summary-three {
         display: grid !important;
         grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
         gap: .85rem !important;
@@ -6782,7 +6775,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         background: transparent !important;
     }
 
-    .cc-consumo-summary .cc-summary-strip-item {
+    .cc-va-analytics .cc-analytics-summary.cc-analytics-summary-three .cc-summary-strip-item {
         display: flex !important;
         min-width: 0;
         min-height: 6.25rem;
@@ -6798,8 +6791,8 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         box-shadow: 0 .35rem 1rem rgba(15, 23, 42, .035);
     }
 
-    .cc-consumo-summary .cc-summary-strip-label,
-    .cc-consumo-summary .cc-summary-strip-value {
+    .cc-va-analytics .cc-analytics-summary.cc-analytics-summary-three .cc-summary-strip-label,
+    .cc-va-analytics .cc-analytics-summary.cc-analytics-summary-three .cc-summary-strip-value {
         display: block !important;
         width: 100%;
         margin: 0 !important;
@@ -6807,7 +6800,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         white-space: normal !important;
     }
 
-    .cc-consumo-summary .cc-summary-strip-label {
+    .cc-va-analytics .cc-analytics-summary.cc-analytics-summary-three .cc-summary-strip-label {
         color: var(--cc-text-muted);
         font-size: .7rem;
         font-weight: 800;
@@ -6816,7 +6809,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         text-transform: uppercase;
     }
 
-    .cc-consumo-summary .cc-summary-strip-value {
+    .cc-va-analytics .cc-analytics-summary.cc-analytics-summary-three .cc-summary-strip-value {
         color: var(--cc-text-main);
         font-size: 1.25rem;
         font-weight: 800;
@@ -6824,55 +6817,12 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         overflow-wrap: anywhere;
     }
 
-    .cc-consumo-charts {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 1rem;
-        margin-bottom: 1.25rem;
-    }
-
-    .cc-consumo-chart-card {
-        min-width: 0;
+    .cc-va-analytics .cc-analytics-chart-interactive {
         padding: 1rem;
-        border: 1px solid var(--cc-border);
-        border-radius: 1rem;
-        background: var(--cc-bg-card);
         box-shadow: 0 .35rem 1rem rgba(15, 23, 42, .035);
     }
 
-    .cc-consumo-chart-header {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 1rem;
-        margin-bottom: .8rem;
-    }
-
-    .cc-consumo-chart-title {
-        margin: 0 0 .2rem;
-        color: var(--cc-text-main);
-        font-size: .95rem;
-        font-weight: 800;
-    }
-
-    .cc-consumo-chart-subtitle {
-        color: var(--cc-text-muted);
-        font-size: .78rem;
-        line-height: 1.4;
-    }
-
-    .cc-consumo-chart-badge {
-        flex: 0 0 auto;
-        padding: .3rem .6rem;
-        border: 1px solid var(--cc-border);
-        border-radius: 999px;
-        color: var(--cc-text-muted);
-        font-size: .7rem;
-        font-weight: 800;
-        white-space: nowrap;
-    }
-
-    .cc-consumo-chart-toolbar {
+    .cc-va-analytics .cc-analytics-chart-interactive .cc-analytics-chart-toolbar {
         display: flex;
         align-items: center;
         flex-wrap: wrap;
@@ -6884,7 +6834,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         background: var(--cc-bg-soft);
     }
 
-    .cc-consumo-chart-button {
+    .cc-va-analytics .cc-analytics-chart-button {
         display: inline-flex;
         min-height: 2rem;
         align-items: center;
@@ -6899,16 +6849,16 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         cursor: pointer;
     }
 
-    .cc-consumo-chart-button:hover {
+    .cc-va-analytics .cc-analytics-chart-button:hover {
         border-color: var(--cc-primary);
     }
 
-    .cc-consumo-chart-button:disabled {
+    .cc-va-analytics .cc-analytics-chart-button:disabled {
         cursor: not-allowed;
         opacity: .45;
     }
 
-    .cc-consumo-chart-status {
+    .cc-va-analytics .cc-analytics-chart-status {
         margin-left: auto;
         color: var(--cc-text-muted);
         font-size: .7rem;
@@ -6916,118 +6866,85 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         white-space: nowrap;
     }
 
-    .cc-consumo-chart-stage {
-        position: relative;
+    .cc-va-analytics .cc-analytics-chart-interactive .cc-analytics-chart-area {
         min-height: 19rem;
-        overflow: hidden;
-        border: 1px solid var(--cc-border);
-        border-radius: .8rem;
-        background: var(--cc-bg-card);
     }
 
-    .cc-consumo-chart-canvas {
-        display: block;
-        width: 100%;
+    .cc-va-analytics .cc-analytics-chart-interactive .cc-analytics-chart-canvas {
         height: 19rem;
     }
 
-    .cc-consumo-chart-detail {
+    .cc-va-analytics .cc-analytics-chart-interactive .cc-analytics-chart-detail {
         min-height: 1.4rem;
         margin-top: .55rem;
-        color: var(--cc-text-muted);
-        font-size: .74rem;
-        text-align: center;
     }
 
-    .cc-consumo-chart-legend {
+    .cc-va-analytics .cc-analytics-chart-interactive .cc-analytics-chart-legend {
         display: flex;
         flex-wrap: wrap;
         gap: .7rem;
         margin-top: .65rem;
-        color: var(--cc-text-muted);
-        font-size: .7rem;
     }
 
-    .cc-consumo-chart-legend-item {
+    .cc-va-analytics .cc-analytics-chart-legend-item {
         display: inline-flex;
         align-items: center;
         gap: .35rem;
     }
 
-    .cc-consumo-chart-legend-swatch {
+    .cc-va-analytics .cc-analytics-chart-legend-swatch {
         width: .75rem;
         height: .75rem;
         border-radius: .2rem;
     }
 
-    .cc-consumo-chart-navigator {
+    .cc-va-analytics .cc-analytics-chart-interactive .cc-analytics-chart-navigator {
         display: grid;
         grid-template-columns: auto minmax(0, 1fr) auto;
         align-items: center;
         gap: .65rem;
         margin-top: .7rem;
-        color: var(--cc-text-muted);
-        font-size: .7rem;
     }
 
-    .cc-consumo-chart-navigator input[type="range"] {
+    .cc-va-analytics .cc-analytics-chart-navigator input[type="range"] {
         width: 100%;
     }
 
-    .cc-consumo-chart-data {
+    .cc-va-analytics .cc-analytics-chart-data {
         display: none;
         margin-top: .75rem;
         overflow-x: auto;
     }
 
-    .cc-consumo-chart-data.is-visible {
+    .cc-va-analytics .cc-analytics-chart-data.is-visible {
         display: block;
     }
 
-    .cc-consumo-chart-data table {
+    .cc-va-analytics .cc-analytics-chart-data table {
         width: 100%;
         min-width: 30rem;
         border-collapse: collapse;
     }
 
-    .cc-consumo-chart-data th,
-    .cc-consumo-chart-data td {
+    .cc-va-analytics .cc-analytics-chart-data th,
+    .cc-va-analytics .cc-analytics-chart-data td {
         padding: .55rem .65rem;
         border: 1px solid var(--cc-border);
         font-size: .72rem;
         text-align: center;
     }
 
-    .cc-consumo-chart-data th {
+    .cc-va-analytics .cc-analytics-chart-data th {
         background: var(--cc-bg-soft);
         font-weight: 800;
         text-transform: uppercase;
     }
 
-    .cc-consumo-chart-empty {
-        display: flex;
+    .cc-va-analytics .cc-analytics-chart-interactive .cc-analytics-chart-empty {
         min-height: 19rem;
-        align-items: center;
-        justify-content: center;
-        padding: 2rem;
-        border: 1px dashed var(--cc-border);
-        border-radius: .8rem;
-        color: var(--cc-text-muted);
-        text-align: center;
     }
 
-    .cc-consumo-sort-link {
-        display: inline-flex;
-        width: 100%;
-        align-items: center;
-        justify-content: center;
-        gap: .4rem;
-        color: inherit;
-        text-decoration: none;
-        white-space: nowrap;
-    }
-
-    .cc-consumo-trend {
+    .cc-va-analytics .cc-analytics-trend {
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -7041,73 +6958,35 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         white-space: nowrap;
     }
 
-    .cc-consumo-number {
-        white-space: nowrap;
-        text-align: right;
-    }
-
-    .cc-va-analytics .cc-card .cc-filter-panel,
-    .cc-va-analytics .cc-card .cc-filter-panel-inline {
-        overflow: visible;
-    }
-
-    .cc-va-analytics .cc-card .cc-filter-multiselect {
-        position: relative;
-        z-index: 1;
-    }
-
-    .cc-va-analytics .cc-card .cc-filter-multiselect.is-open {
-        z-index: 1000;
-    }
-
-    .cc-va-analytics .cc-card .cc-filter-multiselect-menu {
-        z-index: 1001;
-    }
-
     @media (max-width: 1100px) {
-        .cc-consumo-summary {
+        .cc-va-analytics .cc-analytics-summary.cc-analytics-summary-three {
             grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
         }
     }
 
-    @media (max-width: 900px) {
-        .cc-consumo-charts {
-            grid-template-columns: minmax(0, 1fr);
-        }
-    }
-
     @media (max-width: 760px) {
-        .cc-consumo-header {
-            grid-template-columns: minmax(0, 1fr) !important;
-        }
-
-        .cc-consumo-header > div:last-child,
-        .cc-consumo-header > div:last-child > a {
-            width: 100%;
-        }
-
-        .cc-consumo-chart-toolbar {
+        .cc-va-analytics .cc-analytics-chart-interactive .cc-analytics-chart-toolbar {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
-        .cc-consumo-chart-button {
+        .cc-va-analytics .cc-analytics-chart-button {
             width: 100%;
         }
 
-        .cc-consumo-chart-status {
+        .cc-va-analytics .cc-analytics-chart-status {
             grid-column: 1 / -1;
             margin-left: 0;
             text-align: center;
         }
 
-        .cc-consumo-chart-navigator {
+        .cc-va-analytics .cc-analytics-chart-interactive .cc-analytics-chart-navigator {
             grid-template-columns: minmax(0, 1fr);
         }
     }
 
     @media (max-width: 520px) {
-        .cc-consumo-summary {
+        .cc-va-analytics .cc-analytics-summary.cc-analytics-summary-three {
             grid-template-columns: minmax(0, 1fr) !important;
         }
     }
@@ -7258,7 +7137,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         opacity: .72;
     }
 
-    .cc-cycle-number {
+    .cc-va-analytics .cc-cycle-number {
         display: inline-flex;
         min-width: 3rem;
         align-items: center;
@@ -7270,7 +7149,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         background: var(--cc-bg-soft);
     }
 
-    .cc-kilometraje-flow {
+    .cc-va-analytics .cc-kilometraje-flow {
         display: inline-flex;
         align-items: center;
         gap: .5rem;
@@ -7278,11 +7157,11 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         font-weight: 700;
     }
 
-    .cc-kilometraje-arrow {
+    .cc-va-analytics .cc-kilometraje-arrow {
         color: var(--cc-text-muted);
     }
 
-    .cc-motorista-nowrap {
+    .cc-va-analytics .cc-motorista-nowrap {
         white-space: nowrap;
     }
 
@@ -7379,27 +7258,27 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     }
 
 /* Análisis de rutas — excepciones semánticas migradas desde Blade. */
-    .cc-route-header {
+    .cc-va-analytics .cc-analytics-route .cc-analytics-header {
         display: grid !important;
         grid-template-columns: minmax(0, 1fr) auto !important;
         align-items: start !important;
         gap: 1rem !important;
     }
 
-    .cc-route-header > div:last-child {
+    .cc-va-analytics .cc-analytics-route .cc-analytics-header > div:last-child {
         display: flex;
         justify-content: flex-end;
         min-width: 0;
     }
 
-    .cc-route-summary {
+    .cc-va-analytics .cc-analytics-route .cc-analytics-summary {
         display: grid !important;
         grid-template-columns:
             repeat(7, minmax(0, 1fr)) !important;
         width: 100%;
     }
 
-    .cc-route-summary .cc-summary-strip-item {
+    .cc-va-analytics .cc-analytics-route .cc-analytics-summary .cc-summary-strip-item {
         display: flex !important;
         min-width: 0;
         min-height: 5.6rem;
@@ -7411,18 +7290,18 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         text-align: center !important;
     }
 
-    .cc-route-summary .cc-summary-strip-label,
-    .cc-route-summary .cc-summary-strip-value {
+    .cc-va-analytics .cc-analytics-route .cc-analytics-summary .cc-summary-strip-label,
+    .cc-va-analytics .cc-analytics-route .cc-analytics-summary .cc-summary-strip-value {
         width: 100%;
         margin: 0 !important;
         text-align: center !important;
     }
 
-    .cc-route-summary .cc-summary-strip-value {
+    .cc-va-analytics .cc-analytics-route .cc-analytics-summary .cc-summary-strip-value {
         overflow-wrap: anywhere;
     }
 
-    .cc-route-summary-detail {
+    .cc-va-analytics .cc-analytics-route .cc-route-summary-detail {
         display: block;
         width: 100%;
         margin-top: .1rem;
@@ -7433,30 +7312,30 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         text-align: center;
     }
 
-    .cc-route-summary-value-positive {
+    .cc-va-analytics .cc-analytics-route .cc-route-summary-value-positive {
         color: #991b1b;
     }
 
-    .cc-route-summary-value-negative {
+    .cc-va-analytics .cc-analytics-route .cc-route-summary-value-negative {
         color: #166534;
     }
 
-    .cc-route-summary-value-neutral {
+    .cc-va-analytics .cc-analytics-route .cc-route-summary-value-neutral {
         color: var(--cc-text-main);
     }
 
-    .cc-route-actions {
+    .cc-va-analytics .cc-analytics-route .cc-analytics-actions {
         justify-content: flex-end !important;
     }
 
-    .cc-route-charts {
+    .cc-va-analytics .cc-analytics-route .cc-analytics-charts {
         display: grid;
         grid-template-columns: minmax(0, 1fr);
         gap: 1rem;
         margin-bottom: 1.25rem;
     }
 
-    .cc-route-chart-card {
+    .cc-va-analytics .cc-analytics-route .cc-analytics-chart-card {
         min-width: 0;
         padding: 1rem 1rem .85rem;
         border: 1px solid var(--cc-border);
@@ -7464,33 +7343,33 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         background: var(--cc-bg-card);
     }
 
-    .cc-route-chart-title {
+    .cc-va-analytics .cc-analytics-route .cc-analytics-chart-title {
         margin: 0;
         color: var(--cc-text-main);
         font-size: .95rem;
         font-weight: 800;
     }
 
-    .cc-route-chart-subtitle {
+    .cc-va-analytics .cc-analytics-route .cc-analytics-chart-subtitle {
         margin-top: .2rem;
         color: var(--cc-text-muted);
         font-size: .78rem;
         line-height: 1.35;
     }
 
-    .cc-route-chart-area {
+    .cc-va-analytics .cc-analytics-route .cc-analytics-chart-area {
         position: relative;
         min-height: 24rem;
         margin-top: .8rem;
     }
 
-    .cc-route-chart-canvas {
+    .cc-va-analytics .cc-analytics-route .cc-analytics-chart-canvas {
         display: block;
         width: 100%;
         height: 24rem;
     }
 
-    .cc-route-chart-empty {
+    .cc-va-analytics .cc-analytics-route .cc-analytics-chart-empty {
         display: flex;
         min-height: 18rem;
         align-items: center;
@@ -7503,7 +7382,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         text-align: center;
     }
 
-    .cc-route-sort-link {
+    .cc-va-analytics .cc-analytics-route .cc-analytics-sort-link {
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -7514,21 +7393,21 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         white-space: nowrap;
     }
 
-    .cc-route-sort-icon {
+    .cc-va-analytics .cc-analytics-route .cc-analytics-sort-icon {
         font-size: .78rem;
         opacity: .72;
     }
 
-    .cc-route-nowrap {
+    .cc-va-analytics .cc-analytics-route .cc-route-nowrap {
         white-space: nowrap;
     }
 
-    .cc-route-number {
+    .cc-va-analytics .cc-analytics-route .cc-analytics-number {
         white-space: nowrap;
         text-align: right;
     }
 
-    .cc-route-badge {
+    .cc-va-analytics .cc-analytics-route .cc-route-badge {
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -7539,57 +7418,57 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         white-space: nowrap;
     }
 
-    .cc-route-status-success {
+    .cc-va-analytics .cc-analytics-route .cc-route-status-success {
         background: rgba(22, 163, 74, .12);
         color: #166534;
     }
 
-    .cc-route-status-danger {
+    .cc-va-analytics .cc-analytics-route .cc-route-status-danger {
         background: rgba(220, 38, 38, .12);
         color: #991b1b;
     }
 
-    .cc-route-status-info {
+    .cc-va-analytics .cc-analytics-route .cc-route-status-info {
         background: rgba(37, 99, 235, .12);
         color: #1d4ed8;
     }
 
-    .cc-route-status-muted {
+    .cc-va-analytics .cc-analytics-route .cc-route-status-muted {
         background: rgba(100, 116, 139, .14);
         color: #475569;
     }
 
-    .cc-route-path {
+    .cc-va-analytics .cc-analytics-route .cc-route-path {
         font-weight: 700;
         white-space: nowrap;
     }
 
-    .cc-route-name {
+    .cc-va-analytics .cc-analytics-route .cc-route-name {
         margin-top: .2rem;
         color: var(--cc-text-muted);
         font-size: .78rem;
         white-space: normal;
     }
 
-    .cc-va-analytics .cc-card .cc-filter-panel,
-    .cc-va-analytics .cc-card .cc-filter-panel-inline {
+    .cc-va-analytics .cc-analytics-route .cc-card .cc-filter-panel,
+    .cc-va-analytics .cc-analytics-route .cc-card .cc-filter-panel-inline {
         overflow: visible;
     }
 
-    .cc-va-analytics .cc-card .cc-filter-multiselect {
+    .cc-va-analytics .cc-analytics-route .cc-card .cc-filter-multiselect {
         position: relative;
         z-index: 1;
     }
 
-    .cc-va-analytics .cc-card .cc-filter-multiselect.is-open {
+    .cc-va-analytics .cc-analytics-route .cc-card .cc-filter-multiselect.is-open {
         z-index: 1000;
     }
 
-    .cc-va-analytics .cc-card .cc-filter-multiselect-menu {
+    .cc-va-analytics .cc-analytics-route .cc-card .cc-filter-multiselect-menu {
         z-index: 1001;
     }
 
-    .cc-route-chart-toolbar {
+    .cc-va-analytics .cc-analytics-route .cc-analytics-chart-toolbar {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
@@ -7602,20 +7481,20 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         background: var(--cc-bg-soft);
     }
 
-    .cc-route-chart-toolbar-actions {
+    .cc-va-analytics .cc-analytics-route .cc-route-chart-toolbar-actions {
         display: flex;
         flex-wrap: wrap;
         gap: .5rem;
     }
 
-    .cc-route-chart-toolbar-status {
+    .cc-va-analytics .cc-analytics-route .cc-route-chart-toolbar-status {
         color: var(--cc-text-muted);
         font-size: .76rem;
         font-weight: 700;
         white-space: nowrap;
     }
 
-    .cc-route-chart-navigator {
+    .cc-va-analytics .cc-analytics-route .cc-analytics-chart-navigator {
         display: grid;
         grid-template-columns:
             auto minmax(10rem, 1fr) auto;
@@ -7624,30 +7503,30 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         margin-top: .75rem;
     }
 
-    .cc-route-chart-navigator-label {
+    .cc-va-analytics .cc-analytics-route .cc-route-chart-navigator-label {
         color: var(--cc-text-muted);
         font-size: .72rem;
         font-weight: 700;
         white-space: nowrap;
     }
 
-    .cc-route-chart-range {
+    .cc-va-analytics .cc-analytics-route .cc-route-chart-range {
         width: 100%;
         accent-color: var(--cc-primary);
     }
 
-    .cc-route-chart-table-panel[hidden] {
+    .cc-va-analytics .cc-analytics-route .cc-route-chart-table-panel[hidden] {
         display: none;
     }
 
-    .cc-route-chart-table-panel {
+    .cc-va-analytics .cc-analytics-route .cc-route-chart-table-panel {
         margin-top: .85rem;
         overflow-x: auto;
         border: 1px solid var(--cc-border);
         border-radius: .8rem;
     }
 
-    .cc-route-chart-table {
+    .cc-va-analytics .cc-analytics-route .cc-route-chart-table {
         width: 100%;
         min-width: 46rem;
         border-collapse: collapse;
@@ -7655,22 +7534,22 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         background: var(--cc-bg-card);
     }
 
-    .cc-route-chart-table th,
-    .cc-route-chart-table td {
+    .cc-va-analytics .cc-analytics-route .cc-route-chart-table th,
+    .cc-va-analytics .cc-analytics-route .cc-route-chart-table td {
         padding: .65rem .75rem;
         border-bottom: 1px solid var(--cc-border);
         text-align: right;
         white-space: nowrap;
     }
 
-    .cc-route-chart-table th:first-child,
-    .cc-route-chart-table td:first-child,
-    .cc-route-chart-table th:nth-child(2),
-    .cc-route-chart-table td:nth-child(2) {
+    .cc-va-analytics .cc-analytics-route .cc-route-chart-table th:first-child,
+    .cc-va-analytics .cc-analytics-route .cc-route-chart-table td:first-child,
+    .cc-va-analytics .cc-analytics-route .cc-route-chart-table th:nth-child(2),
+    .cc-va-analytics .cc-analytics-route .cc-route-chart-table td:nth-child(2) {
         text-align: left;
     }
 
-    .cc-route-chart-table th {
+    .cc-va-analytics .cc-analytics-route .cc-route-chart-table th {
         background: var(--cc-bg-soft);
         color: var(--cc-text-main);
         font-size: .7rem;
@@ -7679,11 +7558,11 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         text-transform: uppercase;
     }
 
-    .cc-route-chart-table tbody tr:last-child td {
+    .cc-va-analytics .cc-analytics-route .cc-route-chart-table tbody tr:last-child td {
         border-bottom: 0;
     }
 
-    .cc-route-chart-legend {
+    .cc-va-analytics .cc-analytics-route .cc-analytics-chart-legend {
         display: flex;
         flex-wrap: wrap;
         gap: 1rem;
@@ -7692,49 +7571,49 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         font-size: .76rem;
     }
 
-    .cc-route-chart-legend-item {
+    .cc-va-analytics .cc-analytics-route .cc-route-chart-legend-item {
         display: inline-flex;
         align-items: center;
         gap: .4rem;
     }
 
-    .cc-route-chart-legend-line {
+    .cc-va-analytics .cc-analytics-route .cc-route-chart-legend-line {
         width: 1.8rem;
         height: .2rem;
         border-radius: 999px;
     }
 
-    .cc-route-chart-legend-line-theoretical {
+    .cc-va-analytics .cc-analytics-route .cc-route-chart-legend-line-theoretical {
         background: var(--cc-primary);
     }
 
-    .cc-route-chart-legend-line-real {
+    .cc-va-analytics .cc-analytics-route .cc-route-chart-legend-line-real {
         background: #d97706;
     }
 
-    .cc-route-detail-button {
+    .cc-va-analytics .cc-analytics-route .cc-route-detail-button {
         display: inline-flex;
         align-items: center;
         justify-content: center;
         min-width: 6.5rem;
     }
 
-    .cc-route-detail-row[hidden] {
+    .cc-va-analytics .cc-analytics-route .cc-route-detail-row[hidden] {
         display: none;
     }
 
-    .cc-route-detail-cell {
+    .cc-va-analytics .cc-analytics-route .cc-route-detail-cell {
         padding: 0 !important;
         background: var(--cc-bg-soft);
     }
 
-    .cc-route-detail-panel {
+    .cc-va-analytics .cc-analytics-route .cc-route-detail-panel {
         padding: 1rem;
         border-top: 1px solid var(--cc-border);
         border-bottom: 1px solid var(--cc-border);
     }
 
-    .cc-route-detail-heading {
+    .cc-va-analytics .cc-analytics-route .cc-route-detail-heading {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
@@ -7742,13 +7621,13 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         margin-bottom: .75rem;
     }
 
-    .cc-route-detail-title {
+    .cc-va-analytics .cc-analytics-route .cc-route-detail-title {
         color: var(--cc-text-main);
         font-size: .88rem;
         font-weight: 800;
     }
 
-    .cc-route-detail-note {
+    .cc-va-analytics .cc-analytics-route .cc-route-detail-note {
         max-width: 42rem;
         color: var(--cc-text-muted);
         font-size: .72rem;
@@ -7756,25 +7635,25 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         text-align: right;
     }
 
-    .cc-route-detail-table-wrapper {
+    .cc-va-analytics .cc-analytics-route .cc-route-detail-table-wrapper {
         overflow-x: auto;
     }
 
-    .cc-route-detail-table {
+    .cc-va-analytics .cc-analytics-route .cc-route-detail-table {
         width: 100%;
         min-width: 76rem;
         border-collapse: collapse;
         background: var(--cc-bg-card);
     }
 
-    .cc-route-detail-table th,
-    .cc-route-detail-table td {
+    .cc-va-analytics .cc-analytics-route .cc-route-detail-table th,
+    .cc-va-analytics .cc-analytics-route .cc-route-detail-table td {
         padding: .7rem .75rem;
         border: 1px solid var(--cc-border);
         vertical-align: middle;
     }
 
-    .cc-route-detail-table th {
+    .cc-va-analytics .cc-analytics-route .cc-route-detail-table th {
         background: var(--cc-bg-soft);
         color: var(--cc-text-main);
         font-size: .7rem;
@@ -7784,11 +7663,11 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         white-space: nowrap;
     }
 
-    .cc-route-detail-table td {
+    .cc-va-analytics .cc-analytics-route .cc-route-detail-table td {
         font-size: .78rem;
     }
 
-    .cc-route-diagnostic-strip {
+    .cc-va-analytics .cc-analytics-route .cc-route-diagnostic-strip {
         display: grid;
         grid-template-columns:
             repeat(4, minmax(0, 1fr));
@@ -7796,7 +7675,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         margin-bottom: 1.25rem;
     }
 
-    .cc-route-diagnostic-item {
+    .cc-va-analytics .cc-analytics-route .cc-route-diagnostic-item {
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -7808,7 +7687,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         background: var(--cc-bg-card);
     }
 
-    .cc-route-diagnostic-label {
+    .cc-va-analytics .cc-analytics-route .cc-route-diagnostic-label {
         min-width: 0;
         color: var(--cc-text-main);
         font-size: .78rem;
@@ -7816,7 +7695,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         line-height: 1.3;
     }
 
-    .cc-route-diagnostic-value {
+    .cc-va-analytics .cc-analytics-route .cc-route-diagnostic-value {
         flex: 0 0 auto;
         min-width: 2.25rem;
         padding: .28rem .55rem;
@@ -7827,93 +7706,93 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     }
 
     @media (max-width: 900px) {
-        .cc-route-diagnostic-strip {
+        .cc-va-analytics .cc-analytics-route .cc-route-diagnostic-strip {
             grid-template-columns:
                 repeat(2, minmax(0, 1fr));
         }
     }
 
     @media (max-width: 430px) {
-        .cc-route-diagnostic-strip {
+        .cc-va-analytics .cc-analytics-route .cc-route-diagnostic-strip {
             grid-template-columns:
                 minmax(0, 1fr);
         }
     }
 
     @media (max-width: 1180px) {
-        .cc-route-summary {
+        .cc-va-analytics .cc-analytics-route .cc-analytics-summary {
             grid-template-columns:
                 repeat(4, minmax(0, 1fr)) !important;
         }
     }
 
     @media (max-width: 900px) {
-        .cc-route-summary {
+        .cc-va-analytics .cc-analytics-route .cc-analytics-summary {
             grid-template-columns:
                 repeat(2, minmax(0, 1fr)) !important;
         }
     }
 
     @media (max-width: 900px) {
-        .cc-route-charts {
+        .cc-va-analytics .cc-analytics-route .cc-analytics-charts {
             grid-template-columns: minmax(0, 1fr);
         }
     }
 
     @media (max-width: 760px) {
-        .cc-route-chart-toolbar {
+        .cc-va-analytics .cc-analytics-route .cc-analytics-chart-toolbar {
             align-items: stretch;
             flex-direction: column;
         }
 
-        .cc-route-chart-toolbar-actions {
+        .cc-va-analytics .cc-analytics-route .cc-route-chart-toolbar-actions {
             display: grid;
             grid-template-columns:
                 repeat(2, minmax(0, 1fr));
         }
 
-        .cc-route-chart-toolbar-actions > * {
+        .cc-va-analytics .cc-analytics-route .cc-route-chart-toolbar-actions > * {
             width: 100%;
         }
 
-        .cc-route-chart-navigator {
+        .cc-va-analytics .cc-analytics-route .cc-analytics-chart-navigator {
             grid-template-columns:
                 minmax(0, 1fr);
         }
 
-        .cc-route-header {
+        .cc-va-analytics .cc-analytics-route .cc-analytics-header {
             grid-template-columns: minmax(0, 1fr) !important;
         }
 
-        .cc-route-header > div:last-child {
+        .cc-va-analytics .cc-analytics-route .cc-analytics-header > div:last-child {
             width: 100%;
             justify-content: stretch;
         }
 
-        .cc-route-header > div:last-child > a {
+        .cc-va-analytics .cc-analytics-route .cc-analytics-header > div:last-child > a {
             width: 100%;
         }
 
-        .cc-route-summary {
+        .cc-va-analytics .cc-analytics-route .cc-analytics-summary {
             grid-template-columns:
                 repeat(2, minmax(0, 1fr)) !important;
         }
 
-        .cc-route-actions {
+        .cc-va-analytics .cc-analytics-route .cc-analytics-actions {
             display: grid !important;
             grid-template-columns:
                 repeat(2, minmax(0, 1fr)) !important;
             gap: .75rem !important;
         }
 
-        .cc-route-actions > * {
+        .cc-va-analytics .cc-analytics-route .cc-analytics-actions > * {
             width: 100% !important;
         }
     }
 
     @media (max-width: 430px) {
-        .cc-route-summary,
-        .cc-route-actions {
+        .cc-va-analytics .cc-analytics-route .cc-analytics-summary,
+        .cc-va-analytics .cc-analytics-route .cc-analytics-actions {
             grid-template-columns: minmax(0, 1fr) !important;
         }
     }

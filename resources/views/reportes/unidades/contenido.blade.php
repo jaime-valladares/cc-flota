@@ -165,8 +165,8 @@
             <p>No hay unidades que coincidan con los filtros seleccionados.</p>
         </div>
     @else
-        <div class="mb-4 flex justify-end text-sm text-[var(--cc-text-muted)]">
-            Mostrando <strong class="mx-1 text-[var(--cc-text-main)]">{{ $unidades->firstItem() }}</strong>-<strong class="mx-1 text-[var(--cc-text-main)]">{{ $unidades->lastItem() }}</strong> de <strong class="ml-1 text-[var(--cc-text-main)]">{{ $unidades->total() }}</strong>
+        <div class="cc-result-count">
+            Mostrando <strong class="cc-result-count-value">{{ $unidades->firstItem() }}</strong>-<strong class="cc-result-count-value">{{ $unidades->lastItem() }}</strong> de <strong class="cc-result-count-value">{{ $unidades->total() }}</strong>
         </div>
 
         <div class="cc-table-adaptive-wrapper">
@@ -202,7 +202,7 @@
                             @style(['background-color: var(--cc-bg-soft);' => $loop->even])
                         >
                             <td>{{ $unidad->empresa?->nombre_comercial ?: ($unidad->empresa?->nombre_legal ?: '—') }}</td>
-                            <td><strong class="whitespace-nowrap text-[var(--cc-text-main)]">{{ $unidad->placa }}</strong></td>
+                            <td><strong class="cc-table-adaptive-strong whitespace-nowrap">{{ $unidad->placa }}</strong></td>
                             <td>{{ $unidad->marca ?: '—' }}</td>
                             <td>
                                 <span @class([

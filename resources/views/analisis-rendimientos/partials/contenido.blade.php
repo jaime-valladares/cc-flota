@@ -89,7 +89,7 @@
 
     @if ($errors->any())
         <div class="cc-alert cc-alert-danger">
-            <div class="font-bold">
+            <div class="cc-alert-title">
                 No fue posible completar el análisis.
             </div>
 
@@ -740,14 +740,12 @@
         && $abastecimientos->total() > 0
     )
         <div
-            class="mb-4 flex justify-end
-                   text-sm text-[var(--cc-text-muted)]"
+            class="cc-result-count"
         >
             Mostrando
 
             <span
-                class="mx-1 font-bold
-                       text-[var(--cc-text-main)]"
+                class="cc-result-count-value"
             >
                 {{ $abastecimientos->firstItem() }}
             </span>
@@ -755,8 +753,7 @@
             -
 
             <span
-                class="mx-1 font-bold
-                       text-[var(--cc-text-main)]"
+                class="cc-result-count-value"
             >
                 {{ $abastecimientos->lastItem() }}
             </span>
@@ -764,8 +761,7 @@
             de
 
             <span
-                class="ml-1 font-bold
-                       text-[var(--cc-text-main)]"
+                class="cc-result-count-value"
             >
                 {{ $abastecimientos->total() }}
             </span>

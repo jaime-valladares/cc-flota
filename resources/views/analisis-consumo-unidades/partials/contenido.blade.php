@@ -72,7 +72,7 @@
 
 
 <div class="cc-card">
-    <div class="cc-card-header cc-card-header-compact cc-consumo-header">
+    <div class="cc-card-header cc-card-header-compact cc-analytics-header">
         <div>
             <h3 class="cc-title cc-title-compact">
                 Análisis de Consumo por Unidad
@@ -95,7 +95,7 @@
 
     @if ($errors->any())
         <div class="cc-alert cc-alert-danger">
-            <div class="font-bold">
+            <div class="cc-alert-title">
                 No fue posible completar el análisis.
             </div>
 
@@ -495,7 +495,7 @@
         @endphp
 
         <div
-            class="cc-summary-strip cc-consumo-summary cc-analytics-summary-spacing"
+            class="cc-summary-strip cc-analytics-summary cc-analytics-summary-three cc-analytics-summary-spacing"
         >
             @foreach ($tarjetas as $tarjeta)
                 <div class="cc-summary-strip-item">
@@ -510,7 +510,7 @@
             @endforeach
         </div>
 
-        <div class="cc-consumo-charts">
+        <div class="cc-analytics-charts">
             @php
                 $configuracionesGraficos = [
                     [
@@ -538,31 +538,31 @@
 
             @foreach ($configuracionesGraficos as $grafico)
                 <section
-                    class="cc-consumo-chart-card"
+                    class="cc-analytics-chart-card cc-analytics-chart-interactive"
                     data-cc-chart-card
                     data-chart-type="{{ $grafico['tipo'] }}"
                 >
-                    <div class="cc-consumo-chart-header">
+                    <div class="cc-analytics-chart-header">
                         <div>
-                            <h4 class="cc-consumo-chart-title">
+                            <h4 class="cc-analytics-chart-title">
                                 {{ $grafico['titulo'] }}
                             </h4>
 
-                            <div class="cc-consumo-chart-subtitle">
+                            <div class="cc-analytics-chart-subtitle">
                                 {{ $grafico['subtitulo'] }}
                             </div>
                         </div>
 
-                        <span class="cc-consumo-chart-badge">
+                        <span class="cc-analytics-chart-badge">
                             {{ $grafico['badge'] }}
                         </span>
                     </div>
 
                     @if ($grafico['puntos'] !== [])
-                        <div class="cc-consumo-chart-toolbar">
+                        <div class="cc-analytics-chart-toolbar">
                             <button
                                 type="button"
-                                class="cc-consumo-chart-button"
+                                class="cc-analytics-chart-button"
                                 data-chart-action="previous"
                             >
                                 ← Anterior
@@ -570,7 +570,7 @@
 
                             <button
                                 type="button"
-                                class="cc-consumo-chart-button"
+                                class="cc-analytics-chart-button"
                                 data-chart-action="next"
                             >
                                 Siguiente →
@@ -578,7 +578,7 @@
 
                             <button
                                 type="button"
-                                class="cc-consumo-chart-button"
+                                class="cc-analytics-chart-button"
                                 data-chart-action="zoom-in"
                             >
                                 Acercar
@@ -586,7 +586,7 @@
 
                             <button
                                 type="button"
-                                class="cc-consumo-chart-button"
+                                class="cc-analytics-chart-button"
                                 data-chart-action="zoom-out"
                             >
                                 Alejar
@@ -594,7 +594,7 @@
 
                             <button
                                 type="button"
-                                class="cc-consumo-chart-button"
+                                class="cc-analytics-chart-button"
                                 data-chart-action="reset"
                             >
                                 Restablecer
@@ -602,21 +602,21 @@
 
                             <button
                                 type="button"
-                                class="cc-consumo-chart-button"
+                                class="cc-analytics-chart-button"
                                 data-chart-action="data"
                             >
                                 Ver datos
                             </button>
 
                             <span
-                                class="cc-consumo-chart-status"
+                                class="cc-analytics-chart-status"
                                 data-chart-status
                             ></span>
                         </div>
 
-                        <div class="cc-consumo-chart-stage">
+                        <div class="cc-analytics-chart-area">
                             <canvas
-                                class="cc-consumo-chart-canvas"
+                                class="cc-analytics-chart-canvas"
                                 data-cc-bar-chart
                                 data-chart-source="{{ $grafico['id'] }}"
                                 aria-label="{{ $grafico['aria'] }}"
@@ -624,18 +624,18 @@
                         </div>
 
                         <div
-                            class="cc-consumo-chart-detail"
+                            class="cc-analytics-chart-detail"
                             data-chart-detail
                         >
                             Mueva el cursor sobre una barra para ver el detalle.
                         </div>
 
                         <div
-                            class="cc-consumo-chart-legend"
+                            class="cc-analytics-chart-legend"
                             data-chart-legend
                         ></div>
 
-                        <div class="cc-consumo-chart-navigator">
+                        <div class="cc-analytics-chart-navigator">
                             <span>Inicio</span>
 
                             <input
@@ -650,7 +650,7 @@
                         </div>
 
                         <div
-                            class="cc-consumo-chart-data"
+                            class="cc-analytics-chart-data"
                             data-chart-data
                         ></div>
 
@@ -659,7 +659,7 @@
                             id="{{ $grafico['id'] }}"
                         >@json($grafico['puntos'])</script>
                     @else
-                        <div class="cc-consumo-chart-empty">
+                        <div class="cc-analytics-chart-empty">
                             {{ $grafico['vacio'] }}
                         </div>
                     @endif
@@ -689,24 +689,23 @@
         </section>
     @else
         <div
-            class="mb-4 flex justify-end
-                   text-sm text-[var(--cc-text-muted)]"
+            class="cc-result-count"
         >
             Mostrando
 
-            <span class="mx-1 font-bold text-[var(--cc-text-main)]">
+            <span class="cc-result-count-value">
                 {{ $unidadesAnalizadas->firstItem() }}
             </span>
 
             -
 
-            <span class="mx-1 font-bold text-[var(--cc-text-main)]">
+            <span class="cc-result-count-value">
                 {{ $unidadesAnalizadas->lastItem() }}
             </span>
 
             de
 
-            <span class="ml-1 font-bold text-[var(--cc-text-main)]">
+            <span class="cc-result-count-value">
                 {{ $unidadesAnalizadas->total() }}
             </span>
         </div>
@@ -729,7 +728,7 @@
                             <th>
                                 <a
                                     href="{{ $urlOrden($campo) }}"
-                                    class="cc-consumo-sort-link"
+                                    class="cc-analytics-sort-link"
                                 >
                                     {{ $etiqueta }}
 
@@ -747,7 +746,7 @@
                         <th>
                             <a
                                 href="{{ $urlOrden('ultimo_ciclo') }}"
-                                class="cc-consumo-sort-link"
+                                class="cc-analytics-sort-link"
                             >
                                 Último ciclo
 
@@ -785,11 +784,11 @@
                                 </div>
                             </td>
 
-                            <td class="cc-consumo-number">
+                            <td class="cc-analytics-number">
                                 {{ $fila['ciclos'] }}
                             </td>
 
-                            <td class="cc-consumo-number">
+                            <td class="cc-analytics-number">
                                 {{
                                     $formatoNumero(
                                         $fila['galones_consumidos']
@@ -797,7 +796,7 @@
                                 }} gal
                             </td>
 
-                            <td class="cc-consumo-number">
+                            <td class="cc-analytics-number">
                                 {{
                                     $formatoNumero(
                                         $fila['actividad_total']
@@ -812,7 +811,7 @@
                                 'peor_resultado',
                                 'ultimo_resultado',
                             ] as $campoResultado)
-                                <td class="cc-consumo-number">
+                                <td class="cc-analytics-number">
                                     @if (
                                         is_null(
                                             $fila[$campoResultado]
@@ -851,7 +850,7 @@
                             </td>
 
                             <td>
-                                <span class="cc-consumo-trend">
+                                <span class="cc-analytics-trend">
                                     {{
                                         $etiquetaTendencia[
                                             $fila['tendencia']
@@ -974,8 +973,8 @@
                 }
 
                 if (chartType === 'consumo') {
-                    legend.innerHTML = '<span class="cc-consumo-chart-legend-item">'
-                        + '<span class="cc-consumo-chart-legend-swatch" '
+                    legend.innerHTML = '<span class="cc-analytics-chart-legend-item">'
+                        + '<span class="cc-analytics-chart-legend-swatch" '
                         + 'style="background:' + palette.consumo + '"></span>'
                         + 'Galones consumidos'
                         + '</span>';
@@ -998,8 +997,8 @@
 
                 legend.innerHTML = presentes.map(
                     function ([label, color]) {
-                        return '<span class="cc-consumo-chart-legend-item">'
-                            + '<span class="cc-consumo-chart-legend-swatch" '
+                        return '<span class="cc-analytics-chart-legend-item">'
+                            + '<span class="cc-analytics-chart-legend-swatch" '
                             + 'style="background:' + color + '"></span>'
                             + label
                             + '</span>';

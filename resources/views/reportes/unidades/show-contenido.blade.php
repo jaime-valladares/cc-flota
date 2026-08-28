@@ -34,11 +34,11 @@
         </div>
         <div class="cc-profile-status flex flex-wrap justify-end gap-4">
             <div class="flex flex-col items-end gap-1">
-                <span class="text-xs font-semibold text-[var(--cc-text-muted)]">Estado administrativo</span>
+                <span class="cc-va-structured-label">Estado administrativo</span>
                 <span @class(['cc-badge', 'cc-badge-pending' => $unidad->estado === 'registrada', 'cc-badge-active' => $unidad->estado === 'activa', 'cc-badge-inactive' => $unidad->estado === 'inactiva'])>{{ $unidad->estado_texto }}</span>
             </div>
             <div class="flex flex-col items-end gap-1">
-                <span class="text-xs font-semibold text-[var(--cc-text-muted)]">Resultado operacional</span>
+                <span class="cc-va-structured-label">Resultado operacional</span>
                 <span @class(['cc-badge', 'cc-badge-active' => $unidad->es_operable, 'cc-badge-inactive' => ! $unidad->es_operable])>{{ $unidad->es_operable ? 'Operable' : 'No operable' }}</span>
             </div>
         </div>

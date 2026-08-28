@@ -71,11 +71,11 @@
 @endphp
 
 
-<div class="cc-card">
+<div class="cc-card cc-analytics-route">
     <div
         class="cc-card-header
                cc-card-header-compact
-               cc-route-header"
+               cc-analytics-header"
     >
         <div>
             <h3 class="cc-title cc-title-compact">
@@ -99,7 +99,7 @@
 
     @if ($errors->any())
         <div class="cc-alert cc-alert-danger">
-            <div class="font-bold">
+            <div class="cc-alert-title">
                 No fue posible completar el análisis.
             </div>
 
@@ -564,7 +564,7 @@
 
                 <div
                     class="cc-standard-filter-actions
-                           cc-route-actions cc-analytics-filter-actions"
+                           cc-analytics-actions cc-analytics-filter-actions"
                 >
                     <button
                         type="submit"
@@ -650,14 +650,14 @@
                                 )
                         ),
                     'clase_valor' => is_null($variacion)
-                        ? 'cc-route-summary-value-neutral'
+                        ? 'cc-analytics-summary-value-neutral'
                         : (
                             $variacion > 0
-                                ? 'cc-route-summary-value-positive'
+                                ? 'cc-analytics-summary-value-positive'
                                 : (
                                     $variacion < 0
-                                        ? 'cc-route-summary-value-negative'
-                                        : 'cc-route-summary-value-neutral'
+                                        ? 'cc-analytics-summary-value-negative'
+                                        : 'cc-analytics-summary-value-neutral'
                                 )
                         ),
                 ],
@@ -665,7 +665,7 @@
         @endphp
 
         <div
-            class="cc-summary-strip cc-route-summary cc-analytics-summary-spacing"
+            class="cc-summary-strip cc-analytics-summary cc-analytics-summary-spacing"
         >
             @foreach ($tarjetas as $tarjeta)
                 <div class="cc-summary-strip-item">
@@ -682,7 +682,7 @@
                     </span>
 
                     @if (! empty($tarjeta['detalle']))
-                        <span class="cc-route-summary-detail">
+                        <span class="cc-analytics-summary-detail">
                             {{ $tarjeta['detalle'] }}
                         </span>
                     @endif
@@ -760,21 +760,21 @@
             </div>
         </div>
 
-        <div class="cc-route-charts">
-            <section class="cc-route-chart-card">
-                <h4 class="cc-route-chart-title">
+        <div class="cc-analytics-charts">
+            <section class="cc-analytics-chart-card">
+                <h4 class="cc-analytics-chart-title">
                     Consumo teórico frente a real por ciclo
                 </h4>
 
-                <div class="cc-route-chart-subtitle">
+                <div class="cc-analytics-chart-subtitle">
                     El eje X representa los ciclos de abastecimiento
                     completados y el eje Y representa galones.
                 </div>
 
                 @if ($graficos['ciclos']['puntos'] !== [])
-                    <div class="cc-route-chart-area">
+                    <div class="cc-analytics-chart-area">
                         <canvas
-                            class="cc-route-chart-canvas"
+                            class="cc-analytics-chart-canvas"
                             data-route-line-chart
                             data-chart-source="grafico-rutas-ciclos"
                             aria-label="Consumo teórico y real por ciclo"
@@ -789,7 +789,7 @@
                         el detalle del ciclo.
                     </div>
 
-                    <div class="cc-route-chart-toolbar">
+                    <div class="cc-analytics-chart-toolbar">
                         <div class="cc-route-chart-toolbar-actions">
                             <button
                                 type="button"
@@ -849,7 +849,7 @@
                         </div>
                     </div>
 
-                    <div class="cc-route-chart-navigator">
+                    <div class="cc-analytics-chart-navigator">
                         <span class="cc-route-chart-navigator-label">
                             Inicio
                         </span>
@@ -889,7 +889,7 @@
                         </table>
                     </div>
 
-                    <div class="cc-route-chart-legend">
+                    <div class="cc-analytics-chart-legend">
                         <span class="cc-route-chart-legend-item">
                             <span
                                 class="cc-route-chart-legend-line
@@ -914,7 +914,7 @@
                         id="grafico-rutas-ciclos"
                     >@json($graficos['ciclos']['puntos'])</script>
                 @else
-                    <div class="cc-route-chart-empty">
+                    <div class="cc-analytics-chart-empty">
                         No hay ciclos suficientes para construir
                         la comparación.
                     </div>
@@ -962,11 +962,11 @@
                             <th>
                                 <a
                                     href="{{ $urlOrden($campo) }}"
-                                    class="cc-route-sort-link"
+                                    class="cc-analytics-sort-link"
                                 >
                                     {{ $etiqueta }}
 
-                                    <span class="cc-route-sort-icon">
+                                    <span class="cc-analytics-sort-icon">
                                         {{ $indicadorOrden($campo) }}
                                     </span>
                                 </a>
@@ -1029,7 +1029,7 @@
                                 }}
                             </td>
 
-                            <td class="cc-route-number">
+                            <td class="cc-analytics-number">
                                 {{
                                     is_null(
                                         $abastecimiento
@@ -1044,7 +1044,7 @@
                                 }}
                             </td>
 
-                            <td class="cc-route-number">
+                            <td class="cc-analytics-number">
                                 {{
                                     is_null(
                                         $abastecimiento
@@ -1058,7 +1058,7 @@
                                 }}
                             </td>
 
-                            <td class="cc-route-number">
+                            <td class="cc-analytics-number">
                                 {{
                                     is_null(
                                         $abastecimiento
@@ -1072,7 +1072,7 @@
                                 }}
                             </td>
 
-                            <td class="cc-route-number">
+                            <td class="cc-analytics-number">
                                 @if (
                                     is_null(
                                         $abastecimiento
@@ -1215,7 +1215,7 @@
                                                         </td>
 
                                                         <td
-                                                            class="cc-route-number"
+                                                            class="cc-analytics-number"
                                                         >
                                                             {{
                                                                 $formatoNumero(
@@ -1228,7 +1228,7 @@
                                                         </td>
 
                                                         <td
-                                                            class="cc-route-number"
+                                                            class="cc-analytics-number"
                                                         >
                                                             {{
                                                                 is_null(
@@ -1247,7 +1247,7 @@
                                                         </td>
 
                                                         <td
-                                                            class="cc-route-number"
+                                                            class="cc-analytics-number"
                                                         >
                                                             {{
                                                                 $formatoNumero(
@@ -1259,7 +1259,7 @@
                                                         </td>
 
                                                         <td
-                                                            class="cc-route-number"
+                                                            class="cc-analytics-number"
                                                         >
                                                             {{
                                                                 is_null(
@@ -1277,7 +1277,7 @@
                                                         </td>
 
                                                         <td
-                                                            class="cc-route-number"
+                                                            class="cc-analytics-number"
                                                         >
                                                             {{
                                                                 is_null(
