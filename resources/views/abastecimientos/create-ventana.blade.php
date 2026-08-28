@@ -11,6 +11,8 @@
         Registrar abastecimiento · CC-Flota
     </title>
 
+    @include('layouts.partials.favicon')
+
     @vite([
         'resources/css/app.css',
         'resources/js/app.js',

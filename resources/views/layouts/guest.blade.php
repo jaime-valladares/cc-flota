@@ -7,9 +7,7 @@
 
         <title>Acceso | CC-Flota</title>
 
-        <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/cc-flota/favicon.png') }}?v=3">
-        <link rel="shortcut icon" type="image/png" href="{{ asset('images/cc-flota/favicon.png') }}?v=3">
-        <link rel="apple-touch-icon" href="{{ asset('images/cc-flota/favicon.png') }}?v=3">
+        @include('layouts.partials.favicon')
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.googleapis.com">

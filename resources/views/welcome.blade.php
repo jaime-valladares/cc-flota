@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CC-Flota System</title>
 
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/cc-flota/favicon.png') }}">
-    <link rel="shortcut icon" href="{{ asset('images/cc-flota/favicon.png') }}">
-    <link rel="apple-touch-icon" href="{{ asset('images/cc-flota/favicon.png') }}">
+    @include('layouts.partials.favicon')
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
