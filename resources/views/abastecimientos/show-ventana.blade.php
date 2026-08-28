@@ -119,55 +119,13 @@
         'resources/css/app.css',
         'resources/js/app.js',
     ])
-
-    <style>
-        html,
-        body {
-            min-width: 0;
-            min-height: 100%;
-        }
-
-        body {
-            margin: 0;
-            background: var(--cc-bg-main);
-        }
-
-        .cc-abastecimiento-ficha-ventana {
-            width: 100%;
-            min-width: 0;
-        }
-
-        .cc-abastecimiento-ficha-ventana .cc-page-wrapper {
-            width: 100%;
-            min-width: 0;
-        }
-
-        @media (max-width: 760px) {
-            .cc-abastecimiento-ficha-ventana
-            .cc-card-header {
-                align-items: stretch;
-                flex-direction: column;
-            }
-
-            .cc-abastecimiento-ficha-ventana
-            .cc-card-header > div:last-child {
-                width: 100%;
-            }
-
-            .cc-abastecimiento-ficha-ventana
-            .cc-card-header > div:last-child > a {
-                width: 100%;
-            }
-        }
-    </style>
 </head>
 
 <body class="antialiased">
     <main class="cc-abastecimiento-ficha-ventana">
-        <div class="cc-page-wrapper">
+        <div class="cc-page-wrapper cc-va-scope">
             <div
-                class="cc-window-container"
-                style="width: 100%; max-width: 80rem;"
+                class="cc-window-container cc-operational-container"
             >
             <div class="cc-card">
 

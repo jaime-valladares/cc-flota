@@ -28,29 +28,6 @@
     $eventos = collect([$apertura, $cierre])->filter();
 @endphp
 
-<style>
-    .cc-cycle-pair {
-        display: flex;
-        align-items: baseline;
-        gap: 0.38rem;
-        flex-wrap: wrap;
-    }
-
-    .cc-cycle-pair .cc-detail-label,
-    .cc-cycle-pair .cc-detail-value {
-        display: inline;
-        margin: 0;
-    }
-
-    .cc-cycle-pair .cc-detail-label {
-        font-weight: 750;
-    }
-
-    .cc-cycle-pair .cc-detail-value {
-        font-weight: 450;
-    }
-</style>
-
 <div class="cc-card-header cc-card-header-compact">
     <h3 class="cc-title cc-title-compact">Ficha del ciclo</h3>
     <div class="flex flex-wrap gap-3">

@@ -15,73 +15,6 @@
         'resources/css/app.css',
         'resources/js/app.js',
     ])
-
-    <style>
-        html,
-        body {
-            min-width: 0;
-            min-height: 100%;
-        }
-
-        body {
-            margin: 0;
-            background: var(--cc-page-bg, #f5f7fa);
-        }
-
-        .cc-standalone-shell {
-            width: 100%;
-            min-width: 0;
-        }
-
-        .cc-standalone-shell .cc-page-wrapper {
-            width: 100%;
-            min-width: 0;
-        }
-
-        .cc-standalone-shell .cc-content-container {
-            width: min(100%, 80rem);
-            min-width: 0;
-            margin-inline: auto;
-        }
-
-        @media (max-width: 900px) {
-            .cc-standalone-shell .cc-card-header {
-                grid-template-columns: 1fr !important;
-            }
-
-            .cc-standalone-shell .cc-card-header > div:last-child {
-                justify-content: start !important;
-            }
-        }
-
-        @media (max-width: 640px) {
-            .cc-standalone-shell .cc-page-wrapper {
-                padding-inline: .75rem;
-            }
-
-            .cc-standalone-shell .cc-card-header > div:last-child {
-                grid-template-columns: 1fr !important;
-                width: 100%;
-            }
-
-            .cc-standalone-shell .cc-card-header > div:last-child a {
-                width: 100% !important;
-            }
-
-            .cc-standalone-shell .cc-summary-strip {
-                grid-template-columns: 1fr;
-            }
-
-            .cc-standalone-shell .cc-form-actions {
-                align-items: stretch;
-                flex-direction: column-reverse;
-            }
-
-            .cc-standalone-shell .cc-form-actions > * {
-                width: 100%;
-            }
-        }
-    </style>
 </head>
 
 <body>
@@ -178,10 +111,9 @@
         );
     @endphp
 
-    <div class="cc-page-wrapper">
+    <div class="cc-page-wrapper cc-va-scope">
         <div
-            class="cc-content-container"
-            style="max-width: 82rem;"
+            class="cc-content-container cc-operational-container"
         >
             <div class="cc-card">
 

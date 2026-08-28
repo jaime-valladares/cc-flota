@@ -22,7 +22,7 @@
         @endphp
 
         <div class="cc-window-wrapper" style="padding-top: 2.1rem;">
-            <div class="cc-window-container" style="max-width: 79rem;">
+            <div class="cc-window-container cc-operational-container">
                 <div class="cc-card">
 
                     <div class="cc-card-header cc-card-header-compact">

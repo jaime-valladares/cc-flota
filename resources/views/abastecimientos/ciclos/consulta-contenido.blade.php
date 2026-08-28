@@ -37,41 +37,6 @@
     @endforeach
 </div>
 
-<style>
-    .cc-cycle-filter-secondary {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr);
-        gap: 1rem;
-        margin-top: 1rem;
-        align-items: end;
-    }
-
-    .cc-cycle-filter-action {
-        display: flex;
-        align-items: flex-end;
-    }
-
-    .cc-cycle-filter-action .cc-btn-form-action {
-        min-width: 7.25rem;
-        min-height: 2.72rem;
-    }
-
-    @media (min-width: 768px) {
-        .cc-cycle-filter-secondary {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-    }
-
-    @media (min-width: 1280px) {
-        .cc-cycle-filter-secondary {
-            grid-template-columns:
-                repeat(4, minmax(0, 1fr))
-                max-content
-                max-content;
-        }
-    }
-</style>
-
 <form
     id="cc-ciclos-filtros"
     method="GET"

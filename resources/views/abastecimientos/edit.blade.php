@@ -137,10 +137,9 @@
         );
     @endphp
 
-    <div class="cc-page-wrapper">
+    <div class="cc-page-wrapper cc-va-scope">
         <div
-            class="cc-content-container"
-            style="max-width: 80rem;"
+            class="cc-content-container cc-operational-container"
         >
             <div class="cc-card">
 
@@ -311,68 +310,7 @@
                         @endif
                     </div>
 
-                    <style>
-                        .cc-cycle-metrics {
-                            display: grid !important;
-                            grid-template-columns:
-                                repeat(
-                                    {{
-                                        $unidad->modelo_medicion
-                                        === 'galones_hora'
-                                            ? 5
-                                            : 4
-                                    }},
-                                    minmax(0, 1fr)
-                                ) !important;
-                            width: 100%;
-                        }
-
-                        .cc-cycle-metric {
-                            display: flex !important;
-                            min-width: 0;
-                            min-height: 5.75rem;
-                            flex-direction: column !important;
-                            align-items: center !important;
-                            justify-content: center !important;
-                            gap: .5rem !important;
-                            padding: 1rem .75rem !important;
-                            text-align: center !important;
-                        }
-
-                        .cc-cycle-metric-label,
-                        .cc-cycle-metric-value {
-                            display: block !important;
-                            width: 100%;
-                            margin: 0 !important;
-                            text-align: center !important;
-                        }
-
-                        .cc-cycle-metric-label {
-                            line-height: 1.25;
-                            white-space: normal;
-                        }
-
-                        .cc-cycle-metric-value {
-                            line-height: 1.2;
-                            white-space: nowrap;
-                        }
-
-                        @media (max-width: 980px) {
-                            .cc-cycle-metrics {
-                                grid-template-columns:
-                                    repeat(2, minmax(0, 1fr)) !important;
-                            }
-                        }
-
-                        @media (max-width: 560px) {
-                            .cc-cycle-metrics {
-                                grid-template-columns:
-                                    minmax(0, 1fr) !important;
-                            }
-                        }
-                    </style>
-
-                    <div class="cc-summary-strip cc-cycle-metrics">
+                    <div class="cc-summary-strip cc-cycle-metrics cc-cycle-metrics-{{ $unidad->modelo_medicion === 'galones_hora' ? '5' : '4' }}">
                         <div class="cc-summary-strip-item cc-cycle-metric">
                             <span
                                 class="cc-summary-strip-label

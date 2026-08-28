@@ -13,8 +13,8 @@
 </head>
 <body class="antialiased">
     <main class="min-h-screen" style="background: var(--cc-bg-main);">
-        <div class="cc-page-wrapper">
-            <div class="cc-window-container" style="width: 100%; max-width: 80rem;">
+        <div class="cc-page-wrapper cc-va-scope">
+            <div class="cc-window-container cc-operational-container">
                 <div class="cc-card">
                     @include('abastecimientos.ciclos.show-contenido', ['modoVentana' => true])
                 </div>
