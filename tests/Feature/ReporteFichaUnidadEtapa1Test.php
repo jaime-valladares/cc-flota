@@ -170,10 +170,27 @@ test('usuario empresa solo ve sus unidades y manipulacion de filtros no amplia t
     $this->actingAs($usuario)
         ->get(route('reportes.unidades.index', [
             'consultar' => 1,
-            'empresa_ids' => [$ajena->id],
-            'unidad_ids' => [$unidadAjena->id],
+            'empresa_ids' => [$propia->id],
+            'unidad_ids' => [$unidadPropia->id],
         ]))
-        ->assertOk()->assertDontSee('RU-AJENA')->assertDontSee('Reporte TENANT-AJENO');
+        ->assertOk()->assertSee('RU-PROPIA')->assertDontSee('RU-AJENA');
+
+    $this->actingAs($usuario)
+        ->get(route('reportes.unidades.index', [
+            'consultar' => 1,
+            'empresa_ids' => [$ajena->id],
+        ]))->assertForbidden();
+    $this->actingAs($usuario)
+        ->get(route('reportes.unidades.index', [
+            'consultar' => 1,
+            'unidad_ids' => [$unidadAjena->id],
+        ]))->assertForbidden();
+    $this->actingAs($usuario)
+        ->get(route('reportes.unidades.index', [
+            'consultar' => 1,
+            'empresa_ids' => [$propia->id, $ajena->id],
+            'unidad_ids' => [$unidadPropia->id, $unidadAjena->id],
+        ]))->assertForbidden();
 
     $this->actingAs($usuario)
         ->get(route('reportes.unidades.show', $unidadPropia))->assertOk();
@@ -249,18 +266,36 @@ test('ruta ventana comparte permiso aislamiento y preserva filtros', function ()
     prepararPermisosReporteUnidades($this);
     $propia = empresaReporteUnidades('VENTANA-PROPIA');
     $ajena = empresaReporteUnidades('VENTANA-AJENA');
-    unidadReporteUnidades($propia, 'RU-VENTANA-PROPIA');
+    $unidadPropia = unidadReporteUnidades($propia, 'RU-VENTANA-PROPIA');
     $unidadAjena = unidadReporteUnidades($ajena, 'RU-VENTANA-AJENA');
+    $usuario = usuarioReporteUnidades(User::ROL_EMPRESA_AUDITOR, $propia);
 
-    $this->actingAs(usuarioReporteUnidades(User::ROL_EMPRESA_AUDITOR, $propia))
+    $this->actingAs($usuario)
         ->get(route('reportes.unidades.ventana', [
             'consultar' => 1,
             'busqueda' => 'VENTANA',
-            'empresa_ids' => [$ajena->id],
-            'unidad_ids' => [$unidadAjena->id],
+            'empresa_ids' => [$propia->id],
+            'unidad_ids' => [$unidadPropia->id],
         ]))
-        ->assertOk()->assertDontSee('RU-VENTANA-AJENA')
+        ->assertOk()->assertSee('RU-VENTANA-PROPIA')->assertDontSee('RU-VENTANA-AJENA')
         ->assertSee('value="VENTANA"', false);
+
+    $this->actingAs($usuario)
+        ->get(route('reportes.unidades.ventana', [
+            'consultar' => 1,
+            'empresa_ids' => [$ajena->id],
+        ]))->assertForbidden();
+    $this->actingAs($usuario)
+        ->get(route('reportes.unidades.ventana', [
+            'consultar' => 1,
+            'unidad_ids' => [$unidadAjena->id],
+        ]))->assertForbidden();
+    $this->actingAs($usuario)
+        ->get(route('reportes.unidades.ventana', [
+            'consultar' => 1,
+            'empresa_ids' => [$propia->id, $ajena->id],
+            'unidad_ids' => [$unidadPropia->id, $unidadAjena->id],
+        ]))->assertForbidden();
 
     $this->actingAs(usuarioReporteUnidades(User::ROL_DIESEL_TECNICO))
         ->get(route('reportes.unidades.ventana'))->assertForbidden();
@@ -713,16 +748,35 @@ test('pdf general de usuario empresa mantiene tenant ante filtros manipulados', 
     $documento->shouldReceive('setPaper')->andReturnSelf();
     $documento->shouldReceive('download')->andReturn(response('PDF'));
 
-    $this->actingAs(usuarioReporteUnidades(User::ROL_EMPRESA_ADMIN, $propia))
+    $usuario = usuarioReporteUnidades(User::ROL_EMPRESA_ADMIN, $propia);
+
+    $this->actingAs($usuario)
         ->get(route('reportes.unidades.pdf', [
             'consultar' => 1,
-            'empresa_ids' => [$ajena->id],
-            'unidad_ids' => [$unidadPropia->id, $unidadAjena->id],
+            'empresa_ids' => [$propia->id],
+            'unidad_ids' => [$unidadPropia->id],
         ]))->assertOk();
 
     expect($datosPdf['unidades']->pluck('id')->all())->toBe([$unidadPropia->id])
         ->and($datosPdf['filtrosAplicados']['Nombre / Placa'])->toBe('RU-PDF-PROPIA')
         ->and($datosPdf['filtrosAplicados']['Empresa'])->toBe('Reporte PDF-TENANT');
+
+    $this->actingAs($usuario)
+        ->get(route('reportes.unidades.pdf', [
+            'consultar' => 1,
+            'empresa_ids' => [$ajena->id],
+        ]))->assertForbidden();
+    $this->actingAs($usuario)
+        ->get(route('reportes.unidades.pdf', [
+            'consultar' => 1,
+            'unidad_ids' => [$unidadAjena->id],
+        ]))->assertForbidden();
+    $this->actingAs($usuario)
+        ->get(route('reportes.unidades.pdf', [
+            'consultar' => 1,
+            'empresa_ids' => [$propia->id, $ajena->id],
+            'unidad_ids' => [$unidadPropia->id, $unidadAjena->id],
+        ]))->assertForbidden();
 });
 
 test('pdf ficha contiene configuracion actual completa y protege tenant', function () {

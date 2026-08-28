@@ -176,7 +176,24 @@ class FichaUnidadController extends Controller
         $modeloMedicion = $validated['modelo_medicion'] ?? null;
 
         if (! $usuario->esDieselCop()) {
-            $empresaIds = [(int) $usuario->empresa_id];
+            $tenant = (int) $usuario->empresa_id;
+
+            abort_if(
+                collect($empresaIds)->contains(
+                    fn (int $id): bool => $id !== $tenant
+                ),
+                403
+            );
+
+            abort_if(
+                Unidad::query()
+                    ->whereIn('id', $unidadIds)
+                    ->where('empresa_id', '!=', $tenant)
+                    ->exists(),
+                403
+            );
+
+            $empresaIds = [$tenant];
         }
 
         return compact('busqueda', 'empresaIds', 'unidadIds', 'estado', 'disponibilidad', 'modeloMedicion');
