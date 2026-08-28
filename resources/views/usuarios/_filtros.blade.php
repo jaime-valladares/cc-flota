@@ -32,20 +32,19 @@
             </div>
 
             <div class="cc-field">
-                <label for="tipo_usuario">
+                <label>
                     Tipo de usuario
                 </label>
 
                 @if ($esUsuarioDieselCop)
-                    <select id="tipo_usuario" name="tipo_usuario" class="cc-input">
-                        <option value="">Todos</option>
-                        <option value="diesel_cop" @selected($tipoUsuario === 'diesel_cop')>
-                            Diesel Cop
-                        </option>
-                        <option value="empresa" @selected($tipoUsuario === 'empresa')>
-                            Empresa
-                        </option>
-                    </select>
+                    <div class="cc-filter-multiselect" data-cc-filter-multiselect data-filter-tipo-usuario>
+                        <button type="button" class="cc-filter-multiselect-toggle" data-cc-filter-toggle><span data-cc-filter-label data-default-label="Todos">{{ $tipoUsuario === 'diesel_cop' ? 'Diesel Cop' : ($tipoUsuario === 'empresa' ? 'Empresa' : 'Todos') }}</span><span class="cc-filter-multiselect-arrow">⌄</span></button>
+                        <div class="cc-filter-multiselect-menu" data-cc-filter-menu><div class="cc-filter-multiselect-list">
+                            @foreach (['' => 'Todos', 'diesel_cop' => 'Diesel Cop', 'empresa' => 'Empresa'] as $valor => $texto)
+                                <label class="cc-filter-multiselect-option" data-cc-filter-option><input type="radio" name="tipo_usuario" value="{{ $valor }}" @checked($tipoUsuario === ($valor ?: null)) data-cc-filter-checkbox><span data-cc-filter-option-label>{{ $texto }}</span></label>
+                            @endforeach
+                        </div></div>
+                    </div>
                 @else
                     <input type="hidden" name="tipo_usuario" value="empresa">
 
@@ -186,19 +185,29 @@
             </div>
 
             <div class="cc-field">
-                <label for="estado">
-                    Estado
+                <label>
+                    Estado Usuario
                 </label>
+                <div class="cc-filter-multiselect" data-cc-filter-multiselect data-filter-estado-usuario>
+                    <button type="button" class="cc-filter-multiselect-toggle" data-cc-filter-toggle><span data-cc-filter-label data-default-label="Todos">{{ $estado === 'activo' ? 'Activos' : ($estado === 'inactivo' ? 'Inactivos' : 'Todos') }}</span><span class="cc-filter-multiselect-arrow">⌄</span></button>
+                    <div class="cc-filter-multiselect-menu" data-cc-filter-menu><div class="cc-filter-multiselect-list">
+                        @foreach (['' => 'Todos', 'activo' => 'Activos', 'inactivo' => 'Inactivos'] as $valor => $texto)
+                            <label class="cc-filter-multiselect-option" data-cc-filter-option><input type="radio" name="estado" value="{{ $valor }}" @checked($estado === ($valor ?: null)) data-cc-filter-checkbox><span data-cc-filter-option-label>{{ $texto }}</span></label>
+                        @endforeach
+                    </div></div>
+                </div>
+            </div>
 
-                <select id="estado" name="estado" class="cc-input">
-                    <option value="">Todos</option>
-                    <option value="activo" @selected($estado === 'activo')>
-                        Activos
-                    </option>
-                    <option value="inactivo" @selected($estado === 'inactivo')>
-                        Inactivos
-                    </option>
-                </select>
+            <div class="cc-field">
+                <label>Estado Empresa</label>
+                <div class="cc-filter-multiselect" data-cc-filter-multiselect data-filter-estado-empresa>
+                    <button type="button" class="cc-filter-multiselect-toggle" data-cc-filter-toggle><span data-cc-filter-label data-default-label="Todas">{{ $estadoEmpresa === 'activa' ? 'Activas' : ($estadoEmpresa === 'inactiva' ? 'Inactivas' : 'Todas') }}</span><span class="cc-filter-multiselect-arrow">⌄</span></button>
+                    <div class="cc-filter-multiselect-menu" data-cc-filter-menu><div class="cc-filter-multiselect-list">
+                        @foreach (['' => 'Todas', 'activa' => 'Activas', 'inactiva' => 'Inactivas'] as $valor => $texto)
+                            <label class="cc-filter-multiselect-option" data-cc-filter-option><input type="radio" name="estado_empresa" value="{{ $valor }}" @checked($estadoEmpresa === ($valor ?: null)) data-cc-filter-checkbox><span data-cc-filter-option-label>{{ $texto }}</span></label>
+                        @endforeach
+                    </div></div>
+                </div>
             </div>
 
             <div class="cc-standard-filter-actions cc-users-filter-actions">

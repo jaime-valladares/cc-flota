@@ -391,28 +391,16 @@
                             </div>
 
                             <div class="cc-field">
-                                <label for="estado">
-                                    Estado administrativo
-                                </label>
-
-                                <select
-                                    id="estado"
-                                    name="estado"
-                                    class="cc-input"
-                                >
-                                    <option value="">
-                                        Todos
-                                    </option>
-
-                                    @foreach ($estadosUnidad as $valor => $texto)
-                                        <option
-                                            value="{{ $valor }}"
-                                            @selected($estado === $valor)
-                                        >
-                                            {{ $texto }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                                <label>Estado administrativo</label>
+                                <div class="cc-filter-multiselect" data-cc-filter-multiselect data-filter-estado-administrativo>
+                                    <button type="button" class="cc-filter-multiselect-toggle" data-cc-filter-toggle><span data-cc-filter-label data-default-label="Todos">{{ $estado ? ($estadosUnidad[$estado] ?? 'Todos') : 'Todos' }}</span><span class="cc-filter-multiselect-arrow">⌄</span></button>
+                                    <div class="cc-filter-multiselect-menu" data-cc-filter-menu><div class="cc-filter-multiselect-list">
+                                        <label class="cc-filter-multiselect-option" data-cc-filter-option><input type="radio" name="estado" value="" @checked(! $estado) data-cc-filter-checkbox><span data-cc-filter-option-label>Todos</span></label>
+                                        @foreach ($estadosUnidad as $valor => $texto)
+                                            <label class="cc-filter-multiselect-option" data-cc-filter-option><input type="radio" name="estado" value="{{ $valor }}" @checked($estado === $valor) data-cc-filter-checkbox><span data-cc-filter-option-label>{{ $texto }}</span></label>
+                                        @endforeach
+                                    </div></div>
+                                </div>
 
                                 @error('estado')
                                     <div class="cc-error">

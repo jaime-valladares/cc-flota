@@ -92,7 +92,8 @@
                         <th style="width: 24%;">Empresa</th>
                         <th style="width: 24%;">Rol</th>
                         <th style="width: 13%;">Tipo</th>
-                        <th style="width: 12%;">Estado</th>
+                        <th style="width: 12%;">Estado Usuario</th>
+                        <th>Estado Empresa</th>
                     </tr>
                 </thead>
 
@@ -139,6 +140,14 @@
                                     <span class="cc-badge cc-badge-active">Activo</span>
                                 @else
                                     <span class="cc-badge cc-badge-inactive">Inactivo</span>
+                                @endif
+                            </td>
+
+                            <td>
+                                @if ($usuario->empresa)
+                                    <span class="cc-badge {{ $usuario->empresa->estado === 'activa' ? 'cc-badge-active' : 'cc-badge-inactive' }}">{{ $usuario->empresa->estado === 'activa' ? 'Activa' : 'Inactiva' }}</span>
+                                @else
+                                    —
                                 @endif
                             </td>
 

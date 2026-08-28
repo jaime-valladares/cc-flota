@@ -49,8 +49,7 @@ class UsuarioController extends Controller
     private function prepararConsultaUsuarios(
         Request $request,
         bool $modoAdministracion = false
-    ): array
-    {
+    ): array {
         /** @var User $usuarioAutenticado */
         $usuarioAutenticado = Auth::user();
         $esUsuarioDieselCop = $usuarioAutenticado->esDieselCop();
@@ -91,25 +90,17 @@ class UsuarioController extends Controller
                 'nullable',
                 Rule::in(['activo', 'inactivo']),
             ],
+            'estado_empresa' => ['nullable', Rule::in(['activa', 'inactiva'])],
         ], [
-            'busqueda_usuario.max' =>
-                'La búsqueda no debe exceder 150 caracteres.',
-            'tipo_usuario.in' =>
-                'El tipo de usuario seleccionado no es válido.',
-            'empresa_ids.array' =>
-                'La selección de empresas no es válida.',
-            'empresa_ids.*.exists' =>
-                'Una de las empresas seleccionadas no es válida.',
-            'empresa_id.exists' =>
-                'La empresa seleccionada no es válida.',
-            'rol_ids.array' =>
-                'La selección de roles no es válida.',
-            'rol_ids.*.exists' =>
-                'Uno de los roles seleccionados no es válido.',
-            'rol_id.exists' =>
-                'El rol seleccionado no es válido.',
-            'estado.in' =>
-                'El estado seleccionado no es válido.',
+            'busqueda_usuario.max' => 'La búsqueda no debe exceder 150 caracteres.',
+            'tipo_usuario.in' => 'El tipo de usuario seleccionado no es válido.',
+            'empresa_ids.array' => 'La selección de empresas no es válida.',
+            'empresa_ids.*.exists' => 'Una de las empresas seleccionadas no es válida.',
+            'empresa_id.exists' => 'La empresa seleccionada no es válida.',
+            'rol_ids.array' => 'La selección de roles no es válida.',
+            'rol_ids.*.exists' => 'Uno de los roles seleccionados no es válido.',
+            'rol_id.exists' => 'El rol seleccionado no es válido.',
+            'estado.in' => 'El estado seleccionado no es válido.',
         ]);
 
         $busquedaUsuario = trim(
@@ -118,6 +109,7 @@ class UsuarioController extends Controller
 
         $tipoUsuario = $validated['tipo_usuario'] ?? null;
         $estado = $validated['estado'] ?? null;
+        $estadoEmpresa = $validated['estado_empresa'] ?? null;
 
         $empresaIds = collect(
             $validated['empresa_ids'] ?? []
@@ -170,6 +162,7 @@ class UsuarioController extends Controller
             || $busquedaUsuario !== ''
             || count($rolIds) > 0
             || filled($estado)
+            || filled($estadoEmpresa)
             || (
                 $esUsuarioDieselCop
                 && (
@@ -180,6 +173,7 @@ class UsuarioController extends Controller
 
         $empresasSelector = $esUsuarioDieselCop
             ? Empresa::query()
+                ->when($modoAdministracion, fn (Builder $query) => $query->where('estado', 'activa'))
                 ->orderBy('nombre_comercial')
                 ->orderBy('nombre_legal')
                 ->get()
@@ -194,8 +188,7 @@ class UsuarioController extends Controller
             ->where('estado', 'activo')
             ->when(
                 ! $esUsuarioDieselCop,
-                fn (Builder $query) =>
-                    $query->where('alcance', 'empresa')
+                fn (Builder $query) => $query->where('alcance', 'empresa')
             )
             ->orderBy('alcance')
             ->orderBy('nombre')
@@ -211,6 +204,9 @@ class UsuarioController extends Controller
         );
 
         if ($modoAdministracion) {
+            $query->where(function (Builder $query) {
+                $query->whereNull('empresa_id')->orWhereHas('empresa', fn (Builder $empresa) => $empresa->where('estado', 'activa'));
+            });
             $this->aplicarAlcanceAdministracion(
                 $query,
                 $usuarioAutenticado
@@ -224,7 +220,8 @@ class UsuarioController extends Controller
                 $tipoUsuario,
                 $empresaIds,
                 $rolIds,
-                $estado
+                $estado,
+                $estadoEmpresa
             );
         } else {
             $query->whereRaw('1 = 0');
@@ -246,6 +243,9 @@ class UsuarioController extends Controller
         );
 
         if ($modoAdministracion) {
+            $baseResumen->where(function (Builder $query) {
+                $query->whereNull('empresa_id')->orWhereHas('empresa', fn (Builder $empresa) => $empresa->where('estado', 'activa'));
+            });
             $this->aplicarAlcanceAdministracion(
                 $baseResumen,
                 $usuarioAutenticado
@@ -259,7 +259,8 @@ class UsuarioController extends Controller
                 $tipoUsuario,
                 $empresaIds,
                 $rolIds,
-                $estado
+                $estado,
+                $estadoEmpresa
             );
         }
 
@@ -272,6 +273,7 @@ class UsuarioController extends Controller
             'empresaIds' => $empresaIds,
             'rolIds' => $rolIds,
             'estado' => $estado,
+            'estadoEmpresa' => $estadoEmpresa,
             'hayFiltros' => $hayFiltros,
             'totalUsuarios' => (clone $baseResumen)->count(),
             'usuariosActivos' => (clone $baseResumen)
@@ -328,11 +330,10 @@ class UsuarioController extends Controller
         )) {
             $query->whereHas(
                 'role',
-                fn (Builder $roleQuery) =>
-                    $roleQuery->whereIn('codigo', [
-                        User::ROL_EMPRESA_OPERADOR,
-                        User::ROL_EMPRESA_AUDITOR,
-                    ])
+                fn (Builder $roleQuery) => $roleQuery->whereIn('codigo', [
+                    User::ROL_EMPRESA_OPERADOR,
+                    User::ROL_EMPRESA_AUDITOR,
+                ])
             );
 
             return;
@@ -347,27 +348,27 @@ class UsuarioController extends Controller
         ?string $tipoUsuario,
         array $empresaIds,
         array $rolIds,
-        ?string $estado
+        ?string $estado,
+        ?string $estadoEmpresa
     ): void {
         if ($busquedaUsuario !== '') {
             $query->where(
-                function (Builder $subquery)
-                use ($busquedaUsuario) {
+                function (Builder $subquery) use ($busquedaUsuario) {
                     $subquery
                         ->where(
                             'name',
                             'like',
-                            '%' . $busquedaUsuario . '%'
+                            '%'.$busquedaUsuario.'%'
                         )
                         ->orWhere(
                             'apellido',
                             'like',
-                            '%' . $busquedaUsuario . '%'
+                            '%'.$busquedaUsuario.'%'
                         )
                         ->orWhere(
                             'email',
                             'like',
-                            '%' . $busquedaUsuario . '%'
+                            '%'.$busquedaUsuario.'%'
                         );
                 }
             );
@@ -403,6 +404,10 @@ class UsuarioController extends Controller
                 'estado',
                 $estado
             );
+        }
+
+        if (filled($estadoEmpresa)) {
+            $query->whereHas('empresa', fn (Builder $empresa) => $empresa->where('estado', $estadoEmpresa));
         }
     }
 
@@ -453,8 +458,7 @@ class UsuarioController extends Controller
             'empresas' => $empresas,
             'roles' => $roles,
             'esUsuarioDieselCop' => $esUsuarioDieselCop,
-            'puedeCambiarRol' =>
-                is_null($usuario)
+            'puedeCambiarRol' => is_null($usuario)
                 || (int) $usuarioAutenticado->id
                     !== (int) $usuario->id,
         ];
@@ -486,22 +490,17 @@ class UsuarioController extends Controller
         );
 
         $usuario = User::create([
-            'empresa_id' =>
-                $validated['tipo_usuario']
+            'empresa_id' => $validated['tipo_usuario']
                     === User::TIPO_EMPRESA
                     ? $validated['empresa_id']
                     : null,
             'rol_id' => $role->id,
-            'tipo_usuario' =>
-                $validated['tipo_usuario'],
+            'tipo_usuario' => $validated['tipo_usuario'],
             'name' => $validated['name'],
-            'apellido' =>
-                $validated['apellido'] ?? null,
+            'apellido' => $validated['apellido'] ?? null,
             'email' => $validated['email'],
-            'telefono' =>
-                $validated['telefono'] ?? null,
-            'cargo' =>
-                $validated['cargo'] ?? null,
+            'telefono' => $validated['telefono'] ?? null,
+            'cargo' => $validated['cargo'] ?? null,
             'estado' => 'activo',
             'password' => $validated['password'],
             'creado_por' => Auth::id(),
@@ -626,24 +625,18 @@ class UsuarioController extends Controller
             $role
         );
 
-
         $datosActualizar = [
-            'empresa_id' =>
-                $validated['tipo_usuario']
+            'empresa_id' => $validated['tipo_usuario']
                     === User::TIPO_EMPRESA
                     ? $validated['empresa_id']
                     : null,
             'rol_id' => $role->id,
-            'tipo_usuario' =>
-                $validated['tipo_usuario'],
+            'tipo_usuario' => $validated['tipo_usuario'],
             'name' => $validated['name'],
-            'apellido' =>
-                $validated['apellido'] ?? null,
+            'apellido' => $validated['apellido'] ?? null,
             'email' => $validated['email'],
-            'telefono' =>
-                $validated['telefono'] ?? null,
-            'cargo' =>
-                $validated['cargo'] ?? null,
+            'telefono' => $validated['telefono'] ?? null,
+            'cargo' => $validated['cargo'] ?? null,
             'actualizado_por' => Auth::id(),
         ];
 
@@ -670,8 +663,7 @@ class UsuarioController extends Controller
 
         if ((int) $usuario->id === (int) Auth::id()) {
             return back()->withErrors([
-                'motivo_inactivacion' =>
-                    'No puede inactivar su propio usuario mientras está en sesión.',
+                'motivo_inactivacion' => 'No puede inactivar su propio usuario mientras está en sesión.',
             ]);
         }
 
@@ -681,17 +673,15 @@ class UsuarioController extends Controller
                 ->where('estado', 'activo')
                 ->whereHas(
                     'role',
-                    fn (Builder $query) =>
-                        $query->where(
-                            'codigo',
-                            User::ROL_DIESEL_SUPER_ADMIN
-                        )
+                    fn (Builder $query) => $query->where(
+                        'codigo',
+                        User::ROL_DIESEL_SUPER_ADMIN
+                    )
                 )
                 ->count() <= 1
         ) {
             return back()->withErrors([
-                'motivo_inactivacion' =>
-                    'No puede inactivar el último superadministrador activo.',
+                'motivo_inactivacion' => 'No puede inactivar el último superadministrador activo.',
             ]);
         }
 
@@ -712,18 +702,15 @@ class UsuarioController extends Controller
                 ]),
             ],
         ], [
-            'motivo_inactivacion.required' =>
-                'Debe seleccionar el motivo de inactivación.',
-            'motivo_inactivacion.in' =>
-                'El motivo seleccionado no es válido.',
+            'motivo_inactivacion.required' => 'Debe seleccionar el motivo de inactivación.',
+            'motivo_inactivacion.in' => 'El motivo seleccionado no es válido.',
         ]);
 
         $usuario->update([
             'estado' => 'inactivo',
             'fecha_inactivacion' => now(),
             'inactivado_por' => Auth::id(),
-            'motivo_inactivacion' =>
-                $validated['motivo_inactivacion'],
+            'motivo_inactivacion' => $validated['motivo_inactivacion'],
             'actualizado_por' => Auth::id(),
         ]);
 
@@ -791,7 +778,7 @@ class UsuarioController extends Controller
             'empresa_id' => [
                 'nullable',
                 'required_if:tipo_usuario,empresa',
-                'exists:empresas,id',
+                Rule::exists('empresas', 'id')->where('estado', 'activa'),
             ],
             'rol_id' => [
                 'required',
@@ -827,26 +814,16 @@ class UsuarioController extends Controller
             ],
             'password' => $passwordRules,
         ], [
-            'tipo_usuario.required' =>
-                'Debe seleccionar el tipo de usuario.',
-            'empresa_id.required_if' =>
-                'Debe seleccionar una empresa.',
-            'rol_id.required' =>
-                'Debe seleccionar un rol.',
-            'name.required' =>
-                'El nombre es obligatorio.',
-            'email.required' =>
-                'El correo electrónico es obligatorio.',
-            'email.unique' =>
-                'Ya existe un usuario con este correo.',
-            'telefono.regex' =>
-                'El teléfono debe tener el formato 0000-0000.',
-            'password.required' =>
-                'La contraseña es obligatoria.',
-            'password.min' =>
-                'La contraseña debe tener al menos 8 caracteres.',
-            'password.confirmed' =>
-                'La confirmación no coincide.',
+            'tipo_usuario.required' => 'Debe seleccionar el tipo de usuario.',
+            'empresa_id.required_if' => 'Debe seleccionar una empresa.',
+            'rol_id.required' => 'Debe seleccionar un rol.',
+            'name.required' => 'El nombre es obligatorio.',
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.unique' => 'Ya existe un usuario con este correo.',
+            'telefono.regex' => 'El teléfono debe tener el formato 0000-0000.',
+            'password.required' => 'La contraseña es obligatoria.',
+            'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
+            'password.confirmed' => 'La confirmación no coincide.',
         ]);
     }
 
@@ -980,6 +957,10 @@ class UsuarioController extends Controller
          */
         if ($usuario->esCuentaMaestra()) {
             abort(404);
+        }
+
+        if ($usuario->empresa_id && $usuario->empresa()->where('estado', 'inactiva')->exists()) {
+            abort(403, 'La empresa del usuario está inactiva y no permite administración.');
         }
 
         $usuario->loadMissing('role');
