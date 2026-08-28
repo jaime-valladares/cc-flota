@@ -5261,7 +5261,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         border-radius: 999px;
         font-size: .66rem;
         font-weight: 800;
-        text-transform: uppercase;
+        text-transform: none;
     }
 
     .cc-operational-priority-alta {

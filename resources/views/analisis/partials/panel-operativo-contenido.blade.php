@@ -1291,11 +1291,11 @@
                                                                : 'alta'
                                                        }}"
                                             >
-                                                {{
+                                                {{ ucfirst(strtolower(
                                                     $unidadOperativa
                                                         ? 'Operativa'
                                                         : 'No operativa'
-                                                }}
+                                                )) }}
                                             </span>
                                         </td>
 
@@ -1389,7 +1389,7 @@
                                                            $prioridad
                                                        }}"
                                             >
-                                                {{ $prioridad }}
+                                                {{ ucfirst(strtolower($prioridad)) }}
                                             </span>
                                         </td>
                                     </tr>
