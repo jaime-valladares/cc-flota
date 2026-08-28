@@ -392,7 +392,7 @@
 
                             <div class="cc-field">
                                 <label>Estado administrativo</label>
-                                <div class="cc-filter-multiselect" data-cc-filter-multiselect data-filter-estado-administrativo>
+                                <div class="cc-filter-multiselect cc-filter-multiselect-compact" data-cc-filter-multiselect data-filter-estado-administrativo>
                                     <button type="button" class="cc-filter-multiselect-toggle" data-cc-filter-toggle><span data-cc-filter-label data-default-label="Todos">{{ $estado ? ($estadosUnidad[$estado] ?? 'Todos') : 'Todos' }}</span><span class="cc-filter-multiselect-arrow">⌄</span></button>
                                     <div class="cc-filter-multiselect-menu" data-cc-filter-menu><div class="cc-filter-multiselect-list">
                                         <label class="cc-filter-multiselect-option" data-cc-filter-option><input type="radio" name="estado" value="" @checked(! $estado) data-cc-filter-checkbox><span data-cc-filter-option-label>Todos</span></label>
@@ -490,7 +490,8 @@
 
                                 $puedeEditar =
                                     Auth::user()->tienePermiso('unidades.editar')
-                                    && $unidad->estado !== 'inactiva';
+                                    && $unidad->estado !== 'inactiva'
+                                    && (! $licencia || $licencia->habilita_operacion);
 
                                 $disponibilidadPendiente = in_array(
                                     $unidad->disponibilidad_operativa,

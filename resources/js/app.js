@@ -90,6 +90,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         function openMenu() {
+            multiselect.classList.add('is-open');
             menu.classList.add('is-open');
             toggle.classList.add('is-open');
 
@@ -100,6 +101,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         function closeMenu() {
+            multiselect.classList.remove('is-open');
             menu.classList.remove('is-open');
             toggle.classList.remove('is-open');
         }

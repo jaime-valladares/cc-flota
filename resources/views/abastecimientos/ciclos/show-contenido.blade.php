@@ -8,17 +8,35 @@
         'galones_viaje' => 'Galones por viaje',
         default => 'No definido',
     };
-    $lecturaInicial = $esHoras ? $apertura->horometro_actual : $apertura->kilometraje_actual;
-    $lecturaFinal = $cierre ? ($esHoras ? $cierre->horometro_actual : $cierre->kilometraje_actual) : null;
-    $recorrido = $cierre ? ($esHoras ? $cierre->diferencia_horometro : $cierre->diferencia_kilometraje) : null;
-    $rendimientoTeorico = $esHoras
-        ? $apertura->rendimiento_teorico_gal_hora_snapshot
-        : $apertura->rendimiento_teorico_km_galon_snapshot;
+    $totalViajes = $cierre?->total_viajes;
+    $rendimientoTeoricoViaje = $esCompleto
+        && ! is_null($cierre->galones_teoricos)
+        && $totalViajes > 0
+            ? (float) $cierre->galones_teoricos / $totalViajes
+            : null;
+    $rendimientoRealViaje = $esCompleto
+        && ! is_null($cierre->consumo_real_ciclo)
+        && $totalViajes > 0
+            ? (float) $cierre->consumo_real_ciclo / $totalViajes
+            : null;
+    $rendimientoTeorico = match ($apertura->modelo_medicion) {
+        'kilometros_galon' => $apertura->rendimiento_teorico_km_galon_snapshot,
+        'galones_hora' => $apertura->rendimiento_teorico_gal_hora_snapshot,
+        'galones_viaje' => $rendimientoTeoricoViaje,
+        default => null,
+    };
     $rendimientoReal = $cierre ? match ($apertura->modelo_medicion) {
         'kilometros_galon' => $cierre->kilometros_por_galon,
         'galones_hora' => $cierre->galones_por_hora,
+        'galones_viaje' => $rendimientoRealViaje,
         default => null,
     } : null;
+    $rendimientoUnidad = match ($apertura->modelo_medicion) {
+        'kilometros_galon' => 'km/gal',
+        'galones_hora' => 'gal/h',
+        'galones_viaje' => 'gal/viaje',
+        default => '',
+    };
     [$costoUnitarioEtiqueta, $costoUnitarioSufijo] = match ($apertura->modelo_medicion) {
         'kilometros_galon' => ['Costo por kilómetro', '/km'],
         'galones_hora' => ['Costo por hora', '/h'],
@@ -53,11 +71,22 @@
 <section class="cc-detail-section mt-6">
     <div class="cc-detail-section-header"><h5>Medición</h5></div>
     <div class="cc-detail-grid">
-        <div class="cc-detail-item cc-cycle-pair"><span class="cc-detail-label">Lectura inicial:</span> <span class="cc-detail-value">{{ number_format((float) $lecturaInicial, 2) }} {{ $esHoras ? 'h' : 'km' }}</span></div>
-        <div class="cc-detail-item cc-cycle-pair"><span class="cc-detail-label">Lectura final:</span> <span class="cc-detail-value">{{ is_null($lecturaFinal) ? 'Pendiente' : number_format((float) $lecturaFinal, 2).' '.($esHoras ? 'h' : 'km') }}</span></div>
-        <div class="cc-detail-item cc-cycle-pair"><span class="cc-detail-label">Distancia / horas:</span> <span class="cc-detail-value">{{ is_null($recorrido) ? 'Pendiente' : number_format((float) $recorrido, 2).' '.($esHoras ? 'h' : 'km') }}</span></div>
-        <div class="cc-detail-item cc-cycle-pair"><span class="cc-detail-label">Rendimiento teórico:</span> <span class="cc-detail-value">{{ is_null($rendimientoTeorico) ? 'No definido' : number_format((float) $rendimientoTeorico, 2) }}</span></div>
-        <div class="cc-detail-item cc-cycle-pair"><span class="cc-detail-label">Rendimiento real:</span> <span class="cc-detail-value">{{ is_null($rendimientoReal) ? 'Pendiente' : number_format((float) $rendimientoReal, 2) }}</span></div>
+        @if ($esHoras)
+            <div class="cc-detail-item cc-cycle-pair"><span class="cc-detail-label">Lectura inicial de horómetro:</span> <span class="cc-detail-value">{{ number_format((float) $apertura->horometro_actual, 2) }} h</span></div>
+            <div class="cc-detail-item cc-cycle-pair"><span class="cc-detail-label">Lectura final de horómetro:</span> <span class="cc-detail-value">{{ $cierre ? number_format((float) $cierre->horometro_actual, 2).' h' : 'Pendiente' }}</span></div>
+            <div class="cc-detail-item cc-cycle-pair"><span class="cc-detail-label">Horas contabilizadas:</span> <span class="cc-detail-value">{{ $cierre ? number_format((float) $cierre->diferencia_horometro, 2).' h' : 'Pendiente' }}</span></div>
+            <div class="cc-detail-item cc-cycle-pair"><span class="cc-detail-label">Distancia recorrida:</span> <span class="cc-detail-value">{{ $cierre ? number_format((float) $cierre->diferencia_kilometraje, 2).' km' : 'Pendiente' }}</span></div>
+        @else
+            <div class="cc-detail-item cc-cycle-pair"><span class="cc-detail-label">Lectura inicial:</span> <span class="cc-detail-value">{{ number_format((float) $apertura->kilometraje_actual, 2) }} km</span></div>
+            <div class="cc-detail-item cc-cycle-pair"><span class="cc-detail-label">Lectura final:</span> <span class="cc-detail-value">{{ $cierre ? number_format((float) $cierre->kilometraje_actual, 2).' km' : 'Pendiente' }}</span></div>
+            <div class="cc-detail-item cc-cycle-pair"><span class="cc-detail-label">Distancia recorrida:</span> <span class="cc-detail-value">{{ $cierre ? number_format((float) $cierre->diferencia_kilometraje, 2).' km' : 'Pendiente' }}</span></div>
+        @endif
+        @if ($esViajes)
+            <div class="cc-detail-item cc-cycle-pair"><span class="cc-detail-label">Viajes contabilizados:</span> <span class="cc-detail-value">{{ $cierre ? number_format((int) $totalViajes) : 'Pendiente' }}</span></div>
+        @endif
+        <div class="cc-detail-item cc-cycle-pair"><span class="cc-detail-label">Galones consumidos:</span> <span class="cc-detail-value">{{ $cierre && ! is_null($cierre->consumo_real_ciclo) ? number_format((float) $cierre->consumo_real_ciclo, 2).' gal' : 'Pendiente' }}</span></div>
+        <div class="cc-detail-item cc-cycle-pair"><span class="cc-detail-label">Rendimiento teórico:</span> <span class="cc-detail-value">{{ is_null($rendimientoTeorico) ? 'No disponible' : number_format((float) $rendimientoTeorico, 2).' '.$rendimientoUnidad }}</span></div>
+        <div class="cc-detail-item cc-cycle-pair"><span class="cc-detail-label">Rendimiento real:</span> <span class="cc-detail-value">{{ ! $esCompleto ? 'Pendiente' : (is_null($rendimientoReal) ? 'No disponible' : number_format((float) $rendimientoReal, 2).' '.$rendimientoUnidad) }}</span></div>
         <div class="cc-detail-item cc-cycle-pair"><span class="cc-detail-label">Variación vs. teórico:</span> <span class="cc-detail-value">{{ $cierre && ! is_null($cierre->diferencia_galones_ciclo) ? number_format((float) $cierre->diferencia_galones_ciclo, 2).' gal' : 'Pendiente' }}</span></div>
     </div>
 </section>

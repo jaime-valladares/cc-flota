@@ -899,6 +899,8 @@ class UnidadController extends Controller
                 ->lockForUpdate()
                 ->first();
 
+            $this->validarLicenciaAsociadaOperativa($licenciaExistente);
+
             $tanquesExistentes = $unidadBloqueada
                 ->tanquesUnidad()
                 ->lockForUpdate()
@@ -1062,8 +1064,8 @@ class UnidadController extends Controller
     /**
      * Reactiva administrativamente una unidad.
      *
-     * La licencia no se modifica. La unidad regresa a registrada
-     * y su disponibilidad se recalcula de manera independiente.
+     * La licencia no se modifica. Si existe, debe habilitar operación antes
+     * de permitir que la unidad regrese al estado registrada.
      */
     public function reactivar(
         Request $request,
@@ -1403,7 +1405,8 @@ class UnidadController extends Controller
      *
      * Casos permitidos:
      *
-     * Una unidad conserva configuración editable mientras no esté inactiva.
+     * Una unidad sin licencia conserva la edición previa a la configuración
+     * contractual. Si ya tiene licencia, esta debe habilitar operación.
      */
     private function validarUnidadEditable(
         Unidad $unidad
@@ -1414,14 +1417,25 @@ class UnidadController extends Controller
             'puntosSeguridad',
         ]);
 
-        if ($unidad->estado !== 'inactiva') {
-            return;
+        if ($unidad->estado === 'inactiva') {
+            abort(
+                403,
+                'La configuración estructural de una unidad inactiva no puede modificarse.'
+            );
         }
 
-        abort(
-            403,
-            'La configuración estructural de una unidad inactiva no puede modificarse.'
-        );
+        $this->validarLicenciaAsociadaOperativa($unidad->licencia);
+    }
+
+    private function validarLicenciaAsociadaOperativa(
+        ?Licencia $licencia
+    ): void {
+        if ($licencia && ! $licencia->habilita_operacion) {
+            abort(
+                403,
+                'La licencia asociada no está vigente y debe renovarse o reactivarse antes de modificar la unidad.'
+            );
+        }
     }
 
     /**
@@ -1501,8 +1515,7 @@ class UnidadController extends Controller
     /**
      * Evita reactivar una unidad que no esté inactiva.
      *
-     * La reactivación administrativa no exige una licencia vigente.
-     * La unidad puede continuar bloqueada después de regresar a registrada.
+     * Si existe una licencia asociada, debe estar operativa y vigente.
      */
     private function validarUnidadInactivaParaReactivacion(
         Unidad $unidad
@@ -1513,6 +1526,9 @@ class UnidadController extends Controller
                 'No se puede reactivar esta unidad porque no se encuentra inactiva.'
             );
         }
+
+        $unidad->loadMissing('licencia');
+        $this->validarLicenciaAsociadaOperativa($unidad->licencia);
     }
 
     /**

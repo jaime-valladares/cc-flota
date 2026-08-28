@@ -25,6 +25,7 @@
     @php
         $accionFiltro = route('usuarios.administrar');
         $rutaLimpiar = route('usuarios.administrar');
+        $mostrarEstadoEmpresa = false;
     @endphp
 
     @include('usuarios._filtros')

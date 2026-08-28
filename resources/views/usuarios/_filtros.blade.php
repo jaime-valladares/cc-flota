@@ -37,7 +37,7 @@
                 </label>
 
                 @if ($esUsuarioDieselCop)
-                    <div class="cc-filter-multiselect" data-cc-filter-multiselect data-filter-tipo-usuario>
+                    <div class="cc-filter-multiselect cc-filter-multiselect-compact" data-cc-filter-multiselect data-filter-tipo-usuario>
                         <button type="button" class="cc-filter-multiselect-toggle" data-cc-filter-toggle><span data-cc-filter-label data-default-label="Todos">{{ $tipoUsuario === 'diesel_cop' ? 'Diesel Cop' : ($tipoUsuario === 'empresa' ? 'Empresa' : 'Todos') }}</span><span class="cc-filter-multiselect-arrow">⌄</span></button>
                         <div class="cc-filter-multiselect-menu" data-cc-filter-menu><div class="cc-filter-multiselect-list">
                             @foreach (['' => 'Todos', 'diesel_cop' => 'Diesel Cop', 'empresa' => 'Empresa'] as $valor => $texto)
@@ -188,7 +188,7 @@
                 <label>
                     Estado Usuario
                 </label>
-                <div class="cc-filter-multiselect" data-cc-filter-multiselect data-filter-estado-usuario>
+                <div class="cc-filter-multiselect cc-filter-multiselect-compact" data-cc-filter-multiselect data-filter-estado-usuario>
                     <button type="button" class="cc-filter-multiselect-toggle" data-cc-filter-toggle><span data-cc-filter-label data-default-label="Todos">{{ $estado === 'activo' ? 'Activos' : ($estado === 'inactivo' ? 'Inactivos' : 'Todos') }}</span><span class="cc-filter-multiselect-arrow">⌄</span></button>
                     <div class="cc-filter-multiselect-menu" data-cc-filter-menu><div class="cc-filter-multiselect-list">
                         @foreach (['' => 'Todos', 'activo' => 'Activos', 'inactivo' => 'Inactivos'] as $valor => $texto)
@@ -198,9 +198,10 @@
                 </div>
             </div>
 
+            @if ($mostrarEstadoEmpresa ?? true)
             <div class="cc-field">
                 <label>Estado Empresa</label>
-                <div class="cc-filter-multiselect" data-cc-filter-multiselect data-filter-estado-empresa>
+                <div class="cc-filter-multiselect cc-filter-multiselect-compact" data-cc-filter-multiselect data-filter-estado-empresa>
                     <button type="button" class="cc-filter-multiselect-toggle" data-cc-filter-toggle><span data-cc-filter-label data-default-label="Todas">{{ $estadoEmpresa === 'activa' ? 'Activas' : ($estadoEmpresa === 'inactiva' ? 'Inactivas' : 'Todas') }}</span><span class="cc-filter-multiselect-arrow">⌄</span></button>
                     <div class="cc-filter-multiselect-menu" data-cc-filter-menu><div class="cc-filter-multiselect-list">
                         @foreach (['' => 'Todas', 'activa' => 'Activas', 'inactiva' => 'Inactivas'] as $valor => $texto)
@@ -209,6 +210,7 @@
                     </div></div>
                 </div>
             </div>
+            @endif
 
             <div class="cc-standard-filter-actions cc-users-filter-actions">
                 <button type="submit" class="cc-btn-primary">

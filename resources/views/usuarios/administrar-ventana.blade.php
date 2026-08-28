@@ -39,6 +39,7 @@
     @php
         $accionFiltro = route('usuarios.administrar.ventana');
         $rutaLimpiar = route('usuarios.administrar.ventana');
+        $mostrarEstadoEmpresa = false;
     @endphp
 
     @include('usuarios._filtros')

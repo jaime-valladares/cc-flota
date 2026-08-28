@@ -5198,6 +5198,14 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     min-width: 0;
 }
 
+/* Variante para catálogos breves: sólo compacta el panel abierto. */
+.cc-filter-multiselect-compact .cc-filter-multiselect-menu {
+    width: 75%;
+    min-width: 0;
+    right: auto;
+    left: 0;
+}
+
 .cc-va-scope .cc-users-filter-actions {
     grid-column: 1 / -1;
     justify-self: end;
@@ -6594,7 +6602,49 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
 }
 
 .cc-va-analytics .cc-analytics-table-performance {
-    min-width: 90rem;
+    min-width: 96rem;
+}
+
+.cc-va-analytics .cc-analytics-performance-table-wrapper {
+    width: 100%;
+    max-width: 100%;
+    margin-inline: 0;
+    padding-inline: 0;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-gutter: stable;
+}
+
+.cc-va-analytics .cc-analytics-performance-table-wrapper .cc-analytics-table-performance {
+    margin-left: 0;
+}
+
+.cc-va-analytics .cc-filter-multiselect-readable .cc-filter-multiselect-menu {
+    width: min(90%, 24rem);
+    min-width: 14rem;
+    right: auto;
+    left: 0;
+}
+
+/* Dropdowns de reportes: anclaje inequívoco sin alterar el control cerrado. */
+.cc-va-analytics .cc-analytics-root-card .cc-filter-multiselect.is-open {
+    z-index: 6000;
+}
+
+.cc-va-analytics .cc-analytics-root-card .cc-filter-multiselect-menu {
+    position: absolute;
+    top: calc(100% + 0.42rem);
+    right: auto;
+    left: 0;
+    z-index: 6001;
+}
+
+.cc-va-analytics .cc-analytics-root-card .cc-filter-multiselect-compact .cc-filter-multiselect-menu {
+    width: 75%;
+}
+
+.cc-va-analytics .cc-analytics-root-card .cc-filter-multiselect-readable .cc-filter-multiselect-menu {
+    width: min(90%, 24rem);
 }
 
 .cc-va-analytics .cc-analytics-table-consumption {
@@ -6715,6 +6765,8 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     font-size: var(--cc-va-auxiliary-text-size);
     font-weight: 500;
     color: var(--cc-text-muted);
+    align-items: center;
+    gap: 0.2rem;
 }
 
 .cc-va-analytics .cc-result-count-value {

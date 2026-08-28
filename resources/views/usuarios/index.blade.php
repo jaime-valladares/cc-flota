@@ -23,31 +23,6 @@
         </div>
     @endif
 
-    <div class="cc-summary-strip">
-        <div class="cc-summary-strip-item">
-            <span class="cc-summary-strip-label">
-                {{ $hayFiltros ? 'Resultados' : 'Total usuarios' }}
-            </span>
-            <span class="cc-summary-strip-value">
-                {{ $hayFiltros ? $usuarios->total() : $totalUsuarios }}
-            </span>
-        </div>
-
-        <div class="cc-summary-strip-item">
-            <span class="cc-summary-strip-label">Activos</span>
-            <span class="cc-summary-strip-value cc-summary-strip-value-success">
-                {{ $usuariosActivos }}
-            </span>
-        </div>
-
-        <div class="cc-summary-strip-item">
-            <span class="cc-summary-strip-label">Inactivos</span>
-            <span class="cc-summary-strip-value cc-summary-strip-value-danger">
-                {{ $usuariosInactivos }}
-            </span>
-        </div>
-    </div>
-
     @php
         $accionFiltro = route('usuarios.index');
         $rutaLimpiar = route('usuarios.index');
@@ -55,6 +30,14 @@
 
 
     @include('usuarios._filtros')
+
+    @if ($hayFiltros && $usuarios->isNotEmpty())
+        <div class="cc-summary-strip" data-usuarios-summary>
+            <div class="cc-summary-strip-item"><span class="cc-summary-strip-label">Resultados</span><span class="cc-summary-strip-value">{{ $usuarios->total() }}</span></div>
+            <div class="cc-summary-strip-item"><span class="cc-summary-strip-label">Activos</span><span class="cc-summary-strip-value cc-summary-strip-value-success">{{ $usuariosActivos }}</span></div>
+            <div class="cc-summary-strip-item"><span class="cc-summary-strip-label">Inactivos</span><span class="cc-summary-strip-value cc-summary-strip-value-danger">{{ $usuariosInactivos }}</span></div>
+        </div>
+    @endif
 
     @if ($hayFiltros && $usuarios->total() > 0)
         <div class="mb-4 flex justify-end text-sm text-[var(--cc-text-muted)]">

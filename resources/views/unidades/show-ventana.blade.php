@@ -13,7 +13,13 @@
 
     $puedeEditar =
         Auth::user()->tienePermiso('unidades.editar')
-        && $unidad->estado === 'registrada';
+        && $unidad->estado !== 'inactiva'
+        && (! $licencia || $licencia->habilita_operacion);
+
+    $puedeReactivar =
+        Auth::user()->tienePermiso('unidades.reactivar')
+        && $unidad->estado === 'inactiva'
+        && (! $licencia || $licencia->habilita_operacion);
 
     $puedeInactivar =
         Auth::user()->tienePermiso('unidades.inactivar')
@@ -815,7 +821,7 @@
                                 </div>
                             </div>
 
-                            @if ($unidad->estado === 'inactiva')
+                            @if ($puedeReactivar)
                                 <form
                                     method="POST"
                                     action="{{ route(

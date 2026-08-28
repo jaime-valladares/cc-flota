@@ -1,4 +1,5 @@
 <?php
+
 use App\Http\Controllers\AnalisisConsumoUnidadController;
 use App\Models\Empresa;
 use App\Models\Gasolinera;
@@ -16,6 +17,7 @@ use App\Services\AbastecimientoService;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
+
 function contextoFullToFull($test, string $modelo = 'kilometros_galon'): array
 {
     $rol = Role::create([
@@ -92,6 +94,7 @@ function contextoFullToFull($test, string $modelo = 'kilometros_galon'): array
         'fecha_creacion' => now(),
         'creado_por' => $usuario->id,
     ]);
+
     return [$usuario, $empresa, $gasolinera, $tanque, $unidad->refresh(), $motorista];
 }
 function registrarInternoM4(
@@ -106,6 +109,7 @@ function registrarInternoM4(
     [$usuario, $empresa, $gasolinera, $tanque, $unidad, $motorista] = $contexto;
     $punto = $unidad->puntosSeguridad()
         ->where('tipo_punto', 'tapón')->where('subgrupo', 'Depósito')->firstOrFail();
+
     return app(AbastecimientoService::class)->registrar([
         'empresa_id' => $empresa->id,
         'unidad_id' => $unidad->id,
@@ -557,6 +561,63 @@ test('costo por kilometro conserva precision interna y presenta dos decimales', 
         ->assertSee('$1,147.50')
         ->assertSee('Costo por kilómetro:')
         ->assertSee('$0.48/km');
+});
+
+test('ficha de ciclo kilometros galon presenta medicion y unidades naturales', function () {
+    $contexto = contextoFullToFull($this, 'kilometros_galon');
+    $apertura = registrarInternoM4($contexto, 500, 100, null, '7654311');
+    $cierre = registrarInternoM4($contexto, 250, 2600, $apertura->id, '7654312');
+    $cierre->update(['kilometros_por_galon' => 10, 'diferencia_galones_ciclo' => 0]);
+
+    foreach (['abastecimientos.ciclos.show', 'abastecimientos.ciclos.show.ventana'] as $ruta) {
+        $this->actingAs($contexto[0])->get(route($ruta, $apertura))->assertOk()
+            ->assertSee('Distancia recorrida:')->assertSee('2,500.00 km')
+            ->assertSee('Galones consumidos:')->assertSee('250.00 gal')
+            ->assertSee('10.00 km/gal')->assertSee('Variación vs. teórico:')
+            ->assertDontSee('Distancia / horas');
+    }
+});
+
+test('ficha de ciclo galones hora presenta horometros distancia y galones por hora', function () {
+    $contexto = contextoFullToFull($this, 'galones_hora');
+    $apertura = registrarInternoM4($contexto, 500, 100, null, '7654321', 100);
+    $cierre = registrarInternoM4($contexto, 400, 300, $apertura->id, '7654322', 120);
+    $cierre->update(['galones_por_hora' => 5, 'diferencia_galones_ciclo' => 0]);
+
+    $this->actingAs($contexto[0])->get(route('abastecimientos.ciclos.show', $apertura))->assertOk()
+        ->assertSee('Lectura inicial de horómetro:')->assertSee('Lectura final de horómetro:')
+        ->assertSee('Horas contabilizadas:')->assertSee('20.00 h')
+        ->assertSee('Distancia recorrida:')->assertSee('200.00 km')
+        ->assertSee('Galones consumidos:')->assertSee('400.00 gal')
+        ->assertSee('5.00 gal/h')->assertDontSee('Distancia / horas');
+});
+
+test('ficha de ciclo galones viaje calcula rendimientos visuales por viaje', function () {
+    $contexto = contextoFullToFull($this, 'galones_viaje');
+    [$usuario, $empresa] = $contexto;
+    $origen = PuntoRuta::create(['empresa_id' => $empresa->id, 'nombre' => 'Origen ficha', 'direccion' => 'A', 'estado' => 'activo', 'creado_por' => $usuario->id]);
+    $destino = PuntoRuta::create(['empresa_id' => $empresa->id, 'nombre' => 'Destino ficha', 'direccion' => 'B', 'estado' => 'activo', 'creado_por' => $usuario->id]);
+    $ruta = Ruta::create(['empresa_id' => $empresa->id, 'punto_origen_id' => $origen->id, 'punto_destino_id' => $destino->id, 'ruta' => 'Ruta ficha', 'kilometros_estimados' => 50, 'galones_estimados' => 20, 'estado' => 'activo', 'creado_por' => $usuario->id]);
+    $apertura = registrarInternoM4($contexto, 500, 100, null, '7654331');
+    $cierre = registrarInternoM4($contexto, 245, 6550, $apertura->id, '7654332', null, [['ruta_id' => $ruta->id, 'tipo_recorrido' => 'ida']]);
+    $cierre->update(['diferencia_kilometraje' => 6450, 'total_viajes' => 29, 'galones_teoricos' => 240.70, 'consumo_real_ciclo' => 255, 'diferencia_galones_ciclo' => -14.30, 'costo_unitario_ciclo' => 37.37]);
+
+    $this->actingAs($contexto[0])->get(route('abastecimientos.ciclos.show', $apertura))->assertOk()
+        ->assertSee('Distancia recorrida:')->assertSee('6,450.00 km')
+        ->assertSee('Viajes contabilizados:')->assertSee('29')
+        ->assertSee('Galones consumidos:')->assertSee('255.00 gal')
+        ->assertSee('8.30 gal/viaje')->assertSee('8.79 gal/viaje')
+        ->assertSee('-14.30 gal')->assertSee('$37.37/viaje')
+        ->assertDontSee('Distancia / horas');
+});
+
+test('ficha de ciclo abierto no divide ni presenta metricas finales inexistentes', function () {
+    $contexto = contextoFullToFull($this, 'galones_viaje');
+    $apertura = registrarInternoM4($contexto, 500, 100, null, '7654341');
+
+    $this->actingAs($contexto[0])->get(route('abastecimientos.ciclos.show', $apertura))->assertOk()
+        ->assertSee('Cierre pendiente')->assertSee('Rendimiento real:')
+        ->assertSee('Pendiente')->assertDontSee('NaN')->assertDontSee('Infinity');
 });
 test('linea base exige carga exactamente igual a capacidad cubierta', function () {
     $contexto = contextoFullToFull($this);
