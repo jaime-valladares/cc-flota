@@ -502,7 +502,7 @@
 
                                 $puedeEditar =
                                     Auth::user()->tienePermiso('unidades.editar')
-                                    && $unidad->estado === 'registrada';
+                                    && $unidad->estado !== 'inactiva';
 
                                 $disponibilidadPendiente = in_array(
                                     $unidad->disponibilidad_operativa,
@@ -703,7 +703,7 @@
 
                                 </div>
 
-                                @if (! $puedeEditar)
+                                @if ($unidad->disponibilidad_operativa !== 'operable')
                                     <div class="mt-4 border-t border-[var(--cc-border)] pt-4">
                                         <p class="text-sm text-[var(--cc-text-muted)] leading-relaxed">
                                             {{ $unidad->disponibilidad_operativa_descripcion }}

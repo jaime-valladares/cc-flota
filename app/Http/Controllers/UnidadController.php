@@ -886,8 +886,8 @@ class UnidadController extends Controller
                 ->lockForUpdate()
                 ->findOrFail($unidad->id);
 
-            if ($unidadBloqueada->estado !== 'registrada') {
-                abort(403, 'La configuración estructural de una unidad activa no puede modificarse.');
+            if ($unidadBloqueada->estado === 'inactiva') {
+                abort(403, 'La configuración estructural de una unidad inactiva no puede modificarse.');
             }
 
             if ($unidadBloqueada->abastecimientosRegistrados()->exists()) {
@@ -1403,7 +1403,7 @@ class UnidadController extends Controller
      *
      * Casos permitidos:
      *
-     * Solo una unidad registrada conserva configuración editable.
+     * Una unidad conserva configuración editable mientras no esté inactiva.
      */
     private function validarUnidadEditable(
         Unidad $unidad
@@ -1414,13 +1414,13 @@ class UnidadController extends Controller
             'puntosSeguridad',
         ]);
 
-        if ($unidad->estado === 'registrada') {
+        if ($unidad->estado !== 'inactiva') {
             return;
         }
 
         abort(
             403,
-            'La configuración estructural solo puede modificarse mientras la unidad está registrada.'
+            'La configuración estructural de una unidad inactiva no puede modificarse.'
         );
     }
 
