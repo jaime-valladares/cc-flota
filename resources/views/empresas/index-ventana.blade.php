@@ -43,38 +43,6 @@
                             </div>
                         @endif
 
-                        <div class="cc-summary-strip">
-                            <div class="cc-summary-strip-item">
-                                <span class="cc-summary-strip-label">
-                                    {{ $hayFiltros ? 'Resultados' : 'Total empresas' }}
-                                </span>
-
-                                <span class="cc-summary-strip-value">
-                                    {{ $hayFiltros ? $empresas->total() : $totalEmpresas }}
-                                </span>
-                            </div>
-
-                            <div class="cc-summary-strip-item">
-                                <span class="cc-summary-strip-label">
-                                    Activas
-                                </span>
-
-                                <span class="cc-summary-strip-value cc-summary-strip-value-success">
-                                    {{ $empresasActivas }}
-                                </span>
-                            </div>
-
-                            <div class="cc-summary-strip-item">
-                                <span class="cc-summary-strip-label">
-                                    Inactivas
-                                </span>
-
-                                <span class="cc-summary-strip-value cc-summary-strip-value-danger">
-                                    {{ $empresasInactivas }}
-                                </span>
-                            </div>
-                        </div>
-
                         <form method="GET"
                               action="{{ route('empresas.consulta.ventana') }}"
                               class="mb-5">
@@ -217,28 +185,17 @@
                                     </div>
 
                                     <div class="cc-field">
-                                        <label for="estado">
+                                        <label>
                                             Estado
                                         </label>
-
-                                        <select id="estado"
-                                                name="estado"
-                                                class="cc-input">
-
-                                            <option value="">
-                                                Todos
-                                            </option>
-
-                                            <option value="activa"
-                                                    @selected($estado === 'activa')>
-                                                Activas
-                                            </option>
-
-                                            <option value="inactiva"
-                                                    @selected($estado === 'inactiva')>
-                                                Inactivas
-                                            </option>
-                                        </select>
+                                        <div class="cc-filter-multiselect" data-cc-filter-multiselect data-filter-estado>
+                                            <button type="button" class="cc-filter-multiselect-toggle" data-cc-filter-toggle><span data-cc-filter-label data-default-label="Todas">{{ $estado === 'activa' ? 'Activas' : ($estado === 'inactiva' ? 'Inactivas' : 'Todas') }}</span><span class="cc-filter-multiselect-arrow">⌄</span></button>
+                                            <div class="cc-filter-multiselect-menu" data-cc-filter-menu><div class="cc-filter-multiselect-list">
+                                                @foreach ([''=>'Todas','activa'=>'Activas','inactiva'=>'Inactivas'] as $valorEstado=>$textoEstado)
+                                                    <label class="cc-filter-multiselect-option" data-cc-filter-option><input type="radio" name="estado" value="{{ $valorEstado }}" @checked(($estado ?? '') === $valorEstado) data-cc-filter-checkbox><span data-cc-filter-option-label>{{ $textoEstado }}</span></label>
+                                                @endforeach
+                                            </div></div>
+                                        </div>
 
                                         @error('estado')
                                             <div class="cc-error">
@@ -262,6 +219,14 @@
                                 </div>
                             </div>
                         </form>
+
+                        @if (request()->boolean('consultar') && $empresas->isNotEmpty())
+                            <div class="cc-summary-strip" data-empresas-summary>
+                                @foreach ([['Resultados',$empresas->total(),''],['Activas',$empresasActivas,'cc-summary-strip-value-success'],['Inactivas',$empresasInactivas,'cc-summary-strip-value-danger']] as [$etiqueta,$valor,$clase])
+                                    <div class="cc-summary-strip-item"><span class="cc-summary-strip-label">{{ $etiqueta }}</span><span class="cc-summary-strip-value {{ $clase }}">{{ $valor }}</span></div>
+                                @endforeach
+                            </div>
+                        @endif
 
                         @if ($hayFiltros && $empresas->total() > 0)
                             <div class="mb-4 flex justify-end text-sm text-[var(--cc-text-muted)]">
@@ -331,6 +296,8 @@
                                             <th style="width: 18%;">
                                                 Unidades
                                             </th>
+
+                                            <th>Estado</th>
                                         </tr>
                                     </thead>
 
@@ -394,6 +361,8 @@
                                                         {{ $unidadesRegistradas }} registradas
                                                     </div>
                                                 </td>
+
+                                                <td class="cc-table-adaptive-nowrap"><span class="cc-badge {{ $empresa->estado === 'activa' ? 'cc-badge-active' : 'cc-badge-inactive' }}">{{ $empresa->estado === 'activa' ? 'Activa' : 'Inactiva' }}</span></td>
                                             </tr>
                                         @endforeach
                                     </tbody>
