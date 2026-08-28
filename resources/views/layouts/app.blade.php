@@ -1031,7 +1031,7 @@
                     @endif
 
                     <!-- Reportes -->
-                    @if ($usuarioAutenticado->tienePermiso('reportes.unidades.ficha'))
+                    @if ($usuarioAutenticado->tienePermiso('reportes.unidades.ficha') || $usuarioAutenticado->tienePermiso('reportes.rendimiento-km-galon.consultar'))
                         <div class="cc-sidebar-group">
                             <div
                                 id="ccReportesToggle"
@@ -1046,12 +1046,16 @@
                             </div>
 
                             <div id="ccReportesSubnav" class="cc-sidebar-subnav cc-sidebar-subnav-collapsed">
-                                <a
-                                    href="{{ route('reportes.unidades.index') }}"
-                                    class="cc-sidebar-sublink {{ request()->routeIs('reportes.unidades.*') ? 'cc-sidebar-sublink-active' : '' }}"
-                                >
-                                    Ficha completa de la unidad
-                                </a>
+                                @if ($usuarioAutenticado->tienePermiso('reportes.unidades.ficha'))
+                                    <a href="{{ route('reportes.unidades.index') }}" class="cc-sidebar-sublink {{ request()->routeIs('reportes.unidades.*') ? 'cc-sidebar-sublink-active' : '' }}">
+                                        Unidades
+                                    </a>
+                                @endif
+                                @if ($usuarioAutenticado->tienePermiso('reportes.rendimiento-km-galon.consultar'))
+                                    <a href="{{ route('reportes.rendimiento-km-galon.index') }}" class="cc-sidebar-sublink {{ request()->routeIs('reportes.rendimiento-km-galon.*') ? 'cc-sidebar-sublink-active' : '' }}">
+                                        Rendimiento km/gal
+                                    </a>
+                                @endif
                             </div>
                         </div>
                     @endif

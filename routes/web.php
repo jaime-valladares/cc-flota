@@ -19,6 +19,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PuntoRutaController;
 use App\Http\Controllers\RecargaTanqueController;
 use App\Http\Controllers\Reportes\FichaUnidadController;
+use App\Http\Controllers\Reportes\RendimientoKmGalonController;
 use App\Http\Controllers\RutaController;
 use App\Http\Controllers\TanqueController;
 use App\Http\Controllers\UnidadController;
@@ -1337,6 +1338,17 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
             '/reportes/unidades/{unidad}',
             [FichaUnidadController::class, 'show']
         )->name('reportes.unidades.show');
+    });
+
+    Route::middleware('permiso:reportes.rendimiento-km-galon.consultar')->group(function () {
+        Route::get('/reportes/rendimiento-km-galon', [RendimientoKmGalonController::class, 'index'])
+            ->name('reportes.rendimiento-km-galon.index');
+        Route::get('/reportes/rendimiento-km-galon/ventana', [RendimientoKmGalonController::class, 'ventana'])
+            ->name('reportes.rendimiento-km-galon.ventana');
+        Route::get('/reportes/rendimiento-km-galon/{ciclo}/ventana', [RendimientoKmGalonController::class, 'showVentana'])
+            ->name('reportes.rendimiento-km-galon.show.ventana');
+        Route::get('/reportes/rendimiento-km-galon/{ciclo}', [RendimientoKmGalonController::class, 'show'])
+            ->name('reportes.rendimiento-km-galon.show');
     });
 
 });

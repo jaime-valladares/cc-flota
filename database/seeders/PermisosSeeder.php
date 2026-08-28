@@ -835,6 +835,15 @@ class PermisosSeeder extends Seeder
                 'alcance' => 'ambos',
                 'estado' => 'activo',
             ],
+            [
+                'codigo' => 'reportes.rendimiento-km-galon.consultar',
+                'modulo' => 'reportes',
+                'accion' => 'rendimiento-km-galon.consultar',
+                'nombre' => 'Consultar rendimiento en kilómetros por galón',
+                'descripcion' => 'Permite consultar ciclos completos de rendimiento en kilómetros por galón según el alcance empresarial autorizado.',
+                'alcance' => 'ambos',
+                'estado' => 'activo',
+            ],
 
         ];
 
