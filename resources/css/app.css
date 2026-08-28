@@ -1131,6 +1131,10 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.cc-summary-grid-row-six {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
 .cc-summary-grid-row-three {
     grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -1154,12 +1158,38 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
 }
 
 @media (max-width: 960px) {
+    .cc-summary-grid-row-six {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
     .cc-summary-grid-row-four,
     .cc-summary-grid-row-three {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .cc-summary-grid .cc-summary-strip-item:nth-child(odd) {
+        border-left: 0;
+    }
+
+    .cc-summary-grid-row-six .cc-summary-strip-item:nth-child(odd) {
+        border-left: 1px solid var(--cc-card-border);
+    }
+
+    .cc-summary-grid-row-six .cc-summary-strip-item:nth-child(3n + 1) {
+        border-left: 0;
+    }
+}
+
+@media (max-width: 640px) {
+    .cc-summary-grid-row-six {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .cc-summary-grid-row-six .cc-summary-strip-item:nth-child(3n + 1) {
+        border-left: 1px solid var(--cc-card-border);
+    }
+
+    .cc-summary-grid-row-six .cc-summary-strip-item:nth-child(odd) {
         border-left: 0;
     }
 }
@@ -1173,6 +1203,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
 }
 
 @media (max-width: 520px) {
+    .cc-summary-grid-row-six,
     .cc-summary-grid-row-four,
     .cc-summary-grid-row-three {
         grid-template-columns: minmax(0, 1fr);
@@ -6603,6 +6634,42 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
 
 .cc-va-analytics .cc-analytics-table-performance {
     min-width: 96rem;
+}
+
+.cc-va-analytics .cc-analytics-table-driver-management {
+    min-width: 74rem;
+}
+
+.cc-va-analytics .cc-analytics-table-driver-management th,
+.cc-va-analytics .cc-analytics-table-driver-management td {
+    padding-inline: .72rem;
+}
+
+.cc-va-analytics .cc-analytics-table-driver-management th:first-child,
+.cc-va-analytics .cc-analytics-table-driver-management td:first-child {
+    min-width: 13rem;
+}
+
+.cc-va-analytics .cc-analytics-table-driver-management :is(th, td):is(:nth-child(2), :nth-child(3), :nth-child(8), :nth-child(10), :nth-child(11)) {
+    width: 1%;
+    padding-inline: .55rem;
+    white-space: nowrap;
+}
+
+.cc-va-analytics .cc-detail-summary-grid {
+    gap: .65rem;
+    margin: 0;
+    padding: .75rem;
+}
+
+.cc-va-analytics .cc-analytics-table-start {
+    margin-left: 0;
+    transform: none;
+}
+
+.cc-va-analytics .cc-analytics-table-start > .cc-table-adaptive {
+    margin-left: 0;
+    transform: none;
 }
 
 .cc-va-analytics .cc-analytics-performance-table-wrapper {

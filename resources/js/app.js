@@ -151,3 +151,13 @@ document.addEventListener('DOMContentLoaded', function () {
         updateLabel();
     });
 });
+
+/* Las tablas analíticas con scroll siempre se presentan desde su primera columna. */
+function resetAnalyticalTables() {
+    document.querySelectorAll('[data-cc-table-start]').forEach(function (wrapper) {
+        wrapper.scrollLeft = 0;
+    });
+}
+
+document.addEventListener('DOMContentLoaded', resetAnalyticalTables);
+window.addEventListener('pageshow', resetAnalyticalTables);
