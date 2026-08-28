@@ -2,6 +2,7 @@
 
 use App\Models\Abastecimiento;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 function cicloFamilia($empresa,$unidad,$motorista,$usuario,string $fecha,string $modelo,float $real,float $teorico): Abastecimiento
 {
@@ -57,4 +58,44 @@ test('menu lateral expone la familia de rendimiento segun el permiso backend', f
         ->assertOk()
         ->assertDontSee('Rendimiento gal/hora')
         ->assertDontSee('Rendimiento gal/viaje');
+});
+
+test('resumenes siguen filtros solo tras consultar y usan estructura cuatro mas tres', function () {
+    prepararReporteKmGalon($this); $e=empresaKmGalon('VIS'); $admin=usuarioKmGalon(User::ROL_DIESEL_ADMIN); $m=motoristaKmGalon($e,'VIS');
+    foreach ([['kilometros_galon','reportes.rendimiento-km-galon'],['galones_hora','reportes.rendimiento-galones-hora'],['galones_viaje','reportes.rendimiento-galones-viaje']] as [$modelo,$ruta]) {
+        $u=unidadKmGalon($e,'VIS-'.strtoupper($modelo),$modelo); cicloFamilia($e,$u,$m,$admin,'2026-08-25',$modelo,8,10);
+        $sin=$this->actingAs($admin)->get(route($ruta.'.index'))->assertOk()->assertDontSee('data-report-summary',false);
+        $con=$this->actingAs($admin)->get(route($ruta.'.index',['consultar'=>1]))->assertOk()->assertSee('data-report-summary',false)->assertSee('cc-summary-grid-row-four',false)->assertSee('cc-summary-grid-row-three',false);
+        expect(strpos($con->getContent(),'<form'))->toBeLessThan(strpos($con->getContent(),'data-report-summary'))
+            ->and(strpos($con->getContent(),'data-report-summary'))->toBeLessThan(strpos($con->getContent(),'cc-result-count'))
+            ->and(substr_count($con->getContent(),'data-summary-label='))->toBe(7);
+    }
+});
+
+test('consulta excluye consumos nulos y aperturas de distinta empresa o unidad', function () {
+    prepararReporteKmGalon($this); $a=empresaKmGalon('ROB-A'); $b=empresaKmGalon('ROB-B'); $admin=usuarioKmGalon(User::ROL_DIESEL_ADMIN); $m=motoristaKmGalon($a,'ROB'); $u=unidadKmGalon($a,'ROB-OK');
+    $valido=cicloFamilia($a,$u,$m,$admin,'2026-08-20','kilometros_galon',8,10);
+    $nulo=cicloFamilia($a,$u,$m,$admin,'2026-08-21','kilometros_galon',8,10); $nulo->update(['consumo_real_ciclo'=>null]);
+    $cruzado=cicloFamilia($a,$u,$m,$admin,'2026-08-22','kilometros_galon',8,10); $otra=unidadKmGalon($b,'ROB-OTRA'); $cruzado->abastecimientoAnterior->update(['empresa_id'=>$b->id,'unidad_id'=>$otra->id]);
+    $r=$this->actingAs($admin)->get(route('reportes.rendimiento-km-galon.index',['consultar'=>1]))->assertOk()->assertSee('data-report-cycle-row="'.$valido->id.'"',false);
+    $r->assertDontSee('data-report-cycle-row="'.$nulo->id.'"',false)->assertDontSee('data-report-cycle-row="'.$cruzado->id.'"',false);
+});
+
+test('pdf principal de cada modelo reutiliza filtros e incluye resultados sin paginacion', function () {
+    prepararReporteKmGalon($this); $e=empresaKmGalon('PDF-L'); $admin=usuarioKmGalon(User::ROL_DIESEL_AUDITOR); $m=motoristaKmGalon($e,'PDF-L'); $capturas=[];
+    $config=[['kilometros_galon','reportes.rendimiento-km-galon'],['galones_hora','reportes.rendimiento-galones-hora'],['galones_viaje','reportes.rendimiento-galones-viaje']];
+    foreach($config as[$modelo,$ruta]){$u=unidadKmGalon($e,'PDF-'.strtoupper($modelo),$modelo);foreach(range(1,12)as $n)cicloFamilia($e,$u,$m,$admin,'2026-08-'.str_pad((string)$n,2,'0',STR_PAD_LEFT),$modelo,8,10);}
+    $doc=Mockery::mock(\Barryvdh\DomPDF\PDF::class); Pdf::shouldReceive('loadView')->times(3)->withArgs(function(string $vista,array $datos)use(&$capturas):bool{$capturas[$datos['rutaBase']]=$datos;return $vista==='reportes.rendimiento-km-galon.pdf-general';})->andReturn($doc); $doc->shouldReceive('setPaper')->times(3)->with('a4','landscape')->andReturnSelf();$doc->shouldReceive('download')->times(3)->andReturn(response('PDF',200,['Content-Type'=>'application/pdf']));
+    foreach($config as[$modelo,$ruta])$this->actingAs($admin)->get(route($ruta.'.pdf',['consultar'=>1,'busqueda'=>'PDF-'.strtoupper($modelo),'page'=>2]))->assertOk();
+    foreach($config as[$modelo,$ruta]){expect($capturas[$ruta]['ciclos'])->toHaveCount(12)->and($capturas[$ruta]['ciclos']->every(fn($c)=>$c->modelo_medicion===$modelo))->toBeTrue()->and($capturas[$ruta]['filtrosAplicados']['Búsqueda'])->toBe('PDF-'.strtoupper($modelo));$html=view('reportes.rendimiento-km-galon.pdf-general',$capturas[$ruta])->render();expect(substr_count($html,'data-pdf-cycle='))->toBe(12)->and($html)->toContain($capturas[$ruta]['titulo'])->not->toContain('<button');}
+});
+
+test('pdf detalle de los tres modelos conserva seguridad snapshots e impacto', function () {
+    prepararReporteKmGalon($this);$a=empresaKmGalon('PDF-D');$b=empresaKmGalon('PDF-X');$admin=usuarioKmGalon(User::ROL_DIESEL_ADMIN);$ma=motoristaKmGalon($a,'AP');$mc=motoristaKmGalon($a,'CI');$capturas=[];$config=[['kilometros_galon','reportes.rendimiento-km-galon'],['galones_hora','reportes.rendimiento-galones-hora'],['galones_viaje','reportes.rendimiento-galones-viaje']];
+    $ciclos=[];foreach($config as[$modelo,$ruta]){$u=unidadKmGalon($a,'PDFD-'.strtoupper($modelo),$modelo);$c=cicloFamilia($a,$u,$ma,$admin,'2026-08-20',$modelo,8,10);$c->update(['motorista_id'=>$mc->id,'motorista_nombre_snapshot'=>$mc->nombre_completo]);$ciclos[$ruta]=$c->fresh();}
+    $doc=Mockery::mock(\Barryvdh\DomPDF\PDF::class);Pdf::shouldReceive('loadView')->times(3)->withArgs(function(string $vista,array $datos)use(&$capturas):bool{$capturas[$datos['rutaBase']]=$datos;return $vista==='reportes.rendimiento-km-galon.pdf-detalle';})->andReturn($doc);$doc->shouldReceive('setPaper')->times(3)->with('a4','portrait')->andReturnSelf();$doc->shouldReceive('download')->times(3)->andReturn(response('PDF'));
+    foreach($config as[$modelo,$ruta])$this->actingAs($admin)->get(route($ruta.'.show.pdf',$ciclos[$ruta]))->assertOk();
+    foreach($config as[$modelo,$ruta]){expect($capturas[$ruta]['ciclo']->modelo_medicion)->toBe($modelo)->and($capturas[$ruta]['ciclo']->motorista_nombre_snapshot)->toBe($mc->nombre_completo)->and($capturas[$ruta]['ciclo']->impacto_economico_reporte)->toBe(10.0);$html=view('reportes.rendimiento-km-galon.pdf-detalle',$capturas[$ruta])->render();expect($html)->toContain('Motorista apertura')->toContain('Motorista cierre')->toContain('Costo efectivo por galón')->toContain('+$10.00');}
+    $empresaUser=usuarioKmGalon(User::ROL_EMPRESA_ADMIN,$b);$this->actingAs($empresaUser)->get(route('reportes.rendimiento-km-galon.show.pdf',$ciclos['reportes.rendimiento-km-galon']))->assertForbidden();
+    $this->actingAs($admin)->get(route('reportes.rendimiento-galones-hora.show.pdf',$ciclos['reportes.rendimiento-km-galon']))->assertNotFound();
 });

@@ -28,23 +28,6 @@
         </div>
     </header>
 
-    @if ($hayConsulta)
-    <div class="cc-summary-strip">
-        @foreach ([
-            [$hayFiltros ? 'Resultados' : 'Total unidades', $resumen['total'], ''],
-            ['Registradas', $resumen['registradas'], ''],
-            ['Activas', $resumen['activas'], 'cc-summary-strip-value-success'],
-            ['Inactivas', $resumen['inactivas'], 'cc-summary-strip-value-danger'],
-            ['Operables', $resumen['operables'], 'cc-summary-strip-value-success'],
-        ] as [$etiqueta, $valor, $clase])
-            <div class="cc-summary-strip-item" data-summary-label="{{ $etiqueta }}" data-summary-value="{{ $valor }}">
-                <span class="cc-summary-strip-label">{{ $etiqueta }}</span>
-                <span class="cc-summary-strip-value {{ $clase }}">{{ $valor }}</span>
-            </div>
-        @endforeach
-    </div>
-    @endif
-
     <form method="GET" action="{{ $rutaConsulta }}" class="mb-5">
         <input type="hidden" name="consultar" value="1">
         <div class="cc-filter-panel cc-filter-panel-compact cc-filter-panel-inline">
@@ -153,6 +136,23 @@
             </div>
         </div>
     </form>
+
+    @if ($hayConsulta && $unidades->isNotEmpty())
+        <div class="cc-summary-strip" data-report-summary>
+            @foreach ([
+                [$hayFiltros ? 'Resultados' : 'Total unidades', $resumen['total'], ''],
+                ['Registradas', $resumen['registradas'], ''],
+                ['Activas', $resumen['activas'], 'cc-summary-strip-value-success'],
+                ['Inactivas', $resumen['inactivas'], 'cc-summary-strip-value-danger'],
+                ['Operables', $resumen['operables'], 'cc-summary-strip-value-success'],
+            ] as [$etiqueta, $valor, $clase])
+                <div class="cc-summary-strip-item" data-summary-label="{{ $etiqueta }}" data-summary-value="{{ $valor }}">
+                    <span class="cc-summary-strip-label">{{ $etiqueta }}</span>
+                    <span class="cc-summary-strip-value {{ $clase }}">{{ $valor }}</span>
+                </div>
+            @endforeach
+        </div>
+    @endif
 
     @if (! $hayConsulta)
         <div class="cc-empty-panel cc-empty-panel-compact">

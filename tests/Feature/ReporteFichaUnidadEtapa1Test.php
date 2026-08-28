@@ -771,3 +771,18 @@ test('pdf ficha contiene configuracion actual completa y protege tenant', functi
         ->get(route('reportes.unidades.show.pdf', $unidadAjena))
         ->assertForbidden();
 });
+
+test('resumen de unidades aparece entre filtros y tabla solo con resultados consultados', function () {
+    prepararPermisosReporteUnidades($this);
+    $empresa = empresaReporteUnidades('ORDEN-RESUMEN');
+    unidadReporteUnidades($empresa, 'RU-ORDEN-RESUMEN');
+    $usuario = usuarioReporteUnidades(User::ROL_DIESEL_AUDITOR);
+
+    $this->actingAs($usuario)->get(route('reportes.unidades.index'))
+        ->assertOk()->assertDontSee('data-report-summary', false);
+    $respuesta = $this->actingAs($usuario)->get(route('reportes.unidades.index', ['consultar' => 1]))
+        ->assertOk()->assertSee('data-report-summary', false);
+    $html = $respuesta->getContent();
+    expect(strpos($html, '<form'))->toBeLessThan(strpos($html, 'data-report-summary'))
+        ->and(strpos($html, 'data-report-summary'))->toBeLessThan(strpos($html, 'cc-result-count'));
+});

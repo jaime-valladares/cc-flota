@@ -8,8 +8,10 @@ use App\Models\Empresa;
 use App\Models\Motorista;
 use App\Models\Unidad;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -27,6 +29,31 @@ abstract class RendimientoConsumoController extends Controller
     public function ventana(Request $request): View { return view("reportes.{$this->carpeta()}.index-ventana", $this->prepararReporte($request)); }
     public function show(Abastecimiento $ciclo): View { return view("reportes.{$this->carpeta()}.show", $this->prepararDetalle($ciclo)); }
     public function showVentana(Abastecimiento $ciclo): View { return view("reportes.{$this->carpeta()}.show-ventana", $this->prepararDetalle($ciclo)); }
+
+    public function pdf(Request $request): Response
+    {
+        abort_unless($request->boolean('consultar'), 404);
+        /** @var User $usuario */ $usuario = Auth::user();
+        $filtros = $this->validarFiltros($request, $usuario);
+        $consulta = $this->consultaFiltrada($usuario, $filtros);
+        $resumen = $this->resumir(clone $consulta);
+        $ciclos = $consulta->orderByDesc('fecha_hora_abastecimiento')->orderByDesc('id')->get();
+        $ciclos->each(fn (Abastecimiento $c) => $this->enriquecerCiclo($c));
+
+        return Pdf::loadView('reportes.rendimiento-km-galon.pdf-general', array_merge([
+            'ciclos' => $ciclos, 'resumen' => $resumen,
+            'filtrosAplicados' => $this->describirFiltros($filtros, $usuario),
+            'generadoEn' => now(), 'logoPath' => public_path('images/cc-flota/logo.png'),
+        ], $this->datosPresentacion()))->setPaper('a4', 'landscape')->download($this->carpeta().'.pdf');
+    }
+
+    public function showPdf(Abastecimiento $ciclo): Response
+    {
+        $datos = $this->prepararDetalle($ciclo);
+        return Pdf::loadView('reportes.rendimiento-km-galon.pdf-detalle', $datos + [
+            'generadoEn' => now(), 'logoPath' => public_path('images/cc-flota/logo.png'),
+        ])->setPaper('a4', 'portrait')->download($this->carpeta().'-ciclo-'.$ciclo->id.'.pdf');
+    }
 
     private function prepararReporte(Request $request): array
     {
@@ -60,7 +87,15 @@ abstract class RendimientoConsumoController extends Controller
     {
         extract($f); $modelo=$this->modelo();
         $q=Abastecimiento::query()->with(['abastecimientoAnterior','rutas'])->where('estado',Abastecimiento::ESTADO_REGISTRADO)->where('modelo_medicion',$modelo)->whereNotNull('abastecimiento_anterior_id')
-            ->whereHas('abastecimientoAnterior',fn(Builder $a)=>$a->where('estado',Abastecimiento::ESTADO_REGISTRADO)->where('modelo_medicion',$modelo))
+            ->whereNotNull('consumo_real_ciclo')->whereNotNull('consumo_teorico_ciclo')
+            ->whereExists(function ($apertura) use ($modelo): void {
+                $apertura->selectRaw('1')->from('abastecimientos as apertura')
+                    ->whereColumn('apertura.id', 'abastecimientos.abastecimiento_anterior_id')
+                    ->where('apertura.estado', Abastecimiento::ESTADO_REGISTRADO)
+                    ->where('apertura.modelo_medicion', $modelo)
+                    ->whereColumn('apertura.empresa_id', 'abastecimientos.empresa_id')
+                    ->whereColumn('apertura.unidad_id', 'abastecimientos.unidad_id');
+            })
             ->when(! $usuario->esDieselCop(),fn(Builder $t)=>$t->where('empresa_id',$usuario->empresa_id));
         $q->when($empresaIds!==[],fn(Builder $x)=>$x->whereIn('empresa_id',$empresaIds))->when($unidadIds!==[],fn(Builder $x)=>$x->whereIn('unidad_id',$unidadIds))->when($motoristaIds!==[],fn(Builder $x)=>$x->whereIn('motorista_id',$motoristaIds))
             ->when($fechaDesde,fn(Builder $x)=>$x->where('fecha_hora_abastecimiento','>=',Carbon::parse($fechaDesde)->startOfDay()))->when($fechaHasta,fn(Builder $x)=>$x->where('fecha_hora_abastecimiento','<',Carbon::parse($fechaHasta)->addDay()->startOfDay()))
@@ -81,4 +116,17 @@ abstract class RendimientoConsumoController extends Controller
     { $cs=$q->get();$cs->each(fn(Abastecimiento $c)=>$this->enriquecerCiclo($c));return['ciclos'=>$cs->count(),'operacion'=>$cs->sum(fn($c)=>(float)match($this->modelo()){Abastecimiento::MODELO_GALONES_HORA=>$c->diferencia_horometro,Abastecimiento::MODELO_GALONES_VIAJE=>$c->total_viajes,default=>$c->diferencia_kilometraje}),'consumo_teorico'=>$cs->sum(fn($c)=>(float)$c->consumo_teorico_ciclo),'consumo_real'=>$cs->sum(fn($c)=>(float)$c->consumo_real_ciclo),'ahorro_galones'=>$cs->where('resultado_reporte','Ahorro')->sum('diferencia_absoluta_reporte'),'sobreconsumo_galones'=>$cs->where('resultado_reporte','Sobreconsumo')->sum('diferencia_absoluta_reporte'),'impacto_neto'=>$cs->sum('impacto_neto_reporte')]; }
     private function resumenVacio(): array{return['ciclos'=>0,'operacion'=>0,'consumo_teorico'=>0,'consumo_real'=>0,'ahorro_galones'=>0,'sobreconsumo_galones'=>0,'impacto_neto'=>0];}
     private function normalizarIds(array $ids): array{return collect($ids)->map(fn($id)=>(int)$id)->unique()->values()->all();}
+
+    private function describirFiltros(array $f, User $usuario): array
+    {
+        $descripcion = [];
+        if ($f['busqueda'] !== '') $descripcion['Búsqueda'] = $f['busqueda'];
+        if ($f['empresaIds'] !== []) $descripcion['Empresa'] = Empresa::query()->whereIn('id',$f['empresaIds'])->orderByRaw('COALESCE(nombre_comercial,nombre_legal)')->get()->map(fn(Empresa $e)=>$e->nombre_comercial?:$e->nombre_legal)->implode(', ');
+        if ($f['unidadIds'] !== []) $descripcion['Unidad'] = Unidad::query()->whereIn('id',$f['unidadIds'])->when(! $usuario->esDieselCop(),fn(Builder $q)=>$q->where('empresa_id',$usuario->empresa_id))->orderBy('placa')->pluck('placa')->implode(', ');
+        if ($f['motoristaIds'] !== []) $descripcion['Motorista'] = Motorista::query()->whereIn('id',$f['motoristaIds'])->when(! $usuario->esDieselCop(),fn(Builder $q)=>$q->where('empresa_id',$usuario->empresa_id))->get()->pluck('nombre_completo')->implode(', ');
+        if ($f['fechaDesde']) $descripcion['Fecha desde'] = Carbon::parse($f['fechaDesde'])->format('d/m/Y');
+        if ($f['fechaHasta']) $descripcion['Fecha hasta'] = Carbon::parse($f['fechaHasta'])->format('d/m/Y');
+        if ($f['resultado']) $descripcion['Resultado'] = match($f['resultado']){'ahorro'=>'Ahorro','sobreconsumo'=>'Sobreconsumo',default=>'En objetivo'};
+        return $descripcion;
+    }
 }
