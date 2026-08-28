@@ -18,6 +18,7 @@ class RolPermisosSeeder extends Seeder
             'DIESEL_SUPER_ADMIN' => 'ALL',
 
             'DIESEL_ADMIN' => [
+                'reportes.gestion-combustible-motorista.consultar',
                 'reportes.rendimiento-km-galon.consultar',
                 'reportes.unidades.ficha',
                 'auditoria.consultar',
@@ -140,6 +141,7 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'DIESEL_AUDITOR' => [
+                'reportes.gestion-combustible-motorista.consultar',
                 'reportes.rendimiento-km-galon.consultar',
                 'reportes.unidades.ficha',
                 'auditoria.consultar',
@@ -170,6 +172,7 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_ADMIN' => [
+                'reportes.gestion-combustible-motorista.consultar',
                 'reportes.rendimiento-km-galon.consultar',
                 'reportes.unidades.ficha',
                 'auditoria.consultar',
@@ -250,6 +253,7 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_SUPERVISOR' => [
+                'reportes.gestion-combustible-motorista.consultar',
                 'reportes.rendimiento-km-galon.consultar',
                 'reportes.unidades.ficha',
                 'auditoria.consultar',
@@ -349,6 +353,7 @@ class RolPermisosSeeder extends Seeder
             ],
 
             'EMPRESA_AUDITOR' => [
+                'reportes.gestion-combustible-motorista.consultar',
                 'reportes.rendimiento-km-galon.consultar',
                 'reportes.unidades.ficha',
                 'auditoria.consultar',

@@ -1343,14 +1343,16 @@ Route::middleware(['auth', 'usuario.activo'])->group(function () {
         )->name('reportes.unidades.show');
     });
 
-    Route::middleware('permiso:reportes.rendimiento-km-galon.consultar')->group(function () {
+    Route::middleware('permiso:reportes.gestion-combustible-motorista.consultar')->group(function () {
         Route::get('/reportes/gestion-combustible-motorista', [GestionCombustibleMotoristaController::class, 'index'])->name('reportes.gestion-combustible-motorista.index');
         Route::get('/reportes/gestion-combustible-motorista/ventana', [GestionCombustibleMotoristaController::class, 'ventana'])->name('reportes.gestion-combustible-motorista.ventana');
         Route::get('/reportes/gestion-combustible-motorista/pdf', [GestionCombustibleMotoristaController::class, 'pdf'])->name('reportes.gestion-combustible-motorista.pdf');
         Route::get('/reportes/gestion-combustible-motorista/{motorista}/pdf', [GestionCombustibleMotoristaController::class, 'showPdf'])->name('reportes.gestion-combustible-motorista.show.pdf');
         Route::get('/reportes/gestion-combustible-motorista/{motorista}/ventana', [GestionCombustibleMotoristaController::class, 'showVentana'])->name('reportes.gestion-combustible-motorista.show.ventana');
         Route::get('/reportes/gestion-combustible-motorista/{motorista}', [GestionCombustibleMotoristaController::class, 'show'])->name('reportes.gestion-combustible-motorista.show');
+    });
 
+    Route::middleware('permiso:reportes.rendimiento-km-galon.consultar')->group(function () {
         Route::get('/reportes/rendimiento-km-galon', [RendimientoKmGalonController::class, 'index'])
             ->name('reportes.rendimiento-km-galon.index');
         Route::get('/reportes/rendimiento-km-galon/ventana', [RendimientoKmGalonController::class, 'ventana'])

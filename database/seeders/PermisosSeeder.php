@@ -844,6 +844,15 @@ class PermisosSeeder extends Seeder
                 'alcance' => 'ambos',
                 'estado' => 'activo',
             ],
+            [
+                'codigo' => 'reportes.gestion-combustible-motorista.consultar',
+                'modulo' => 'reportes',
+                'accion' => 'consultar',
+                'nombre' => 'Consultar gestión de combustible por motorista',
+                'descripcion' => 'Permite consultar el reporte consolidado de gestión de combustible por motorista, sus fichas de detalle y exportaciones PDF según el alcance autorizado.',
+                'alcance' => 'ambos',
+                'estado' => 'activo',
+            ],
 
         ];
 

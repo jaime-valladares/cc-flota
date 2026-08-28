@@ -1031,7 +1031,7 @@
                     @endif
 
                     <!-- Reportes -->
-                    @if ($usuarioAutenticado->tienePermiso('reportes.unidades.ficha') || $usuarioAutenticado->tienePermiso('reportes.rendimiento-km-galon.consultar'))
+                    @if ($usuarioAutenticado->tienePermiso('reportes.unidades.ficha') || $usuarioAutenticado->tienePermiso('reportes.gestion-combustible-motorista.consultar') || $usuarioAutenticado->tienePermiso('reportes.rendimiento-km-galon.consultar'))
                         <div class="cc-sidebar-group">
                             <div
                                 id="ccReportesToggle"
@@ -1051,11 +1051,13 @@
                                         Unidades
                                     </a>
                                 @endif
-                                @if ($usuarioAutenticado->tienePermiso('reportes.rendimiento-km-galon.consultar'))
+                                @if ($usuarioAutenticado->tienePermiso('reportes.gestion-combustible-motorista.consultar'))
                                     <a href="{{ route('reportes.gestion-combustible-motorista.index') }}" class="cc-sidebar-sublink {{ request()->routeIs('reportes.gestion-combustible-motorista.*') ? 'cc-sidebar-sublink-active' : '' }}">
                                         Gestión por motorista
                                     </a>
+                                @endif
 
+                                @if ($usuarioAutenticado->tienePermiso('reportes.rendimiento-km-galon.consultar'))
                                     <a href="{{ route('reportes.rendimiento-km-galon.index') }}" class="cc-sidebar-sublink {{ request()->routeIs('reportes.rendimiento-km-galon.*') ? 'cc-sidebar-sublink-active' : '' }}">
                                         Rendimiento km/gal
                                     </a>

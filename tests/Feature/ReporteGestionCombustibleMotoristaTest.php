@@ -3,6 +3,7 @@
 use App\Models\Abastecimiento;
 use App\Models\Empresa;
 use App\Models\Motorista;
+use App\Models\Permiso;
 use App\Models\Role;
 use App\Models\Unidad;
 use App\Models\User;
@@ -51,6 +52,51 @@ function cicloGestion(array $d): Abastecimiento
 
     return $c->fresh();
 }
+
+test('permiso específico tiene metadatos y matriz exacta sin alterar recargas', function () {
+    $permiso = Permiso::where('codigo', 'reportes.gestion-combustible-motorista.consultar')->firstOrFail();
+    expect($permiso->modulo)->toBe('reportes')
+        ->and($permiso->accion)->toBe('consultar')
+        ->and($permiso->alcance)->toBe('ambos')
+        ->and($permiso->estado)->toBe('activo')
+        ->and($permiso->roles()->orderBy('codigo')->pluck('codigo')->all())->toBe([
+            User::ROL_DIESEL_ADMIN, User::ROL_DIESEL_AUDITOR, User::ROL_DIESEL_SUPER_ADMIN,
+            User::ROL_EMPRESA_ADMIN, User::ROL_EMPRESA_AUDITOR, User::ROL_EMPRESA_SUPERVISOR,
+        ]);
+
+    $rolesRecargas = [
+        User::ROL_DIESEL_SUPER_ADMIN, User::ROL_DIESEL_ADMIN, User::ROL_DIESEL_TECNICO,
+        User::ROL_EMPRESA_ADMIN, User::ROL_EMPRESA_SUPERVISOR, User::ROL_EMPRESA_OPERADOR,
+    ];
+    foreach (['recargas_tanques.registrar', 'recargas_tanques.anular'] as $codigo) {
+        expect(Permiso::where('codigo', $codigo)->firstOrFail()->roles()->orderBy('codigo')->pluck('codigo')->all())
+            ->toBe(collect($rolesRecargas)->sort()->values()->all());
+    }
+});
+
+test('matriz de roles protege index y ficha con permiso específico', function () {
+    $empresa = gmEmpresa('GM-ROLES');
+    $creador = gmUsuario(User::ROL_DIESEL_ADMIN);
+    $motorista = gmMotorista($empresa, 'ROLES');
+    $unidad = gmUnidad($empresa, 'GM-ROLES');
+    cicloGestion(['empresa' => $empresa, 'unidad' => $unidad, 'motorista' => $motorista, 'usuario' => $creador, 'fecha' => '2026-08-10', 'real' => 8, 'teorico' => 10, 'costo' => 40]);
+
+    foreach ([User::ROL_DIESEL_SUPER_ADMIN, User::ROL_DIESEL_ADMIN, User::ROL_DIESEL_AUDITOR] as $rol) {
+        $usuario = gmUsuario($rol);
+        $this->actingAs($usuario)->get(route('reportes.gestion-combustible-motorista.index'))->assertOk();
+        $this->actingAs($usuario)->get(route('reportes.gestion-combustible-motorista.show', ['motorista' => $motorista->id, 'consultar' => 1]))->assertOk();
+    }
+    foreach ([User::ROL_EMPRESA_ADMIN, User::ROL_EMPRESA_SUPERVISOR, User::ROL_EMPRESA_AUDITOR] as $rol) {
+        $usuario = gmUsuario($rol, $empresa);
+        $this->actingAs($usuario)->get(route('reportes.gestion-combustible-motorista.index'))->assertOk();
+        $this->actingAs($usuario)->get(route('reportes.gestion-combustible-motorista.show', ['motorista' => $motorista->id, 'consultar' => 1]))->assertOk();
+    }
+    foreach ([[User::ROL_DIESEL_TECNICO, null], [User::ROL_EMPRESA_OPERADOR, $empresa]] as [$rol, $tenant]) {
+        $usuario = gmUsuario($rol, $tenant);
+        $this->actingAs($usuario)->get(route('reportes.gestion-combustible-motorista.index'))->assertForbidden();
+        $this->actingAs($usuario)->get(route('reportes.gestion-combustible-motorista.show', ['motorista' => $motorista->id, 'consultar' => 1]))->assertForbidden();
+    }
+});
 
 test('gestión por motorista atribuye al cierre y consolida ciclos unidades y motoristas', function () {
     $e = gmEmpresa('GM-A');
