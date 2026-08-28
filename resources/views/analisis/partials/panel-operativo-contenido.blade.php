@@ -1150,7 +1150,7 @@
                     @endif
                 </section>
 
-                <section class="cc-operational-section cc-analytics-panel">
+                <section class="cc-operational-section cc-analytics-panel cc-analytics-panel-separation">
                     <div class="cc-operational-section-header cc-analytics-panel-header">
                         <div>
                             <h4 class="cc-operational-section-title cc-analytics-panel-title">

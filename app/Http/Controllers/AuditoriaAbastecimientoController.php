@@ -354,7 +354,15 @@ class AuditoriaAbastecimientoController extends Controller
             $clasificaciones->push('correcto');
         }
 
-        $usuario = $abastecimiento->registradoPor?->name ?: 'No disponible';
+        $usuarioRegistrador = $abastecimiento->registradoPor;
+        $usuario = $usuarioRegistrador
+            ? trim(implode(' ', array_filter([
+                $usuarioRegistrador->name,
+                $usuarioRegistrador->apellido,
+            ])))
+            : 'No disponible';
+
+        $usuario = $usuario !== '' ? $usuario : 'No disponible';
 
         return [
             'id' => (int) $abastecimiento->id,

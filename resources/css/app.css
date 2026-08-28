@@ -6258,6 +6258,10 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     padding: 1rem;
 }
 
+.cc-va-analytics .cc-analytics-panel-separation {
+    margin-top: 1rem;
+}
+
 .cc-va-analytics .cc-analytics-panel-header,
 .cc-va-analytics .cc-analytics-chart-header {
     display: flex;
@@ -6410,6 +6414,58 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     margin-inline: 0.25rem;
     font-weight: 800;
     color: var(--cc-text-main);
+}
+
+.cc-va-analytics .cc-audit-events-table {
+    min-width: 74rem;
+    table-layout: fixed;
+}
+
+.cc-va-analytics .cc-audit-events-table th:nth-child(1),
+.cc-va-analytics .cc-audit-events-table td:nth-child(1) {
+    width: 7.5rem;
+}
+
+.cc-va-analytics .cc-audit-events-table th:nth-child(2),
+.cc-va-analytics .cc-audit-events-table td:nth-child(2) {
+    width: 12rem;
+}
+
+.cc-va-analytics .cc-audit-events-table th:nth-child(3),
+.cc-va-analytics .cc-audit-events-table td:nth-child(3) {
+    width: 7rem;
+}
+
+.cc-va-analytics .cc-audit-events-table th:nth-child(4),
+.cc-va-analytics .cc-audit-events-table td:nth-child(4) {
+    width: 8.5rem;
+}
+
+.cc-va-analytics .cc-audit-events-table th:nth-child(5),
+.cc-va-analytics .cc-audit-events-table td:nth-child(5) {
+    width: 14rem;
+}
+
+.cc-va-analytics .cc-audit-events-table th:nth-child(6),
+.cc-va-analytics .cc-audit-events-table td:nth-child(6) {
+    width: 5.5rem;
+}
+
+.cc-va-analytics .cc-audit-events-table th:nth-child(7),
+.cc-va-analytics .cc-audit-events-table td:nth-child(7) {
+    width: 11rem;
+}
+
+.cc-va-analytics .cc-audit-events-table th:nth-child(8),
+.cc-va-analytics .cc-audit-events-table td:nth-child(8) {
+    width: 8.5rem;
+}
+
+.cc-va-analytics .cc-audit-events-table td:nth-child(2),
+.cc-va-analytics .cc-audit-events-table td:nth-child(5),
+.cc-va-analytics .cc-audit-events-table td:nth-child(7) {
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 .cc-va-analytics .cc-analytics-progress {

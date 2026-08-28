@@ -778,8 +778,7 @@
     @else
         <div class="cc-table-adaptive-wrapper">
             <table
-                class="cc-table-adaptive"
-                style="min-width: 112rem;"
+                class="cc-table-adaptive cc-audit-events-table"
             >
                 <thead>
                     <tr>
@@ -840,7 +839,7 @@
                                 </div>
                             </td>
 
-                            <td class="cc-audit-nowrap">
+                            <td>
                                 {{ $evento['empresa'] }}
                             </td>
 
@@ -860,7 +859,7 @@
                                 {{ $evento['cantidad'] }}
                             </td>
 
-                            <td class="cc-audit-nowrap">
+                            <td>
                                 {{ $evento['usuario'] }}
                             </td>
 
