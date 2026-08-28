@@ -22,8 +22,8 @@
 
     <body class="antialiased">
         <div class="min-h-screen" style="background: var(--cc-bg-main);">
-            <div class="cc-page-wrapper">
-                <div class="cc-window-container" style="max-width: 80rem;">
+            <div class="cc-page-wrapper cc-va-scope">
+                <div class="cc-window-container cc-operational-container">
                     <div class="cc-card">
 
                         <div class="cc-card-header cc-card-header-compact">

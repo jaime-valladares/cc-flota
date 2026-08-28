@@ -4877,3 +4877,194 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         transition-duration: 0.01ms !important;
     }
 }
+
+/* =========================================================
+   CC-Flota Visual Architecture v0.1 — módulos piloto
+
+   Este contrato sólo se activa mediante .cc-va-scope. Los defaults
+   históricos permanecen intactos para los módulos fuera del piloto.
+   ========================================================= */
+
+:root {
+    --cc-operational-max-width: 80rem;
+    --cc-va-page-title-size: 1.75rem;
+    --cc-va-page-subtitle-size: 0.92rem;
+    --cc-va-section-title-size: 0.82rem;
+    --cc-va-section-subtitle-size: 0.82rem;
+    --cc-va-form-label-size: 0.82rem;
+    --cc-va-control-text-size: 0.92rem;
+    --cc-va-auxiliary-text-size: 0.78rem;
+    --cc-va-field-error-size: 0.78rem;
+}
+
+.cc-operational-container {
+    width: 100%;
+    max-width: var(--cc-operational-max-width);
+    margin-inline: auto;
+}
+
+.cc-va-scope .cc-title,
+.cc-va-scope .cc-title-compact {
+    font-family: var(--cc-font-heading);
+    font-size: var(--cc-va-page-title-size);
+    font-weight: 800;
+    line-height: 1.12;
+    letter-spacing: -0.04em;
+}
+
+.cc-va-scope .cc-subtitle,
+.cc-va-scope .cc-subtitle-compact {
+    max-width: 54rem;
+    font-family: var(--cc-font-body);
+    font-size: var(--cc-va-page-subtitle-size);
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+.cc-va-scope .cc-form-section-title,
+.cc-va-scope .cc-section-title {
+    font-family: var(--cc-font-heading);
+    font-size: var(--cc-va-section-title-size);
+    font-weight: 800;
+}
+
+.cc-va-scope .cc-form-section-note,
+.cc-va-scope .cc-section-note,
+.cc-va-scope .cc-detail-section-header p {
+    font-family: var(--cc-font-body);
+    font-size: var(--cc-va-section-subtitle-size);
+    font-weight: 500;
+}
+
+.cc-va-scope .cc-field label {
+    font-family: var(--cc-font-body);
+    font-size: var(--cc-va-form-label-size);
+    font-weight: 700;
+}
+
+.cc-va-scope .cc-input {
+    font-family: var(--cc-font-body);
+    font-size: var(--cc-va-control-text-size);
+    font-weight: 500;
+}
+
+.cc-va-scope .cc-field-help {
+    font-family: var(--cc-font-body);
+    font-size: var(--cc-va-auxiliary-text-size);
+    font-weight: 500;
+}
+
+.cc-va-scope .cc-error {
+    font-family: var(--cc-font-body);
+    font-size: var(--cc-va-field-error-size);
+    font-weight: 650;
+}
+
+.cc-va-result-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--cc-font-heading);
+    font-size: 1.05rem;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.03em;
+    color: var(--cc-text-heading);
+}
+
+.cc-va-structured-label {
+    font-family: var(--cc-font-heading);
+    font-size: var(--cc-structured-label-font-size);
+    font-weight: 800;
+    line-height: 1.3;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--cc-text-muted);
+}
+
+.cc-va-structured-value {
+    font-family: var(--cc-font-body);
+    font-size: var(--cc-structured-value-font-size);
+    font-weight: 650;
+    line-height: 1.45;
+    color: var(--cc-text-main);
+}
+
+.cc-va-auxiliary-text {
+    font-family: var(--cc-font-body);
+    font-size: var(--cc-va-auxiliary-text-size);
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--cc-text-muted);
+}
+
+/* Distribución propia de Usuarios, compartida por consulta y ventana. */
+.cc-va-scope .cc-users-filter-grid {
+    display: grid;
+    grid-template-columns:
+        minmax(15rem, 1.7fr)
+        minmax(9.5rem, 1fr)
+        minmax(11rem, 1.15fr)
+        minmax(10rem, 1.05fr)
+        minmax(8.5rem, 0.85fr);
+    gap: 1rem;
+    align-items: end;
+    min-width: 0;
+}
+
+.cc-va-scope .cc-users-filter-grid > * {
+    min-width: 0;
+}
+
+.cc-va-scope .cc-users-filter-actions {
+    grid-column: 1 / -1;
+    justify-self: end;
+    justify-content: flex-end;
+    width: auto;
+    margin-left: auto;
+}
+
+@media (max-width: 1180px) {
+    .cc-va-scope .cc-users-filter-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .cc-va-scope .cc-users-filter-search {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 860px) {
+    .cc-va-scope .cc-users-filter-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .cc-va-scope .cc-users-filter-search {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 639px) {
+    .cc-va-scope .cc-users-filter-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .cc-va-scope .cc-users-filter-search,
+    .cc-va-scope .cc-users-filter-actions {
+        grid-column: auto;
+    }
+
+    .cc-va-scope .cc-users-filter-actions {
+        width: 100%;
+        justify-self: stretch;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 820px) {
+    .cc-va-scope .cc-title,
+    .cc-va-scope .cc-title-compact {
+        font-size: 1.55rem;
+    }
+}

@@ -178,7 +178,7 @@
 
                         <div class="flex-1 min-w-0">
                             <div class="flex flex-wrap items-center gap-3">
-                                <h5 class="font-[var(--cc-font-heading)] text-xl font-extrabold text-[var(--cc-text-heading)] tracking-[-0.03em] cc-cell-truncate">
+                                <h5 class="cc-va-result-title">
                                     {{ $licencia->unidad->placa ?? 'Sin Nombre / Placa' }}
                                 </h5>
 
@@ -195,10 +195,10 @@
 
                             <div class="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
                                 <div>
-                                    <div class="font-[var(--cc-font-heading)] text-xs font-extrabold text-[var(--cc-text-muted)] uppercase tracking-wider">
+                                    <div class="cc-va-structured-label">
                                         Empresa
                                     </div>
-                                    <div class="mt-1 text-sm font-bold text-[var(--cc-text-main)] cc-cell-truncate">
+                                    <div class="cc-va-structured-value mt-1 cc-cell-truncate">
                                         @if ($licencia->empresa)
                                             {{ $licencia->empresa->nombre_comercial ?: $licencia->empresa->nombre_legal }}
                                         @else
@@ -208,28 +208,28 @@
                                 </div>
 
                                 <div>
-                                    <div class="font-[var(--cc-font-heading)] text-xs font-extrabold text-[var(--cc-text-muted)] uppercase tracking-wider">
+                                    <div class="cc-va-structured-label">
                                         Vigencia
                                     </div>
-                                    <div class="mt-1 text-sm font-bold text-[var(--cc-text-main)]">
+                                    <div class="cc-va-structured-value mt-1">
                                         {{ $licencia->periodo_vigencia_texto }}
                                     </div>
                                 </div>
 
                                 <div>
-                                    <div class="font-[var(--cc-font-heading)] text-xs font-extrabold text-[var(--cc-text-muted)] uppercase tracking-wider">
+                                    <div class="cc-va-structured-label">
                                         Vencimiento
                                     </div>
-                                    <div class="mt-1 text-sm font-bold text-[var(--cc-text-main)]">
+                                    <div class="cc-va-structured-value mt-1">
                                         {{ $licencia->fecha_vencimiento?->format('d/m/Y') ?? 'No registrado' }}
                                     </div>
                                 </div>
 
                                 <div>
-                                    <div class="font-[var(--cc-font-heading)] text-xs font-extrabold text-[var(--cc-text-muted)] uppercase tracking-wider">
+                                    <div class="cc-va-structured-label">
                                         Puntos esperados
                                     </div>
-                                    <div class="mt-1 text-sm font-bold text-[var(--cc-text-main)]">
+                                    <div class="cc-va-structured-value mt-1">
                                         {{ $licencia->cantidad_puntos_seguridad_esperados }}
                                     </div>
                                 </div>
@@ -252,7 +252,7 @@
 
                         <div class="lg:col-span-3 min-w-0">
                             <div class="flex items-center gap-3 min-w-0">
-                                <h5 class="font-[var(--cc-font-heading)] text-xl font-extrabold text-[var(--cc-text-heading)] tracking-[-0.03em] cc-cell-truncate">
+                                <h5 class="cc-va-result-title">
                                     {{ $licencia->unidad->placa ?? 'Sin Nombre / Placa' }}
                                 </h5>
 
@@ -267,17 +267,17 @@
                                 @endif
                             </div>
 
-                            <div class="mt-1 text-sm font-medium text-[var(--cc-text-muted)] cc-cell-truncate">
+                            <div class="cc-va-auxiliary-text mt-1 cc-cell-truncate">
                                 {{ $licencia->unidad->marca ?? 'Sin marca registrada' }}
                             </div>
                         </div>
 
                         <div class="lg:col-span-2 min-w-0">
-                            <div class="font-[var(--cc-font-heading)] text-xs font-extrabold text-[var(--cc-text-muted)] uppercase tracking-wider">
+                            <div class="cc-va-structured-label">
                                 Empresa
                             </div>
 
-                            <div class="mt-1 font-bold text-[var(--cc-text-main)] cc-cell-truncate">
+                            <div class="cc-va-structured-value mt-1 cc-cell-truncate">
                                 @if ($licencia->empresa)
                                     {{ $licencia->empresa->nombre_comercial ?: $licencia->empresa->nombre_legal }}
                                 @else
@@ -287,31 +287,31 @@
                         </div>
 
                         <div class="lg:col-span-2">
-                            <div class="font-[var(--cc-font-heading)] text-xs font-extrabold text-[var(--cc-text-muted)] uppercase tracking-wider">
+                            <div class="cc-va-structured-label">
                                 Vigencia
                             </div>
 
-                            <div class="mt-1 font-bold text-[var(--cc-text-main)]">
+                            <div class="cc-va-structured-value mt-1">
                                 {{ $licencia->periodo_vigencia_texto }}
                             </div>
                         </div>
 
                         <div class="lg:col-span-2">
-                            <div class="font-[var(--cc-font-heading)] text-xs font-extrabold text-[var(--cc-text-muted)] uppercase tracking-wider">
+                            <div class="cc-va-structured-label">
                                 Vencimiento
                             </div>
 
-                            <div class="mt-1 font-bold text-[var(--cc-text-main)]">
+                            <div class="cc-va-structured-value mt-1">
                                 {{ $licencia->fecha_vencimiento?->format('d/m/Y') ?? 'No registrado' }}
                             </div>
                         </div>
 
                         <div class="lg:col-span-3 min-w-0">
-                            <div class="font-[var(--cc-font-heading)] text-xs font-extrabold text-[var(--cc-text-muted)] uppercase tracking-wider">
+                            <div class="cc-va-structured-label">
                                 Plantilla
                             </div>
 
-                            <div class="mt-1 font-bold text-[var(--cc-text-main)] cc-cell-truncate">
+                            <div class="cc-va-structured-value mt-1 cc-cell-truncate">
                                 {{ $licencia->plantilla_puntos_seguridad_texto }}
                                 · {{ $licencia->cantidad_puntos_seguridad_esperados }} puntos
                             </div>

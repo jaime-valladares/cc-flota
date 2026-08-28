@@ -1,6 +1,6 @@
 <x-app-layout>
-    <div class="cc-page-wrapper">
-        <div class="cc-content-container" style="max-width: 80rem;">
+    <div class="cc-page-wrapper cc-va-scope">
+        <div class="cc-content-container cc-operational-container">
             <div class="cc-card">
 
                 @php
