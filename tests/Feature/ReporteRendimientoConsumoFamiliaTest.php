@@ -89,7 +89,14 @@ test('paneles modernos quedan como overlays compactos anclados a la izquierda', 
 
     $javascript = file_get_contents(resource_path('js/app.js'));
     expect($javascript)->toContain("multiselect.classList.add('is-open')")
-        ->toContain("multiselect.classList.remove('is-open')");
+        ->toContain("multiselect.classList.remove('is-open')")
+        ->not->toContain('has-open-dropdown');
+
+    expect($css)->not->toContain('has-open-dropdown');
+
+    $partial = file_get_contents(resource_path('views/reportes/rendimiento-km-galon/contenido.blade.php'));
+    expect(substr_count($partial, 'class="cc-standard-filter-grid cc-analytics-report-filter-grid"'))->toBe(1)
+        ->and($partial)->not->toContain('cc-analytics-filter-row');
 });
 
 test('familia protege detalle modelo tenant roles e historial inactivo', function () {
