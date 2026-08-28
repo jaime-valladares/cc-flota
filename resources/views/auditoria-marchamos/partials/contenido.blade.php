@@ -176,7 +176,11 @@
                             'opciones' => $usuariosSelector,
                             'valor' => fn ($item) => $item->id,
                             'texto' => fn ($item) =>
-                                $item->name ?: $item->email,
+                                trim(implode(' ', array_filter([
+                                    $item->name,
+                                    $item->apellido,
+                                ])))
+                                ?: ($item->name ?: $item->email),
                             'empresa' => null,
                             'tipo' => 'usuario',
                         ],

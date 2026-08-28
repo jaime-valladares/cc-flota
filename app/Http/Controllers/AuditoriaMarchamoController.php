@@ -389,6 +389,11 @@ class AuditoriaMarchamoController extends Controller
                                             $termino
                                         )
                                         ->orWhere(
+                                            'apellido',
+                                            'like',
+                                            $termino
+                                        )
+                                        ->orWhere(
                                             'email',
                                             'like',
                                             $termino
@@ -640,17 +645,20 @@ class AuditoriaMarchamoController extends Controller
                         )
                         : 'No disponible';
 
-                    $nombreUsuario = $evento
-                        ->registradoPor
-                        ? (
-                            $evento
-                                ->registradoPor
-                                ->name
-                            ?: $evento
-                                ->registradoPor
-                                ->email
-                        )
-                        : 'No disponible';
+                    $usuarioRegistrador = $evento
+                        ->registradoPor;
+
+                    $nombreUsuario = $usuarioRegistrador
+                        ? trim(implode(' ', array_filter([
+                            $usuarioRegistrador->name,
+                            $usuarioRegistrador->apellido,
+                        ])))
+                        : '';
+
+                    $nombreUsuario = $nombreUsuario
+                        ?: ($usuarioRegistrador?->name
+                            ?: $usuarioRegistrador?->email
+                            ?: 'No disponible');
 
                     return [
                         'modelo' => $evento,
