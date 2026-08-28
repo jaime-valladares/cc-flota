@@ -70,354 +70,6 @@
     ];
 @endphp
 
-<style>
-    .cc-consumo-header {
-        display: grid !important;
-        grid-template-columns: minmax(0, 1fr) auto !important;
-        align-items: start !important;
-        gap: 1rem !important;
-    }
-
-    .cc-consumo-summary {
-        display: grid !important;
-        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-        gap: .85rem !important;
-        width: 100%;
-        padding: 0 !important;
-        border: 0 !important;
-        background: transparent !important;
-    }
-
-    .cc-consumo-summary .cc-summary-strip-item {
-        display: flex !important;
-        min-width: 0;
-        min-height: 6.25rem;
-        flex-direction: column !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: .45rem !important;
-        padding: 1rem .85rem !important;
-        border: 1px solid var(--cc-border) !important;
-        border-radius: 1rem !important;
-        background: var(--cc-bg-card) !important;
-        text-align: center !important;
-        box-shadow: 0 .35rem 1rem rgba(15, 23, 42, .035);
-    }
-
-    .cc-consumo-summary .cc-summary-strip-label,
-    .cc-consumo-summary .cc-summary-strip-value {
-        display: block !important;
-        width: 100%;
-        margin: 0 !important;
-        text-align: center !important;
-        white-space: normal !important;
-    }
-
-    .cc-consumo-summary .cc-summary-strip-label {
-        color: var(--cc-text-muted);
-        font-size: .7rem;
-        font-weight: 800;
-        line-height: 1.3;
-        letter-spacing: .08em;
-        text-transform: uppercase;
-    }
-
-    .cc-consumo-summary .cc-summary-strip-value {
-        color: var(--cc-text-main);
-        font-size: 1.25rem;
-        font-weight: 800;
-        line-height: 1.15;
-        overflow-wrap: anywhere;
-    }
-
-    .cc-consumo-charts {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 1rem;
-        margin-bottom: 1.25rem;
-    }
-
-    .cc-consumo-chart-card {
-        min-width: 0;
-        padding: 1rem;
-        border: 1px solid var(--cc-border);
-        border-radius: 1rem;
-        background: var(--cc-bg-card);
-        box-shadow: 0 .35rem 1rem rgba(15, 23, 42, .035);
-    }
-
-    .cc-consumo-chart-header {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 1rem;
-        margin-bottom: .8rem;
-    }
-
-    .cc-consumo-chart-title {
-        margin: 0 0 .2rem;
-        color: var(--cc-text-main);
-        font-size: .95rem;
-        font-weight: 800;
-    }
-
-    .cc-consumo-chart-subtitle {
-        color: var(--cc-text-muted);
-        font-size: .78rem;
-        line-height: 1.4;
-    }
-
-    .cc-consumo-chart-badge {
-        flex: 0 0 auto;
-        padding: .3rem .6rem;
-        border: 1px solid var(--cc-border);
-        border-radius: 999px;
-        color: var(--cc-text-muted);
-        font-size: .7rem;
-        font-weight: 800;
-        white-space: nowrap;
-    }
-
-    .cc-consumo-chart-toolbar {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: .45rem;
-        margin-bottom: .75rem;
-        padding: .65rem;
-        border: 1px solid var(--cc-border);
-        border-radius: .8rem;
-        background: var(--cc-bg-soft);
-    }
-
-    .cc-consumo-chart-button {
-        display: inline-flex;
-        min-height: 2rem;
-        align-items: center;
-        justify-content: center;
-        padding: .35rem .6rem;
-        border: 1px solid var(--cc-border);
-        border-radius: .55rem;
-        background: var(--cc-bg-card);
-        color: var(--cc-text-main);
-        font-size: .7rem;
-        font-weight: 800;
-        cursor: pointer;
-    }
-
-    .cc-consumo-chart-button:hover {
-        border-color: var(--cc-primary);
-    }
-
-    .cc-consumo-chart-button:disabled {
-        cursor: not-allowed;
-        opacity: .45;
-    }
-
-    .cc-consumo-chart-status {
-        margin-left: auto;
-        color: var(--cc-text-muted);
-        font-size: .7rem;
-        font-weight: 700;
-        white-space: nowrap;
-    }
-
-    .cc-consumo-chart-stage {
-        position: relative;
-        min-height: 19rem;
-        overflow: hidden;
-        border: 1px solid var(--cc-border);
-        border-radius: .8rem;
-        background: var(--cc-bg-card);
-    }
-
-    .cc-consumo-chart-canvas {
-        display: block;
-        width: 100%;
-        height: 19rem;
-    }
-
-    .cc-consumo-chart-detail {
-        min-height: 1.4rem;
-        margin-top: .55rem;
-        color: var(--cc-text-muted);
-        font-size: .74rem;
-        text-align: center;
-    }
-
-    .cc-consumo-chart-legend {
-        display: flex;
-        flex-wrap: wrap;
-        gap: .7rem;
-        margin-top: .65rem;
-        color: var(--cc-text-muted);
-        font-size: .7rem;
-    }
-
-    .cc-consumo-chart-legend-item {
-        display: inline-flex;
-        align-items: center;
-        gap: .35rem;
-    }
-
-    .cc-consumo-chart-legend-swatch {
-        width: .75rem;
-        height: .75rem;
-        border-radius: .2rem;
-    }
-
-    .cc-consumo-chart-navigator {
-        display: grid;
-        grid-template-columns: auto minmax(0, 1fr) auto;
-        align-items: center;
-        gap: .65rem;
-        margin-top: .7rem;
-        color: var(--cc-text-muted);
-        font-size: .7rem;
-    }
-
-    .cc-consumo-chart-navigator input[type="range"] {
-        width: 100%;
-    }
-
-    .cc-consumo-chart-data {
-        display: none;
-        margin-top: .75rem;
-        overflow-x: auto;
-    }
-
-    .cc-consumo-chart-data.is-visible {
-        display: block;
-    }
-
-    .cc-consumo-chart-data table {
-        width: 100%;
-        min-width: 30rem;
-        border-collapse: collapse;
-    }
-
-    .cc-consumo-chart-data th,
-    .cc-consumo-chart-data td {
-        padding: .55rem .65rem;
-        border: 1px solid var(--cc-border);
-        font-size: .72rem;
-        text-align: center;
-    }
-
-    .cc-consumo-chart-data th {
-        background: var(--cc-bg-soft);
-        font-weight: 800;
-        text-transform: uppercase;
-    }
-
-    .cc-consumo-chart-empty {
-        display: flex;
-        min-height: 19rem;
-        align-items: center;
-        justify-content: center;
-        padding: 2rem;
-        border: 1px dashed var(--cc-border);
-        border-radius: .8rem;
-        color: var(--cc-text-muted);
-        text-align: center;
-    }
-
-    .cc-consumo-sort-link {
-        display: inline-flex;
-        width: 100%;
-        align-items: center;
-        justify-content: center;
-        gap: .4rem;
-        color: inherit;
-        text-decoration: none;
-        white-space: nowrap;
-    }
-
-    .cc-consumo-trend {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 6.5rem;
-        padding: .35rem .65rem;
-        border: 1px solid var(--cc-border);
-        border-radius: 999px;
-        background: var(--cc-bg-soft);
-        font-size: .75rem;
-        font-weight: 800;
-        white-space: nowrap;
-    }
-
-    .cc-consumo-number {
-        white-space: nowrap;
-        text-align: right;
-    }
-
-    .cc-card .cc-filter-panel,
-    .cc-card .cc-filter-panel-inline {
-        overflow: visible;
-    }
-
-    .cc-card .cc-filter-multiselect {
-        position: relative;
-        z-index: 1;
-    }
-
-    .cc-card .cc-filter-multiselect.is-open {
-        z-index: 1000;
-    }
-
-    .cc-card .cc-filter-multiselect-menu {
-        z-index: 1001;
-    }
-
-    @media (max-width: 1100px) {
-        .cc-consumo-summary {
-            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        }
-    }
-
-    @media (max-width: 900px) {
-        .cc-consumo-charts {
-            grid-template-columns: minmax(0, 1fr);
-        }
-    }
-
-    @media (max-width: 760px) {
-        .cc-consumo-header {
-            grid-template-columns: minmax(0, 1fr) !important;
-        }
-
-        .cc-consumo-header > div:last-child,
-        .cc-consumo-header > div:last-child > a {
-            width: 100%;
-        }
-
-        .cc-consumo-chart-toolbar {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
-        .cc-consumo-chart-button {
-            width: 100%;
-        }
-
-        .cc-consumo-chart-status {
-            grid-column: 1 / -1;
-            margin-left: 0;
-            text-align: center;
-        }
-
-        .cc-consumo-chart-navigator {
-            grid-template-columns: minmax(0, 1fr);
-        }
-    }
-
-    @media (max-width: 520px) {
-        .cc-consumo-summary {
-            grid-template-columns: minmax(0, 1fr) !important;
-        }
-    }
-</style>
 
 <div class="cc-card">
     <div class="cc-card-header cc-card-header-compact cc-consumo-header">
@@ -475,24 +127,14 @@
                    cc-filter-panel-inline"
         >
             <div
-                class="cc-form-section
-                       cc-form-section-compact"
-                style="margin-top: 0;"
+                class="cc-form-section cc-form-section-compact cc-analytics-filter-heading"
             >
                 <div class="cc-form-section-title">
                     Filtros de análisis
                 </div>
             </div>
 
-            <div
-                style="
-                    display: grid;
-                    grid-template-columns:
-                        repeat(auto-fit, minmax(14rem, 1fr));
-                    gap: 1rem;
-                    align-items: end;
-                "
-            >
+            <div class="cc-standard-filter-grid cc-analytics-filter-grid">
                 <div class="cc-field">
                     <label>Empresa</label>
 
@@ -800,16 +442,7 @@
                 </div>
 
                 <div
-                    class="cc-standard-filter-actions"
-                    style="
-                        display: flex;
-                        flex-wrap: nowrap;
-                        gap: .75rem;
-                        align-items: center;
-                        justify-content: flex-end;
-                        grid-column: 1 / -1;
-                        width: 100%;
-                    "
+                    class="cc-standard-filter-actions cc-analytics-filter-actions"
                 >
                     <button
                         type="submit"
@@ -862,8 +495,7 @@
         @endphp
 
         <div
-            class="cc-summary-strip cc-consumo-summary"
-            style="margin-bottom: 1.25rem;"
+            class="cc-summary-strip cc-consumo-summary cc-analytics-summary-spacing"
         >
             @foreach ($tarjetas as $tarjeta)
                 <div class="cc-summary-strip-item">
@@ -1081,8 +713,7 @@
 
         <div class="cc-table-adaptive-wrapper">
             <table
-                class="cc-table-adaptive"
-                style="min-width: 108rem;"
+                class="cc-table-adaptive cc-analytics-table-consumption"
             >
                 <thead>
                     <tr>

@@ -12,7 +12,7 @@
     $rutaPdf = route('reportes.unidades.pdf', request()->except('page'));
 @endphp
 
-<section class="cc-card" style="position: relative; isolation: isolate;">
+<section class="cc-card cc-analytics-root-card">
     <header class="cc-card-header cc-card-header-compact">
         <div>
             <h1 class="cc-title cc-title-compact">Reporte de unidades</h1>
@@ -48,11 +48,11 @@
     <form method="GET" action="{{ $rutaConsulta }}" class="mb-5">
         <input type="hidden" name="consultar" value="1">
         <div class="cc-filter-panel cc-filter-panel-compact cc-filter-panel-inline">
-            <div class="cc-form-section cc-form-section-compact" style="margin-top: 0;">
+            <div class="cc-form-section cc-form-section-compact cc-analytics-filter-heading">
                 <div class="cc-form-section-title">Filtros de consulta</div>
             </div>
 
-            <div class="cc-standard-filter-grid" style="gap: .85rem 1rem;">
+            <div class="cc-standard-filter-grid cc-analytics-filter-grid">
                 <div class="cc-field">
                     <label for="busqueda">Buscar empresa o Nombre / Placa</label>
                     <input id="busqueda" name="busqueda" type="text" class="cc-input" value="{{ $busqueda }}" maxlength="150" placeholder="Empresa o Nombre / Placa">
@@ -170,13 +170,13 @@
         </div>
 
         <div class="cc-table-adaptive-wrapper">
-            <table class="cc-table-adaptive" style="min-width: 108rem;">
+            <table class="cc-table-adaptive cc-analytics-table-units">
                 <thead>
                     <tr>
                         <th>Empresa</th><th>Nombre / Placa</th><th>Marca</th><th>Estado</th>
-                        <th style="min-width: 15rem;">Disponibilidad operativa</th>
-                        <th style="min-width: 12rem;">Modelo de medición</th>
-                        <th style="min-width: 12rem;">Rendimiento Teórico</th>
+                        <th class="cc-table-column-long">Disponibilidad operativa</th>
+                        <th class="cc-table-column-medium">Modelo de medición</th>
+                        <th class="cc-table-column-medium">Rendimiento Teórico</th>
                         <th>Tanques</th><th>Capacidad total</th>
                         <th>Licencia</th><th>Marchamos</th><th>Acción</th>
                     </tr>

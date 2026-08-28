@@ -64,272 +64,6 @@
 @endphp
 
 
-<style>
-    .cc-analytics-header {
-        display: grid !important;
-        grid-template-columns: minmax(0, 1fr) auto !important;
-        align-items: start !important;
-        gap: 1rem !important;
-    }
-
-    .cc-analytics-header > div:last-child {
-        display: flex;
-        justify-content: flex-end;
-        min-width: 0;
-    }
-
-    .cc-analytics-summary {
-        display: grid !important;
-        grid-template-columns:
-            repeat(6, minmax(0, 1fr)) !important;
-        width: 100%;
-    }
-
-    .cc-analytics-summary .cc-summary-strip-item {
-        display: flex !important;
-        min-width: 0;
-        min-height: 5.6rem;
-        flex-direction: column !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: .45rem !important;
-        padding: 1rem .8rem !important;
-        text-align: center !important;
-    }
-
-    .cc-analytics-summary .cc-summary-strip-label,
-    .cc-analytics-summary .cc-summary-strip-value {
-        display: block !important;
-        width: 100%;
-        margin: 0 !important;
-        text-align: center !important;
-    }
-
-    .cc-analytics-summary .cc-summary-strip-label {
-        line-height: 1.25 !important;
-        white-space: normal !important;
-    }
-
-    .cc-analytics-summary .cc-summary-strip-value {
-        line-height: 1.15 !important;
-        overflow-wrap: anywhere;
-        white-space: normal !important;
-    }
-
-    .cc-analytics-actions {
-        justify-content: flex-end !important;
-    }
-
-    @media (max-width: 1100px) {
-        .cc-analytics-summary {
-            grid-template-columns:
-                repeat(3, minmax(0, 1fr)) !important;
-        }
-    }
-
-    @media (max-width: 760px) {
-        .cc-analytics-header {
-            grid-template-columns: minmax(0, 1fr) !important;
-        }
-
-        .cc-analytics-header > div:last-child {
-            width: 100%;
-            justify-content: stretch;
-        }
-
-        .cc-analytics-header > div:last-child > a {
-            width: 100%;
-        }
-
-        .cc-analytics-summary {
-            grid-template-columns:
-                repeat(2, minmax(0, 1fr)) !important;
-        }
-
-        .cc-analytics-actions {
-            display: grid !important;
-            grid-template-columns:
-                repeat(2, minmax(0, 1fr)) !important;
-            gap: .75rem !important;
-        }
-
-        .cc-analytics-actions > * {
-            width: 100% !important;
-            min-width: 0 !important;
-        }
-    }
-
-    @media (max-width: 430px) {
-        .cc-analytics-summary {
-            grid-template-columns:
-                minmax(0, 1fr) !important;
-        }
-
-        .cc-analytics-actions {
-            grid-template-columns:
-                minmax(0, 1fr) !important;
-        }
-    }
-
-    /*
-     * Mantiene el multiselect abierto por encima de los demás
-     * controles del grid. Sin este nivel en el contenedor padre,
-     * los campos de la siguiente fila pueden dibujarse sobre el menú.
-     */
-    .cc-card .cc-filter-panel,
-    .cc-card .cc-filter-panel-inline {
-        overflow: visible;
-    }
-
-    .cc-card .cc-filter-multiselect {
-        position: relative;
-        z-index: 1;
-    }
-
-    .cc-card .cc-filter-multiselect.is-open {
-        z-index: 1000;
-    }
-
-    .cc-card .cc-filter-multiselect-menu {
-        z-index: 1001;
-    }
-
-    .cc-analytics-sort-link {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: .4rem;
-        width: 100%;
-        color: inherit;
-        text-decoration: none;
-        white-space: nowrap;
-    }
-
-    .cc-analytics-sort-icon {
-        font-size: .78rem;
-        opacity: .72;
-    }
-
-    .cc-cycle-number {
-        display: inline-flex;
-        min-width: 3rem;
-        align-items: center;
-        justify-content: center;
-        padding: .35rem .65rem;
-        border: 1px solid var(--cc-border);
-        border-radius: .55rem;
-        font-weight: 700;
-        background: var(--cc-bg-soft);
-    }
-
-    .cc-kilometraje-flow {
-        display: inline-flex;
-        align-items: center;
-        gap: .5rem;
-        white-space: nowrap;
-        font-weight: 700;
-    }
-
-    .cc-kilometraje-arrow {
-        color: var(--cc-text-muted);
-    }
-
-    .cc-motorista-nowrap {
-        white-space: nowrap;
-    }
-
-    .cc-analytics-number {
-        white-space: nowrap;
-        text-align: right;
-    }
-
-    .cc-analytics-charts {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 1rem;
-        margin-bottom: 1.25rem;
-    }
-
-    .cc-analytics-chart-card {
-        min-width: 0;
-        padding: 1rem 1rem .85rem;
-        border: 1px solid var(--cc-border);
-        border-radius: 1rem;
-        background: var(--cc-bg-card);
-    }
-
-    .cc-analytics-chart-header {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 1rem;
-        margin-bottom: .8rem;
-    }
-
-    .cc-analytics-chart-title {
-        margin: 0;
-        color: var(--cc-text-main);
-        font-size: .95rem;
-        font-weight: 800;
-    }
-
-    .cc-analytics-chart-subtitle {
-        margin-top: .2rem;
-        color: var(--cc-text-muted);
-        font-size: .78rem;
-        line-height: 1.35;
-    }
-
-    .cc-analytics-chart-badge {
-        flex: 0 0 auto;
-        padding: .3rem .55rem;
-        border: 1px solid var(--cc-border);
-        border-radius: 999px;
-        color: var(--cc-text-muted);
-        font-size: .72rem;
-        font-weight: 700;
-        white-space: nowrap;
-    }
-
-    .cc-analytics-chart-area {
-        position: relative;
-        min-height: 18rem;
-    }
-
-    .cc-analytics-chart-canvas {
-        display: block;
-        width: 100%;
-        height: 18rem;
-    }
-
-    .cc-analytics-chart-detail {
-        min-height: 1.3rem;
-        margin-top: .4rem;
-        color: var(--cc-text-muted);
-        font-size: .76rem;
-        text-align: center;
-    }
-
-    .cc-analytics-chart-empty {
-        display: flex;
-        min-height: 18rem;
-        align-items: center;
-        justify-content: center;
-        padding: 2rem;
-        border: 1px dashed var(--cc-border);
-        border-radius: .8rem;
-        color: var(--cc-text-muted);
-        font-size: .85rem;
-        line-height: 1.5;
-        text-align: center;
-    }
-
-    @media (max-width: 900px) {
-        .cc-analytics-charts {
-            grid-template-columns: minmax(0, 1fr);
-        }
-    }
-</style>
 
 <div class="cc-card">
     <div class="cc-card-header cc-card-header-compact cc-analytics-header">
@@ -391,24 +125,14 @@
                    cc-filter-panel-inline"
         >
             <div
-                class="cc-form-section
-                       cc-form-section-compact"
-                style="margin-top: 0;"
+                class="cc-form-section cc-form-section-compact cc-analytics-filter-heading"
             >
                 <div class="cc-form-section-title">
                     Filtros de análisis
                 </div>
             </div>
 
-            <div
-                style="
-                    display: grid;
-                    grid-template-columns:
-                        repeat(auto-fit, minmax(14rem, 1fr));
-                    gap: 1rem;
-                    align-items: end;
-                "
-            >
+            <div class="cc-standard-filter-grid cc-analytics-filter-grid">
                 <div class="cc-field">
                     <label>
                         Empresa
@@ -807,8 +531,7 @@
                 </div>
 
                 <div
-                    class="cc-field"
-                    style="grid-column: span 2;"
+                    class="cc-field cc-analytics-filter-search"
                 >
                     <label for="busqueda">
                         Búsqueda general
@@ -826,17 +549,7 @@
                 </div>
 
                 <div
-                    class="cc-standard-filter-actions cc-analytics-actions"
-                    style="
-                        display: flex;
-                        flex-wrap: nowrap;
-                        gap: .75rem;
-                        align-items: center;
-                        justify-content: flex-end;
-                        white-space: nowrap;
-                        grid-column: 1 / -1;
-                        width: 100%;
-                    "
+                    class="cc-standard-filter-actions cc-analytics-actions cc-analytics-filter-actions"
                 >
                     <button
                         type="submit"
@@ -899,8 +612,7 @@
         @endphp
 
         <div
-            class="cc-summary-strip cc-analytics-summary"
-            style="margin-bottom: 1.25rem;"
+            class="cc-summary-strip cc-analytics-summary cc-analytics-summary-spacing"
         >
             @foreach ($tarjetas as $tarjeta)
                 <div class="cc-summary-strip-item">
@@ -1091,8 +803,7 @@
     @else
         <div class="cc-table-adaptive-wrapper">
             <table
-                class="cc-table-adaptive"
-                style="min-width: 96rem;"
+                class="cc-table-adaptive cc-analytics-table-yields"
             >
                 <thead>
                     <tr>

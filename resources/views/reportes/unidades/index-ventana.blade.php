@@ -14,7 +14,7 @@
 <body class="antialiased">
     <div class="min-h-screen" style="background: var(--cc-bg-main);">
         <div class="cc-page-wrapper">
-            <div class="cc-window-container" style="max-width: 80rem;">
+            <div class="cc-window-container cc-operational-container cc-va-scope cc-va-analytics">
                 @include('reportes.unidades.contenido', ['esVentana' => true])
             </div>
         </div>

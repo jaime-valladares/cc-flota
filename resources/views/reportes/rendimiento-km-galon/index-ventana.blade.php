@@ -6,6 +6,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head><body class="antialiased"><div class="min-h-screen" style="background: var(--cc-bg-main);"><div class="cc-page-wrapper"><div class="cc-window-container" style="max-width: 80rem;">
+</head><body class="antialiased"><div class="min-h-screen" style="background: var(--cc-bg-main);"><div class="cc-page-wrapper"><div class="cc-window-container cc-operational-container cc-va-scope cc-va-analytics">
     @include('reportes.rendimiento-km-galon.contenido', ['esVentana' => true])
 </div></div></div></body></html>

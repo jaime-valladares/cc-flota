@@ -57,7 +57,7 @@
         <section class="cc-detail-section" data-report-section="tanques">
             <div class="cc-detail-section-header"><h5>Tanques físicos</h5></div>
             <div class="cc-table-shell"><table class="cc-table">
-                <thead><tr><th style="width: 20%;">Tanque</th><th class="text-right" style="width: 30%;">Capacidad</th><th style="width: 50%;">Cubierto por licencia</th></tr></thead>
+                <thead><tr><th class="cc-table-column-20">Tanque</th><th class="cc-table-column-30 text-right">Capacidad</th><th class="cc-table-column-50">Cubierto por licencia</th></tr></thead>
                 <tbody>
                     @forelse ($unidad->tanquesUnidad as $tanque)
                         <tr><td>Tanque {{ $tanque->numero }}</td><td class="text-right">{{ number_format((float) $tanque->capacidad, 2) }} gal</td><td>{{ $tanque->cubierto_por_licencia ? 'Sí' : 'No' }}</td></tr>
@@ -89,7 +89,7 @@
                 @endforeach
             </div>
             <div class="cc-table-shell"><table class="cc-table">
-                <thead><tr><th style="width: 4rem; min-width: 4rem;">Orden</th><th>Código / Punto</th><th>Grupo</th><th>Subgrupo</th><th>Posición / Tanque</th><th>Marchamo actual</th><th>Estado marchamo</th></tr></thead>
+                <thead><tr><th class="cc-table-column-order">Orden</th><th>Código / Punto</th><th>Grupo</th><th>Subgrupo</th><th>Posición / Tanque</th><th>Marchamo actual</th><th>Estado marchamo</th></tr></thead>
                 <tbody>
                     @forelse ($puntos as $punto)
                         <tr data-report-security-point="{{ $punto->id }}">

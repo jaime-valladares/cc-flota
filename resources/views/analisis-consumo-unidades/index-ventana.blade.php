@@ -48,8 +48,7 @@
     >
         <div class="cc-page-wrapper">
             <div
-                class="cc-window-container"
-                style="max-width: 80rem;"
+                class="cc-window-container cc-operational-container cc-va-scope cc-va-analytics"
             >
                 @include(
                     'analisis-consumo-unidades.partials.contenido',
