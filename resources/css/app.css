@@ -3223,7 +3223,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
 
 .cc-home-mark-image {
     background: #ffffff;
-    padding: 0.72rem;
+    padding: 0.20rem;
     overflow: hidden;
     box-shadow:
         0 24px 55px rgba(6, 59, 74, 0.18),

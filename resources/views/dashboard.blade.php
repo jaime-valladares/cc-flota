@@ -120,7 +120,7 @@
                     <div class="cc-home-visual" aria-hidden="true">
                         <div class="cc-home-mark cc-home-mark-image">
                             <img
-                                src="{{ asset('images/cc-flota/favicon.png') }}"
+                                src="{{ asset('images/cc-flota/cc_flota_single_logo.svg') }}"
                                 alt="CC-Flota"
                                 class="cc-home-mark-img"
                             >
