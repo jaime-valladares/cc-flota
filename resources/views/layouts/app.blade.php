@@ -1152,6 +1152,19 @@
                                     <path d="M3 4v6h6"></path>
                                 </svg>
                             </button>
+
+                            <a
+                                href="{{ route('dashboard') }}"
+                                class="cc-sidebar-menu-toggle cc-sidebar-reset-button"
+                                aria-label="Ir al inicio"
+                                title="Ir al inicio"
+                            >
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M3 11.5 12 4l9 7.5"></path>
+                                    <path d="M5 10.5V20h14v-9.5"></path>
+                                    <path d="M9 20v-6h6v6"></path>
+                                </svg>
+                            </a>
                         </div>
 
                         <div>
