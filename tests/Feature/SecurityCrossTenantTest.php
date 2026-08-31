@@ -1,11 +1,20 @@
 <?php
 
+use App\Models\Abastecimiento;
 use App\Models\Empresa;
+use App\Models\Gasolinera;
 use App\Models\GasolineraExterna;
+use App\Models\Licencia;
+use App\Models\Marchamo;
 use App\Models\Motorista;
+use App\Models\MovimientoInventarioCombustible;
 use App\Models\PuntoRuta;
+use App\Models\PuntoSeguridadUnidad;
+use App\Models\RecargaCombustible;
+use App\Models\ReemplazoMarchamoEvento;
 use App\Models\Role;
 use App\Models\Ruta;
+use App\Models\Tanque;
 use App\Models\Unidad;
 use App\Models\User;
 use Database\Seeders\PermisosSeeder;
@@ -89,6 +98,84 @@ function assertTenantDenied($test, User $actor, string $routeName, mixed $parame
 {
     $response = $test->actingAs($actor)->get(route($routeName, $parameter));
     expect($response->status())->toBeIn([403, 404], "{$routeName} devolvió {$response->status()}");
+}
+
+function tenantOperationalFixture(string $suffix): array
+{
+    $fixture = tenantFixture($suffix);
+    $gasolineraInterna = Gasolinera::query()->create([
+        'empresa_id' => $fixture['empresa']->id,
+        'nombre' => "Interna {$suffix}",
+        'direccion' => 'Dirección interna',
+        'estado' => 'activa',
+        'creado_por' => $fixture['user']->id,
+    ]);
+    $tanque = Tanque::query()->create([
+        'gasolinera_id' => $gasolineraInterna->id,
+        'nombre' => "Tanque {$suffix}",
+        'capacidad_total' => 1000,
+        'volumen_actual' => 500,
+        'volumen_minimo_alerta' => 100,
+        'estado' => 'activo',
+        'creado_por' => $fixture['user']->id,
+    ]);
+    $licencia = Licencia::query()->create([
+        'empresa_id' => $fixture['empresa']->id,
+        'unidad_id' => $fixture['unidad']->id,
+        'periodo_vigencia_meses' => 12,
+        'fecha_activacion' => now()->subMonth()->toDateString(),
+        'fecha_vencimiento' => now()->addMonths(11)->toDateString(),
+        'estado' => 'activa',
+        'plantilla_puntos_seguridad' => 'plantilla_1_tanque',
+        'creado_por' => $fixture['user']->id,
+    ]);
+    $puntoSeguridad = PuntoSeguridadUnidad::query()->create([
+        'unidad_id' => $fixture['unidad']->id,
+        'orden' => 1,
+        'nombre_punto' => "Punto {$suffix}",
+        'requiere_marchamo' => true,
+        'plantilla_origen' => 'plantilla_1_tanque',
+        'estado_asignacion' => 'asignado',
+        'estado' => 'activo',
+        'creado_por' => $fixture['user']->id,
+    ]);
+    $marchamo = Marchamo::query()->create([
+        'empresa_id' => $fixture['empresa']->id,
+        'unidad_id' => $fixture['unidad']->id,
+        'punto_seguridad_id' => $puntoSeguridad->id,
+        'codigo_marchamo' => substr(str_pad((string) crc32($suffix), 7, '0'), 0, 7),
+        'fecha_activacion' => now(),
+        'estado' => 'activo',
+        'activo_actual' => 1,
+        'origen_creacion' => 'asignacion_inicial',
+        'creado_por' => $fixture['user']->id,
+    ]);
+    $puntoSeguridad->update(['marchamo_actual_id' => $marchamo->id]);
+    $recarga = RecargaCombustible::query()->create([
+        'empresa_id' => $fixture['empresa']->id,
+        'gasolinera_id' => $gasolineraInterna->id,
+        'precio_galon' => 4,
+        'total_galones' => 10,
+        'total_compra' => 40,
+        'fecha_hora_recarga' => now(),
+        'usuario_registra_id' => $fixture['user']->id,
+        'estado' => 'registrado',
+    ]);
+    $abastecimiento = Abastecimiento::query()->create([
+        'empresa_id' => $fixture['empresa']->id, 'unidad_id' => $fixture['unidad']->id,
+        'motorista_id' => $fixture['motorista']->id, 'registrado_por' => $fixture['user']->id,
+        'empresa_nombre_snapshot' => $fixture['empresa']->nombre_legal,
+        'unidad_placa_snapshot' => $fixture['unidad']->placa,
+        'motorista_nombre_snapshot' => $fixture['motorista']->nombres,
+        'fecha_hora_abastecimiento' => now(), 'estado' => 'registrado',
+        'modelo_medicion' => 'kilometros_galon', 'lectura_actual' => 100,
+        'kilometraje_actual' => 100, 'volumen_inicial' => 10, 'volumen_cargado' => 20,
+        'volumen_final' => 30, 'capacidad_cubierta_snapshot' => 100,
+        'tipo_origen' => 'externo', 'gasolinera_externa_id' => $fixture['gasolinera']->id,
+        'origen_nombre_snapshot' => $fixture['gasolinera']->compania,
+    ]);
+
+    return $fixture + compact('gasolineraInterna', 'tanque', 'licencia', 'puntoSeguridad', 'marchamo', 'recarga', 'abastecimiento');
 }
 
 test('acceso directo a fichas edición ventanas y PDFs de otra empresa nunca devuelve 200', function () {
@@ -204,3 +291,171 @@ test('usuario empresarial no puede autoescalar ni editar un usuario de otro tena
     expect($foreign->status())->toBeIn([403, 404]);
     expect($b['user']->refresh()->rol_id)->not->toBe($dieselRole->id);
 });
+
+test('licencias ajenas son rechazadas y ninguna mutación altera sus datos', function () {
+    $a = tenantOperationalFixture('LA');
+    $b = tenantOperationalFixture('LB');
+    $before = $b['licencia']->only(['empresa_id', 'unidad_id', 'estado', 'fecha_vencimiento']);
+    $before['fecha_vencimiento'] = $b['licencia']->fecha_vencimiento->toDateString();
+
+    foreach (['licencias.show', 'licencias.show.ventana', 'licencias.edit', 'licencias.edit.ventana'] as $routeName) {
+        $this->actingAs($a['user'])->get(route($routeName, $b['licencia']))->assertStatus(403);
+    }
+    foreach (['licencias.inactivar', 'licencias.reactivar', 'licencias.renovar'] as $routeName) {
+        $this->actingAs($a['user'])->patch(route($routeName, $b['licencia']), [])->assertStatus(403);
+    }
+    $this->actingAs($a['user'])->put(route('licencias.update', $b['licencia']), [])->assertStatus(403);
+
+    $after = $b['licencia']->refresh()->only(array_keys($before));
+    $after['fecha_vencimiento'] = $b['licencia']->fecha_vencimiento->toDateString();
+    expect($after)->toBe($before)
+        ->and($b['unidad']->refresh()->estado)->toBe('activa');
+});
+
+test('gasolineras internas ajenas no pueden consultarse ni mutarse', function () {
+    $a = tenantOperationalFixture('GA');
+    $b = tenantOperationalFixture('GB');
+    $before = $b['gasolineraInterna']->only(['empresa_id', 'nombre', 'estado']);
+
+    foreach (['gasolineras.show', 'gasolineras.show.ventana', 'gasolineras.edit', 'gasolineras.edit.ventana'] as $routeName) {
+        $this->actingAs($a['user'])->get(route($routeName, $b['gasolineraInterna']))->assertStatus(403);
+    }
+    $this->actingAs($a['user'])->put(route('gasolineras.update', $b['gasolineraInterna']), [])->assertStatus(403);
+    $this->actingAs($a['user'])->patch(route('gasolineras.inactivar', $b['gasolineraInterna']), [])->assertStatus(403);
+    $this->actingAs($a['user'])->patch(route('gasolineras.reactivar', $b['gasolineraInterna']), [])->assertStatus(403);
+
+    expect($b['gasolineraInterna']->refresh()->only(array_keys($before)))->toBe($before);
+});
+
+test('tanques exigen tenant y parentesco con la gasolinera de la ruta', function () {
+    $a = tenantOperationalFixture('TA');
+    $b = tenantOperationalFixture('TB');
+    $before = $b['tanque']->only(['gasolinera_id', 'volumen_actual', 'estado']);
+
+    foreach (['gasolineras.tanques.show', 'gasolineras.tanques.show.ventana'] as $routeName) {
+        $this->actingAs($a['user'])->get(route($routeName, [$b['gasolineraInterna'], $b['tanque']]))->assertStatus(403);
+        $this->actingAs($a['user'])->get(route($routeName, [$a['gasolineraInterna'], $b['tanque']]))->assertStatus(404);
+    }
+    $this->actingAs($a['user'])->post(route('gasolineras.tanques.store', $b['gasolineraInterna']), [])->assertStatus(403);
+    foreach (['gasolineras.tanques.update', 'gasolineras.tanques.inactivar', 'gasolineras.tanques.reactivar'] as $routeName) {
+        $method = $routeName === 'gasolineras.tanques.update' ? 'put' : 'patch';
+        $this->actingAs($a['user'])->{$method}(route($routeName, [$a['gasolineraInterna'], $b['tanque']]), [])->assertStatus(404);
+    }
+
+    expect($b['tanque']->refresh()->only(array_keys($before)))->toBe($before)
+        ->and(Tanque::query()->count())->toBe(2);
+});
+
+test('recargas manipuladas son rechazadas sin alterar inventario ni movimientos', function () {
+    $a = tenantOperationalFixture('RA');
+    $b = tenantOperationalFixture('RB');
+    $tankBefore = $b['tanque']->only(['gasolinera_id', 'volumen_actual', 'estado']);
+    $reloadBefore = $b['recarga']->only(['empresa_id', 'gasolinera_id', 'total_galones', 'estado']);
+    $counts = [RecargaCombustible::count(), MovimientoInventarioCombustible::count()];
+
+    foreach (['gasolineras.tanques.recargas.show', 'gasolineras.tanques.recargas.show.ventana'] as $routeName) {
+        $this->actingAs($a['user'])->get(route($routeName, [$b['gasolineraInterna'], $b['tanque']]))->assertStatus(403);
+        $this->actingAs($a['user'])->get(route($routeName, [$a['gasolineraInterna'], $b['tanque']]))->assertStatus(404);
+    }
+    $this->actingAs($a['user'])->post(route('gasolineras.tanques.recargas.store', $b['gasolineraInterna']), [])->assertStatus(403);
+    $this->actingAs($a['user'])->patch(route('gasolineras.tanques.recargas.anular', [$a['gasolineraInterna'], $b['recarga']]), [])->assertStatus(404);
+
+    expect([RecargaCombustible::count(), MovimientoInventarioCombustible::count()])->toBe($counts)
+        ->and($b['tanque']->refresh()->only(array_keys($tankBefore)))->toBe($tankBefore)
+        ->and($b['recarga']->refresh()->only(array_keys($reloadBefore)))->toBe($reloadBefore);
+});
+
+test('marchamos de unidad ajena son rechazados sin cambios relacionados', function () {
+    $a = tenantOperationalFixture('MA2');
+    $b = tenantOperationalFixture('MB2');
+    $pointBefore = $b['puntoSeguridad']->only(['unidad_id', 'marchamo_actual_id', 'estado_asignacion', 'estado']);
+    $sealBefore = $b['marchamo']->only(['empresa_id', 'unidad_id', 'punto_seguridad_id', 'estado', 'activo_actual']);
+    $counts = [Marchamo::count(), ReemplazoMarchamoEvento::count(), PuntoSeguridadUnidad::count()];
+
+    foreach (['marchamos.detalle-unidad', 'marchamos.detalle-unidad.ventana', 'marchamos.reemplazos.show', 'marchamos.reemplazos.show.ventana'] as $routeName) {
+        $this->actingAs($a['user'])->get(route($routeName, $b['unidad']))->assertStatus(403);
+    }
+    foreach (['marchamos.asignacion-inicial.show', 'marchamos.asignacion-inicial.show.ventana'] as $routeName) {
+        $this->actingAs($a['user'])->get(route($routeName, $b['unidad']))->assertStatus(403);
+    }
+    $this->actingAs($a['user'])->post(route('marchamos.asignacion-inicial.guardar-avance', $b['unidad']), [])->assertStatus(403);
+    $this->actingAs($a['user'])->post(route('marchamos.asignacion-inicial.finalizar', $b['unidad']), [])->assertStatus(403);
+    $this->actingAs($a['user'])->post(route('marchamos.reemplazos.store', $b['unidad']), ['reemplazos' => [['seleccionado' => 1, 'punto_seguridad_id' => $b['puntoSeguridad']->id]]])->assertStatus(403);
+    $this->actingAs($a['user'])->post(route('marchamos.reemplazos.store', $a['unidad']), [
+        'reemplazos' => [[
+            'seleccionado' => 1,
+            'punto_seguridad_id' => $b['puntoSeguridad']->id,
+            'nuevo_codigo_marchamo' => '7123456',
+            'motivo_reemplazo' => 'dano',
+        ]],
+    ])->assertRedirect()->assertSessionHasErrors('reemplazos');
+
+    expect([Marchamo::count(), ReemplazoMarchamoEvento::count(), PuntoSeguridadUnidad::count()])->toBe($counts)
+        ->and($b['puntoSeguridad']->refresh()->only(array_keys($pointBefore)))->toBe($pointBefore)
+        ->and($b['marchamo']->refresh()->only(array_keys($sealBefore)))->toBe($sealBefore);
+});
+
+test('abastecimientos ajenos no pueden abrirse ni registrarse y no afectan inventario', function () {
+    $a = tenantOperationalFixture('AA');
+    $b = tenantOperationalFixture('AB');
+    $counts = [Abastecimiento::count(), MovimientoInventarioCombustible::count()];
+
+    foreach (['abastecimientos.create', 'abastecimientos.create.ventana'] as $routeName) {
+        $response = $this->actingAs($a['user'])->get(route($routeName, $b['unidad']));
+        expect($response->status())->toBe(403, $routeName);
+    }
+    foreach (['abastecimientos.show', 'abastecimientos.show.ventana', 'abastecimientos.ciclos.show', 'abastecimientos.ciclos.show.ventana'] as $routeName) {
+        $response = $this->actingAs($a['user'])->get(route($routeName, $b['abastecimiento']));
+        expect($response->status())->toBe(403, $routeName);
+    }
+    $response = $this->actingAs($a['user'])->post(route('abastecimientos.store', $b['unidad']), [
+        'empresa_id' => $b['empresa']->id,
+        'unidad_id' => $b['unidad']->id,
+        'motorista_id' => $b['motorista']->id,
+        'kilometraje_actual' => '200.00',
+        'tipo_origen' => 'externo',
+        'gasolinera_externa_id' => $b['gasolinera']->id,
+        'galones_externos' => '10.00',
+        'precio_galon' => '4.00',
+        'marchamos' => [[
+            'punto_seguridad_id' => $b['puntoSeguridad']->id,
+            'nuevo_codigo_marchamo' => '7654321',
+        ]],
+    ]);
+    expect($response->status())->toBe(403, 'abastecimientos.store');
+
+    expect([Abastecimiento::count(), MovimientoInventarioCombustible::count()])->toBe($counts);
+});
+
+test('detalles y PDFs de rendimiento rechazan ciclos de otra empresa', function (string $routeName) {
+    $a = tenantOperationalFixture('RDA');
+    $b = tenantOperationalFixture('RDB');
+    $this->actingAs($a['user'])->get(route($routeName, $b['abastecimiento']))->assertStatus(403);
+})->with([
+    'km galón detalle' => ['reportes.rendimiento-km-galon.show'],
+    'km galón PDF' => ['reportes.rendimiento-km-galon.show.pdf'],
+    'galones hora detalle' => ['reportes.rendimiento-galones-hora.show'],
+    'galones hora PDF' => ['reportes.rendimiento-galones-hora.show.pdf'],
+    'galones viaje detalle' => ['reportes.rendimiento-galones-viaje.show'],
+    'galones viaje PDF' => ['reportes.rendimiento-galones-viaje.show.pdf'],
+]);
+
+test('análisis y auditorías no amplían el tenant mediante filtros ajenos', function (string $routeName, string $filter, string $fixtureKey) {
+    $a = tenantOperationalFixture('FIA');
+    $b = tenantOperationalFixture('FIB');
+    $response = $this->actingAs($a['user'])->get(route($routeName, [
+        'consultar' => 1,
+        $filter => [$b[$fixtureKey]->id],
+    ]));
+
+    $response->assertStatus(200)->assertDontSee($b['unidad']->placa);
+})->with([
+    'consumo empresa' => ['analisis.consumo-unidades.index', 'empresa_ids', 'empresa'],
+    'consumo unidad' => ['analisis.consumo-unidades.index', 'unidad_ids', 'unidad'],
+    'rendimientos empresa' => ['analisis.rendimientos.index', 'empresa_ids', 'empresa'],
+    'rutas motorista' => ['analisis.rutas.index', 'motorista_ids', 'motorista'],
+    'rutas ruta' => ['analisis.rutas.index', 'ruta_ids', 'ruta'],
+    'panel unidad' => ['analisis.panel-operativo', 'unidad_ids', 'unidad'],
+    'auditoría abastecimiento' => ['auditoria.abastecimientos.index', 'unidad_ids', 'unidad'],
+    'auditoría marchamos' => ['auditoria.marchamos.index', 'unidad_ids', 'unidad'],
+]);
