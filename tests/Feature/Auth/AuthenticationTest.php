@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 test('login screen can be rendered', function () {
     $response = $this->get('/login');
@@ -18,6 +19,19 @@ test('users can authenticate using the login screen', function () {
 
     $this->assertAuthenticated();
     $response->assertRedirect(route('dashboard', absolute: false));
+});
+
+test('historical eight character passwords remain valid for authentication', function () {
+    $user = User::factory()->create([
+        'password' => Hash::make('12345678'),
+    ]);
+
+    $this->post('/login', [
+        'email' => $user->email,
+        'password' => '12345678',
+    ])->assertRedirect(route('dashboard', absolute: false));
+
+    $this->assertAuthenticatedAs($user);
 });
 
 test('users can not authenticate with invalid password', function () {

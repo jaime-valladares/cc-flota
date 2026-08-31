@@ -41,6 +41,12 @@ class InitialAdminUserSeeder extends Seeder
             );
         }
 
+        if (mb_strlen($password) < 12) {
+            throw new RuntimeException(
+                'CC_FLOTA_INITIAL_ADMIN_PASSWORD debe tener al menos 12 caracteres.'
+            );
+        }
+
         $superAdminRole = Role::query()
             ->where('codigo', User::ROL_DIESEL_SUPER_ADMIN)
             ->where('estado', 'activo')

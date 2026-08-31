@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 
 class UsuarioController extends Controller
@@ -757,13 +758,13 @@ class UsuarioController extends Controller
             ? [
                 'nullable',
                 'string',
-                'min:8',
+                Password::defaults(),
                 'confirmed',
             ]
             : [
                 'required',
                 'string',
-                'min:8',
+                Password::defaults(),
                 'confirmed',
             ];
 
@@ -822,7 +823,7 @@ class UsuarioController extends Controller
             'email.unique' => 'Ya existe un usuario con este correo.',
             'telefono.regex' => 'El teléfono debe tener el formato 0000-0000.',
             'password.required' => 'La contraseña es obligatoria.',
-            'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
+            'password.min' => 'La contraseña debe tener al menos 12 caracteres.',
             'password.confirmed' => 'La confirmación no coincide.',
         ]);
     }
