@@ -90,15 +90,67 @@
                             Contraseña
                         </label>
 
-                        <input
-                            id="password"
-                            type="password"
-                            name="password"
-                            required
-                            autocomplete="current-password"
-                            class="cc-login-input"
-                            placeholder="Ingrese su contraseña"
+                        <div
+                            x-data="{ passwordVisible: false }"
+                            style="position: relative;"
                         >
+                            <input
+                                id="password"
+                                :type="passwordVisible ? 'text' : 'password'"
+                                type="password"
+                                name="password"
+                                required
+                                autocomplete="current-password"
+                                class="cc-login-input"
+                                style="padding-right: 3rem;"
+                                placeholder="Ingrese su contraseña"
+                            >
+
+                            <button
+                                type="button"
+                                @click="passwordVisible = ! passwordVisible"
+                                :aria-label="passwordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                                :aria-pressed="passwordVisible.toString()"
+                                style="position: absolute; right: 0.85rem; top: 50%; display: inline-flex; transform: translateY(-50%); align-items: center; justify-content: center; color: #64748b;"
+                            >
+                                <svg
+                                    x-show="! passwordVisible"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="20"
+                                    height="20"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    aria-hidden="true"
+                                >
+                                    <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+
+                                <svg
+                                    x-show="passwordVisible"
+                                    x-cloak
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="20"
+                                    height="20"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    aria-hidden="true"
+                                >
+                                    <path d="m2 2 20 20" />
+                                    <path d="M6.71 6.71A10.7 10.7 0 0 0 2.06 11.65a1 1 0 0 0 0 .7A10.75 10.75 0 0 0 17.29 17.29" />
+                                    <path d="M10.73 5.08A10.8 10.8 0 0 1 12 5c4.6 0 8.4 2.9 9.94 6.65a1 1 0 0 1 0 .7 10.7 10.7 0 0 1-1.38 2.42" />
+                                    <path d="M14.12 14.12A3 3 0 0 1 9.88 9.88" />
+                                </svg>
+                            </button>
+                        </div>
 
                         <x-input-error :messages="$errors->get('password')" class="cc-login-error" />
                     </div>
