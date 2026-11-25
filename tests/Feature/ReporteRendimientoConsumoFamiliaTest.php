@@ -197,7 +197,16 @@ test('pdf principal de cada modelo reutiliza filtros e incluye resultados sin pa
     foreach ($config as [$modelo,$ruta]) {
         expect($capturas[$ruta]['ciclos'])->toHaveCount(12)->and($capturas[$ruta]['ciclos']->every(fn ($c) => $c->modelo_medicion === $modelo))->toBeTrue()->and($capturas[$ruta]['filtrosAplicados']['Búsqueda'])->toBe('PDF-'.strtoupper($modelo));
         $html = view('reportes.rendimiento-km-galon.pdf-general', $capturas[$ruta])->render();
-        expect(substr_count($html, 'data-pdf-cycle='))->toBe(12)->and($html)->toContain($capturas[$ruta]['titulo'])->not->toContain('<button');
+        expect(substr_count($html, 'data-pdf-cycle='))->toBe(12)->and($html)->toContain($capturas[$ruta]['titulo'])->not->toContain('<button', '@else');
+        if ($modelo === Abastecimiento::MODELO_GALONES_VIAJE) {
+            expect($html)->not->toContain('pdf-indicador-')->toContain('summary-value danger">0.00 gal');
+        } else {
+            expect($html)
+                ->toContain('summary-value pdf-indicador-neutro">0.00 gal')
+                ->toContain('class="center pdf-indicador-favorable">Ahorro')
+                ->toContain('class="right pdf-indicador-favorable">+$10.00')
+                ->toContain('<span class="pdf-indicador-favorable">');
+        }
     }
 });
 
@@ -232,6 +241,54 @@ test('pdf detalle de los tres modelos conserva seguridad snapshots e impacto', f
         expect($capturas[$ruta]['ciclo']->modelo_medicion)->toBe($modelo)->and($capturas[$ruta]['ciclo']->motorista_nombre_snapshot)->toBe($mc->nombre_completo)->and($capturas[$ruta]['ciclo']->impacto_economico_reporte)->toBe(10.0);
         $html = view('reportes.rendimiento-km-galon.pdf-detalle', $capturas[$ruta])->render();
         expect($html)->toContain('Motorista apertura')->toContain('Motorista cierre')->toContain('Costo efectivo por galón')->toContain('+$10.00');
+        if ($modelo === Abastecimiento::MODELO_GALONES_VIAJE) {
+            expect($html)->not->toContain('pdf-indicador-');
+
+            continue;
+        }
+
+        $datos = $capturas[$ruta];
+        $campo = $datos['rendimientoRealCampo'];
+        $casos = [
+            ['Ahorro', 10.0, 2.5, 'favorable', 'favorable', '+$10.00'],
+            ['Sobreconsumo', -10.0, 2.5, 'desfavorable', 'desfavorable', '-$10.00'],
+            ['En objetivo', 0.0, 2.5, 'neutro', 'neutro', '$0.00'],
+            ['Ahorro', 0.0, null, 'neutro', 'neutro', '+$0.00'],
+            ['Sobreconsumo', 0.0, 2.5, 'desfavorable', 'neutro', '-$0.00'],
+            ['Ahorro', 0.004, 2.5, 'favorable', 'neutro', '+$0.00'],
+            ['Sobreconsumo', -0.004, 2.5, 'desfavorable', 'neutro', '-$0.00'],
+        ];
+
+        foreach ($casos as [$resultado, $neto, $real, $claseReal, $claseImpacto, $importe]) {
+            $datos['ciclo'] = clone $capturas[$ruta]['ciclo'];
+            $datos['ciclo']->forceFill([
+                'resultado_reporte' => $resultado,
+                'impacto_neto_reporte' => $neto,
+                'impacto_economico_reporte' => abs($neto),
+                $campo => $real,
+            ]);
+            $html = view('reportes.rendimiento-km-galon.pdf-detalle', $datos)->render();
+            $rendimiento = ($real === null ? '0.00' : '2.50').' '.$datos['rendimientoUnidad'];
+
+            expect($html)
+                ->toContain('<div class="label">Rendimiento real</div><div class="value pdf-indicador-'.$claseReal.'">'.$rendimiento.'</div>')
+                ->toContain('<div class="label">Impacto</div><div class="value pdf-indicador-'.$claseImpacto.'">'.$importe.'</div>')
+                ->toContain('<div class="result"><strong>'.$resultado.'</strong> · <span class="pdf-indicador-'.$claseImpacto.'">'.$importe.'</span>')
+                ->toContain('<div class="label">Resultado</div><div class="value pdf-indicador-'.match ($resultado) {
+                    'Ahorro' => 'favorable',
+                    'Sobreconsumo' => 'desfavorable',
+                    default => 'neutro',
+                }.'">'.$resultado.'</div>');
+        }
+
+        if ($modelo === Abastecimiento::MODELO_KILOMETROS_GALON) {
+            $documento = app('dompdf');
+            $documento->loadHtml($html, 'UTF-8');
+            $documento->setPaper('a4', 'portrait');
+            $documento->render();
+            $pdf = $documento->output(['compress' => 0]);
+            expect($pdf)->toStartWith('%PDF-')->toContain('0.706 0.137 0.094 rg', '0.129 0.129 0.129 rg');
+        }
     }
     $empresaUser = usuarioKmGalon(User::ROL_EMPRESA_ADMIN, $b);
     $this->actingAs($empresaUser)->get(route('reportes.rendimiento-km-galon.show.pdf', $ciclos['reportes.rendimiento-km-galon']))->assertForbidden();

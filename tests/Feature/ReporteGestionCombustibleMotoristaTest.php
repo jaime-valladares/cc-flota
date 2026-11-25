@@ -168,7 +168,17 @@ test('filtros usan cierre y protegen tenant en consulta detalle y pdf', function
     $this->actingAs($user)->get(route('reportes.gestion-combustible-motorista.index', ['consultar' => 1, 'empresa_ids' => [$b->id], 'motorista_ids' => [$mb->id], 'unidad_ids' => [$ub->id]]))->assertForbidden();
     $this->actingAs($user)->get(route('reportes.gestion-combustible-motorista.show', ['motorista' => $mb->id, 'consultar' => 1]))->assertForbidden();
     $doc = Mockery::mock(Barryvdh\DomPDF\PDF::class);
-    Pdf::shouldReceive('loadView')->once()->withArgs(fn (string $vista, array $datos) => $vista === 'reportes.gestion-combustible-motorista.pdf-general' && $datos['motoristas']->count() === 1 && $datos['periodoEvaluado'] === '10/08/2026 – 10/08/2026' && $datos['filtrosAplicados']['Resultado'] === 'Ahorro')->andReturn($doc);
+    Pdf::shouldReceive('loadView')->once()->withArgs(function (string $vista, array $datos): bool {
+        expect(view($vista, $datos)->render())
+            ->toContain('<div class="value pdf-indicador-favorable">+$10.00</div><div class="label">Impacto económico neto</div>')
+            ->toContain('<td class="right pdf-indicador-favorable">+$10.00</td><td class="pdf-indicador-favorable">Ahorro</td>')
+            ->toContain('<div class="value pdf-indicador-neutro">0.00 gal</div><div class="label">Sobreconsumo</div>');
+
+        return $vista === 'reportes.gestion-combustible-motorista.pdf-general'
+            && $datos['motoristas']->count() === 1
+            && $datos['periodoEvaluado'] === '10/08/2026 – 10/08/2026'
+            && $datos['filtrosAplicados']['Resultado'] === 'Ahorro';
+    })->andReturn($doc);
     $doc->shouldReceive('setPaper')->once()->with('a4', 'landscape')->andReturnSelf();
     $doc->shouldReceive('download')->once()->andReturn(response('PDF'));
     $this->actingAs($user)->get(route('reportes.gestion-combustible-motorista.pdf', ['consultar' => 1, 'fecha_desde' => '2026-08-10', 'fecha_hasta' => '2026-08-10', 'resultado' => 'ahorro']))->assertOk();
@@ -203,6 +213,23 @@ test('pdf de ficha conserva motorista periodo filtros economía e historial comp
     $this->actingAs($admin)->get(route('reportes.gestion-combustible-motorista.show.pdf', ['motorista' => $m->id] + $query))->assertOk();
     expect(view('reportes.gestion-combustible-motorista.pdf-detalle', $captura)->render())
         ->toContain($m->nombre_completo, '10/08/2026 – 10/08/2026', 'data-pdf-driver-cycle="'.$incluido->id.'"', 'Consumo teórico', 'Impacto neto por 1,000 km');
+
+    foreach ([[10, 'favorable', '+$10.00'], [-10, 'desfavorable', '-$10.00'], [0, 'neutro', '$0.00'], [0.004, 'neutro', '+$0.00'], [-0.004, 'neutro', '-$0.00']] as [$neto, $clase, $importe]) {
+        $captura['resumen']['impacto_neto'] = $neto;
+        $html = view('reportes.gestion-combustible-motorista.pdf-detalle', $captura)->render();
+        expect($html)
+            ->toContain('<div class="value pdf-indicador-'.$clase.'">'.$importe.'</div><div class="label">Impacto económico neto</div>')
+            ->toContain('<td class="right pdf-indicador-favorable">+$10.00</td>')
+            ->toContain('<div class="value pdf-indicador-favorable">+$10.00 / 1,000 km</div>');
+        if ($neto === 10) {
+            $documento = app('dompdf');
+            $documento->loadHtml($html, 'UTF-8');
+            $documento->setPaper('a4', 'landscape');
+            $documento->render();
+            $pdf = $documento->output(['compress' => 0]);
+            expect($pdf)->toStartWith('%PDF-')->toContain('0.082 0.396 0.753 rg');
+        }
+    }
 });
 
 test('pdf de ficha bloquea motorista y filtros cross tenant', function () {
