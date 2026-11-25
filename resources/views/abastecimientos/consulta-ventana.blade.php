@@ -61,7 +61,7 @@
 
         $modelosTexto = [
             'kilometros_galon' => 'Kilómetros por galón',
-            'galones_hora' => 'Horas por galón',
+            'galones_hora' => 'Galones por hora',
             'galones_viaje' => 'Galones por viaje',
         ];
 
@@ -610,7 +610,7 @@
                                                 === 'galones_hora'
                                         )
                                     >
-                                        Horas por galón
+                                        Galones por hora
                                     </option>
 
                                     <option

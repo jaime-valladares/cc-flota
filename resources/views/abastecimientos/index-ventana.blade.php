@@ -414,7 +414,7 @@
                                                 'Kilómetros por galón',
 
                                             'galones_hora' =>
-                                                'Horas por galón',
+                                                'Galones por hora',
 
                                             'galones_viaje' =>
                                                 'Galones por viaje',

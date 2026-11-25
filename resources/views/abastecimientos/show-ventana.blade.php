@@ -57,7 +57,7 @@
 
     $modeloTexto = match ($abastecimiento->modelo_medicion) {
         'kilometros_galon' => 'Kilómetros por galón',
-        'galones_hora' => 'Horas por galón',
+        'galones_hora' => 'Galones por hora',
         'galones_viaje' => 'Galones por viaje',
         default => 'No definido',
     };
