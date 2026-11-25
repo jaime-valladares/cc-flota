@@ -4,7 +4,7 @@
             {{ __('Profile Information') }}
         </h2>
 
-        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+        <p class="mt-1 text-sm text-[var(--cc-text-content)] dark:text-gray-400">
             @if ($user->esCuentaMaestra())
                 La identidad de la Cuenta Maestra es inmutable.
             @else
@@ -23,13 +23,13 @@
 
         <div>
             <x-input-label for="name" :value="__('Name')" />
-            <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name', $user->name)" required autofocus autocomplete="name" :disabled="$user->esCuentaMaestra()" />
+            <x-text-input id="name" name="name" type="text" class="mt-1 block w-full enabled:text-[var(--cc-text-content)] dark:enabled:text-gray-300" :value="old('name', $user->name)" required autofocus autocomplete="name" :disabled="$user->esCuentaMaestra()" />
             <x-input-error class="mt-2" :messages="$errors->get('name')" />
         </div>
 
         <div>
             <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" :value="old('email', $user->email)" required autocomplete="username" :disabled="$user->esCuentaMaestra()" />
+            <x-text-input id="email" name="email" type="email" class="mt-1 block w-full enabled:text-[var(--cc-text-content)] dark:enabled:text-gray-300" :value="old('email', $user->email)" required autocomplete="username" :disabled="$user->esCuentaMaestra()" />
             <x-input-error class="mt-2" :messages="$errors->get('email')" />
 
             @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())

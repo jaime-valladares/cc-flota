@@ -739,7 +739,7 @@
                                     }}
                                 </div>
 
-                                <div class="cc-table-adaptive-muted">
+                                <div class="cc-table-adaptive-muted cc-content-text">
                                     {{
                                         optional($fila['fecha'])->format('H:i')
                                         ?: '—'
@@ -774,7 +774,7 @@
                                     }}
                                 </div>
 
-                                <div class="cc-table-adaptive-muted">
+                                <div class="cc-table-adaptive-muted cc-content-text">
                                     {{ $fila['origen'] }}
                                 </div>
                             </td>

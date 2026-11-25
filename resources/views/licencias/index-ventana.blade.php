@@ -492,22 +492,22 @@
                         </form>
 
                         @if ($hayFiltros && $licencias->total() > 0)
-                            <div class="mb-4 flex justify-end text-sm text-[var(--cc-text-muted)]">
+                            <div class="mb-4 flex justify-end text-sm text-[var(--cc-text-content)]">
                                 Mostrando
 
-                                <span class="mx-1 font-bold text-[var(--cc-text-main)]">
+                                <span class="mx-1 font-bold text-[var(--cc-text-content)]">
                                     {{ $licencias->firstItem() }}
                                 </span>
 
                                 -
 
-                                <span class="mx-1 font-bold text-[var(--cc-text-main)]">
+                                <span class="mx-1 font-bold text-[var(--cc-text-content)]">
                                     {{ $licencias->lastItem() }}
                                 </span>
 
                                 de
 
-                                <span class="ml-1 font-bold text-[var(--cc-text-main)]">
+                                <span class="ml-1 font-bold text-[var(--cc-text-content)]">
                                     {{ $licencias->total() }}
                                 </span>
                             </div>
@@ -612,7 +612,7 @@
                                                         {{ $unidad->placa ?? 'Sin Nombre / Placa' }}
                                                     </div>
 
-                                                    <div class="cc-table-adaptive-muted">
+                                                    <div class="cc-table-adaptive-muted cc-content-text">
                                                         {{ $unidad->marca ?? 'Sin marca' }}
                                                     </div>
                                                 </td>
@@ -623,7 +623,7 @@
                                                             {{ $licencia->empresa->nombre_comercial ?: $licencia->empresa->nombre_legal }}
                                                         </div>
                                                     @else
-                                                        <span class="text-[var(--cc-text-muted)]">
+                                                        <span class="text-[var(--cc-text-content)]">
                                                             Sin empresa
                                                         </span>
                                                     @endif
@@ -642,7 +642,7 @@
                                                         {{ $licencia->fecha_vencimiento?->format('d/m/Y') ?? 'No registrada' }}
                                                     </div>
 
-                                                    <div class="cc-table-adaptive-muted whitespace-nowrap">
+                                                    <div class="cc-table-adaptive-muted cc-content-text whitespace-nowrap">
                                                         {{ $licencia->vencimiento_relativo_texto }}
                                                     </div>
                                                 </td>
@@ -682,7 +682,7 @@
                                                             : 'Pendiente' }}
                                                     </div>
 
-                                                    <div class="cc-table-adaptive-muted whitespace-nowrap">
+                                                    <div class="cc-table-adaptive-muted cc-content-text whitespace-nowrap">
                                                         {{ $unidad?->total_puntos_con_marchamo_asignado ?? 0 }}
                                                         de
                                                         {{ $unidad?->total_puntos_que_requieren_marchamo ?? 0 }}

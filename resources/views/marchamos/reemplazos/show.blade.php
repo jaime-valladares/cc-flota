@@ -411,7 +411,7 @@
                                         <tr>
                                             <td
                                                 colspan="6"
-                                                class="text-center text-[var(--cc-text-muted)] py-8"
+                                                class="text-center text-[var(--cc-text-content)] py-8"
                                             >
                                                 No hay puntos de seguridad disponibles para esta unidad.
                                             </td>

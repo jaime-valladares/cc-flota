@@ -833,7 +833,7 @@
                                     }}
                                 </div>
 
-                                <div class="cc-table-adaptive-muted">
+                                <div class="cc-table-adaptive-muted cc-content-text">
                                     {{
                                         optional(
                                             $evento['fecha']

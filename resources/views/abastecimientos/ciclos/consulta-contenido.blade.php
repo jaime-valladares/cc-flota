@@ -153,7 +153,7 @@
             <div class="cc-form-section-title">Consulta pendiente</div>
         </div>
 
-        <div class="text-sm text-[var(--cc-text-muted)]">
+        <div class="text-sm text-[var(--cc-text-content)]">
             Los resultados permanecerán vacíos hasta que realice una búsqueda.
         </div>
     </div>
@@ -191,7 +191,7 @@
                     <tr>
                         <td>
                             <div class="cc-table-adaptive-strong">{{ $apertura->empresa_nombre_snapshot ?: $apertura->empresa?->nombre_comercial ?: $apertura->empresa?->nombre_legal }}</div>
-                            <div class="cc-table-adaptive-muted">{{ $apertura->unidad_placa_snapshot ?: $apertura->unidad?->placa }}</div>
+                            <div class="cc-table-adaptive-muted cc-content-text">{{ $apertura->unidad_placa_snapshot ?: $apertura->unidad?->placa }}</div>
                         </td>
                         <td><span class="cc-badge {{ $cierre ? 'cc-badge-active' : 'cc-badge-warning' }}">{{ $cierre ? 'Completo' : 'En proceso' }}</span></td>
                         <td class="cc-table-adaptive-nowrap">
@@ -215,7 +215,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="9" class="py-8 text-center text-[var(--cc-text-muted)]">
+                        <td colspan="9" class="py-8 text-center text-[var(--cc-text-content)]">
                             No se encontraron ciclos con los filtros seleccionados.
                         </td>
                     </tr>

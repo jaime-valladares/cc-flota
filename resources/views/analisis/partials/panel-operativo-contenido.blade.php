@@ -814,7 +814,7 @@
                                     <div
                                         class="cc-operational-alert-meta"
                                     >
-                                        <span>
+                                        <span class="cc-content-text">
                                             {{
                                                 $alerta['porcentaje']
                                             }}
@@ -1107,7 +1107,7 @@
                                             </div>
 
                                             <div
-                                                class="cc-table-adaptive-muted"
+                                                class="cc-table-adaptive-muted cc-content-text"
                                             >
                                                 {{
                                                     $coberturaEmpresa
@@ -1247,7 +1247,7 @@
                                             </div>
 
                                             <div
-                                                class="cc-table-adaptive-muted"
+                                                class="cc-table-adaptive-muted cc-content-text"
                                             >
                                                 {{
                                                     $item[
@@ -1329,7 +1329,7 @@
                                             </div>
 
                                             <div
-                                                class="cc-table-adaptive-muted"
+                                                class="cc-table-adaptive-muted cc-content-text"
                                             >
                                                 {{
                                                     $item[

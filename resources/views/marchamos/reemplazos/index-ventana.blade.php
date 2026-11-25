@@ -191,7 +191,7 @@
                                                                 </span>
                                                             </label>
                                                         @empty
-                                                            <div class="px-3 py-3 text-sm text-[var(--cc-text-muted)]">
+                                                            <div class="px-3 py-3 text-sm text-[var(--cc-text-content)]">
                                                                 No hay empresas activas disponibles.
                                                             </div>
                                                         @endforelse
@@ -309,7 +309,7 @@
                                                             </span>
                                                         </label>
                                                     @empty
-                                                        <div class="px-3 py-3 text-sm text-[var(--cc-text-muted)]">
+                                                        <div class="px-3 py-3 text-sm text-[var(--cc-text-content)]">
                                                             No hay unidades elegibles disponibles.
                                                         </div>
                                                     @endforelse
@@ -410,7 +410,7 @@
                                                     </span>
                                                 </div>
 
-                                                <div class="cc-admin-result-subtitle">
+                                                <div class="cc-admin-result-subtitle cc-content-text">
                                                     {{ $unidad->marca ?: 'Sin marca registrada' }}
                                                 </div>
                                             </div>

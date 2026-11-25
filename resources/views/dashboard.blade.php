@@ -142,7 +142,7 @@
                             <div class="cc-callout-title">
                                 Acceso por rol
                             </div>
-                            <div class="cc-callout-text">
+                            <div class="cc-callout-text cc-content-text">
                                 Las acciones visibles dependen de los permisos asignados.
                             </div>
                         </div>

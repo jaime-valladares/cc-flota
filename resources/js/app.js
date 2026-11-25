@@ -47,7 +47,10 @@ document.addEventListener('DOMContentLoaded', function () {
         function updateLabel() {
             const selected = getSelectedCheckboxes();
 
-            if (selected.length === 0 || selected.length === checkboxes.length) {
+            const hasSelection = selected.length > 0 && selected.length < checkboxes.length;
+            label.toggleAttribute('data-cc-filter-has-selection', hasSelection);
+
+            if (! hasSelection) {
                 label.textContent = allText;
                 checkAll.checked = true;
                 checkAll.indeterminate = false;

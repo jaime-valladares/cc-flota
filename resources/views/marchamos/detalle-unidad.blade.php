@@ -107,7 +107,7 @@
                         <div class="cc-profile-meta flex flex-wrap gap-x-5 gap-y-2">
                             <span>
                                 <strong>Marca:</strong>
-                                {{ $unidad->marca ?: 'Sin marca registrada' }}
+                                <span class="cc-content-text">{{ $unidad->marca ?: 'Sin marca registrada' }}</span>
                             </span>
 
                             <span>
@@ -282,7 +282,7 @@
                             <div class="cc-detail-value">
                                 {{ $marchamosActivos }} activos
 
-                                <span class="text-[var(--cc-text-muted)]">
+                                <span class="text-[var(--cc-text-content)]">
                                     · {{ $marchamosHistoricos }} históricos
                                 </span>
                             </div>
@@ -305,7 +305,7 @@
                                         · Incompleta
                                     </span>
                                 @else
-                                    <span class="text-[var(--cc-text-muted)]">
+                                    <span class="text-[var(--cc-text-content)]">
                                         · Sin puntos registrados
                                     </span>
                                 @endif
@@ -503,7 +503,7 @@
                                     <tr>
                                         <td
                                             colspan="7"
-                                            class="text-center text-[var(--cc-text-muted)] py-8"
+                                            class="text-center text-[var(--cc-text-content)] py-8"
                                         >
                                             No se encontraron marchamos para la unidad seleccionada.
                                         </td>

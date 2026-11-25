@@ -426,22 +426,22 @@
                         </form>
 
                         @if ($hayFiltros && $puntosRuta->total() > 0)
-                            <div class="mb-4 flex justify-end text-sm text-[var(--cc-text-muted)]">
+                            <div class="mb-4 flex justify-end text-sm text-[var(--cc-text-content)]">
                                 Mostrando
 
-                                <span class="mx-1 font-bold text-[var(--cc-text-main)]">
+                                <span class="mx-1 font-bold text-[var(--cc-text-content)]">
                                     {{ $puntosRuta->firstItem() }}
                                 </span>
 
                                 -
 
-                                <span class="mx-1 font-bold text-[var(--cc-text-main)]">
+                                <span class="mx-1 font-bold text-[var(--cc-text-content)]">
                                     {{ $puntosRuta->lastItem() }}
                                 </span>
 
                                 de
 
-                                <span class="ml-1 font-bold text-[var(--cc-text-main)]">
+                                <span class="ml-1 font-bold text-[var(--cc-text-content)]">
                                     {{ $puntosRuta->total() }}
                                 </span>
                             </div>

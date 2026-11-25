@@ -228,7 +228,7 @@
 
         <div class="cc-field cc-col-span-2">
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p class="text-sm leading-relaxed text-[var(--cc-text-muted)]">
+                <p class="text-sm leading-relaxed text-[var(--cc-text-content)]">
                     Registre al menos un tanque para que la gasolinera pueda operar.
                     El volumen actual generará una carga inicial de inventario.
                 </p>

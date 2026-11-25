@@ -102,7 +102,7 @@
 
         <div class="mt-5 border-t border-[var(--cc-card-border)] pt-5">
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                <p class="text-sm text-[var(--cc-text-muted)] leading-relaxed">
+                <p class="text-sm text-[var(--cc-text-content)] leading-relaxed">
                     {{ $modoAdministrar ? 'Desde esta pantalla podrá acceder a la ficha administrativa o editar una licencia.' : 'La consulta permite visualizar licencias, sin modificar información.' }}
                 </p>
 
@@ -140,13 +140,13 @@
     </div>
 
     @if ($hayFiltros && $licencias->total() > 0)
-        <div class="text-sm text-[var(--cc-text-muted)]">
+        <div class="text-sm text-[var(--cc-text-content)]">
             Mostrando
-            <span class="font-bold text-[var(--cc-text-main)]">{{ $licencias->firstItem() }}</span>
+            <span class="font-bold text-[var(--cc-text-content)]">{{ $licencias->firstItem() }}</span>
             -
-            <span class="font-bold text-[var(--cc-text-main)]">{{ $licencias->lastItem() }}</span>
+            <span class="font-bold text-[var(--cc-text-content)]">{{ $licencias->lastItem() }}</span>
             de
-            <span class="font-bold text-[var(--cc-text-main)]">{{ $licencias->total() }}</span>
+            <span class="font-bold text-[var(--cc-text-content)]">{{ $licencias->total() }}</span>
         </div>
     @endif
 </div>

@@ -340,7 +340,7 @@
                                         <tr>
                                             <td
                                                 colspan="6"
-                                                class="text-center text-[var(--cc-text-muted)] py-8"
+                                                class="text-center text-[var(--cc-text-content)] py-8"
                                             >
                                                 La unidad no tiene puntos de seguridad disponibles para asignación.
                                             </td>

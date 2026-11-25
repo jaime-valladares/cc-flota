@@ -114,24 +114,24 @@
                         </div>
 
                         <div class="cc-profile-meta">
-                            <span>
+                            <span class="cc-content-text">
                                 {{ $unidad->marca ?: 'Sin marca registrada' }}
                             </span>
 
                             @if ($unidad->empresa)
                                 <span>
                                     Empresa:
-                                    {{ $unidad->empresa->nombre_comercial ?: $unidad->empresa->nombre_legal }}
+                                    <span class="cc-content-text">{{ $unidad->empresa->nombre_comercial ?: $unidad->empresa->nombre_legal }}</span>
                                 </span>
                             @else
                                 <span>
-                                    Empresa: Sin empresa
+                                    Empresa: <span class="cc-content-text">Sin empresa</span>
                                 </span>
                             @endif
 
                             <span>
                                 Modelo:
-                                {{ $unidad->modelo_medicion_texto }}
+                                <span class="cc-content-text">{{ $unidad->modelo_medicion_texto }}</span>
                             </span>
                         </div>
                     </div>

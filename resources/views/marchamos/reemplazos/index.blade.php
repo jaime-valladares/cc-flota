@@ -373,7 +373,7 @@
                                             </span>
                                         </div>
 
-                                        <div class="cc-admin-result-subtitle">
+                                        <div class="cc-admin-result-subtitle cc-content-text">
                                             {{ $unidad->marca ?: 'Sin marca registrada' }}
                                         </div>
                                     </div>

@@ -32,6 +32,7 @@
     --cc-card-border-strong: #C7D7DE;
     --cc-border: var(--cc-card-border);
 
+    --cc-text-content: #212121;
     --cc-text-main: #102832;
     --cc-text-heading: #063B4A;
     --cc-text-muted: #5F7280;
@@ -716,6 +717,14 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         background-color 0.18s ease;
 }
 
+input.cc-input:enabled:not([type="checkbox"], [type="radio"], [type="file"], [type="button"], [type="submit"], [type="reset"]),
+textarea.cc-input:enabled,
+select.cc-input:enabled:not(:has(option[value=""]:checked)),
+.cc-filter-multiselect-toggle:enabled [data-cc-filter-label][data-cc-filter-has-selection],
+[data-cc-filter-multiselect]:has([data-cc-filter-master]):has([data-cc-filter-checkbox]:checked) .cc-filter-multiselect-toggle:enabled [data-cc-filter-label] {
+    color: var(--cc-text-content);
+}
+
 .cc-input::placeholder {
     color: #9AAAB3;
 }
@@ -930,7 +939,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     font-family: var(--cc-font-heading);
     font-size: 2rem;
     font-weight: 800;
-    color: var(--cc-text-heading);
+    color: var(--cc-text-content);
     letter-spacing: -0.045em;
     line-height: 1;
 }
@@ -1048,7 +1057,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
 .cc-empty-panel p {
     margin-top: 0.3rem;
     font-size: 0.9rem;
-    color: var(--cc-text-muted);
+    color: var(--cc-text-content);
     line-height: 1.5;
 }
 
@@ -1101,7 +1110,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     font-family: var(--cc-font-heading);
     font-size: 1.05rem;
     font-weight: 800;
-    color: var(--cc-text-heading);
+    color: var(--cc-text-content);
     line-height: 1;
 }
 
@@ -1409,7 +1418,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     font-family: var(--cc-font-body);
     font-size: var(--cc-structured-value-font-size);
     font-weight: 650;
-    color: var(--cc-text-main);
+    color: var(--cc-text-content);
     line-height: 1.45;
     overflow-wrap: anywhere;
 }
@@ -1543,7 +1552,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     font-family: var(--cc-font-body);
     font-size: var(--cc-structured-value-font-size);
     font-weight: 750;
-    color: var(--cc-text-main);
+    color: var(--cc-text-content);
     line-height: 1.35;
 }
 
@@ -1551,7 +1560,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     margin-top: 0.12rem;
     font-size: 0.8rem;
     font-weight: 500;
-    color: var(--cc-text-muted);
+    color: var(--cc-text-content);
     line-height: 1.35;
 }
 
@@ -1630,7 +1639,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     font-size: var(--cc-table-body-font-size);
     font-weight: 500;
     line-height: 1.45;
-    color: var(--cc-text-main);
+    color: var(--cc-text-content);
     border-bottom: 1px solid #EDF3F5;
     vertical-align: middle;
 }
@@ -1867,7 +1876,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
 }
 
 .cc-empty-state {
-    color: var(--cc-text-muted);
+    color: var(--cc-text-content);
     font-size: 0.95rem;
     padding: 1rem 0;
 }
@@ -2716,7 +2725,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     font-size: 1.08rem;
     font-weight: 450;
     line-height: 1.72;
-    color: var(--cc-text-muted);
+    color: var(--cc-text-content);
 }
 
 .cc-home-divider {
@@ -2766,7 +2775,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     margin-top: 0.45rem;
     font-size: 0.86rem;
     line-height: 1.55;
-    color: var(--cc-text-muted);
+    color: var(--cc-text-content);
 }
 
 .cc-home-visual {
@@ -2878,7 +2887,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     max-width: 58rem;
     font-size: 0.9rem;
     line-height: 1.58;
-    color: var(--cc-text-muted);
+    color: var(--cc-text-content);
 }
 
 .cc-home-note-badge {
@@ -2995,7 +3004,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     margin-top: 0.45rem;
     font-size: 0.96rem;
     font-weight: 450;
-    color: var(--cc-text-muted);
+    color: var(--cc-text-content);
     line-height: 1.62;
 }
 
@@ -3016,7 +3025,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     font-weight: 800;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--cc-text-muted);
+    color: var(--cc-text-content);
 }
 
 .cc-callout {
@@ -3170,7 +3179,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     max-width: 34rem;
     font-size: 0.92rem;
     line-height: 1.6;
-    color: var(--cc-text-muted);
+    color: var(--cc-text-content);
 }
 
 /* =========================================================
@@ -3651,7 +3660,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
 
 .cc-bi-filter-empty {
     padding: 0.65rem;
-    color: var(--cc-text-muted);
+    color: var(--cc-text-content);
     font-size: 0.78rem;
     font-weight: 650;
 }
@@ -3758,7 +3767,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     font-size: clamp(1.05rem, 1.25vw, 1.38rem);
     font-weight: 800;
     line-height: 1;
-    color: var(--cc-text-heading);
+    color: var(--cc-text-content);
     letter-spacing: -0.05em;
     text-align: right;
     min-width: 2.4rem;
@@ -4521,9 +4530,14 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     font-size: var(--cc-table-body-font-size);
     font-weight: 500;
     line-height: 1.45;
-    color: var(--cc-text-main);
+    color: var(--cc-text-content);
     border-bottom: 1px solid #EDF3F5;
     vertical-align: middle;
+}
+
+/* Keep the original inherited color for controls inside recolored records. */
+:where(.cc-table tbody td, .cc-table-adaptive tbody td, .cc-detail-value, .cc-result-value, .cc-admin-result-value, .cc-va-structured-value) :where(a, button) {
+    color: var(--cc-text-main);
 }
 
 .cc-table-adaptive tbody td span,
@@ -4555,7 +4569,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
 
 .cc-table-adaptive-strong {
     font-weight: 800;
-    color: var(--cc-text-heading);
+    color: var(--cc-text-content);
 }
 
 .cc-table-adaptive-muted {
@@ -4564,6 +4578,12 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     font-weight: 600;
     color: var(--cc-text-muted);
     line-height: 1.35;
+}
+
+.cc-content-text,
+.cc-table-adaptive-muted.cc-content-text,
+.cc-admin-result-subtitle.cc-content-text {
+    color: var(--cc-text-content);
 }
 
 .cc-table-adaptive-nowrap {
@@ -4672,7 +4692,6 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     margin-top: 0.22rem;
     font-size: 0.9rem;
     font-weight: 750;
-    color: var(--cc-text-main);
     line-height: 1.35;
     overflow-wrap: anywhere;
 }
@@ -4681,9 +4700,13 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     margin-top: 0.12rem;
     font-size: 0.8rem;
     font-weight: 500;
-    color: var(--cc-text-muted);
     line-height: 1.35;
     overflow-wrap: anywhere;
+}
+
+/* Let explicit text colors override the neutral default. */
+:where(.cc-admin-result-value, .cc-admin-result-value-muted) {
+    color: var(--cc-text-content);
 }
 
 .cc-admin-result-actions {
@@ -5162,6 +5185,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
 }
 
 .cc-va-scope .cc-field-help {
+    color: var(--cc-text-content);
     font-family: var(--cc-font-body);
     font-size: var(--cc-va-auxiliary-text-size);
     font-weight: 500;
@@ -5200,7 +5224,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     font-size: var(--cc-structured-value-font-size);
     font-weight: 650;
     line-height: 1.45;
-    color: var(--cc-text-main);
+    color: var(--cc-text-content);
 }
 
 .cc-va-auxiliary-text {
@@ -5208,7 +5232,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     font-size: var(--cc-va-auxiliary-text-size);
     font-weight: 500;
     line-height: 1.5;
-    color: var(--cc-text-muted);
+    color: var(--cc-text-content);
 }
 
 /* Distribución propia de Usuarios, compartida por consulta y ventana. */
@@ -5318,7 +5342,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         margin-top: .45rem;
         font-size: .86rem;
         line-height: 1.55;
-        color: var(--cc-text-muted);
+        color: var(--cc-text-content);
     }
 
     .cc-operational-header {
@@ -5417,7 +5441,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         padding: .3rem .55rem;
         border: 1px solid var(--cc-border);
         border-radius: 999px;
-        color: var(--cc-text-muted);
+        color: var(--cc-text-content);
         font-size: .72rem;
         font-weight: 700;
         white-space: nowrap;
@@ -5468,7 +5492,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
 
     .cc-operational-alert-detail {
         margin: .65rem 0 0;
-        color: var(--cc-text-muted);
+        color: var(--cc-text-content);
         font-size: .76rem;
         line-height: 1.4;
     }
@@ -5527,6 +5551,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     }
 
     .cc-operational-bar-value {
+        color: var(--cc-text-content);
         text-align: right;
     }
 
@@ -5735,7 +5760,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
 }
 
 .cc-aud-abast-kpi-value {
-    color: var(--cc-text-main);
+    color: var(--cc-text-content);
     font-family: "Plus Jakarta Sans", sans-serif;
     font-size: clamp(1.15rem, 1.45vw, 1.4rem);
     font-weight: 800;
@@ -5744,7 +5769,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
 }
 
 .cc-aud-abast-kpi-meta {
-    color: var(--cc-text-muted);
+    color: var(--cc-text-content);
     font-size: .76rem;
     line-height: 1.35;
 }
@@ -5854,7 +5879,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     align-items: center;
     justify-content: center;
     padding: 2rem;
-    color: var(--cc-text-muted);
+    color: var(--cc-text-content);
     text-align: center;
 }
 
@@ -6018,7 +6043,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     padding: .3rem .55rem;
     border-radius: 999px;
     background: var(--cc-bg-soft);
-    color: var(--cc-text-main);
+    color: var(--cc-text-content);
     font-size: .78rem;
     font-weight: 800;
     text-align: center;
@@ -6116,7 +6141,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
 .cc-audit-chart-detail {
     min-height: 1.25rem;
     margin-top: .75rem;
-    color: var(--cc-text-main);
+    color: var(--cc-text-content);
     font-size: .8rem;
     font-weight: 650;
 }
@@ -6195,7 +6220,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     padding: 1.5rem;
     border: 1px dashed var(--cc-border);
     border-radius: .8rem;
-    color: var(--cc-text-muted);
+    color: var(--cc-text-content);
     font-size: .84rem;
     text-align: center;
 }
@@ -6548,7 +6573,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     font-weight: 800;
     line-height: 1.05;
     letter-spacing: -0.035em;
-    color: var(--cc-text-heading);
+    color: var(--cc-text-content);
 }
 
 .cc-va-analytics .cc-analytics-kpi-meta {
@@ -6557,7 +6582,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     font-size: var(--cc-va-auxiliary-text-size);
     font-weight: 500;
     line-height: 1.35;
-    color: var(--cc-text-muted);
+    color: var(--cc-text-content);
 }
 
 .cc-va-analytics .cc-analytics-chart {
@@ -6801,7 +6826,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     font-family: var(--cc-font-body);
     font-size: 0.84rem;
     font-weight: 500;
-    color: var(--cc-text-muted);
+    color: var(--cc-text-content);
 }
 
 .cc-va-analytics .cc-analytics-alert-grid {
@@ -6831,7 +6856,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     font-family: var(--cc-font-body);
     font-size: var(--cc-va-auxiliary-text-size);
     font-weight: 500;
-    color: var(--cc-text-muted);
+    color: var(--cc-text-content);
     align-items: center;
     gap: 0.2rem;
 }
@@ -6839,7 +6864,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
 .cc-va-analytics .cc-result-count-value {
     margin-inline: 0.25rem;
     font-weight: 800;
-    color: var(--cc-text-main);
+    color: var(--cc-text-content);
 }
 
 .cc-va-analytics .cc-audit-events-table {
@@ -6996,7 +7021,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     }
 
     .cc-va-analytics .cc-analytics-summary.cc-analytics-summary-three .cc-summary-strip-value {
-        color: var(--cc-text-main);
+        color: var(--cc-text-content);
         font-size: 1.25rem;
         font-weight: 800;
         line-height: 1.15;
@@ -7418,7 +7443,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     .cc-va-analytics .cc-analytics-chart-detail {
         min-height: 1.3rem;
         margin-top: .4rem;
-        color: var(--cc-text-muted);
+        color: var(--cc-text-content);
         font-size: .76rem;
         text-align: center;
     }
@@ -7431,7 +7456,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         padding: 2rem;
         border: 1px dashed var(--cc-border);
         border-radius: .8rem;
-        color: var(--cc-text-muted);
+        color: var(--cc-text-content);
         font-size: .85rem;
         line-height: 1.5;
         text-align: center;
@@ -7507,7 +7532,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
     }
 
     .cc-va-analytics .cc-analytics-route .cc-route-summary-value-neutral {
-        color: var(--cc-text-main);
+        color: var(--cc-text-content);
     }
 
     .cc-va-analytics .cc-analytics-route .cc-analytics-actions {
@@ -7563,7 +7588,7 @@ details.cc-sidebar-group[open] > .cc-sidebar-subnav {
         padding: 2rem;
         border: 1px dashed var(--cc-border);
         border-radius: .8rem;
-        color: var(--cc-text-muted);
+        color: var(--cc-text-content);
         font-size: .85rem;
         text-align: center;
     }

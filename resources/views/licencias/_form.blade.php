@@ -203,7 +203,7 @@
         >
             <div
                 id="unidad_resumen_identidad"
-                class="text-xs font-medium leading-5 text-[var(--cc-text-muted)]"
+                class="text-xs font-medium leading-5 text-[var(--cc-text-content)]"
             ></div>
         </div>
 
@@ -247,7 +247,7 @@
 
             <div
                 data-tanques-unidad-vacia
-                class="mt-1 text-xs leading-5 text-[var(--cc-text-muted)]"
+                class="mt-1 text-xs leading-5 text-[var(--cc-text-content)]"
                 style="{{ filled($unidadActual) ? 'display: none;' : '' }}"
             >
                 Seleccione una unidad para ver sus tanques.
@@ -255,7 +255,7 @@
 
             <div
                 data-tanques-unidad-ayuda
-                class="mt-1 text-xs leading-5 text-[var(--cc-text-muted)]"
+                class="mt-1 text-xs leading-5 text-[var(--cc-text-content)]"
                 style="{{ filled($unidadActual) ? '' : 'display: none;' }}"
             >
                 Seleccione uno o más tanques.
@@ -274,12 +274,12 @@
             >
                 <div
                     id="unidad_resumen_cobertura"
-                    class="font-medium text-[var(--cc-text)]"
+                    class="font-medium text-[var(--cc-text-content)]"
                 ></div>
 
                 <div
                     id="unidad_resumen_plantilla"
-                    class="text-[var(--cc-text-muted)]"
+                    class="text-[var(--cc-text-content)]"
                 ></div>
             </div>
         </div>
@@ -351,7 +351,7 @@
             </div>
         @enderror
 
-        <div class="mt-2 text-xs leading-5 text-[var(--cc-text-muted)]">
+        <div class="mt-2 text-xs leading-5 text-[var(--cc-text-content)]">
             Una fecha futura dejará la licencia pendiente de activación
             hasta que llegue el día indicado.
         </div>

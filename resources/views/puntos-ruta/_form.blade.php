@@ -47,7 +47,7 @@
                 value="{{ $puntoRuta->empresa_id }}"
             >
 
-            <div class="mt-2 text-sm text-[var(--cc-text-muted)]">
+            <div class="mt-2 text-sm text-[var(--cc-text-content)]">
                 La empresa propietaria no puede modificarse después de registrar el punto.
             </div>
         @elseif ($esUsuarioDieselCop)

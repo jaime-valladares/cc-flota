@@ -528,22 +528,22 @@
                         </form>
 
                         @if ($hayFiltros && $licencias->total() > 0)
-                            <div class="mb-4 flex justify-end text-sm text-[var(--cc-text-muted)]">
+                            <div class="mb-4 flex justify-end text-sm text-[var(--cc-text-content)]">
                                 Mostrando
 
-                                <span class="mx-1 font-bold text-[var(--cc-text-main)]">
+                                <span class="mx-1 font-bold text-[var(--cc-text-content)]">
                                     {{ $licencias->firstItem() }}
                                 </span>
 
                                 -
 
-                                <span class="mx-1 font-bold text-[var(--cc-text-main)]">
+                                <span class="mx-1 font-bold text-[var(--cc-text-content)]">
                                     {{ $licencias->lastItem() }}
                                 </span>
 
                                 de
 
-                                <span class="ml-1 font-bold text-[var(--cc-text-main)]">
+                                <span class="ml-1 font-bold text-[var(--cc-text-content)]">
                                     {{ $licencias->total() }}
                                 </span>
                             </div>

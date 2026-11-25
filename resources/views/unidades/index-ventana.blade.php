@@ -506,22 +506,22 @@
                         @endif
 
                         @if ($hayFiltros && $unidades->total() > 0)
-                            <div class="mb-4 flex justify-end text-sm text-[var(--cc-text-muted)]">
+                            <div class="mb-4 flex justify-end text-sm text-[var(--cc-text-content)]">
                                 Mostrando
 
-                                <span class="mx-1 font-bold text-[var(--cc-text-main)]">
+                                <span class="mx-1 font-bold text-[var(--cc-text-content)]">
                                     {{ $unidades->firstItem() }}
                                 </span>
 
                                 -
 
-                                <span class="mx-1 font-bold text-[var(--cc-text-main)]">
+                                <span class="mx-1 font-bold text-[var(--cc-text-content)]">
                                     {{ $unidades->lastItem() }}
                                 </span>
 
                                 de
 
-                                <span class="ml-1 font-bold text-[var(--cc-text-main)]">
+                                <span class="ml-1 font-bold text-[var(--cc-text-content)]">
                                     {{ $unidades->total() }}
                                 </span>
                             </div>
@@ -623,7 +623,7 @@
                                                     @if ($unidad->empresa)
                                                         {{ $unidad->empresa->nombre_comercial ?: $unidad->empresa->nombre_legal }}
                                                     @else
-                                                        <span class="text-[var(--cc-text-muted)]">
+                                                        <span class="text-[var(--cc-text-content)]">
                                                             Sin empresa
                                                         </span>
                                                     @endif
@@ -693,7 +693,7 @@
                                                                 Inicia:
                                                                 {{ $licencia->fecha_activacion?->format('d/m/Y') ?? 'No registrada' }}
                                                             @elseif ($licencia->esta_vencida || $licencia->esta_vigente)
-                                                                {{ $licencia->vencimiento_relativo_texto }}
+                                                                <span class="cc-content-text">{{ $licencia->vencimiento_relativo_texto }}</span>
                                                             @elseif ($licencia->estado === 'inactiva')
                                                                 Inactivada administrativamente
                                                             @endif
@@ -717,7 +717,7 @@
                                                             : 'Pendiente' }}
                                                     </div>
 
-                                                    <div class="mt-1 text-xs text-[var(--cc-text-muted)] whitespace-nowrap">
+                                                    <div class="mt-1 text-xs text-[var(--cc-text-content)] whitespace-nowrap">
                                                         {{ $unidad->total_puntos_con_marchamo_asignado }}
                                                         de
                                                         {{ $unidad->total_puntos_que_requieren_marchamo }}

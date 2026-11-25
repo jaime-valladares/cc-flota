@@ -40,17 +40,17 @@
     @endif
 
     @if ($hayFiltros && $usuarios->total() > 0)
-        <div class="mb-4 flex justify-end text-sm text-[var(--cc-text-muted)]">
+        <div class="mb-4 flex justify-end text-sm text-[var(--cc-text-content)]">
             Mostrando
-            <span class="mx-1 font-bold text-[var(--cc-text-main)]">
+            <span class="mx-1 font-bold text-[var(--cc-text-content)]">
                 {{ $usuarios->firstItem() }}
             </span>
             -
-            <span class="mx-1 font-bold text-[var(--cc-text-main)]">
+            <span class="mx-1 font-bold text-[var(--cc-text-content)]">
                 {{ $usuarios->lastItem() }}
             </span>
             de
-            <span class="ml-1 font-bold text-[var(--cc-text-main)]">
+            <span class="ml-1 font-bold text-[var(--cc-text-content)]">
                 {{ $usuarios->total() }}
             </span>
         </div>
@@ -87,7 +87,7 @@
                                 <div class="cc-table-adaptive-strong">
                                     {{ trim($usuario->name . ' ' . ($usuario->apellido ?? '')) }}
                                 </div>
-                                <div class="cc-table-adaptive-muted">
+                                <div class="cc-table-adaptive-muted cc-content-text">
                                     {{ $usuario->email }}
                                 </div>
                             </td>
@@ -97,7 +97,7 @@
                                     <div class="cc-table-adaptive-strong">
                                         {{ $usuario->empresa->nombre_comercial ?: $usuario->empresa->nombre_legal }}
                                     </div>
-                                    <div class="cc-table-adaptive-muted">
+                                    <div class="cc-table-adaptive-muted cc-content-text">
                                         {{ $usuario->empresa->nit }}
                                     </div>
                                 @else
@@ -109,7 +109,7 @@
                                 <div class="cc-table-adaptive-strong">
                                     {{ $usuario->role->nombre ?? 'Sin rol' }}
                                 </div>
-                                <div class="cc-table-adaptive-muted">
+                                <div class="cc-table-adaptive-muted cc-content-text">
                                     {{ $usuario->role->codigo ?? '—' }}
                                 </div>
                             </td>

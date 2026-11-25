@@ -15,7 +15,7 @@
 
     <div class="px-5 py-4">
         @if ($puntosExtra->isEmpty())
-            <p class="text-sm text-[var(--cc-text-muted)] mb-4">
+            <p class="text-sm text-[var(--cc-text-content)] mb-4">
                 Esta unidad todavía no tiene puntos de seguridad extra.
             </p>
         @else

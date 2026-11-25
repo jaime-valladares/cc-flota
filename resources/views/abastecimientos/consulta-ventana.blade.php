@@ -726,13 +726,13 @@
                 )
                     <div
                         class="mb-4 flex justify-end
-                               text-sm text-[var(--cc-text-muted)]"
+                               text-sm text-[var(--cc-text-content)]"
                     >
                         Mostrando
 
                         <span
                             class="mx-1 font-bold
-                                   text-[var(--cc-text-main)]"
+                                   text-[var(--cc-text-content)]"
                         >
                             {{ $abastecimientos->firstItem() }}
                         </span>
@@ -741,7 +741,7 @@
 
                         <span
                             class="mx-1 font-bold
-                                   text-[var(--cc-text-main)]"
+                                   text-[var(--cc-text-content)]"
                         >
                             {{ $abastecimientos->lastItem() }}
                         </span>
@@ -750,7 +750,7 @@
 
                         <span
                             class="ml-1 font-bold
-                                   text-[var(--cc-text-main)]"
+                                   text-[var(--cc-text-content)]"
                         >
                             {{ $abastecimientos->total() }}
                         </span>
@@ -924,7 +924,7 @@
                                             </div>
 
                                             <div
-                                                class="cc-table-adaptive-muted"
+                                                class="cc-table-adaptive-muted cc-content-text"
                                             >
                                                 {{
                                                     optional(
@@ -958,7 +958,7 @@
                                             </div>
 
                                             <div
-                                                class="cc-table-adaptive-muted"
+                                                class="cc-table-adaptive-muted cc-content-text"
                                             >
                                                 {{
                                                     $abastecimiento
@@ -992,11 +992,11 @@
                                                 class="cc-table-adaptive-muted"
                                             >
                                                 Lic.
-                                                {{
+                                                <span class="cc-content-text">{{
                                                     $abastecimiento
                                                         ->motorista_licencia_snapshot
                                                     ?: 'No disponible'
-                                                }}
+                                                }}</span>
                                             </div>
                                         </td>
 
@@ -1016,7 +1016,7 @@
                                             </div>
 
                                             <div
-                                                class="cc-table-adaptive-muted"
+                                                class="cc-table-adaptive-muted cc-content-text"
                                             >
                                                 {{ $origenNombre }}
                                             </div>
@@ -1043,7 +1043,7 @@
                                                 class="cc-table-adaptive-muted"
                                             >
                                                 Final:
-                                                {{
+                                                <span class="cc-content-text">{{
                                                     number_format(
                                                         (float)
                                                         $abastecimiento
@@ -1051,7 +1051,7 @@
                                                         2
                                                     )
                                                 }}
-                                                gal
+                                                gal</span>
                                             </div>
                                         </td>
 
@@ -1074,14 +1074,14 @@
                                                 class="cc-table-adaptive-muted"
                                             >
                                                 Km:
-                                                {{
+                                                <span class="cc-content-text">{{
                                                     number_format(
                                                         (float)
                                                         $abastecimiento
                                                             ->kilometraje_actual,
                                                         2
                                                     )
-                                                }}
+                                                }}</span>
 
                                                 @if (
                                                     ! is_null(
@@ -1090,14 +1090,14 @@
                                                     )
                                                 )
                                                     · H:
-                                                    {{
+                                                    <span class="cc-content-text">{{
                                                         number_format(
                                                             (float)
                                                             $abastecimiento
                                                                 ->horometro_actual,
                                                             2
                                                         )
-                                                    }}
+                                                    }}</span>
                                                 @endif
                                             </div>
                                         </td>
