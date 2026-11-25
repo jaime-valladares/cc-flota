@@ -4196,6 +4196,11 @@ select.cc-input:enabled:not(:has(option[value=""]:checked)),
     overflow: visible;
 }
 
+.cc-main-content .cc-filter-panel,
+.cc-main-content .cc-filter-panel-inline {
+    isolation: isolate;
+}
+
 .cc-standard-filter-grid {
     position: relative;
     z-index: 80;
