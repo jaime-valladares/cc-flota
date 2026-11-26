@@ -10,7 +10,11 @@
 @include('reportes.partials.pdf-indicadores-estilos')
 @endif
 </style></head><body>
-<div class="header"><table class="header-table"><tr><td><img class="logo" src="{{ $logoPath }}"></td><td><div class="title">{{ $titulo }}</div><div class="subtitle">Modelo fijo: {{ $tituloCorto }} · Generado: {{ $generadoEn->format('d/m/Y H:i') }}</div></td></tr></table></div>
+<div class="header"><table class="header-table"><tr><td><img class="logo" src="{{ $logoPath }}"></td><td><div class="title">{{ $titulo }}</div><div class="subtitle">Modelo fijo: {{ $tituloCorto }} · Generado: {{ $generadoEn->format('d/m/Y H:i') }}</div>
+@if(isset($periodoConsulta))
+@include('reportes.partials.pdf-periodo-consulta')
+@endif
+</td></tr></table></div>
 @if($filtrosAplicados!==[])<div class="filters"><strong>Filtros aplicados:</strong> @foreach($filtrosAplicados as $e=>$v)<span class="filter"><strong>{{ $e }}:</strong> {{ $v }}</span>@endforeach</div>@endif
 <table class="summary"><tr>@foreach([['Ciclos',$resumen['ciclos'],''],[$variableLabel,number_format($resumen['operacion'],2).' '.$variableUnidad,''],['Consumo teórico',number_format($resumen['consumo_teorico'],2).' gal',''],['Consumo real',number_format($resumen['consumo_real'],2).' gal','']] as [$e,$v,$c])<td><div class="summary-value {{ $c }}">{{ $v }}</div><div class="summary-label">{{ $e }}</div></td>@endforeach</tr><tr>@foreach([['Galones ahorrados',number_format($resumen['ahorro_galones'],2).' gal',$destacarIndicadores ? \App\View\PdfColorIndicador::valor($resumen['ahorro_galones'], 'Ahorro') : 'success'],['Sobreconsumo',number_format($resumen['sobreconsumo_galones'],2).' gal',$destacarIndicadores ? \App\View\PdfColorIndicador::valor($resumen['sobreconsumo_galones'], 'Sobreconsumo') : 'danger'],['Impacto neto',($resumen['impacto_neto']<0?'-':'').'$'.number_format(abs($resumen['impacto_neto']),2),$destacarIndicadores ? \App\View\PdfColorIndicador::valor($resumen['impacto_neto']) : ($resumen['impacto_neto']>0?'success':($resumen['impacto_neto']<0?'danger':''))]] as [$e,$v,$c])<td @if($loop->last) colspan="2" @endif><div class="summary-value {{ $c }}">{{ $v }}</div><div class="summary-label">{{ $e }}</div></td>@endforeach</tr></table>
 <table class="report-table"><thead><tr><th>Empresa</th><th>Unidad</th><th>Motorista</th><th>Período</th><th>{{ $variableLabel }}</th><th>{{ $rendimientoLabel }}</th><th>Consumo teórico</th><th>Consumo real</th><th>Diferencia</th><th>Resultado</th><th>Impacto</th></tr></thead><tbody>

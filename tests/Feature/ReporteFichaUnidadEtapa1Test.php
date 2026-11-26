@@ -840,3 +840,174 @@ test('resumen de unidades aparece entre filtros y tabla solo con resultados cons
     expect(strpos($html, '<form'))->toBeLessThan(strpos($html, 'data-report-summary'))
         ->and(strpos($html, 'data-report-summary'))->toBeLessThan(strpos($html, 'cc-result-count'));
 });
+
+test('el periodo filtra altas por meses completos y completa solo los limites omitidos', function () {
+    $this->travelTo(now()->setDate(2026, 6, 15)->setTime(12, 0));
+    prepararPermisosReporteUnidades($this);
+
+    $empresa = empresaReporteUnidades('PERIODO-A');
+    $otra = empresaReporteUnidades('PERIODO-B');
+    $registros = [
+        ['PER-ANTERIOR', '2025-12-31 23:59:59', $empresa],
+        ['PER-INICIO', '2026-01-01 00:00:00', $empresa],
+        ['PER-FIN', '2026-02-28 23:59:59', $empresa],
+        ['PER-SIGUIENTE', '2026-03-01 00:00:00', $empresa],
+        ['PER-AJENA', '2024-10-01 00:00:00', $otra],
+    ];
+    foreach ($registros as [$placa, $fecha, $propietaria]) {
+        unidadReporteUnidades($propietaria, $placa)->forceFill(['created_at' => $fecha])->save();
+    }
+
+    $casos = [
+        [[], ['PER-ANTERIOR', 'PER-FIN', 'PER-INICIO', 'PER-SIGUIENTE'], '12/2025', '06/2026'],
+        [['desde' => '2026-01', 'hasta' => '2026-02'], ['PER-FIN', 'PER-INICIO'], '01/2026', '02/2026'],
+        [['desde' => '2026-03'], ['PER-SIGUIENTE'], '03/2026', '06/2026'],
+        [['hasta' => '2026-01'], ['PER-ANTERIOR', 'PER-INICIO'], '12/2025', '01/2026'],
+        [['hasta' => '2025-11'], [], null, '11/2025'],
+    ];
+
+    $captura = null;
+    $pdf = Mockery::mock(\Barryvdh\DomPDF\PDF::class);
+    Pdf::shouldReceive('loadView')->times(6)->withArgs(function (string $vista, array $datos) use (&$captura): bool {
+        $captura = $datos;
+
+        return $vista === 'reportes.unidades.pdf-general';
+    })->andReturn($pdf);
+    $pdf->shouldReceive('setPaper')->times(6)->with('a4', 'landscape')->andReturnSelf();
+    $pdf->shouldReceive('download')->times(6)->andReturn(response('PDF'));
+
+    $this->actingAs(usuarioReporteUnidades(User::ROL_EMPRESA_ADMIN, $empresa));
+    foreach ($casos as [$filtros, $placas, $desde, $hasta]) {
+        $this->get(route('reportes.unidades.pdf', ['consultar' => 1] + $filtros))->assertOk();
+        expect($captura['unidades']->pluck('placa')->all())->toBe($placas)
+            ->and($captura['periodoDesde'])->toBe($desde)
+            ->and($captura['periodoHasta'])->toBe($hasta)
+            ->and($captura['resumen']['activas'])->toBe(count($placas));
+    }
+
+    $html = view('reportes.unidades.pdf-general', $captura)->render();
+    expect($html)->toContain('Desde: Sin fecha de registro disponible', 'Hasta: 11/2025', 'No hay unidades que coincidan');
+
+    $this->actingAs(usuarioReporteUnidades(User::ROL_DIESEL_ADMIN))
+        ->get(route('reportes.unidades.pdf', ['consultar' => 1, 'empresa_ids' => [$empresa->id, $otra->id]]))
+        ->assertOk();
+    expect($captura['unidades'])->toHaveCount(5)->and($captura['periodoDesde'])->toBe('10/2024');
+});
+
+test('los meses se conservan en página ventana y enlace de descarga y se validan en el servidor', function () {
+    $this->travelTo(now()->setDate(2026, 6, 15));
+    prepararPermisosReporteUnidades($this);
+    $empresa = empresaReporteUnidades('PERIODO-WEB');
+    unidadReporteUnidades($empresa, 'PER-WEB')->forceFill(['created_at' => '2026-02-01 00:00:00'])->save();
+    $this->actingAs(usuarioReporteUnidades(User::ROL_DIESEL_ADMIN));
+
+    $query = ['consultar' => 1, 'desde' => '2026-01', 'hasta' => '2026-02'];
+    foreach (['reportes.unidades.index', 'reportes.unidades.ventana'] as $nombre) {
+        $this->get(route($nombre, $query))->assertOk()
+            ->assertSee('value="2026-01"', false)
+            ->assertSee('value="2026-02"', false)
+            ->assertSee('class="cc-unidades-periodo-row"', false)
+            ->assertSee('id="desde-selector"', false)
+            ->assertSee('id="hasta-selector"', false)
+            ->assertSee('max="2026-06"', false)
+            ->assertSee('PER-WEB')
+            ->assertSee(route('reportes.unidades.pdf', $query));
+    }
+
+    foreach ([
+        [['desde' => '2026-03', 'hasta' => '2026-02'], 'hasta'],
+        [['desde' => '2026-07'], 'desde'],
+        [['hasta' => '2026-07'], 'hasta'],
+        [['desde' => '02/2026'], 'desde'],
+    ] as [$filtros, $campo]) {
+        $this->getJson(route('reportes.unidades.pdf', ['consultar' => 1] + $filtros))
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors($campo);
+    }
+
+    $this->get(route('reportes.unidades.pdf', $query))->assertOk()
+        ->assertHeader('content-type', 'application/pdf');
+});
+
+test('la descarga desde el enlace del reporte conserva los filtros GET y exporta todas las unidades autorizadas', function () {
+    $this->travelTo(now()->setDate(2026, 11, 25));
+    prepararPermisosReporteUnidades($this);
+    $mc = empresaReporteUnidades('TRANSPORTES MC');
+    $otra = empresaReporteUnidades('OTRA');
+    $ajena = empresaReporteUnidades('AJENA');
+    $grupos = [];
+    foreach ([[$mc, 5, '09'], [$otra, 6, '08'], [$ajena, 5, '07']] as [$empresa, $cantidad, $mes]) {
+        foreach (range(1, $cantidad) as $numero) {
+            $unidad = unidadReporteUnidades($empresa, 'DESC-'.$empresa->id.'-'.$numero);
+            $unidad->forceFill(['created_at' => "2026-{$mes}-01 00:00:00"])->save();
+            $grupos[$empresa->id][] = $unidad;
+        }
+    }
+    $operable = $grupos[$mc->id][0];
+    convertirUnidadEnOperable($operable);
+    $idsMc = collect($grupos[$mc->id])->pluck('id')->all();
+    $idsOtra = collect($grupos[$otra->id])->pluck('id')->all();
+    $todos = array_merge($idsMc, $idsOtra, collect($grupos[$ajena->id])->pluck('id')->all());
+    $admin = usuarioReporteUnidades(User::ROL_DIESEL_ADMIN);
+    $empresaUser = usuarioReporteUnidades(User::ROL_EMPRESA_ADMIN, $mc);
+    $casos = [
+        [$admin, ['empresa_ids' => [$mc->id]], $idsMc, '09/2026', '11/2026'],
+        [$admin, ['empresa_ids' => [$mc->id, $otra->id]], array_merge($idsMc, $idsOtra), '08/2026', '11/2026'],
+        [$admin, ['unidad_ids' => [$idsMc[1], $idsOtra[0]]], [$idsMc[1], $idsOtra[0]], '08/2026', '11/2026'],
+        [$admin, ['empresa_ids' => [$mc->id], 'desde' => '2026-09', 'hasta' => '2026-10'], $idsMc, '09/2026', '10/2026'],
+        [$admin, ['empresa_ids' => [$mc->id], 'estado' => 'activa', 'disponibilidad' => 'operable', 'desde' => '2026-09', 'modelo_medicion' => 'kilometros_galon', 'busqueda' => $operable->placa], [$operable->id], '09/2026', '11/2026'],
+        [$empresaUser, [], $idsMc, '09/2026', '11/2026'],
+        [$admin, [], $todos, '07/2026', '11/2026'],
+    ];
+
+    $captura = null;
+    $descarga = Mockery::mock(\Barryvdh\DomPDF\PDF::class);
+    Pdf::shouldReceive('loadView')->withArgs(function ($vista, $datos) use (&$captura): bool {
+        $captura = $datos;
+
+        return $vista === 'reportes.unidades.pdf-general';
+    })->andReturn($descarga);
+    $descarga->shouldReceive('setPaper')->with('a4', 'landscape')->andReturnSelf();
+    $descarga->shouldReceive('download')->andReturn(response('PDF'));
+
+    $codificarFormulario = static function (array $filtros): string {
+        $partes = [];
+        foreach ($filtros as $clave => $valor) {
+            foreach ((array) $valor as $item) {
+                $partes[] = rawurlencode($clave.(is_array($valor) ? '[]' : '')).'='.rawurlencode((string) $item);
+            }
+        }
+
+        return implode('&', $partes);
+    };
+
+    foreach (['reportes.unidades.index', 'reportes.unidades.ventana'] as $vista) {
+        foreach ($casos as [$usuario, $filtros, $esperados, $desde, $hasta]) {
+            $formulario = ['consultar' => 1] + $filtros + ['desde' => '', 'hasta' => '', 'page' => 1];
+            $respuesta = $this->actingAs($usuario)->get(route($vista).'?'.$codificarFormulario($formulario))->assertOk();
+            preg_match_all('/data-report-unit-row="(\d+)"/', $respuesta->getContent(), $filas);
+            $filasWeb = array_map('intval', $filas[1]);
+            expect(array_diff($filasWeb, $esperados))->toBe([])
+                ->and($filasWeb)->toHaveCount(min(10, count($esperados)));
+
+            $documento = new DOMDocument;
+            $documento->loadHTML($respuesta->getContent(), LIBXML_NOERROR | LIBXML_NOWARNING);
+            $enlace = (new DOMXPath($documento))->query('//a[normalize-space(.)="Descargar PDF"]')->item(0);
+            expect($enlace)->not->toBeNull();
+            $url = $enlace->getAttribute('href');
+            expect($url)->not->toContain('page=');
+
+            $this->get($url)->assertOk();
+            expect($captura['unidades']->pluck('id')->all())->toEqualCanonicalizing($esperados)
+                ->and($captura['resumen']['resultados'])->toBe(count($esperados))
+                ->and($captura['periodoDesde'])->toBe($desde)
+                ->and($captura['periodoHasta'])->toBe($hasta);
+
+            foreach (['empresa_ids', 'unidad_ids'] as $clave) {
+                if (isset($filtros[$clave])) {
+                    expect(substr_count($url, rawurlencode($clave.'[]').'='))->toBe(count($filtros[$clave]));
+                }
+            }
+        }
+    }
+});

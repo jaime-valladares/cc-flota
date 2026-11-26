@@ -9,7 +9,23 @@
     $rutaAlterna = $esVentana
         ? route('reportes.unidades.index', request()->query())
         : route('reportes.unidades.ventana', request()->query());
-    $rutaPdf = route('reportes.unidades.pdf', request()->except('page'));
+    $parametrosPdf = array_filter([
+        'consultar' => 1,
+        'desde' => $desde,
+        'hasta' => $hasta,
+        'estado' => $estado,
+        'disponibilidad' => $disponibilidad,
+        'modelo_medicion' => $modeloMedicion,
+        'busqueda' => $busqueda,
+    ], fn ($valor) => $valor !== null && $valor !== '');
+    $queryPdf = [\Illuminate\Support\Arr::query($parametrosPdf)];
+    // Use the same repeated bracket keys as the GET form for multiple selections.
+    foreach (['empresa_ids[]' => $empresaIds, 'unidad_ids[]' => $unidadIds] as $campo => $ids) {
+        foreach ($ids as $id) {
+            $queryPdf[] = \Illuminate\Support\Arr::query([$campo => $id]);
+        }
+    }
+    $rutaPdf = route('reportes.unidades.pdf').'?'.implode('&', $queryPdf);
 @endphp
 
 <section class="cc-card cc-analytics-root-card">
@@ -35,7 +51,7 @@
                 <div class="cc-form-section-title">Filtros de consulta</div>
             </div>
 
-            <div class="cc-standard-filter-grid cc-analytics-filter-grid">
+            <div class="cc-standard-filter-grid cc-analytics-filter-grid cc-unidades-filter-grid">
                 <div class="cc-field">
                     <label for="busqueda">Buscar empresa o Nombre / Placa</label>
                     <input id="busqueda" name="busqueda" type="text" class="cc-input" value="{{ $busqueda }}" maxlength="150" placeholder="Empresa o Nombre / Placa">
@@ -119,20 +135,25 @@
                     </select>
                 </div>
 
-                <div class="cc-field">
-                    <label for="modelo_medicion">Modelo de medición</label>
-                    <select id="modelo_medicion" name="modelo_medicion" class="cc-input">
-                        <option value="">Todos</option>
-                        @foreach ($modelosMedicion as $codigo => $texto)
-                            <option value="{{ $codigo }}" @selected($modeloMedicion === $codigo)>{{ $texto }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
+                <div class="cc-unidades-periodo-row">
+                    <div class="cc-field">
+                        <label for="modelo_medicion">Modelo de medición</label>
+                        <select id="modelo_medicion" name="modelo_medicion" class="cc-input">
+                            <option value="">Todos</option>
+                            @foreach ($modelosMedicion as $codigo => $texto)
+                                <option value="{{ $codigo }}" @selected($modeloMedicion === $codigo)>{{ $texto }}</option>
+                            @endforeach
+                        </select>
+                    </div>
 
-            <div class="mt-5 flex w-full flex-wrap justify-end gap-3">
-                <button type="submit" class="cc-btn-primary">Consultar</button>
-                <a href="{{ $rutaLimpiar }}" class="cc-btn-secondary">Limpiar</a>
+                    <x-month-filter name="desde" label="Fecha desde" :value="$desde" :max="now()->format('Y-m')" />
+                    <x-month-filter name="hasta" label="Fecha hasta" :value="$hasta" :max="now()->format('Y-m')" />
+
+                    <div class="cc-standard-filter-actions cc-unidades-periodo-actions">
+                        <button type="submit" class="cc-btn-primary">Consultar</button>
+                        <a href="{{ $rutaLimpiar }}" class="cc-btn-secondary">Limpiar</a>
+                    </div>
+                </div>
             </div>
         </div>
     </form>

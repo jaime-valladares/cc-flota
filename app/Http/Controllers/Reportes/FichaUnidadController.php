@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Response;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -62,7 +63,18 @@ class FichaUnidadController extends Controller
 
         $unidades->each(fn (Unidad $unidad) => $this->agregarRendimientoTeorico($unidad));
 
+        $generadoEn = now();
+        // With no explicit start, the earliest matching registration determines the displayed month.
+        $desde = $filtros['desde'] === null
+            ? $unidades->min('created_at')
+            : Carbon::parse($filtros['desde'].'-01');
+        $hasta = $filtros['hasta'] === null
+            ? $generadoEn
+            : Carbon::parse($filtros['hasta'].'-01');
+
         return Pdf::loadView('reportes.unidades.pdf-general', [
+            'periodoDesde' => $desde?->format('m/Y'),
+            'periodoHasta' => $hasta->format('m/Y'),
             'unidades' => $unidades,
             'resumen' => [
                 'resultados' => $unidades->count(),
@@ -76,10 +88,10 @@ class FichaUnidadController extends Controller
                 : $unidades->first()?->empresa?->nombre_comercial
                     ?? $unidades->first()?->empresa?->nombre_legal
                     ?? 'Empresa del usuario',
-            'generadoEn' => now(),
+            'generadoEn' => $generadoEn,
             'logoPath' => public_path('images/cc-flota/logo.png'),
         ])->setPaper('a4', 'landscape')->download(
-            'reporte-unidades-'.now()->format('Y-m-d').'.pdf'
+            'reporte-unidades-'.$generadoEn->format('Y-m-d').'.pdf'
         );
     }
 
@@ -109,7 +121,9 @@ class FichaUnidadController extends Controller
             || $unidadIds !== []
             || ! is_null($estado)
             || ! is_null($disponibilidad)
-            || ! is_null($modeloMedicion);
+            || ! is_null($modeloMedicion)
+            || $desde !== null
+            || $hasta !== null;
 
         $empresas = Empresa::query()
             ->when(! $esDieselCop, fn (Builder $query) => $query->whereKey($usuario->empresa_id))
@@ -131,7 +145,7 @@ class FichaUnidadController extends Controller
             $unidades = new LengthAwarePaginator([], 0, self::POR_PAGINA, 1, ['path' => $request->url()]);
             $resumen = ['total' => 0, 'registradas' => 0, 'activas' => 0, 'inactivas' => 0, 'operables' => 0];
 
-            return compact('unidades', 'empresas', 'unidadesSelector', 'empresaIds', 'unidadIds', 'busqueda', 'estado', 'disponibilidad', 'modeloMedicion', 'esDieselCop', 'hayConsulta', 'hayFiltros', 'resumen')
+            return compact('unidades', 'empresas', 'unidadesSelector', 'empresaIds', 'unidadIds', 'busqueda', 'estado', 'disponibilidad', 'modeloMedicion', 'esDieselCop', 'hayConsulta', 'hayFiltros', 'resumen', 'desde', 'hasta')
                 + ['modelosMedicion' => $this->modelosMedicion()];
         }
 
@@ -142,13 +156,19 @@ class FichaUnidadController extends Controller
 
         $unidades->getCollection()->each(fn (Unidad $unidad) => $this->agregarRendimientoTeorico($unidad));
 
-        return compact('unidades', 'empresas', 'unidadesSelector', 'empresaIds', 'unidadIds', 'busqueda', 'estado', 'disponibilidad', 'modeloMedicion', 'esDieselCop', 'hayConsulta', 'hayFiltros', 'resumen')
+        return compact('unidades', 'empresas', 'unidadesSelector', 'empresaIds', 'unidadIds', 'busqueda', 'estado', 'disponibilidad', 'modeloMedicion', 'esDieselCop', 'hayConsulta', 'hayFiltros', 'resumen', 'desde', 'hasta')
             + ['modelosMedicion' => $this->modelosMedicion()];
     }
 
     private function validarFiltros(Request $request, User $usuario): array
     {
+        $mesActual = now()->format('Y-m');
         $validated = $request->validate([
+            'desde' => ['bail', 'nullable', 'date_format:Y-m', 'before_or_equal:'.$mesActual],
+            'hasta' => [
+                'bail', 'nullable', 'date_format:Y-m', 'before_or_equal:'.$mesActual,
+                Rule::when($request->filled('desde'), ['after_or_equal:desde']),
+            ],
             'busqueda' => ['nullable', 'string', 'max:150'],
             'empresa_ids' => ['nullable', 'array'],
             'empresa_ids.*' => ['integer', 'distinct', 'exists:empresas,id'],
@@ -166,6 +186,12 @@ class FichaUnidadController extends Controller
                 'nullable',
                 Rule::in(array_keys($this->modelosMedicion())),
             ],
+        ], [
+            'desde.date_format' => 'Desde debe ser un mes y año válidos.',
+            'hasta.date_format' => 'Hasta debe ser un mes y año válidos.',
+            'desde.before_or_equal' => 'Desde no puede ser un mes futuro.',
+            'hasta.before_or_equal' => 'Hasta no puede ser un mes futuro.',
+            'hasta.after_or_equal' => 'Hasta debe ser igual o posterior a Desde.',
         ]);
 
         $busqueda = trim((string) ($validated['busqueda'] ?? ''));
@@ -196,7 +222,10 @@ class FichaUnidadController extends Controller
             $empresaIds = [$tenant];
         }
 
-        return compact('busqueda', 'empresaIds', 'unidadIds', 'estado', 'disponibilidad', 'modeloMedicion');
+        $desde = $validated['desde'] ?? null;
+        $hasta = $validated['hasta'] ?? null;
+
+        return compact('busqueda', 'empresaIds', 'unidadIds', 'estado', 'disponibilidad', 'modeloMedicion', 'desde', 'hasta');
     }
 
     private function consultaResultados(User $usuario, array $filtros): Builder
@@ -214,6 +243,17 @@ class FichaUnidadController extends Controller
             $estado,
             $modeloMedicion
         );
+
+        if ($desde !== null) {
+            $resultadosQuery->where('created_at', '>=', Carbon::parse($desde.'-01'));
+        }
+
+        if ($desde !== null || $hasta !== null) {
+            $limiteExclusivo = $hasta === null
+                ? now()->startOfMonth()->addMonth()
+                : Carbon::parse($hasta.'-01')->addMonth();
+            $resultadosQuery->where('created_at', '<', $limiteExclusivo);
+        }
 
         if ($disponibilidad) {
             $idsDisponibles = (clone $resultadosQuery)

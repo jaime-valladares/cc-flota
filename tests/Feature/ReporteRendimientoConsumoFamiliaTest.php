@@ -199,7 +199,7 @@ test('pdf principal de cada modelo reutiliza filtros e incluye resultados sin pa
         $html = view('reportes.rendimiento-km-galon.pdf-general', $capturas[$ruta])->render();
         expect(substr_count($html, 'data-pdf-cycle='))->toBe(12)->and($html)->toContain($capturas[$ruta]['titulo'])->not->toContain('<button', '@else');
         if ($modelo === Abastecimiento::MODELO_GALONES_VIAJE) {
-            expect($html)->not->toContain('pdf-indicador-')->toContain('summary-value danger">0.00 gal');
+            expect($html)->not->toContain('Período de consulta', 'pdf-indicador-')->toContain('summary-value danger">0.00 gal');
         } else {
             expect($html)
                 ->toContain('summary-value pdf-indicador-neutro">0.00 gal')
@@ -294,3 +294,152 @@ test('pdf detalle de los tres modelos conserva seguridad snapshots e impacto', f
     $this->actingAs($empresaUser)->get(route('reportes.rendimiento-km-galon.show.pdf', $ciclos['reportes.rendimiento-km-galon']))->assertForbidden();
     $this->actingAs($admin)->get(route('reportes.rendimiento-galones-hora.show.pdf', $ciclos['reportes.rendimiento-km-galon']))->assertNotFound();
 });
+
+test('los pdf generales muestran los límites del conjunto autorizado sin cambiar los resultados web', function (string $reporte, string $modelo) {
+    prepararReporteKmGalon($this);
+    $this->travelTo(\Illuminate\Support\Carbon::parse('2026-10-20 14:30'));
+    $empresa = empresaKmGalon('PERIODO-A');
+    $ajena = empresaKmGalon('PERIODO-B');
+    $usuario = usuarioKmGalon(User::ROL_EMPRESA_ADMIN, $empresa);
+    $admin = usuarioKmGalon(User::ROL_DIESEL_ADMIN);
+    $motorista = motoristaKmGalon($empresa, 'PERIODO-A');
+    $motoristaAjeno = motoristaKmGalon($ajena, 'PERIODO-B');
+    $unidad = unidadKmGalon($empresa, 'PERIODO-A', $modelo);
+    $unidadAjena = unidadKmGalon($ajena, 'PERIODO-B', $modelo);
+    $primero = cicloFamilia($empresa, $unidad, $motorista, $admin, '2026-08-10 23:59:59', $modelo, 8, 10);
+    $ultimo = cicloFamilia($empresa, $unidad, $motorista, $admin, '2026-09-15', $modelo, 8, 10);
+    cicloFamilia($ajena, $unidadAjena, $motoristaAjeno, $admin, '2026-07-01', $modelo, 8, 10);
+
+    $casos = [
+        [['fecha_desde' => '2026-08-01', 'fecha_hasta' => '2026-08-10'], '01/08/2026', '10/08/2026', [$primero->id]],
+        [['fecha_desde' => '2026-09-01'], '01/09/2026', '20/10/2026', [$ultimo->id]],
+        [['fecha_hasta' => '2026-08-10'], '10/08/2026', '10/08/2026', [$primero->id]],
+        [[], '10/08/2026', '20/10/2026', [$ultimo->id, $primero->id]],
+        [['fecha_hasta' => '2026-08-01'], '—', '01/08/2026', []],
+        [['resultado' => 'sobreconsumo'], '—', '—', []],
+    ];
+    $esMotoristas = $reporte === 'gestion-combustible-motorista';
+    $ruta = 'reportes.'.$reporte;
+
+    foreach ($casos as [$fechas, $desde, $hasta, $ids]) {
+        $web = $this->actingAs($usuario)->get(route($ruta.'.index', ['consultar' => 1, 'unidad_ids' => [$unidad->id]] + $fechas))->assertOk();
+        $dato = $esMotoristas ? 'motoristas' : 'ciclos';
+        $campoId = $esMotoristas ? 'motorista_id' : 'id';
+        $filasEsperadas = $esMotoristas && $ids !== [] ? [$motorista->id] : $ids;
+        expect($web->viewData($dato)->getCollection()->pluck($campoId)->all())->toBe($filasEsperadas);
+        $dom = new DOMDocument;
+        @$dom->loadHTML($web->getContent());
+        $enlace = (new DOMXPath($dom))->query('//a[normalize-space(text())="Descargar PDF"]')->item(0);
+        expect($enlace)->toBeInstanceOf(DOMElement::class);
+
+        $documento = $fechas === [] ? new \Barryvdh\DomPDF\PDF(app('dompdf'), config(), app('files'), app('view')) : null;
+        $descarga = Mockery::mock(\Barryvdh\DomPDF\PDF::class);
+        if ($documento === null) {
+            $descarga->shouldReceive('setPaper')->once()->with('a4', 'landscape')->andReturnSelf();
+            $descarga->shouldReceive('download')->once()->andReturn(response('PDF'));
+        }
+        Pdf::shouldReceive('loadView')->once()->andReturnUsing(function (string $vista, array $datos) use ($documento, $descarga, $dato, $campoId, $ids, $filasEsperadas, $desde, $hasta, $web) {
+            expect($datos[$dato]->pluck($campoId)->all())->toBe($filasEsperadas);
+            expect($datos['resumen'])->toEqual($web->viewData('resumen'));
+            expect((int) $datos['resumen']['ciclos'])->toBe(count($ids));
+            expect(view($vista, $datos)->render())
+                ->toContain('Período de consulta', "Desde: $desde · Hasta: $hasta", 'Generado: 20/10/2026 14:30');
+
+            return $documento?->loadView($vista, $datos) ?? $descarga;
+        });
+
+        $pdf = $this->get($enlace->getAttribute('href'))->assertOk();
+        if ($documento !== null) {
+            $pdf->assertHeader('Content-Type', 'application/pdf');
+            expect($pdf->getContent())->toStartWith('%PDF-');
+            expect($documento->getDomPDF()->output(['compress' => 0]))->toContain('0.082 0.396 0.753 rg');
+        }
+    }
+})->with([
+    'motoristas' => ['gestion-combustible-motorista', 'kilometros_galon'],
+    'kilómetros por galón' => ['rendimiento-km-galon', 'kilometros_galon'],
+    'galones por hora' => ['rendimiento-galones-hora', 'galones_hora'],
+]);
+
+test('las dos ventanas exportan el conjunto completo con multiselección y orden de la consulta', function (string $reporte, string $modelo) {
+    prepararReporteKmGalon($this);
+    $admin = usuarioKmGalon(User::ROL_DIESEL_ADMIN);
+    $empresas = [empresaKmGalon('MULTI-A'), empresaKmGalon('MULTI-B')];
+    $ajena = empresaKmGalon('MULTI-C');
+    $esMotoristas = $reporte === 'gestion-combustible-motorista';
+    $unidades = [];
+    $ids = [];
+    $orden = [];
+
+    foreach ([...$empresas, $ajena] as $indice => $empresa) {
+        $unidad = unidadKmGalon($empresa, 'MULTI-'.$indice, $modelo);
+        if ($indice < 2) {
+            $unidades[] = $unidad->id;
+        }
+
+        foreach (range(1, $indice < 2 ? 11 : 1) as $numero) {
+            $sufijo = $indice.'-'.str_pad((string) $numero, 2, '0', STR_PAD_LEFT);
+            $motorista = motoristaKmGalon($empresa, $sufijo);
+            $fecha = sprintf('2026-08-%02d', $indice * 11 + $numero);
+            $ciclo = cicloFamilia($empresa, $unidad, $motorista, $admin, $fecha, $modelo, 8, 10);
+
+            if ($indice < 2) {
+                $id = $esMotoristas ? $motorista->id : $ciclo->id;
+                $ids[] = $id;
+                $orden[$id] = $esMotoristas ? $motorista->nombre_completo : $fecha;
+            }
+        }
+    }
+
+    arsort($orden);
+    $idsEsperados = array_keys($orden);
+    $parametros = [
+        'consultar' => 1,
+        'empresa_ids' => array_map(fn ($empresa) => $empresa->id, $empresas),
+        'unidad_ids' => $unidades,
+        'fecha_desde' => '2026-08-01',
+        'fecha_hasta' => '2026-08-31',
+        'resultado' => 'ahorro',
+        'page' => 2,
+    ];
+    if ($esMotoristas) {
+        $parametros += ['orden' => 'motorista', 'direccion' => 'desc'];
+    }
+
+    $ruta = 'reportes.'.$reporte;
+    $dato = $esMotoristas ? 'motoristas' : 'ciclos';
+    $campoId = $esMotoristas ? 'motorista_id' : 'id';
+    $porPagina = $esMotoristas ? 20 : 10;
+    $descarga = Mockery::mock(\Barryvdh\DomPDF\PDF::class);
+    $descarga->shouldReceive('setPaper')->twice()->with('a4', 'landscape')->andReturnSelf();
+    $descarga->shouldReceive('download')->twice()->andReturn(response('PDF'));
+
+    foreach (['index', 'ventana'] as $entrada) {
+        $web = $this->actingAs($admin)->get(route($ruta.'.'.$entrada, $parametros))->assertOk();
+        expect($web->viewData($dato)->total())->toBe(count($ids))
+            ->and($web->viewData($dato)->pluck($campoId)->all())->toBe(array_slice($idsEsperados, $porPagina, $porPagina));
+        $dom = new DOMDocument;
+        @$dom->loadHTML($web->getContent());
+        $enlace = (new DOMXPath($dom))->query('//a[normalize-space(text())="Descargar PDF"]')->item(0);
+        expect($enlace)->toBeInstanceOf(DOMElement::class);
+
+        $href = $enlace->getAttribute('href');
+        parse_str(parse_url($href, PHP_URL_QUERY), $query);
+        expect($query)->not->toHaveKey('page')
+            ->and(array_map('intval', $query['empresa_ids']))->toBe($parametros['empresa_ids'])
+            ->and(array_map('intval', $query['unidad_ids']))->toBe($unidades);
+
+        Pdf::shouldReceive('loadView')->once()->andReturnUsing(function (string $vista, array $datos) use ($descarga, $dato, $campoId, $idsEsperados, $web) {
+            expect($datos[$dato]->pluck($campoId)->all())->toBe($idsEsperados)
+                ->and($datos['resumen'])->toEqual($web->viewData('resumen'));
+
+            return $descarga;
+        });
+
+        $this->get($href)->assertOk();
+    }
+})->with([
+    'motoristas' => ['gestion-combustible-motorista', 'kilometros_galon'],
+    'kilómetros por galón' => ['rendimiento-km-galon', 'kilometros_galon'],
+    'galones por hora' => ['rendimiento-galones-hora', 'galones_hora'],
+]);

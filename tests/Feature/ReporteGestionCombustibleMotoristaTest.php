@@ -176,7 +176,7 @@ test('filtros usan cierre y protegen tenant en consulta detalle y pdf', function
 
         return $vista === 'reportes.gestion-combustible-motorista.pdf-general'
             && $datos['motoristas']->count() === 1
-            && $datos['periodoEvaluado'] === '10/08/2026 – 10/08/2026'
+            && $datos['periodoConsulta'] === ['desde' => '10/08/2026', 'hasta' => '10/08/2026']
             && $datos['filtrosAplicados']['Resultado'] === 'Ahorro';
     })->andReturn($doc);
     $doc->shouldReceive('setPaper')->once()->with('a4', 'landscape')->andReturnSelf();

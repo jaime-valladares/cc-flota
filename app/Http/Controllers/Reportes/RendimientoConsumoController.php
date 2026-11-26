@@ -8,6 +8,7 @@ use App\Models\Empresa;
 use App\Models\Motorista;
 use App\Models\Unidad;
 use App\Models\User;
+use App\View\PdfPeriodoConsulta;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -40,10 +41,20 @@ abstract class RendimientoConsumoController extends Controller
         $ciclos = $consulta->orderByDesc('fecha_hora_abastecimiento')->orderByDesc('id')->get();
         $ciclos->each(fn (Abastecimiento $c) => $this->enriquecerCiclo($c));
 
+        $generadoEn = now();
+        $periodoConsulta = null;
+        if (in_array($this->modelo(), [Abastecimiento::MODELO_KILOMETROS_GALON, Abastecimiento::MODELO_GALONES_HORA], true)) {
+            $periodoConsulta = PdfPeriodoConsulta::limites(
+                $filtros['fechaDesde'], $filtros['fechaHasta'],
+                $ciclos->last()?->fecha_hora_abastecimiento, $ciclos->isNotEmpty(), $generadoEn,
+            );
+        }
+
         return Pdf::loadView('reportes.rendimiento-km-galon.pdf-general', array_merge([
             'ciclos' => $ciclos, 'resumen' => $resumen,
             'filtrosAplicados' => $this->describirFiltros($filtros, $usuario),
-            'generadoEn' => now(), 'logoPath' => public_path('images/cc-flota/logo.png'),
+            'periodoConsulta' => $periodoConsulta,
+            'generadoEn' => $generadoEn, 'logoPath' => public_path('images/cc-flota/logo.png'),
         ], $this->datosPresentacion()))->setPaper('a4', 'landscape')->download($this->carpeta().'.pdf');
     }
 

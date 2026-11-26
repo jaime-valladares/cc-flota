@@ -44,7 +44,15 @@
     <div class="header">
         <table class="header-table"><tr>
             <td><img class="logo" src="{{ $logoPath }}" alt="CC-Flota"></td>
-            <td><div class="header-title">Reporte de unidades</div><div class="header-subtitle">Alcance: {{ $alcance }} · Generado: {{ $generadoEn->format('d/m/Y H:i') }}</div></td>
+            <td>
+                <div class="header-title">Reporte de unidades</div>
+                <div class="header-subtitle">Alcance: {{ $alcance }} · Generado: {{ $generadoEn->format('d/m/Y H:i') }}</div>
+                <div class="header-subtitle">
+                    <strong>Período de registro</strong><br>
+                    Desde: {{ $periodoDesde ?? 'Sin fecha de registro disponible' }} · Hasta: {{ $periodoHasta }}<br>
+                    Estados actuales evaluados al generar el reporte.
+                </div>
+            </td>
         </tr></table>
     </div>
 

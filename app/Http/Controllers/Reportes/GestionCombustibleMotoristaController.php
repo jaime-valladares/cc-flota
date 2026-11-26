@@ -8,6 +8,7 @@ use App\Models\Empresa;
 use App\Models\Motorista;
 use App\Models\Unidad;
 use App\Models\User;
+use App\View\PdfPeriodoConsulta;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -68,14 +69,20 @@ class GestionCombustibleMotoristaController extends Controller
         $base = $this->consultaBase($usuario, $filtros);
         $resumen = $this->resumen(clone $base);
         $motoristas = $this->consultaAgrupada(clone $base, $request)->get();
+        $generadoEn = now();
+        $primeraFecha = $filtros['fechaDesde'] === null && $motoristas->isNotEmpty()
+            ? (clone $base)->min('fecha_hora_abastecimiento')
+            : null;
 
         return Pdf::loadView('reportes.gestion-combustible-motorista.pdf-general', [
             'motoristas' => $motoristas,
             'resumen' => $resumen,
             'filtrosAplicados' => $this->describirFiltros($filtros, $usuario),
-            'periodoEvaluado' => $this->periodoEvaluado($filtros),
+            'periodoConsulta' => PdfPeriodoConsulta::limites(
+                $filtros['fechaDesde'], $filtros['fechaHasta'], $primeraFecha, $motoristas->isNotEmpty(), $generadoEn,
+            ),
             'modelos' => self::MODELOS,
-            'generadoEn' => now(),
+            'generadoEn' => $generadoEn,
             'logoPath' => public_path('images/cc-flota/logo.png'),
         ])->setPaper('a4', 'landscape')->download('gestion-combustible-motorista.pdf');
     }

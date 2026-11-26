@@ -1,7 +1,9 @@
 import Alpine from 'alpinejs';
+import filtroMes from './filtro-mes';
 
 window.Alpine = Alpine;
 
+Alpine.data('filtroMes', filtroMes);
 Alpine.start();
 
 /*
